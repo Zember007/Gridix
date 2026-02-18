@@ -9,7 +9,7 @@ import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Json } from "@gridix/types/database";
-interface PolygonSettings {
+export interface PolygonSettings {
   colors: {
     available: string;
     sold: string;
@@ -38,6 +38,7 @@ interface PolygonCustomizationSettingsProps {
   projectId: string;
   type: "building" | "floor";
   onSettingsChange?: (settings: PolygonSettings) => void;
+  initialSettings?: PolygonSettings | null;
 }
 
 const defaultSettings: PolygonSettings = {
@@ -122,8 +123,13 @@ const PolygonCustomizationSettings = ({
   projectId,
   type,
   onSettingsChange,
+  initialSettings,
 }: PolygonCustomizationSettingsProps) => {
-  const [settings, setSettings] = useState<PolygonSettings>(defaultSettings);
+  const [settings, setSettings] = useState<PolygonSettings>(
+    initialSettings
+      ? validateAndMergeSettings(initialSettings, type)
+      : defaultSettings,
+  );
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
 
@@ -172,8 +178,12 @@ const PolygonCustomizationSettings = ({
   }, [projectId, type]);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    if (initialSettings) {
+      setSettings(validateAndMergeSettings(initialSettings, type));
+      return;
+    }
+    void loadSettings();
+  }, [initialSettings, loadSettings, type]);
 
   const saveSettings = async () => {
     setLoading(true);

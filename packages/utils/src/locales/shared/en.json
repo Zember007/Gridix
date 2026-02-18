@@ -59,10 +59,22 @@
       "openPage": "Open page"
     }
   },
-  "embed": { "viewApartments": "View apartments" },
-  "common": { "language": "Language", "more": "More details", "hide": "Hide" },
-  "admin": { "documentation": "Documentation" },
-  "auth": { "signOut": "Sign Out" },
+  "embed": {
+    "viewApartments": "View apartments"
+  },
+  "common": {
+    "language": "Language",
+    "more": "More details",
+    "hide": "Hide",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "admin": {
+    "documentation": "Documentation"
+  },
+  "auth": {
+    "signOut": "Sign Out"
+  },
   "partners": {
     "title": "Partner Program",
     "subtitle": "Attract clients and earn commission from each subscription",
@@ -377,7 +389,10 @@
     "integratorCabinetTitle": "Integrator dashboard",
     "integratorCabinetText": "Here you only see managed clients. For each client you have quick notes and login to configure projects and subscriptions.",
     "qrShow": "Show QR Code",
-    "tabs": { "list": "Partner list", "conditions": "Partnership conditions" },
+    "tabs": {
+      "list": "Partner list",
+      "conditions": "Partnership conditions"
+    },
     "stats": {
       "totalPartners": "Total partners",
       "active": "Active",

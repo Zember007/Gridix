@@ -42,4 +42,4 @@ dist-ssr
 .npm-store/
 .npm-logs/
 
-*.tsbuildinfo
+tsconfig.tsbuildinfo

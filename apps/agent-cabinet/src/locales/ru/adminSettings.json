@@ -8,6 +8,8 @@
   "billingInfoDesc": "Детали компании для генерации счетов",
   "bankName": "Название банка",
   "bankNamePlaceholder": "ТБС Банк",
+  "billingCurrency": "Валюта расчетов",
+  "billingCurrencyPlaceholder": "Выберите валюту",
   "changeEmail": "Изменить Email",
   "changePassword": "Изменить пароль",
   "company": "Компания",

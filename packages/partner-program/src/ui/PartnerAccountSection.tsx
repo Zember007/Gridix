@@ -46,6 +46,7 @@ export const PartnerAccountSection: React.FC = () => {
     accountBalance,
     commissionPercentage,
   } = usePartnerAccountData();
+  const hasTransactions = filteredTransactions.length > 0;
 
   if (loading) {
     return (
@@ -144,9 +145,9 @@ export const PartnerAccountSection: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row">
-        <div className="flex w-full flex-col items-center gap-3 md:w-auto md:flex-row">
-          <div className="relative w-full md:w-56">
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:flex-row">
+        <div className="flex w-full flex-col items-center gap-3 lg:w-auto lg:flex-row">
+          <div className="relative w-full lg:w-56">
             <Filter
               size={16}
               className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
@@ -176,8 +177,8 @@ export const PartnerAccountSection: React.FC = () => {
               </SelectContent>
             </ShadcnSelect>
           </div>
-          <div className="flex w-full items-center gap-2 md:w-auto">
-            <div className="group relative flex-1 md:flex-none">
+          <div className="flex w-full items-center gap-2 lg:w-auto">
+            <div className="group relative flex-1 lg:flex-none">
               <Calendar
                 size={16}
                 className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-gray-600"
@@ -187,11 +188,12 @@ export const PartnerAccountSection: React.FC = () => {
                 value={startDate}
                 max={endDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full cursor-pointer rounded-lg border-gray-200 bg-gray-50 pl-10 text-sm text-gray-700 md:w-auto"
+                onClick={(e) => e.currentTarget.showPicker?.()}
+                className="w-full cursor-pointer appearance-none rounded-lg border-gray-200 bg-gray-50 pl-10 text-sm text-gray-700 lg:w-auto [&::-webkit-calendar-picker-indicator]:hidden"
               />
             </div>
             <span className="font-medium text-gray-400">-</span>
-            <div className="group relative flex-1 md:flex-none">
+            <div className="group relative flex-1 lg:flex-none">
               <Calendar
                 size={16}
                 className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-gray-600"
@@ -201,7 +203,8 @@ export const PartnerAccountSection: React.FC = () => {
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full cursor-pointer rounded-lg border-gray-200 bg-gray-50 pl-10 text-sm text-gray-700 md:w-auto"
+                onClick={(e) => e.currentTarget.showPicker?.()}
+                className="w-full cursor-pointer appearance-none rounded-lg border-gray-200 bg-gray-50 pl-10 text-sm text-gray-700 lg:w-auto [&::-webkit-calendar-picker-indicator]:hidden"
               />
             </div>
           </div>
@@ -209,7 +212,7 @@ export const PartnerAccountSection: React.FC = () => {
         <button
           onClick={resetFilters}
           disabled={!hasFilters}
-          className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all md:w-auto ${
+          className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all lg:w-auto ${
             hasFilters
               ? "cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black"
               : "cursor-not-allowed bg-gray-50 text-gray-300"
@@ -222,131 +225,134 @@ export const PartnerAccountSection: React.FC = () => {
 
       {/* Table */}
       <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="custom-scrollbar overflow-x-auto pb-2 sm:pb-0">
-          <div className="min-w-[800px]">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="w-40 px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                    {t("partners.transactionsDate")}
-                  </th>
-                  <th className="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                    {t("partners.transactionsAmount")}
-                  </th>
-                  <th className="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                    {t("partners.transactionsBalance")}
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                    {t("partners.transactionsComment")}
-                  </th>
-                  <th className="w-12 px-4 py-4" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredTransactions.map((tx, idx) => {
-                  let type: "topup" | "expense" | "commission" = "commission";
-                  if (tx.sum < 0) type = "expense";
-                  else if (
-                    tx.comment.toLowerCase().includes("комиссия") ||
-                    tx.comment.toLowerCase().includes("бонус")
-                  )
-                    type = "commission";
+        {hasTransactions ? (
+          <div className="custom-scrollbar overflow-x-auto pb-2 sm:pb-0">
+            <div className="min-w-[800px]">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <th className="w-40 px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                      {t("partners.transactionsDate")}
+                    </th>
+                    <th className="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                      {t("partners.transactionsAmount")}
+                    </th>
+                    <th className="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                      {t("partners.transactionsBalance")}
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                      {t("partners.transactionsComment")}
+                    </th>
+                    <th className="w-12 px-4 py-4" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredTransactions.map((tx, idx) => {
+                    let type: "topup" | "expense" | "commission" = "commission";
+                    if (tx.sum < 0) type = "expense";
+                    else if (
+                      tx.comment.toLowerCase().includes("комиссия") ||
+                      tx.comment.toLowerCase().includes("бонус")
+                    )
+                      type = "commission";
 
-                  const rowStyles = {
-                    expense:
-                      "border-l-4 border-l-red-300 bg-red-50/20 hover:bg-red-50/50",
-                    commission:
-                      "border-l-4 border-l-emerald-400 bg-emerald-50/20 hover:bg-emerald-50/50",
-                    topup:
-                      "border-l-4 border-l-blue-400 bg-blue-50/20 hover:bg-blue-50/50",
-                  }[type];
-                  const sumStyles = {
-                    expense: "text-red-600",
-                    commission: "text-emerald-600",
-                    topup: "text-blue-600",
-                  }[type];
-                  const iconConfig = {
-                    expense: {
-                      Icon: ArrowUpCircle,
-                      bg: "bg-red-100",
-                      text: "text-red-600",
-                    },
-                    commission: {
-                      Icon: Sparkles,
-                      bg: "bg-emerald-100",
-                      text: "text-emerald-600",
-                    },
-                    topup: {
-                      Icon: ArrowDownCircle,
-                      bg: "bg-blue-100",
-                      text: "text-blue-600",
-                    },
-                  }[type];
-                  const IconComponent = iconConfig.Icon;
+                    const rowStyles = {
+                      expense:
+                        "border-l-4 border-l-red-300 bg-red-50/20 hover:bg-red-50/50",
+                      commission:
+                        "border-l-4 border-l-emerald-400 bg-emerald-50/20 hover:bg-emerald-50/50",
+                      topup:
+                        "border-l-4 border-l-blue-400 bg-blue-50/20 hover:bg-blue-50/50",
+                    }[type];
+                    const sumStyles = {
+                      expense: "text-red-600",
+                      commission: "text-emerald-600",
+                      topup: "text-blue-600",
+                    }[type];
+                    const iconConfig = {
+                      expense: {
+                        Icon: ArrowUpCircle,
+                        bg: "bg-red-100",
+                        text: "text-red-600",
+                      },
+                      commission: {
+                        Icon: Sparkles,
+                        bg: "bg-emerald-100",
+                        text: "text-emerald-600",
+                      },
+                      topup: {
+                        Icon: ArrowDownCircle,
+                        bg: "bg-blue-100",
+                        text: "text-blue-600",
+                      },
+                    }[type];
+                    const IconComponent = iconConfig.Icon;
 
-                  return (
-                    <tr
-                      key={idx}
-                      className={`${rowStyles} group relative transition-colors`}
-                    >
-                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`rounded-full p-2 ${iconConfig.bg} ${iconConfig.text} shrink-0`}
-                          >
-                            <IconComponent size={14} />
-                          </div>
-                          {tx.date}
-                        </div>
-                      </td>
-                      <td
-                        className={`px-6 py-4 text-right text-sm font-bold whitespace-nowrap ${sumStyles}`}
+                    return (
+                      <tr
+                        key={idx}
+                        className={`${rowStyles} group relative transition-colors`}
                       >
-                        {tx.sum > 0 ? `+ $${tx.sum}` : `- $${Math.abs(tx.sum)}`}
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono text-sm whitespace-nowrap text-gray-500">
-                        $ {tx.balance.toFixed(2)}
-                      </td>
-                      <td
-                        className="max-w-xs truncate px-6 py-4 text-sm text-gray-700 sm:max-w-md md:max-w-xl"
-                        title={tx.comment}
-                      >
-                        {tx.comment}
-                      </td>
-                      <td className="relative px-4 py-4 text-center">
-                        <button
-                          onClick={(e) => toggleMenu(idx, e)}
-                          className={`rounded-full p-1 transition-colors ${
-                            openMenuIndex === idx
-                              ? "bg-gray-100 text-gray-900"
-                              : "text-gray-300 hover:text-gray-600"
-                          }`}
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-                        {openMenuIndex === idx && (
-                          <div
-                            ref={menuRef}
-                            className="animate-in fade-in zoom-in-95 absolute top-1/2 right-8 z-20 w-48 origin-right -translate-y-1/2 rounded-lg border border-gray-100 bg-white shadow-xl duration-100"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              onClick={handleDownloadInvoice}
-                              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50 hover:text-black"
+                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`rounded-full p-2 ${iconConfig.bg} ${iconConfig.text} shrink-0`}
                             >
-                              {t("partners.transactionsDownloadInvoice")}
-                            </button>
+                              <IconComponent size={14} />
+                            </div>
+                            {tx.date}
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td
+                          className={`px-6 py-4 text-right text-sm font-bold whitespace-nowrap ${sumStyles}`}
+                        >
+                          {tx.sum > 0
+                            ? `+ $${tx.sum}`
+                            : `- $${Math.abs(tx.sum)}`}
+                        </td>
+                        <td className="px-6 py-4 text-right font-mono text-sm whitespace-nowrap text-gray-500">
+                          $ {tx.balance.toFixed(2)}
+                        </td>
+                        <td
+                          className="max-w-xs truncate px-6 py-4 text-sm text-gray-700 sm:max-w-md md:max-w-xl"
+                          title={tx.comment}
+                        >
+                          {tx.comment}
+                        </td>
+                        <td className="relative px-4 py-4 text-center">
+                          <button
+                            onClick={(e) => toggleMenu(idx, e)}
+                            className={`rounded-full p-1 transition-colors ${
+                              openMenuIndex === idx
+                                ? "bg-gray-100 text-gray-900"
+                                : "text-gray-300 hover:text-gray-600"
+                            }`}
+                          >
+                            <MoreVertical size={18} />
+                          </button>
+                          {openMenuIndex === idx && (
+                            <div
+                              ref={menuRef}
+                              className="animate-in fade-in zoom-in-95 absolute top-1/2 right-8 z-20 w-48 origin-right -translate-y-1/2 rounded-lg border border-gray-100 bg-white shadow-xl duration-100"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={handleDownloadInvoice}
+                                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50 hover:text-black"
+                              >
+                                {t("partners.transactionsDownloadInvoice")}
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        {filteredTransactions.length === 0 && (
+        ) : (
           <div className="flex flex-col items-center p-12 text-center text-gray-500">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
               <Filter size={20} className="text-gray-400" />

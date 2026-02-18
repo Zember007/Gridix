@@ -206,7 +206,7 @@ export function PayoutRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold">{t("partners.payoutRequests")}</h2>
           <p className="text-muted-foreground">{t("partners.managePayouts")}</p>
@@ -310,13 +310,19 @@ export function PayoutRequests() {
       {/* Информация о балансе */}
       <Alert>
         <DollarSign className="h-4 w-4" />
-        <AlertDescription>
-          <strong>{t("partners.availableForWithdrawal")}:</strong> $
-          {stats?.available_for_withdrawal?.toFixed(2) || "0"} |{" "}
-          <strong>{t("partners.totalEarned")}:</strong> $
-          {stats?.total_earned?.toFixed(2) || "0"} |{" "}
-          <strong>{t("partners.totalWithdrawn")}:</strong> $
-          {stats?.total_withdrawn?.toFixed(2) || "0"}
+        <AlertDescription className="flex flex-wrap gap-x-3">
+          <span>
+            <strong>{t("partners.availableForWithdrawal")}:</strong> $
+            {stats?.available_for_withdrawal?.toFixed(2) || "0"}
+          </span>
+          <span>
+            <strong>{t("partners.totalEarned")}:</strong> $
+            {stats?.total_earned?.toFixed(2) || "0"}
+          </span>
+          <span>
+            <strong>{t("partners.totalWithdrawn")}:</strong> $
+            {stats?.total_withdrawn?.toFixed(2) || "0"}
+          </span>
         </AlertDescription>
       </Alert>
 

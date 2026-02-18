@@ -35,7 +35,7 @@ const CrmView = ({
   const totalInFunnel = byStage.reduce((sum, s) => sum + s.count, 0);
 
   return (
-    <div className="space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
+    <div className="min-w-0 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -197,13 +197,13 @@ const FinanceView = ({
   t,
 }: FinanceViewProps) => {
   return (
-    <div className="space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
+    <div className="min-w-0 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
       {/* Info Banner */}
-      <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <div className="mt-0.5 rounded-lg border border-slate-100 bg-white p-2 text-slate-600">
+      <div className="flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-0.5 shrink-0 rounded-lg border border-slate-100 bg-white p-2 text-slate-600">
           <Wallet size={20} />
         </div>
-        <div>
+        <div className="min-w-0">
           <h3 className="font-bold text-slate-900">
             {t("common.analytics.finance.registryTitle")}
           </h3>
@@ -214,13 +214,13 @@ const FinanceView = ({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-2 flex min-w-0 items-start justify-between gap-2">
+            <p className="min-w-0 break-words text-xs font-bold uppercase tracking-wider text-slate-400">
               {t("common.analytics.finance.pipeline")}
             </p>
-            <div className="flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-600">
+            <div className="flex shrink-0 items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-600">
               <ArrowUpRight size={10} />
               {t("common.analytics.finance.inProgress")}
             </div>
@@ -232,12 +232,12 @@ const FinanceView = ({
             {payoutCount} {t("common.analytics.finance.dealsInWork")}
           </span>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-2 flex min-w-0 items-start justify-between gap-2">
+            <p className="min-w-0 break-words text-xs font-bold uppercase tracking-wider text-slate-400">
               {t("common.analytics.finance.received")}
             </p>
-            <div className="flex items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+            <div className="flex shrink-0 items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
               <ArrowUpRight size={10} />
               {t("common.analytics.finance.success")}
             </div>
@@ -249,9 +249,9 @@ const FinanceView = ({
             {t("common.analytics.finance.successDeals")}
           </span>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-2 flex min-w-0 items-start justify-between gap-2">
+            <p className="min-w-0 break-words text-xs font-bold uppercase tracking-wider text-slate-400">
               {t("common.analytics.finance.total")}
             </p>
           </div>
@@ -265,34 +265,37 @@ const FinanceView = ({
       </div>
 
       {/* Payouts Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+      <div className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 px-4 py-4 sm:px-6">
           <h3 className="text-sm font-bold text-slate-900">
             {t("common.analytics.finance.registry")}
           </h3>
           <button
             type="button"
-            className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900"
+            aria-label={t("common.analytics.finance.export")}
+            className="flex shrink-0 items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900"
           >
             <Download size={14} />
-            {t("common.analytics.finance.export")}
+            <span className="hidden sm:inline">
+              {t("common.analytics.finance.export")}
+            </span>
           </button>
         </div>
-        <div className="overflow-x-auto">
+        <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
           {payouts.length ? (
-            <table className="w-full text-left">
+            <table className="w-full min-w-[480px] text-left">
               <thead className="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
                 <tr>
-                  <th className="px-6 py-3">
+                  <th className="whitespace-nowrap px-3 py-3 sm:px-6">
                     {t("common.analytics.finance.colAmount")}
                   </th>
-                  <th className="px-6 py-3">
+                  <th className="whitespace-nowrap px-3 py-3 sm:px-6">
                     {t("common.analytics.finance.colProject")}
                   </th>
-                  <th className="px-6 py-3">
+                  <th className="whitespace-nowrap px-3 py-3 sm:px-6">
                     {t("common.analytics.finance.colDate")}
                   </th>
-                  <th className="px-6 py-3">
+                  <th className="whitespace-nowrap px-3 py-3 sm:px-6">
                     {t("common.analytics.finance.colStatus")}
                   </th>
                 </tr>
@@ -303,18 +306,20 @@ const FinanceView = ({
                     key={p.id}
                     className="transition-colors hover:bg-slate-50"
                   >
-                    <td className="px-6 py-4 font-mono font-bold text-slate-900">
+                    <td className="whitespace-nowrap px-3 py-4 font-mono font-bold text-slate-900 sm:px-6">
                       ${Number(p.amount ?? 0).toLocaleString()}
                     </td>
-                    <td className="max-w-[200px] truncate px-6 py-4 text-slate-700">
-                      {p.project_name ?? t("common.common.empty")}
+                    <td className="px-3 py-4 text-slate-700 sm:px-6">
+                      <div className="max-w-[220px] truncate">
+                        {p.project_name ?? t("common.common.empty")}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500">
+                    <td className="whitespace-nowrap px-3 py-4 text-slate-500 sm:px-6">
                       {p.payout_date
                         ? new Date(p.payout_date).toLocaleDateString()
                         : t("common.common.empty")}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="whitespace-nowrap px-3 py-4 sm:px-6">
                       <span
                         className={`rounded-lg px-2 py-1 text-xs font-bold ${
                           String(p.status) === "paid"
@@ -414,7 +419,7 @@ export function AnalyticsTab() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#F8FAFC]">
+    <div className="flex h-full flex-col overflow-x-hidden bg-[#F8FAFC]">
       <ModuleHeader
         title={t("common.analytics.title")}
         subtitle={
@@ -433,12 +438,12 @@ export function AnalyticsTab() {
       />
 
       {/* Filter Bar */}
-      <div className="sticky top-0 z-10 flex flex-col items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 shadow-sm md:flex-row md:px-6">
-        <div className="no-scrollbar flex w-full overflow-x-auto rounded-xl bg-slate-100 p-1 md:w-auto">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-nowrap md:px-6">
+        <div className="no-scrollbar flex w-full min-w-0 overflow-x-auto rounded-xl bg-slate-100 p-1 sm:w-auto">
           <button
             type="button"
             onClick={() => setView("crm")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${
+            className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-bold transition-all sm:flex-none ${
               view === "crm"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
@@ -450,7 +455,7 @@ export function AnalyticsTab() {
           <button
             type="button"
             onClick={() => setView("finance")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${
+            className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-bold transition-all sm:flex-none ${
               view === "finance"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
@@ -461,8 +466,8 @@ export function AnalyticsTab() {
           </button>
         </div>
 
-        <div className="flex w-full items-center gap-3 md:w-auto">
-          <div className="flex items-center gap-2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm">
+        <div className="flex w-full min-w-0 items-center justify-end gap-3 sm:w-auto">
+          <div className="flex min-w-0 items-center gap-2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm">
             <Calendar size={16} className="text-slate-400" />
             <select
               value={period}
@@ -480,7 +485,7 @@ export function AnalyticsTab() {
 
       {/* Content */}
       <div className="custom-scrollbar flex-1 overflow-y-auto p-4 md:p-6">
-        <div className="mx-auto max-w-[1600px] pb-20">
+        <div className="mx-auto min-w-0 max-w-[1600px]">
           {!activeWorkspaceId ? (
             <div className="rounded-xl border border-slate-200 bg-white p-6">
               <h3 className="font-bold text-slate-900">

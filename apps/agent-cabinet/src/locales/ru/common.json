@@ -249,9 +249,12 @@
       "signature": "Подпись",
       "drawSignature": "Нарисовать",
       "uploadSignature": "Загрузить",
+      "replaceSignature": "Заменить подпись",
       "clear": "Очистить",
       "sign": "Подписать договор",
-      "submit": "Отправить заявку"
+      "submit": "Отправить заявку",
+      "currentSignaturePrompt": "Это ваша текущая подпись, используемая в договорах.",
+      "uploadHint": "Загрузите качественное изображение подписи (PNG или JPG)."
     },
     "status": {
       "pending": "На проверке",

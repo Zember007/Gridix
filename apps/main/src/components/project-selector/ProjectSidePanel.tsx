@@ -14,6 +14,12 @@ import { toast } from "sonner";
 import { useAsyncAction } from "@/shared/hooks/useAsyncAction";
 import { generateApartmentPdf } from "@/features/apartment/lib/generateApartmentPdf";
 
+const apartmentCoverPhotoCache = new Map<string, string | null>();
+const apartmentCoverPhotoInFlight = new Map<
+  string,
+  Promise<Record<string, string | null>>
+>();
+
 export type SidePanelState =
   | { kind: "floor"; floorNumber: number }
   | { kind: "apartment"; apartment: Apartment };
@@ -132,8 +138,26 @@ export const ProjectSidePanel = ({
         ? floorApartments.map((a) => a.id)
         : [state.apartment.id];
 
+    const idsFromModuleCache = apartmentIds.filter((id) =>
+      apartmentCoverPhotoCache.has(id),
+    );
+
+    if (idsFromModuleCache.length > 0) {
+      const cachedValues: Record<string, string | null> = {};
+      for (const id of idsFromModuleCache) {
+        cachedValues[id] = apartmentCoverPhotoCache.get(id) ?? null;
+      }
+      setApartmentCoverPhotoById((prev) => ({ ...prev, ...cachedValues }));
+      setApartmentCoverPhotoLoadingById((prev) => {
+        const next = { ...prev };
+        for (const id of idsFromModuleCache) next[id] = false;
+        return next;
+      });
+    }
+
     const idsToFetch = apartmentIds.filter(
-      (id) => !(id in apartmentCoverPhotoById),
+      (id) =>
+        !(id in apartmentCoverPhotoById) && !apartmentCoverPhotoCache.has(id),
     );
     if (idsToFetch.length === 0) return;
 
@@ -147,29 +171,50 @@ export const ProjectSidePanel = ({
           return next;
         });
 
-        const { data, error } = await supabase
-          .from("apartment_photos")
-          .select("apartment_id, image_url, order_index")
-          .in("apartment_id", idsToFetch)
-          .order("order_index", { ascending: true });
+        const requestKey = idsToFetch.slice().sort().join(",");
+
+        const existingRequest = apartmentCoverPhotoInFlight.get(requestKey);
+        const requestPromise =
+          existingRequest ??
+          (async () => {
+            const { data, error } = await supabase
+              .from("apartment_photos")
+              .select("apartment_id, image_url, order_index")
+              .in("apartment_id", idsToFetch)
+              .order("order_index", { ascending: true });
+
+            if (error) throw error;
+
+            const resolvedById: Record<string, string | null> = {};
+            for (const row of data ?? []) {
+              const apartmentId = (row as { apartment_id?: string | null })
+                .apartment_id;
+              const imageUrl = (row as { image_url?: string | null }).image_url;
+              if (!apartmentId || !imageUrl) continue;
+              if (!(apartmentId in resolvedById)) {
+                resolvedById[apartmentId] = imageUrl;
+              }
+            }
+
+            for (const id of idsToFetch) {
+              if (!(id in resolvedById)) resolvedById[id] = null;
+              apartmentCoverPhotoCache.set(id, resolvedById[id] ?? null);
+            }
+
+            return resolvedById;
+          })();
+
+        if (!existingRequest) {
+          apartmentCoverPhotoInFlight.set(requestKey, requestPromise);
+        }
+
+        const resolvedById = await requestPromise;
+
+        if (!existingRequest) {
+          apartmentCoverPhotoInFlight.delete(requestKey);
+        }
 
         if (cancelled) return;
-        if (error) throw error;
-
-        const resolvedById: Record<string, string | null> = {};
-        for (const row of data ?? []) {
-          const apartmentId = (row as { apartment_id?: string | null })
-            .apartment_id;
-          const imageUrl = (row as { image_url?: string | null }).image_url;
-          if (!apartmentId || !imageUrl) continue;
-          if (!(apartmentId in resolvedById))
-            resolvedById[apartmentId] = imageUrl;
-        }
-
-        // Mark apartments with no photos as resolved (null) to avoid refetching
-        for (const id of idsToFetch) {
-          if (!(id in resolvedById)) resolvedById[id] = null;
-        }
 
         setApartmentCoverPhotoById((prev) => ({ ...prev, ...resolvedById }));
         setApartmentCoverPhotoLoadingById((prev) => {

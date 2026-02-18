@@ -29,7 +29,20 @@ import {
   Switch,
   Button,
 } from "@gridix/ui";
-import { Save } from "lucide-react";
+import {
+  Save,
+  Building2,
+  User,
+  CreditCard,
+  Download,
+  FileText,
+  Globe,
+  Phone,
+  Mail,
+  MapPin,
+  BadgeCheck,
+  FileCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { ModuleHeader } from "@/shared/ui/ModuleHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -365,239 +378,368 @@ function AgentUserProfileSection(props: {
       : "company";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{props.t("adminSettings.profileInfo")}</CardTitle>
-        <CardDescription>
-          {props.t("adminSettings.profileInfoDesc")}
-        </CardDescription>
+    <Card className="overflow-hidden border-slate-200 shadow-sm transition-all hover:shadow-md">
+      <CardHeader className="border-b border-slate-50 bg-slate-50/50 pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900">
+              {props.t("adminSettings.profileInfo")}
+            </CardTitle>
+            <CardDescription className="text-slate-500">
+              {props.t("adminSettings.profileInfoDesc")}
+            </CardDescription>
+          </div>
+          <BadgeCheck className="text-blue-500" size={24} />
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 pt-6">
         {props.loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="flex items-center justify-center py-12">
+            <div className="border-3 h-8 w-8 animate-spin rounded-full border-primary border-t-transparent" />
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Person type</Label>
-                <Select
-                  value={personType}
-                  onValueChange={(val) =>
-                    props.onChange({ ...v, person_type: val })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="company">Company</SelectItem>
-                    <SelectItem value="individual">Individual</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Account Type
+                </Label>
+                <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50/50 p-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      props.onChange({ ...v, person_type: "company" })
+                    }
+                    className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-all ${
+                      personType === "company"
+                        ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <Building2 size={16} /> Company
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      props.onChange({ ...v, person_type: "individual" })
+                    }
+                    className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-all ${
+                      personType === "individual"
+                        ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <User size={16} /> Individual
+                  </button>
+                </div>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="preferred_locale">Language</Label>
+                <Label
+                  htmlFor="preferred_locale"
+                  className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                >
+                  Interface Language
+                </Label>
                 <Select
                   value={v.preferred_locale ?? "en"}
                   onValueChange={(val) =>
                     props.onChange({ ...v, preferred_locale: val })
                   }
                 >
-                  <SelectTrigger id="preferred_locale">
-                    <SelectValue placeholder="en" />
+                  <SelectTrigger
+                    id="preferred_locale"
+                    className="rounded-xl border-slate-200 bg-white hover:bg-slate-50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Globe size={16} className="text-slate-400" />
+                      <SelectValue placeholder="en" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">EN</SelectItem>
-                    <SelectItem value="ru">RU</SelectItem>
-                    <SelectItem value="ka">KA</SelectItem>
-                    <SelectItem value="he">HE</SelectItem>
-                    <SelectItem value="ar">AR</SelectItem>
-                    <SelectItem value="tr">TR</SelectItem>
+                    <SelectItem value="en">English (EN)</SelectItem>
+                    <SelectItem value="ru">Русский (RU)</SelectItem>
+                    <SelectItem value="ka">ქართული (KA)</SelectItem>
+                    <SelectItem value="he">עברית (HE)</SelectItem>
+                    <SelectItem value="ar">العربية (AR)</SelectItem>
+                    <SelectItem value="tr">Türkçe (TR)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">
-                  {props.t("adminSettings.fullName")}
-                </Label>
-                <Input
-                  id="full_name"
-                  value={v.full_name ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, full_name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="company_name">
-                  {props.t("adminSettings.companyName")}
-                </Label>
-                <Input
-                  id="company_name"
-                  value={v.company_name ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, company_name: e.target.value })
-                  }
-                />
-              </div>
-            </div>
+            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <User size={16} className="text-blue-500" />
+                Personal details for contracts
+              </h3>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="phone">{props.t("adminSettings.phone")}</Label>
-                <Input
-                  id="phone"
-                  value={v.phone ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, phone: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tax_id">{props.t("adminSettings.taxId")}</Label>
-                <Input
-                  id="tax_id"
-                  value={v.tax_id ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, tax_id: e.target.value })
-                  }
-                />
-              </div>
-            </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="full_name"
+                    className="text-xs font-bold text-slate-600"
+                  >
+                    {props.t("adminSettings.fullName")}
+                  </Label>
+                  <Input
+                    id="full_name"
+                    value={v.full_name ?? ""}
+                    onChange={(e) =>
+                      props.onChange({ ...v, full_name: e.target.value })
+                    }
+                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="legal_address">
-                {props.t("adminSettings.companyAddress")}
-              </Label>
-              <Input
-                id="legal_address"
-                value={v.legal_address ?? ""}
-                onChange={(e) =>
-                  props.onChange({ ...v, legal_address: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="company_type">
-                  {props.t("common.settings.agentCompanyType")}
-                </Label>
-                <Input
-                  id="company_type"
-                  value={v.company_type ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, company_type: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="registered_office">
-                  {props.t("common.settings.agentRegisteredOffice")}
-                </Label>
-                <Input
-                  id="registered_office"
-                  value={v.registered_office ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, registered_office: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="rep_name">
-                  {props.t("common.settings.agentRepresentativeName")}
-                </Label>
-                <Input
-                  id="rep_name"
-                  value={v.representative_name ?? ""}
-                  onChange={(e) =>
-                    props.onChange({
-                      ...v,
-                      representative_name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rep_title">
-                  {props.t("common.settings.agentRepresentativeTitle")}
-                </Label>
-                <Input
-                  id="rep_title"
-                  value={v.representative_title ?? ""}
-                  onChange={(e) =>
-                    props.onChange({
-                      ...v,
-                      representative_title: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="bank_name">
-                  {props.t("adminSettings.bankName")}
-                </Label>
-                <Input
-                  id="bank_name"
-                  value={v.bank_name ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, bank_name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="iban">{props.t("adminSettings.iban")}</Label>
-                <Input
-                  id="iban"
-                  value={v.iban ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, iban: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Billing currency</Label>
-                <Input
-                  value={v.billing_currency ?? ""}
-                  onChange={(e) =>
-                    props.onChange({ ...v, billing_currency: e.target.value })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <div className="font-medium">
-                    {props.t("adminSettings.vatPayer")}
+                {personType === "company" && (
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="company_name"
+                      className="text-xs font-bold text-slate-600"
+                    >
+                      {props.t("adminSettings.companyName")}
+                    </Label>
+                    <Input
+                      id="company_name"
+                      value={v.company_name ?? ""}
+                      onChange={(e) =>
+                        props.onChange({ ...v, company_name: e.target.value })
+                      }
+                      className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    />
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {props.t("adminSettings.billingInfoDesc")}
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="phone"
+                    className="text-xs font-bold text-slate-600"
+                  >
+                    <span className="flex items-center gap-1">
+                      <Phone size={12} /> {props.t("adminSettings.phone")}
+                    </span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={v.phone ?? ""}
+                    onChange={(e) =>
+                      props.onChange({ ...v, phone: e.target.value })
+                    }
+                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="tax_id"
+                    className="text-xs font-bold text-slate-600"
+                  >
+                    {props.t("adminSettings.taxId")}
+                  </Label>
+                  <Input
+                    id="tax_id"
+                    value={v.tax_id ?? ""}
+                    onChange={(e) =>
+                      props.onChange({ ...v, tax_id: e.target.value })
+                    }
+                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="legal_address"
+                  className="text-xs font-bold text-slate-600"
+                >
+                  <span className="flex items-center gap-1">
+                    <MapPin size={12} />{" "}
+                    {props.t("adminSettings.companyAddress")}
+                  </span>
+                </Label>
+                <Input
+                  id="legal_address"
+                  value={v.legal_address ?? ""}
+                  onChange={(e) =>
+                    props.onChange({ ...v, legal_address: e.target.value })
+                  }
+                  className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                />
+              </div>
+
+              {personType === "company" && (
+                <div className="duration-300 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="company_type"
+                        className="text-xs font-bold text-slate-600"
+                      >
+                        {props.t("common.settings.agentCompanyType")}
+                      </Label>
+                      <Input
+                        id="company_type"
+                        value={v.company_type ?? ""}
+                        onChange={(e) =>
+                          props.onChange({ ...v, company_type: e.target.value })
+                        }
+                        placeholder="e.g. LLC / Ltd"
+                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="registered_office"
+                        className="text-xs font-bold text-slate-600"
+                      >
+                        {props.t("common.settings.agentRegisteredOffice")}
+                      </Label>
+                      <Input
+                        id="registered_office"
+                        value={v.registered_office ?? ""}
+                        onChange={(e) =>
+                          props.onChange({
+                            ...v,
+                            registered_office: e.target.value,
+                          })
+                        }
+                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="rep_name"
+                        className="text-xs font-bold text-slate-600"
+                      >
+                        {props.t("common.settings.agentRepresentativeName")}
+                      </Label>
+                      <Input
+                        id="rep_name"
+                        value={v.representative_name ?? ""}
+                        onChange={(e) =>
+                          props.onChange({
+                            ...v,
+                            representative_name: e.target.value,
+                          })
+                        }
+                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="rep_title"
+                        className="text-xs font-bold text-slate-600"
+                      >
+                        {props.t("common.settings.agentRepresentativeTitle")}
+                      </Label>
+                      <Input
+                        id="rep_title"
+                        value={v.representative_title ?? ""}
+                        onChange={(e) =>
+                          props.onChange({
+                            ...v,
+                            representative_title: e.target.value,
+                          })
+                        }
+                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                      />
+                    </div>
                   </div>
                 </div>
-                <Switch
-                  checked={Boolean(v.is_vat_payer)}
-                  onCheckedChange={(checked) =>
-                    props.onChange({ ...v, is_vat_payer: checked })
-                  }
-                />
+              )}
+            </div>
+
+            <div className="space-y-4 rounded-2xl border border-slate-100 bg-blue-50/30 p-4 md:p-6">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <CreditCard size={16} className="text-blue-500" />
+                Bank & Billing Details
+              </h3>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="bank_name"
+                    className="text-xs font-bold text-slate-600"
+                  >
+                    {props.t("adminSettings.bankName")}
+                  </Label>
+                  <Input
+                    id="bank_name"
+                    value={v.bank_name ?? ""}
+                    onChange={(e) =>
+                      props.onChange({ ...v, bank_name: e.target.value })
+                    }
+                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="iban"
+                    className="text-xs font-bold text-slate-600"
+                  >
+                    {props.t("adminSettings.iban")}
+                  </Label>
+                  <Input
+                    id="iban"
+                    value={v.iban ?? ""}
+                    onChange={(e) =>
+                      props.onChange({ ...v, iban: e.target.value })
+                    }
+                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="billing_currency"
+                    className="text-xs font-bold text-slate-600"
+                  >
+                    {props.t("adminSettings.billingCurrency")}
+                  </Label>
+                  <Input
+                    id="billing_currency"
+                    value={v.billing_currency ?? ""}
+                    onChange={(e) =>
+                      props.onChange({ ...v, billing_currency: e.target.value })
+                    }
+                    placeholder={props.t(
+                      "adminSettings.billingCurrencyPlaceholder",
+                    )}
+                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
+                  <div>
+                    <div className="text-sm font-bold text-slate-900">
+                      {props.t("adminSettings.vatPayer")}
+                    </div>
+                    <div className="text-[10px] font-bold uppercase text-slate-400">
+                      {props.t("adminSettings.billingInfoDesc")}
+                    </div>
+                  </div>
+                  <Switch
+                    checked={Boolean(v.is_vat_payer)}
+                    onCheckedChange={(checked) =>
+                      props.onChange({ ...v, is_vat_payer: checked })
+                    }
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Button onClick={() => void props.onSave()}>
+            <div className="flex justify-end pt-4">
+              <Button
+                onClick={() => void props.onSave()}
+                className="h-11 rounded-xl bg-blue-600 px-8 font-bold shadow-lg shadow-blue-200 hover:bg-blue-700"
+              >
+                <Save size={18} className="mr-2" />
                 {props.t("adminSettings.save")}
               </Button>
             </div>
@@ -625,6 +767,9 @@ function AgentSignatureSection(props: {
     string | null
   >(null);
   const [saving, setSaving] = useState(false);
+  const [showExisting, setShowExisting] = useState(
+    !!props.existingSignaturePath,
+  );
 
   useEffect(() => {
     if (props.existingMethod === "draw" || props.existingMethod === "upload") {
@@ -645,7 +790,15 @@ function AgentSignatureSection(props: {
       "touches" in e
         ? (e.touches[0]?.clientY ?? 0)
         : (e as ReactMouseEvent).clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
+
+    // Scale coordinates to canvas resolution
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
   };
 
   const startDrawing = (e: ReactMouseEvent | ReactTouchEvent) => {
@@ -741,77 +894,127 @@ function AgentSignatureSection(props: {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant={signatureMethod === "draw" ? "default" : "outline"}
-            onClick={() => setSignatureMethod("draw")}
-          >
-            {props.t("agent.application.drawSignature")}
-          </Button>
-          <Button
-            type="button"
-            variant={signatureMethod === "upload" ? "default" : "outline"}
-            onClick={() => setSignatureMethod("upload")}
-          >
-            {props.t("agent.application.uploadSignature")}
-          </Button>
-        </div>
-
-        {signatureMethod === "draw" ? (
-          <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-            <canvas
-              ref={canvasRef}
-              width={900}
-              height={360}
-              className="h-64 w-full cursor-crosshair touch-none"
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="absolute right-4 top-4"
-              onClick={clearCanvas}
-            >
-              {props.t("agent.application.clear")}
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  void onUploadSignature(e.target.files?.[0] ?? null)
-                }
+        {showExisting && props.existingSignaturePath ? (
+          <div className="space-y-4">
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-100 bg-slate-50/30 p-8">
+              <img
+                src={props.existingSignaturePath}
+                alt={props.t("agent.application.signature")}
+                className="max-h-40 w-auto object-contain mix-blend-multiply"
               />
-              {uploadedSignatureDataUrl && (
-                <div className="mt-4">
-                  <img
-                    src={uploadedSignatureDataUrl}
-                    alt="signature"
-                    className="mx-auto h-28 object-contain mix-blend-multiply"
-                  />
-                </div>
-              )}
+              <p className="mt-4 text-xs font-medium text-slate-500">
+                {props.t("agent.application.currentSignaturePrompt")}
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowExisting(false)}
+                className="rounded-xl border-slate-200"
+              >
+                {props.t("agent.application.replaceSignature")}
+              </Button>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant={signatureMethod === "draw" ? "default" : "outline"}
+                onClick={() => setSignatureMethod("draw")}
+                className="rounded-xl"
+              >
+                {props.t("agent.application.drawSignature")}
+              </Button>
+              <Button
+                type="button"
+                variant={signatureMethod === "upload" ? "default" : "outline"}
+                onClick={() => setSignatureMethod("upload")}
+                className="rounded-xl"
+              >
+                {props.t("agent.application.uploadSignature")}
+              </Button>
+              {props.existingSignaturePath && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowExisting(true)}
+                  className="ml-auto text-slate-500"
+                >
+                  {props.t("common.cancel")}
+                </Button>
+              )}
+            </div>
 
-        <div className="flex justify-end">
-          <Button onClick={() => void saveSignature()} disabled={saving}>
-            {saving
-              ? props.t("adminSettings.saving")
-              : props.t("adminSettings.save")}
-          </Button>
-        </div>
+            {signatureMethod === "draw" ? (
+              <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-inner">
+                <canvas
+                  ref={canvasRef}
+                  width={900}
+                  height={360}
+                  className="h-64 w-full cursor-crosshair touch-none"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="absolute right-4 top-4 rounded-lg bg-white/80 backdrop-blur"
+                  onClick={clearCanvas}
+                >
+                  {props.t("agent.application.clear")}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 transition-colors hover:border-blue-400">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    className="max-w-xs cursor-pointer"
+                    onChange={(e) =>
+                      void onUploadSignature(e.target.files?.[0] ?? null)
+                    }
+                  />
+                  <p className="mt-2 text-xs text-slate-400">
+                    {props.t("agent.application.uploadHint")}
+                  </p>
+                  {uploadedSignatureDataUrl && (
+                    <div className="mt-6 rounded-lg border border-slate-100 bg-slate-50 p-4">
+                      <img
+                        src={uploadedSignatureDataUrl}
+                        alt="signature preview"
+                        className="h-28 object-contain mix-blend-multiply"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => void saveSignature()}
+                disabled={
+                  saving || (!signatureDataUrl && !uploadedSignatureDataUrl)
+                }
+                className="h-11 rounded-xl bg-blue-600 px-8 font-bold shadow-lg shadow-blue-200 hover:bg-blue-700"
+              >
+                {saving
+                  ? props.t("adminSettings.saving")
+                  : props.t("adminSettings.save")}
+              </Button>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -834,64 +1037,96 @@ function AgentSignedContractsSection(props: {
   if (!props.applicationId) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Signed contracts</CardTitle>
-        <CardDescription>
-          Download the contracts generated during signing.
-        </CardDescription>
+    <Card className="overflow-hidden border-slate-200 shadow-sm transition-all hover:shadow-md">
+      <CardHeader className="border-b border-slate-50 bg-slate-50/50 pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900">
+              Signed contracts
+            </CardTitle>
+            <CardDescription className="text-slate-500">
+              Download the contracts generated during signing.
+            </CardDescription>
+          </div>
+          <FileCheck className="text-green-500" size={24} />
+        </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4 pt-6">
         <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={props.onRefresh}>
-            Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={props.onRefresh}
+            className="rounded-lg border-slate-200 font-bold hover:bg-slate-50"
+          >
+            Refresh List
           </Button>
         </div>
 
         {props.loading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
         ) : props.error ? (
-          <div className="text-sm text-destructive">
-            Failed to load contracts
+          <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 text-center text-sm font-semibold text-red-600">
+            Failed to load contracts. Please try again.
           </div>
         ) : props.contracts.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No contracts yet.</div>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <FileText size={20} />
+            </div>
+            <p className="text-sm font-bold text-slate-900">No contracts yet</p>
+            <p className="text-xs text-slate-500">
+              Sign your first contract to see it here.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-2">
-            {props.contracts.map((c) => (
-              <div
-                key={c.id}
-                className="flex flex-col gap-2 rounded-lg border p-3 md:flex-row md:items-center md:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold">
-                    Contract{" "}
-                    {c.template_lang
-                      ? `(${c.template_lang.toUpperCase()})`
-                      : ""}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {props.contracts.map((c) => {
+              const lang = c.template_lang
+                ? c.template_lang.toUpperCase()
+                : "—";
+              return (
+                <div
+                  key={c.id}
+                  className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-50"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition-transform group-hover:scale-110 group-hover:bg-red-100">
+                    {c.signed_contract_mime === "application/pdf" ? (
+                      <FileText size={24} />
+                    ) : (
+                      <FileText size={24} />
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {c.signed_at ?? "—"}{" "}
-                    {c.signed_contract_mime
-                      ? `• ${c.signed_contract_mime}`
-                      : ""}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-black text-slate-900">
+                      Contract {lang}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400">
+                      <span>{c.signed_at?.split("T")[0] ?? "—"}</span>
+                      <span>•</span>
+                      <span>PDF</span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild size="sm" disabled={!c.signed_download_url}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    disabled={!c.signed_download_url}
+                    className="rounded-full hover:bg-blue-50 hover:text-blue-600"
+                  >
                     <a
                       href={c.signed_download_url ?? undefined}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Download
+                      <Download size={18} />
                     </a>
                   </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

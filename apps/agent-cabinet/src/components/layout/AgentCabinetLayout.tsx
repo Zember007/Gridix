@@ -129,7 +129,7 @@ export function AgentCabinetLayout({
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen overflow-x-hidden bg-background">
       {isMobile ? (
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetContent side="left" className="w-80 p-0">
@@ -141,7 +141,7 @@ export function AgentCabinetLayout({
       )}
 
       <div
-        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${
+        className={`flex min-w-0 flex-1 flex-col bg-background transition-all duration-300 ${
           isCollapsed && !isMobile
             ? "md:ml-28 md:max-w-[calc(100vw-7rem)]"
             : "md:ml-64 md:max-w-[calc(100vw-16rem)]"
@@ -160,7 +160,7 @@ export function AgentCabinetLayout({
           </div>
         ) : null}
 
-        <main className="h-screen flex-1 overflow-auto bg-[#F8FAFC]">
+        <main className="h-screen min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#F8FAFC]">
           {children}
         </main>
       </div>

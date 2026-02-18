@@ -44,36 +44,39 @@ const setQueryPage = (page: string) => {
 const ProfileFooterMenu = ({
   userEmail,
   isCollapsed,
+  isMobile = false,
   onSignOut,
   language,
   setLanguage,
   docsUrl,
   t,
+  userId,
 }: {
   userEmail: string;
   isCollapsed: boolean;
+  isMobile?: boolean;
   onSignOut?: () => void;
   language: Language;
   setLanguage: (l: Language) => void;
   docsUrl?: string;
   t: (k: string) => string;
+  userId?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const username = userEmail.split("@")[0] ?? userEmail;
 
   const handleSelectLanguage = async (nextLanguage: Language) => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    if (!userId) {
+      setLanguage(nextLanguage);
+      return;
+    }
 
-      if (!userError && user?.id) {
-        await supabase
-          .from("user_profiles")
-          .update({ preferred_locale: nextLanguage })
-          .eq("id", user.id);
-      }
+    try {
+      await supabase
+        .from("user_profiles")
+        .update({ preferred_locale: nextLanguage })
+        .eq("id", userId);
     } catch (e) {
       console.error("Failed to persist preferred locale", e);
     } finally {
@@ -82,7 +85,13 @@ const ProfileFooterMenu = ({
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) setIsLanguageOpen(false);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -166,40 +175,87 @@ const ProfileFooterMenu = ({
           </p>
         </div>
 
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger
-            className="flex cursor-pointer items-center gap-2"
-            style={{ color: ADMIN_THEME.sidebarText }}
-          >
-            <Globe className="h-4 w-4" />
-            <span className="flex-1">{t("common.language")}</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent
-            className="w-48"
-            style={{
-              backgroundColor: ADMIN_THEME.sidebarBackground,
-              borderColor: ADMIN_THEME.sidebarBorder,
-            }}
-          >
-            {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
-              <DropdownMenuItem
-                key={code}
-                className={`cursor-pointer pl-8 ${
-                  language === code
-                    ? "!bg-[var(--admin-sidebar-active-background)]"
-                    : "hover:!bg-[var(--admin-sidebar-active-background)]"
-                }`}
-                style={{ color: ADMIN_THEME.sidebarText }}
-                onSelect={() => {
-                  void handleSelectLanguage(code as Language);
-                }}
-              >
-                <span className="mr-2">{config.flag}</span>
-                {config.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        {isMobile ? (
+          <>
+            <div
+              className="grid overflow-hidden transition-all duration-200 ease-out"
+              style={{
+                gridTemplateRows: isLanguageOpen ? "1fr" : "0fr",
+                opacity: isLanguageOpen ? 1 : 0,
+              }}
+            >
+              <div className="min-h-0">
+                {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                  <DropdownMenuItem
+                    key={code}
+                    className={`cursor-pointer pl-8 ${
+                      language === code
+                        ? "!bg-[var(--admin-sidebar-active-background)]"
+                        : "hover:!bg-[var(--admin-sidebar-active-background)]"
+                    }`}
+                    style={{ color: ADMIN_THEME.sidebarText }}
+                    onSelect={() => {
+                      void handleSelectLanguage(code as Language);
+                    }}
+                  >
+                    <span className="mr-2">{config.flag}</span>
+                    {config.name}
+                  </DropdownMenuItem>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="flex w-full items-center justify-between px-2 py-1 text-xs font-medium tracking-wide uppercase transition-colors"
+              style={{ color: ADMIN_THEME.textMuted }}
+              onClick={() => setIsLanguageOpen((prev) => !prev)}
+            >
+              <span className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                {t("common.language")}
+              </span>
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform duration-200 ${isLanguageOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </>
+        ) : (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger
+              className="flex cursor-pointer items-center gap-2"
+              style={{ color: ADMIN_THEME.sidebarText }}
+            >
+              <Globe className="h-4 w-4" />
+              <span className="flex-1">{t("common.language")}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent
+              className="w-48"
+              style={{
+                backgroundColor: ADMIN_THEME.sidebarBackground,
+                borderColor: ADMIN_THEME.sidebarBorder,
+              }}
+            >
+              {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                <DropdownMenuItem
+                  key={code}
+                  className={`cursor-pointer pl-8 ${
+                    language === code
+                      ? "!bg-[var(--admin-sidebar-active-background)]"
+                      : "hover:!bg-[var(--admin-sidebar-active-background)]"
+                  }`}
+                  style={{ color: ADMIN_THEME.sidebarText }}
+                  onSelect={() => {
+                    void handleSelectLanguage(code as Language);
+                  }}
+                >
+                  <span className="mr-2">{config.flag}</span>
+                  {config.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
 
         {docsUrl ? (
           <DropdownMenuItem
@@ -260,6 +316,8 @@ export function SimplifiedSidebar({
   hideFooter = false,
   docsUrl,
   syncQueryParam = true,
+  userId,
+  preferredLocale,
 }: {
   navItems: SimplifiedSidebarNavItem[];
   activeSection: string;
@@ -276,6 +334,8 @@ export function SimplifiedSidebar({
   hideFooter?: boolean;
   docsUrl?: string;
   syncQueryParam?: boolean;
+  userId?: string;
+  preferredLocale?: string;
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
@@ -289,43 +349,12 @@ export function SimplifiedSidebar({
     languageRef.current = language;
   }, [language]);
 
-  // Initialize language from user profile preferred_locale
   useEffect(() => {
-    let cancelled = false;
-
-    const loadPreferredLocale = async () => {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (cancelled || userError || !user?.id) return;
-
-        const { data, error } = await supabase
-          .from("user_profiles")
-          .select("preferred_locale")
-          .eq("id", user.id)
-          .single();
-
-        if (cancelled || error) return;
-
-        const preferred = normalizePreferredLanguage(
-          (data as { preferred_locale?: unknown } | null)?.preferred_locale,
-        );
-        if (preferred && preferred !== languageRef.current) {
-          setLanguage(preferred);
-        }
-      } catch (e) {
-        console.error("Failed to load preferred locale", e);
-      }
-    };
-
-    void loadPreferredLocale();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [setLanguage]);
+    const preferred = normalizePreferredLanguage(preferredLocale);
+    if (preferred && preferred !== languageRef.current) {
+      setLanguage(preferred);
+    }
+  }, [preferredLocale, setLanguage]);
 
   // Auto-expand parent if child is active
   useEffect(() => {
@@ -504,11 +533,13 @@ export function SimplifiedSidebar({
           <ProfileFooterMenu
             userEmail={userEmail}
             isCollapsed={isCollapsed}
+            isMobile={isMobile}
             {...(onSignOut ? { onSignOut } : {})}
             language={language}
             setLanguage={setLanguage}
             docsUrl={resolvedDocsUrl}
             t={t}
+            {...(userId ? { userId } : {})}
           />
         </div>
       ) : null}
@@ -551,7 +582,6 @@ export function SimplifiedSidebar({
         >
           {sidebarContent}
         </aside>
-        {/* Support Button */}
         <SupportButton />
       </>
     );
@@ -570,7 +600,6 @@ export function SimplifiedSidebar({
       >
         {sidebarContent}
       </aside>
-      {/* Support Button */}
       <SupportButton />
     </>
   );

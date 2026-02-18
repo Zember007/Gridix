@@ -77,7 +77,9 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
     searchPlaceholder ?? t("common.moduleHeader.searchPlaceholder");
   const financeTitle = t("common.moduleHeader.financeTitle");
   const balanceLabel = t("common.moduleHeader.balanceLabel");
-  const createLabel = t("common.moduleHeader.create");
+  const hasDesktopRightControls = Boolean(
+    balance !== undefined || actionsMenu || primaryAction,
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,7 +112,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
             ) : null}
           </div>
           {subtitle ? (
-            <p className="mt-1 max-w-[200px] truncate text-xs font-medium text-slate-500 md:max-w-md">
+            <p className="mt-1 max-w-full text-xs font-medium text-slate-500 lg:max-w-md">
               {subtitle}
             </p>
           ) : null}
@@ -157,7 +159,9 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
       </div>
 
       {/* Bottom Row (Mobile) / Right Side (Desktop): Controls */}
-      <div className="flex w-full items-center gap-3 md:w-auto">
+      <div
+        className={`flex w-full items-center gap-3 ${hasDesktopRightControls ? "md:w-auto" : "md:ml-auto md:w-auto"}`}
+      >
         {!hideSearch ? (
           <div className="group relative flex-1 md:w-64 md:flex-none">
             <Search
@@ -192,7 +196,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
         onViewModeChange &&
         availableViews &&
         availableViews.length > 1 ? (
-          <div className="hidden rounded-lg border border-slate-200 bg-slate-100 p-1 md:flex">
+          <div className="hidden rounded-lg border border-slate-200 bg-slate-100 p-1 lg:flex">
             {availableViews.map((view) => (
               <button
                 key={view}
@@ -217,72 +221,63 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
         ) : null}
 
         {/* Desktop Balance & Actions */}
-        <div className="hidden items-center gap-3 md:flex">
-          {balance !== undefined ? (
-            <div
-              onClick={onBalanceClick}
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-3 py-1.5 transition-colors hover:bg-slate-200/70"
-              title={financeTitle}
-            >
-              <Wallet size={16} className="text-slate-500" />
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold leading-none text-slate-900">
-                  $
-                  {balance.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-                <span className="text-[10px] font-medium leading-none text-slate-400">
-                  {balanceLabel}
-                </span>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex items-center gap-2">
-            {actionsMenu ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className={`rounded-lg border p-2 shadow-sm transition-all ${
-                    isMenuOpen
-                      ? "border-slate-300 bg-slate-100 text-slate-900"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <MoreHorizontal size={18} />
-                </button>
-                {isMenuOpen ? (
-                  <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl animate-in fade-in zoom-in-95">
-                    {actionsMenu}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {primaryAction ? (
-              <button
-                type="button"
-                onClick={primaryAction.onClick}
-                className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white shadow-md shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95"
+        {hasDesktopRightControls ? (
+          <div className="hidden items-center gap-3 md:flex">
+            {balance !== undefined ? (
+              <div
+                onClick={onBalanceClick}
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-3 py-1.5 transition-colors hover:bg-slate-200/70"
+                title={financeTitle}
               >
-                {primaryAction.icon || <Plus size={18} />}
-                <span className="hidden lg:inline">{primaryAction.label}</span>
-                <span className="lg:hidden">{createLabel}</span>
-              </button>
+                <Wallet size={16} className="text-slate-500" />
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-bold leading-none text-slate-900">
+                    $
+                    {balance.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                  <span className="text-[10px] font-medium leading-none text-slate-400">
+                    {balanceLabel}
+                  </span>
+                </div>
+              </div>
             ) : null}
-          </div>
-        </div>
 
-        {/* Mobile Primary Action */}
+            <div className="flex items-center gap-2">
+              {actionsMenu ? (
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className={`rounded-lg border p-2 shadow-sm transition-all ${
+                      isMenuOpen
+                        ? "border-slate-300 bg-slate-100 text-slate-900"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
+                  {isMenuOpen ? (
+                    <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl animate-in fade-in zoom-in-95">
+                      {actionsMenu}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Primary Action */}
         {primaryAction ? (
           <button
             type="button"
             onClick={primaryAction.onClick}
-            className="rounded-lg bg-slate-900 p-2 text-white shadow-sm md:hidden"
+            className="flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg bg-slate-900 px-2 text-sm font-bold text-white shadow-md shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95 md:h-10 md:px-4"
           >
-            <Plus size={20} />
+            {primaryAction.icon || <Plus size={18} />}
+            <span className="hidden md:inline">{primaryAction.label}</span>
           </button>
         ) : null}
       </div>
