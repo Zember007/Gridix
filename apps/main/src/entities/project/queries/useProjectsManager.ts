@@ -29,6 +29,7 @@ const singleProjectCache = new Map<
 
 // Глобальные состояния загрузки для предотвращения дублирования запросов
 const loadingStates = new Map();
+const trackedProjectViews = new Set<string>();
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
 
@@ -145,6 +146,11 @@ export const useProjectsManager = () => {
   // Обновление счетчика просмотров
   const incrementViewCount = useCallback(
     async (projectId: string) => {
+      if (trackedProjectViews.has(projectId)) {
+        return;
+      }
+      trackedProjectViews.add(projectId);
+
       try {
         // Записываем просмотр в таблицу аналитики
         await supabase.from("project_views").insert({
@@ -161,9 +167,11 @@ export const useProjectsManager = () => {
         });
 
         if (error) {
+          trackedProjectViews.delete(projectId);
           console.error("Error incrementing view count:", error);
         }
       } catch (err) {
+        trackedProjectViews.delete(projectId);
         console.error("Error tracking view:", err);
       }
     },

@@ -21,7 +21,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAsyncAction } from "@/shared/hooks/useAsyncAction";
 import { generateApartmentPdf } from "@/features/apartment/lib/generateApartmentPdf";
 import { supabase } from "@gridix/utils/api";
@@ -107,7 +107,7 @@ const ApartmentDetailsPage = ({
     Record<string, string | null>
   >({});
   const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
-  const [viewTracked, setViewTracked] = useState(false);
+  const trackedApartmentViewsRef = useRef<Set<string>>(new Set());
 
   const bitrixContext = useMemo(() => {
     const sp = new URLSearchParams(location.search);
@@ -323,9 +323,17 @@ const ApartmentDetailsPage = ({
 
   // Трекинг просмотра квартиры
   useEffect(() => {
-    const trackApartmentView = async () => {
-      if (!apartment || !project?.id || viewTracked) return;
+    if (!apartment || !project?.id || apartmentLoading || projectLoading) {
+      return;
+    }
 
+    const trackingKey = `${project.id}:${apartment.id}`;
+    if (trackedApartmentViewsRef.current.has(trackingKey)) {
+      return;
+    }
+    trackedApartmentViewsRef.current.add(trackingKey);
+
+    const trackApartmentView = async () => {
       try {
         const {
           data: { user },
@@ -338,17 +346,14 @@ const ApartmentDetailsPage = ({
           user_agent: navigator.userAgent,
           referrer: document.referrer || null,
         });
-
-        setViewTracked(true);
       } catch (error) {
+        trackedApartmentViewsRef.current.delete(trackingKey);
         console.error("Error tracking apartment view:", error);
       }
     };
 
-    if (apartment && project && !apartmentLoading && !projectLoading) {
-      trackApartmentView();
-    }
-  }, [apartment, project, apartmentLoading, projectLoading, viewTracked]);
+    void trackApartmentView();
+  }, [apartment, project, apartmentLoading, projectLoading]);
 
   // Photos preloading moved to parent component
   interface CombinedPhoto {
@@ -642,42 +647,85 @@ const ApartmentDetailsPage = ({
 
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setRecommendedApartments(normalizedApartments);
-      // После загрузки рекомендаций загрузим для них превью (фото квартиры или планировки)
+      if (normalizedApartments.length === 0) {
+        setRecommendationThumbnails({});
+        return;
+      }
+
+      // После загрузки рекомендаций грузим превью батчем:
+      // 1) все первые фото квартир, 2) все первые планировки для нужных layout_type.
       try {
-        const thumbnails: Record<string, string | null> = {};
-        for (const apt of normalizedApartments) {
-          // Сначала пробуем первое фото квартиры
-          const { data: aptPhotos, error: aptPhotosError } = await supabase
+        const apartmentIds = normalizedApartments.map((item) => item.id);
+        const layoutTypeByApartmentId = new Map<string, string>();
+        for (const item of normalizedApartments) {
+          const layoutType =
+            item.rooms == 0
+              ? "studio"
+              : item.rooms === "free_layout"
+                ? "free_layout"
+                : `${item.rooms}-room`;
+          layoutTypeByApartmentId.set(item.id, layoutType);
+        }
+
+        const uniqueLayoutTypes = Array.from(
+          new Set(layoutTypeByApartmentId.values()),
+        );
+
+        const [apartmentPhotosRes, layoutPhotosRes] = await Promise.all([
+          supabase
             .from("apartment_photos")
-            .select("image_url, order_index")
-            .eq("apartment_id", apt.id)
-            .order("order_index", { ascending: true })
-            .limit(1);
-          if (!aptPhotosError && aptPhotos && aptPhotos.length > 0) {
-            thumbnails[apt.id] = aptPhotos[0]!.image_url;
+            .select("apartment_id, image_url, order_index")
+            .in("apartment_id", apartmentIds)
+            .order("order_index", { ascending: true }),
+          supabase
+            .from("layout_photos")
+            .select("layout_type, image_url, order_index")
+            .eq("project_id", project.id)
+            .in("layout_type", uniqueLayoutTypes)
+            .order("order_index", { ascending: true }),
+        ]);
+
+        if (apartmentPhotosRes.error) {
+          throw apartmentPhotosRes.error;
+        }
+        if (layoutPhotosRes.error) {
+          throw layoutPhotosRes.error;
+        }
+
+        const firstApartmentPhotoById = new Map<string, string>();
+        for (const photo of apartmentPhotosRes.data || []) {
+          const apartmentId = (photo as { apartment_id?: string | null })
+            .apartment_id;
+          const imageUrl = (photo as { image_url?: string | null }).image_url;
+          if (!apartmentId || !imageUrl) continue;
+          if (!firstApartmentPhotoById.has(apartmentId)) {
+            firstApartmentPhotoById.set(apartmentId, imageUrl);
+          }
+        }
+        const firstLayoutPhotoByType = new Map<string, string>();
+        for (const photo of layoutPhotosRes.data || []) {
+          const layoutType = (photo as { layout_type?: string | null })
+            .layout_type;
+          const imageUrl = (photo as { image_url?: string | null }).image_url;
+          if (!layoutType || !imageUrl) continue;
+          if (!firstLayoutPhotoByType.has(layoutType)) {
+            firstLayoutPhotoByType.set(layoutType, imageUrl);
+          }
+        }
+
+        const thumbnails: Record<string, string | null> = {};
+        for (const item of normalizedApartments) {
+          const apartmentCover = firstApartmentPhotoById.get(item.id);
+          if (apartmentCover) {
+            thumbnails[item.id] = apartmentCover;
             continue;
           }
 
-          // Если у квартиры нет фото — берём первую планировку по типу комнат
-          const layoutType =
-            apt.rooms == 0
-              ? "studio"
-              : apt.rooms === "free_layout"
-                ? "free_layout"
-                : `${apt.rooms}-room`;
-          const { data: layoutPhotos, error: layoutError } = await supabase
-            .from("layout_photos")
-            .select("image_url, order_index")
-            .eq("project_id", project.id)
-            .eq("layout_type", layoutType)
-            .order("order_index", { ascending: true })
-            .limit(1);
-          if (!layoutError && layoutPhotos && layoutPhotos.length > 0) {
-            thumbnails[apt.id] = layoutPhotos[0]!.image_url;
-          } else {
-            thumbnails[apt.id] = null;
-          }
+          const layoutType = layoutTypeByApartmentId.get(item.id);
+          thumbnails[item.id] =
+            (layoutType && firstLayoutPhotoByType.get(layoutType)) ?? null;
         }
+
         setRecommendationThumbnails(thumbnails);
       } catch (thumbError) {
         console.error("Error loading recommendation thumbnails:", thumbError);
