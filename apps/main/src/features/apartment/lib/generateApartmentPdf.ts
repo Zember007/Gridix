@@ -1,5 +1,6 @@
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
+import { generateApartmentPDF } from "@gridix/utils/lib";
 
 interface GenerateApartmentPdfParams {
   apartment: Apartment;
@@ -12,8 +13,6 @@ export async function generateApartmentPdf({
   project,
   language,
 }: GenerateApartmentPdfParams): Promise<void> {
-  const { generateApartmentPDF } = await import("@gridix/utils/lib");
-
   const projectSlug = project.slug || `id/${project.id}`;
   const serverDomain = import.meta.env.VITE_SERVER_DOMAIN;
   const apiUrl = import.meta.env.VITE_API_URL || "";
