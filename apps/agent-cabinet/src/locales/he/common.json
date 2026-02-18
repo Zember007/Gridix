@@ -153,6 +153,7 @@
         "booked": "הוזמן",
         "sold": "נמכר"
       },
+      "empty": "אין יחידות",
       "downloadPdf": "הורד PDF"
     },
     "actions": {

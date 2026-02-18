@@ -153,6 +153,7 @@
         "booked": "Rezerve edildi",
         "sold": "Satılmış"
       },
+      "empty": "Birim yok",
       "downloadPdf": "PDF'yi indir"
     },
     "actions": {
