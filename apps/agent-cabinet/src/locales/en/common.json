@@ -153,6 +153,7 @@
         "booked": "Booked",
         "sold": "Sold"
       },
+      "empty": "No units",
       "downloadPdf": "Download PDF"
     },
     "actions": {
