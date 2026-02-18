@@ -22,6 +22,7 @@ import {
 import { CheckCircle, Loader2 } from "lucide-react";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import ResetPasswordForm from "@/components/Auth/ResetPasswordForm";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SignInPage, type AccountType } from "@/components/ui/sign-in";
 
 function safeRedirectUrl(input: string | null): string | null {
@@ -278,6 +279,9 @@ export default function AuthPage() {
 
   return (
     <>
+      <div className="fixed right-6 top-6 z-50 md:left-6 md:right-auto">
+        <LanguageSwitcher />
+      </div>
       <SignInPage
         defaultMode={isSignup ? "signup" : isSignin ? "signin" : "signin"}
         heroImageSrc={SIGNIN_HERO_IMAGE}

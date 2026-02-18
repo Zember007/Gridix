@@ -3,7 +3,7 @@ import { initReactI18next } from "react-i18next";
 import { addSharedResources, DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  "../locales/*/*.json",
+  "../../locales/*/*.json",
   { eager: true },
 );
 

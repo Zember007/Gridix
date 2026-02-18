@@ -125,7 +125,7 @@ export interface SignInPageProps {
 // --- SUB-COMPONENTS ---
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
+  <div className="focus-within:border-[var(--admin-primary)]/70 focus-within:bg-[var(--admin-primary)]/10 rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors">
     {children}
   </div>
 );
@@ -477,7 +477,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       e.preventDefault();
                       onResetPassword?.();
                     }}
-                    className="text-violet-400 transition-colors hover:underline"
+                    className="text-[var(--admin-primary)] transition-colors hover:underline"
                   >
                     {resetPassword}
                   </button>
@@ -487,7 +487,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="animate-delay-600 w-full animate-element rounded-2xl bg-primary py-4 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="animate-delay-600 w-full animate-element rounded-2xl bg-[var(--admin-primary)] py-4 font-medium text-[var(--admin-text-on-primary)] transition-colors hover:bg-[var(--admin-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {mode === "signin" ? signInButton : signUpButton}
               </button>
@@ -525,7 +525,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   e.preventDefault();
                   setMode(mode === "signin" ? "signup" : "signin");
                 }}
-                className="text-violet-400 transition-colors hover:underline"
+                className="text-[var(--admin-primary)] transition-colors hover:underline"
               >
                 {mode === "signin" ? createAccountLink : alreadyHaveAccountLink}
               </button>

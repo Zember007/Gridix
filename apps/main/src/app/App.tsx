@@ -96,7 +96,6 @@ export default function App() {
                 }
               />
             </Routes>
-            <SupportButton />
           </UsertourBlockingGate>
         </AuthProvider>
       </BrowserRouter>

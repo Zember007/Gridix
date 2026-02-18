@@ -432,39 +432,6 @@ function AgentUserProfileSection(props: {
                   </button>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="preferred_locale"
-                  className="text-xs font-bold uppercase tracking-wider text-slate-500"
-                >
-                  Interface Language
-                </Label>
-                <Select
-                  value={v.preferred_locale ?? "en"}
-                  onValueChange={(val) =>
-                    props.onChange({ ...v, preferred_locale: val })
-                  }
-                >
-                  <SelectTrigger
-                    id="preferred_locale"
-                    className="rounded-xl border-slate-200 bg-white hover:bg-slate-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Globe size={16} className="text-slate-400" />
-                      <SelectValue placeholder="en" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English (EN)</SelectItem>
-                    <SelectItem value="ru">Русский (RU)</SelectItem>
-                    <SelectItem value="ka">ქართული (KA)</SelectItem>
-                    <SelectItem value="he">עברית (HE)</SelectItem>
-                    <SelectItem value="ar">العربية (AR)</SelectItem>
-                    <SelectItem value="tr">Türkçe (TR)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
