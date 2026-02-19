@@ -1,9 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@gridix/utils/react";
-import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@gridix/ui";
-import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -18,17 +16,13 @@ import {
   Gear as SettingsIcon,
   Globe,
   Handshake,
-  List as Menu,
   Package as Integration,
   Stack as Layers3,
   UserCheck,
   UserCircle as UserIcon,
   Crown,
 } from "@phosphor-icons/react";
-import { Button } from "@gridix/ui";
-import { SidebarButton } from "@gridix/ui";
 import { SimplifiedSidebar } from "@gridix/ui";
-import { Sheet, SheetContent } from "@gridix/ui";
 import { UnreadBadge } from "@/shared/ui/UnreadBadge";
 
 const getQueryPage = (): string | null => {
@@ -232,7 +226,7 @@ export function AdminSidebar({
     crmUnreadCount,
   );
 
-  const sidebar = (
+  return (
     <SimplifiedSidebar
       navItems={navItems}
       activeSection={activeSection}
@@ -243,54 +237,18 @@ export function AdminSidebar({
       title={t("adminSidebar.title")}
       showWorkspaceSwitcher={userRole.type === "manager"}
       isMobile={isMobile ?? false}
+      mobileOpen={isMobileOpen}
+      onMobileOpenChange={setIsMobileOpen}
       onMobileClose={() => {
         if (setIsMobileOpen) {
           setIsMobileOpen(false);
         }
       }}
+      showSupportButton
       {...(onSignOut && { onSignOut })}
       userId={user?.id}
       preferredLocale={userProfile?.preferred_locale ?? undefined}
     />
-  );
-
-  if (isMobile && isMobileOpen !== undefined && setIsMobileOpen) {
-    return (
-      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="w-80 p-0">
-          {sidebar}
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  return sidebar;
-}
-
-// Export mobile menu button component
-export function AdminSidebarMenuButton({
-  setIsMobileOpen,
-}: {
-  setIsMobileOpen?: (open: boolean) => void;
-}) {
-  const isMobile = useIsMobile();
-
-  if (!isMobile || !setIsMobileOpen) {
-    return null;
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="lg:hidden"
-      style={{
-        color: ADMIN_THEME.sidebarText,
-      }}
-      onClick={() => setIsMobileOpen?.(true)}
-    >
-      <Menu className="h-5 w-5" />
-    </Button>
   );
 }
 
@@ -343,7 +301,7 @@ export function ProjectEditorSidebar({
 
   const navItems = getProjectEditorNavItems(t, projectType);
 
-  const sidebar = (
+  return (
     <SimplifiedSidebar
       navItems={navItems}
       activeSection={activeSection}
@@ -353,53 +311,14 @@ export function ProjectEditorSidebar({
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t("projectEditorSidebar.title")}
       isMobile={isMobile ?? false}
+      mobileOpen={isMobileOpen}
+      onMobileOpenChange={setIsMobileOpen}
       onMobileClose={() => {
         if (setIsMobileOpen) {
           setIsMobileOpen(false);
         }
       }}
+      showSupportButton={false}
     />
-  );
-
-  if (isMobile && isMobileOpen !== undefined && setIsMobileOpen) {
-    return (
-      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="w-80 p-0">
-          {sidebar}
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  return sidebar;
-}
-
-export function ProjectEditorSidebarMenuButton({
-  setIsMobileOpen,
-}: {
-  setIsMobileOpen?: (open: boolean) => void;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="fixed bottom-2 left-2 z-50 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl md:hidden"
-      style={{
-        backgroundColor: ADMIN_THEME.primary,
-        color: ADMIN_THEME.textOnPrimary,
-        borderColor: ADMIN_THEME.primary,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-        e.currentTarget.style.transform = "scale(1.05)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-        e.currentTarget.style.transform = "scale(1)";
-      }}
-      onClick={() => setIsMobileOpen?.(true)}
-    >
-      <Menu className="h-5 w-5" />
-    </Button>
   );
 }

@@ -92,6 +92,11 @@ interface CommissionTier {
   updated_at: string;
 }
 
+interface ReferralCommissionSettings {
+  level1_percentage: number;
+  level2_percentage: number;
+}
+
 export function SystemSettings() {
   const [settings, setSettings] = useState<SystemSettings>({
     maintenanceMode: false,
@@ -139,8 +144,14 @@ export function SystemSettings() {
     min_projects: 0,
     max_projects: null,
     commission_percentage: 20,
+    link_type: "managed",
     is_active: true,
   });
+  const [referralSettings, setReferralSettings] =
+    useState<ReferralCommissionSettings>({
+      level1_percentage: 20,
+      level2_percentage: 5,
+    });
 
   useEffect(() => {
     loadSettings();
@@ -181,6 +192,23 @@ export function SystemSettings() {
       if (invoiceSettings?.setting_value) {
         setInvoiceConfig(
           invoiceSettings.setting_value as unknown as InvoiceConfig,
+        );
+      }
+
+      // Загружаем настройки реферальных комиссий
+      const { data: referralData, error: referralError } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "referral_commission_settings")
+        .single();
+
+      if (referralError && referralError.code !== "PGRST116") {
+        throw referralError;
+      }
+
+      if (referralData?.setting_value) {
+        setReferralSettings(
+          referralData.setting_value as unknown as ReferralCommissionSettings,
         );
       }
 
@@ -233,6 +261,24 @@ export function SystemSettings() {
 
       if (invoiceError) {
         throw invoiceError;
+      }
+
+      // Сохраняем настройки реферальных комиссий
+      const { error: referralError } = await supabase
+        .from("system_settings")
+        .upsert(
+          {
+            setting_key: "referral_commission_settings",
+            setting_value: JSON.parse(JSON.stringify(referralSettings)),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "setting_key",
+          },
+        );
+
+      if (referralError) {
+        throw referralError;
       }
 
       toast({
@@ -432,6 +478,7 @@ export function SystemSettings() {
       const { data, error } = await supabase
         .from("commission_tiers")
         .select("*")
+        .or("link_type.eq.managed,link_type.is.null")
         .order("min_projects", { ascending: true });
 
       if (error) throw error;
@@ -459,6 +506,7 @@ export function SystemSettings() {
             max_projects:
               tier.max_projects === undefined ? null : tier.max_projects,
             commission_percentage: tier.commission_percentage,
+            link_type: "managed",
             is_active: tier.is_active ?? true,
             updated_at: new Date().toISOString(),
           })
@@ -476,6 +524,7 @@ export function SystemSettings() {
           max_projects:
             tier.max_projects === undefined ? null : tier.max_projects,
           commission_percentage: tier.commission_percentage || 20,
+          link_type: "managed",
           is_active: tier.is_active ?? true,
         });
 
@@ -1278,11 +1327,13 @@ export function SystemSettings() {
         <TabsContent value="commissions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Настройки комиссий партнёров</CardTitle>
+              <CardTitle>
+                Комиссии интеграторов (клиенты на сопровождении)
+              </CardTitle>
               <CardDescription>
-                Управление процентами комиссии в зависимости от суммарного
-                количества проектов всех клиентов партнёра (для реферальных и
-                управляемых клиентов одновременно)
+                Многоуровневая система комиссий для интеграторов. Процент
+                зависит от суммарного количества проектов управляемых клиентов
+                партнёра.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1304,7 +1355,7 @@ export function SystemSettings() {
                             min_projects: 0,
                             max_projects: null,
                             commission_percentage: 20,
-                            link_type: "referral",
+                            link_type: "managed",
                             is_active: true,
                           });
                           setIsTierDialogOpen(true);
@@ -1318,8 +1369,8 @@ export function SystemSettings() {
 
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        Комиссии партнёрской программы (общие для рефералов и
-                        управляемых клиентов)
+                        Уровни комиссий для интеграторов (по количеству проектов
+                        managed-клиентов)
                       </h4>
                       <div className="space-y-2">
                         {commissionTiers
@@ -1536,7 +1587,7 @@ export function SystemSettings() {
                                 min_projects: 0,
                                 max_projects: null,
                                 commission_percentage: 20,
-                                link_type: "referral",
+                                link_type: "managed",
                                 is_active: true,
                               });
                             }}
@@ -1562,6 +1613,67 @@ export function SystemSettings() {
                   </Dialog>
                 </>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Реферальные комиссионные (фиксированные проценты)
+              </CardTitle>
+              <CardDescription>
+                Двухуровневая реферальная система. Уровень 1 — процент партнёру,
+                привлёкшему клиента. Уровень 2 — процент партнёру, привлёкшему
+                этого партнёра.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="referral_level1">
+                    Процент для рефералов 1-го уровня (%)
+                  </Label>
+                  <Input
+                    id="referral_level1"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={referralSettings.level1_percentage}
+                    onChange={(e) =>
+                      setReferralSettings({
+                        ...referralSettings,
+                        level1_percentage: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Комиссия партнёра, который напрямую привлёк клиента
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="referral_level2">
+                    Процент для рефералов 2-го уровня (%)
+                  </Label>
+                  <Input
+                    id="referral_level2"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={referralSettings.level2_percentage}
+                    onChange={(e) =>
+                      setReferralSettings({
+                        ...referralSettings,
+                        level2_percentage: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Комиссия партнёра, который привёл этого реферала
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

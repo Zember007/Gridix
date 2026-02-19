@@ -1,58 +1,55 @@
-import { useRef, useState, useEffect } from "react";
-import { Button } from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Label } from "@gridix/ui";
-import { Textarea } from "@gridix/ui";
+import { useEffect, useRef, useState } from "react";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gridix/ui";
-import {
-  ArrowLeft,
-  Save,
-  Building2,
-  Image,
-  FileText,
-  Upload,
-  X,
-} from "lucide-react";
-import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
-import { toast } from "sonner";
-import { supabase } from "@gridix/utils/api";
-import { useLanguageNavigation } from "@gridix/utils/react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@gridix/utils/react";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useWorkspace } from "@/contexts/WorkspaceContext";
-import {
+  Checkbox,
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
+  Textarea,
 } from "@gridix/ui";
-import { Switch } from "@gridix/ui";
-import { Checkbox } from "@gridix/ui";
-import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from "@gridix/utils/lib";
+import {
+  ArrowLeft,
+  Building2,
+  FileText,
+  Image,
+  Save,
+  Upload,
+  X,
+} from "lucide-react";
+import {
+  ADMIN_THEME,
+  CURRENCIES,
+  CurrencyType,
+  DEFAULT_CURRENCY,
+  getAdminThemeVariables,
+  Language,
+  LANGUAGE_CONFIG,
+  SUPPORTED_LANGUAGES,
+} from "@gridix/utils/lib";
+import { toast } from "sonner";
+import { supabase } from "@gridix/utils/api";
+import { useLanguage, useLanguageNavigation } from "@gridix/utils/react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useProject } from "@/entities/project/queries/useProjects";
 import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsManager";
 import BuildingImageEditor from "@/components/visualization/BuildingImageEditor";
 import AllFieldsManager from "@/components/admin/AllFieldsManager";
 import ApartmentPhotosManager from "@/components/apartment/ApartmentPhotosManager";
-import {
-  Language,
-  LANGUAGE_CONFIG,
-  SUPPORTED_LANGUAGES,
-} from "@gridix/utils/lib";
 
 import ProjectDomainSettings from "@/components/admin/ProjectDomainSettings";
-import {
-  ProjectEditorSidebar,
-  ProjectEditorSidebarMenuButton,
-} from "@/shared/ui/sidebar-component";
+import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
@@ -85,12 +82,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [project, setProject] = useState<ProjectEditorProject>(
     DEFAULT_PROJECT_EDITOR_PROJECT,
   );
-  const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [accessError, setAccessError] = useState<string | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   const { navigate } = useLanguageNavigation();
   const { user, userProfile, loading: authLoading } = useAuth();
@@ -135,7 +130,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
   useEffect(() => {
     if (isNew || !projectId || !cachedProject) {
-      setLoading(false);
       return;
     }
 
@@ -154,7 +148,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
       if (!canEdit) {
         setAccessError(t("projectEditor.noEditRights"));
-        setLoading(false);
         return;
       }
 
@@ -188,11 +181,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             .available_languages,
         ),
       });
-      setLoading(false);
     } catch (error) {
       console.error("Error loading project:", error);
       toast.error(t("projectEditor.errorLoading"));
-      setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, cachedProject?.id]);
@@ -200,7 +191,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
   useEffect(() => {
     if (authLoading) return;
-    const devTour = isDevTourMode();
 
     if (!user?.id) return;
     if (isNew) return;
@@ -620,9 +610,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
       />
-
-      {/* Mobile menu button */}
-      <ProjectEditorSidebarMenuButton setIsMobileOpen={setIsMobileOpen} />
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >

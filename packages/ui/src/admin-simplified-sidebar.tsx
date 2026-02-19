@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useLanguage, useWorkspace } from "@gridix/utils/react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
@@ -24,7 +24,9 @@ import {
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { SidebarButton } from "./sidebar-button";
 import { Button } from "./button";
-import { MessageCircleQuestionMark } from "lucide-react";
+import { Menu, MessageCircleQuestionMark } from "lucide-react";
+import { Sheet, SheetContent } from "./sheet";
+import { createPortal } from "react-dom";
 
 const normalizePreferredLanguage = (value: unknown): Language | null => {
   const raw = String(value ?? "")
@@ -65,6 +67,9 @@ const ProfileFooterMenu = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const username = userEmail.split("@")[0] ?? userEmail;
+
+  const menuSide = isMobile ? "top" : isCollapsed ? "right" : "top";
+  const menuAlign = isMobile ? "start" : isCollapsed ? "center" : "end";
 
   const handleSelectLanguage = async (nextLanguage: Language) => {
     if (!userId) {
@@ -149,8 +154,8 @@ const ProfileFooterMenu = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        align={isCollapsed ? "center" : "end"}
-        side={isCollapsed ? "right" : "top"}
+        align={menuAlign}
+        side={menuSide}
         className="w-56"
         style={{
           backgroundColor: ADMIN_THEME.sidebarBackground,
@@ -299,7 +304,61 @@ export interface SimplifiedSidebarNavItem {
     badge?: React.ReactNode;
   }>;
 }
+const SUPPORT_PORTAL_ID = "gridix-support-portal-root";
 
+const SupportFloatingButton = memo(function SupportFloatingButton() {
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const existing = document.getElementById(
+      SUPPORT_PORTAL_ID,
+    ) as HTMLElement | null;
+
+    if (existing) {
+      setPortalRoot(existing);
+      return;
+    }
+
+    const el = document.createElement("div");
+    el.id = SUPPORT_PORTAL_ID;
+    document.body.appendChild(el);
+    setPortalRoot(el);
+
+    // Важно: не удаляем контейнер на unmount,
+    // чтобы избежать гонок/StrictMode дублей.
+  }, []);
+
+  if (!portalRoot) return null;
+
+  return createPortal(
+    <Button
+      size="icon"
+      aria-label="Support"
+      className="support_usertour fixed right-2 bottom-2 z-50 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
+      style={{
+        backgroundColor: ADMIN_THEME.primary,
+        color: ADMIN_THEME.textOnPrimary,
+        borderColor: ADMIN_THEME.primary,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+        e.currentTarget.style.transform = "scale(1.05)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+        e.currentTarget.style.transform = "scale(1)";
+      }}
+      onClick={() => {
+        window.open("https://t.me/gridix_bot", "_blank", "noopener,noreferrer");
+      }}
+    >
+      <MessageCircleQuestionMark />
+    </Button>,
+    portalRoot,
+  );
+});
 export function SimplifiedSidebar({
   navItems,
   activeSection,
@@ -310,12 +369,15 @@ export function SimplifiedSidebar({
   title = "Admin Panel",
   showWorkspaceSwitcher = false,
   isMobile = false,
+  mobileOpen,
+  onMobileOpenChange,
   onMobileClose,
   onSignOut,
   hideTitle = false,
   hideFooter = false,
   docsUrl,
   syncQueryParam = true,
+  showSupportButton = false,
   userId,
   preferredLocale,
 }: {
@@ -328,19 +390,32 @@ export function SimplifiedSidebar({
   title?: string;
   showWorkspaceSwitcher?: boolean;
   isMobile?: boolean;
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
   onMobileClose?: () => void;
   onSignOut?: () => void;
   hideTitle?: boolean;
   hideFooter?: boolean;
   docsUrl?: string;
   syncQueryParam?: boolean;
+  showSupportButton?: boolean;
   userId?: string;
   preferredLocale?: string;
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const languageRef = useRef(language);
+
+  const resolvedMobileOpen = mobileOpen ?? internalMobileOpen;
+
+  const setResolvedMobileOpen = (open: boolean) => {
+    onMobileOpenChange?.(open);
+    if (mobileOpen === undefined) {
+      setInternalMobileOpen(open);
+    }
+  };
 
   const settingsNavItem = navItems.find((item) => item.id === "settings");
   const primaryNavItems = navItems.filter((item) => item.id !== "settings");
@@ -391,7 +466,10 @@ export function SimplifiedSidebar({
   const handleSectionChange = (section: string) => {
     if (syncQueryParam) setQueryPage(section);
     onSectionChange(section);
-    if (isMobile && onMobileClose) onMobileClose();
+    if (isMobile) {
+      setResolvedMobileOpen(false);
+      onMobileClose?.();
+    }
   };
 
   const resolvedDocsUrl =
@@ -546,43 +624,42 @@ export function SimplifiedSidebar({
     </>
   );
 
-  const SupportButton = () => {
-    return (
-      <Button
-        size={"icon"}
-        className="support_usertour fixed right-2 bottom-2 z-1 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
-        style={{
-          backgroundColor: ADMIN_THEME.primary,
-          color: ADMIN_THEME.textOnPrimary,
-          borderColor: ADMIN_THEME.primary,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-          e.currentTarget.style.transform = "scale(1.05)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-        onClick={() => {
-          window.open("https://t.me/gridix_bot", "_blank");
-        }}
-      >
-        <MessageCircleQuestionMark />
-      </Button>
-    );
-  };
-
   if (isMobile) {
     return (
       <>
-        <aside
-          className="flex h-full flex-col overflow-hidden"
-          style={{ backgroundColor: ADMIN_THEME.sidebarBackground }}
+        <Sheet open={resolvedMobileOpen} onOpenChange={setResolvedMobileOpen}>
+          <SheetContent side="left" className="w-80 p-0">
+            <aside
+              className="flex h-full flex-col overflow-hidden"
+              style={{ backgroundColor: ADMIN_THEME.sidebarBackground }}
+            >
+              {sidebarContent}
+            </aside>
+          </SheetContent>
+        </Sheet>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed bottom-2 left-2 z-50 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl md:hidden"
+          style={{
+            backgroundColor: ADMIN_THEME.primary,
+            color: ADMIN_THEME.textOnPrimary,
+            borderColor: ADMIN_THEME.primary,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+            e.currentTarget.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+          onClick={() => setResolvedMobileOpen(true)}
         >
-          {sidebarContent}
-        </aside>
-        <SupportButton />
+          <Menu className="h-5 w-5" />
+        </Button>
+        {showSupportButton ? <SupportFloatingButton /> : null}
       </>
     );
   }
@@ -600,7 +677,7 @@ export function SimplifiedSidebar({
       >
         {sidebarContent}
       </aside>
-      <SupportButton />
+      {showSupportButton ? <SupportFloatingButton /> : null}
     </>
   );
 }

@@ -68,79 +68,80 @@ const AuthPage = () => {
     }
   }, []);
 
-  // Сохраняем реферальный код и UTM-метки сразу при заходе на /auth/signup (до авторизации)
-  // и логируем клик по ссылке (учитываются все переходы, даже без регистрации)
+  // При заходе на любую страницу auth с ?ref=: сохраняем pending_referral (на signup),
+  // и всегда учитываем клик (Link clicks) в аналитике партнёра.
   useEffect(() => {
     const run = async () => {
       try {
         const path = window.location.pathname;
+        const isAuthPath = path.includes("/auth");
         const isSignupPath = path.endsWith("/auth/signup");
-        if (!isSignupPath) return;
-
         const urlParams = new URLSearchParams(window.location.search);
-        // Если пришли из amoCRM (без SSO) — сохраняем параметры установки/контекста
-        // чтобы после регистрации можно было инициировать привязку аккаунта amoCRM
-        const amoInstall = urlParams.get("amo_install") === "1";
-        const amoAccountId = urlParams.get("amo_account_id");
-        const amoUserId = urlParams.get("amo_user_id");
-        const amoSubdomain = urlParams.get("amo_subdomain");
+        const partnerCode = urlParams.get("ref");
 
-        if (amoInstall || amoAccountId || amoUserId || amoSubdomain) {
-          const amoPayload = {
-            amo_install: amoInstall ? "1" : "0",
-            amo_account_id: amoAccountId,
-            amo_user_id: amoUserId,
-            amo_subdomain: amoSubdomain,
-            captured_at: new Date().toISOString(),
-          };
-          localStorage.setItem(
-            "pending_amocrm_install",
-            JSON.stringify(amoPayload),
-          );
+        if (isSignupPath) {
+          // Если пришли из amoCRM (без SSO) — сохраняем параметры
+          const amoInstall = urlParams.get("amo_install") === "1";
+          const amoAccountId = urlParams.get("amo_account_id");
+          const amoUserId = urlParams.get("amo_user_id");
+          const amoSubdomain = urlParams.get("amo_subdomain");
+          if (amoInstall || amoAccountId || amoUserId || amoSubdomain) {
+            const amoPayload = {
+              amo_install: amoInstall ? "1" : "0",
+              amo_account_id: amoAccountId,
+              amo_user_id: amoUserId,
+              amo_subdomain: amoSubdomain,
+              captured_at: new Date().toISOString(),
+            };
+            localStorage.setItem(
+              "pending_amocrm_install",
+              JSON.stringify(amoPayload),
+            );
+          }
         }
 
-        const partnerCode = urlParams.get("ref");
-        const invitationCode = urlParams.get("invite");
-        const invitationType = urlParams.get("type");
-        const rawUtmSource = urlParams.get("utm_source");
-        const utmMedium = urlParams.get("utm_medium");
-        const utmCampaign = urlParams.get("utm_campaign");
+        if (partnerCode && isAuthPath) {
+          const rawUtmSource = urlParams.get("utm_source");
+          const utmMedium = urlParams.get("utm_medium");
+          const utmCampaign = urlParams.get("utm_campaign");
+          const utmSource =
+            rawUtmSource && rawUtmSource.trim().length > 0
+              ? rawUtmSource.trim()
+              : "direct";
 
-        if (!partnerCode) return;
+          if (isSignupPath) {
+            const referralData = {
+              partnerCode,
+              invitationCode: urlParams.get("invite"),
+              invitationType: urlParams.get("type"),
+              utmSource,
+              utmMedium: utmMedium || null,
+              utmCampaign: utmCampaign || null,
+              timestamp: Date.now(),
+            };
+            localStorage.setItem(
+              "pending_referral",
+              JSON.stringify(referralData),
+            );
+          }
 
-        const utmSource =
-          rawUtmSource && rawUtmSource.trim().length > 0
-            ? rawUtmSource.trim()
-            : "direct";
-
-        const referralData = {
-          partnerCode,
-          invitationCode,
-          invitationType,
-          utmSource,
-          utmMedium: utmMedium || null,
-          utmCampaign: utmCampaign || null,
-          timestamp: Date.now(),
-        };
-
-        localStorage.setItem("pending_referral", JSON.stringify(referralData));
-
-        // Логируем клик по ссылке в edge-функцию (без авторизации)
-        try {
-          await supabase.functions.invoke("partner-program", {
-            body: {
-              action: "track_click",
-              partner_code: partnerCode,
-              utm_source: utmSource,
-              utm_medium: utmMedium,
-              utm_campaign: utmCampaign,
-            },
-          });
-        } catch (clickErr) {
-          console.error("Error logging referral click:", clickErr);
+          // Link clicks: учитываем клик при любом заходе с ref= (без авторизации)
+          try {
+            await supabase.functions.invoke("partner-program", {
+              body: {
+                action: "track_click",
+                partner_code: partnerCode,
+                utm_source: utmSource,
+                utm_medium: utmMedium,
+                utm_campaign: utmCampaign,
+              },
+            });
+          } catch (clickErr) {
+            console.error("Error logging referral click:", clickErr);
+          }
         }
       } catch (error) {
-        console.error("Error saving pending referral:", error);
+        console.error("Error saving pending referral / track click:", error);
       }
     };
 

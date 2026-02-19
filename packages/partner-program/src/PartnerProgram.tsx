@@ -35,6 +35,8 @@ export interface PartnerProgramProps {
   onSectionChange?: (section: PartnerSection) => void;
   /** If true, automatically create partner profile when user is not a partner (used in apps/partners). */
   autoCreateProfile?: boolean;
+  /** Базовый URL для ресурсов инструкций (видео, PDF). Ресурсы лежат в main app public/instructions. Для partners app передайте URL main app (например VITE_MAIN_APP_URL). */
+  instructionsBaseUrl?: string;
 }
 
 export const PartnerProgram: React.FC<PartnerProgramProps> = ({
@@ -42,6 +44,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
   activeSection: externalSection,
   onSectionChange: externalOnSectionChange,
   autoCreateProfile = false,
+  instructionsBaseUrl,
 }) => {
   const { isPartner, loading, createPartnerProfile } = usePartner();
   const { toast } = useToast();
@@ -331,7 +334,11 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
         )}
         {activeTab === "referrals" && <PartnerReferralsSection />}
         {activeTab === "clients" && <PartnerClientsSection />}
-        {activeTab === "instructions" && <PartnerInstructionsSection />}
+        {activeTab === "instructions" && (
+          <PartnerInstructionsSection
+            instructionsBaseUrl={instructionsBaseUrl || ""}
+          />
+        )}
       </div>
     </div>
   );

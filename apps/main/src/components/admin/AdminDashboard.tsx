@@ -15,10 +15,7 @@ import { useLanguageNavigation } from "@gridix/utils/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
-import {
-  AdminSidebar,
-  ProjectEditorSidebarMenuButton,
-} from "@/shared/ui/sidebar-component";
+import { AdminSidebar } from "@/shared/ui/sidebar-component";
 import { ManagerBlockedScreen } from "@/components/Auth/ManagerBlockedScreen";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { useLeadsRealtime } from "@/hooks/useLeadsRealtime";
@@ -342,9 +339,6 @@ const AdminDashboard = () => {
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
-        {/* Floating Mobile Menu Button */}
-        <ProjectEditorSidebarMenuButton setIsMobileOpen={setIsMobileOpen} />
-
         <div
           className={`flex-1 overflow-y-auto ${activeTab === "subscription" ? "mx-auto" : ""} ${activeTab !== "leads" ? "px-6 py-4 lg:py-6" : ""}`}
         >

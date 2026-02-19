@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import type { PartnerPayout } from "@/entities/partner/model/types";
+import type { PartnerPayout } from "@gridix/partner-program";
 
 interface PayoutWithPartner extends PartnerPayout {
   contact_info?: string;
