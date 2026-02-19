@@ -336,7 +336,7 @@ const SupportFloatingButton = memo(function SupportFloatingButton() {
     <Button
       size="icon"
       aria-label="Support"
-      className="support_usertour fixed right-2 bottom-2 z-50 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl md:right-6 md:bottom-6"
+      className="support_usertour fixed right-2 bottom-2 z-50 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
       style={{
         backgroundColor: ADMIN_THEME.primary,
         color: ADMIN_THEME.textOnPrimary,
