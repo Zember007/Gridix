@@ -15,10 +15,7 @@ import { useLanguageNavigation } from "@gridix/utils/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
-import {
-  AdminSidebar,
-  ProjectEditorSidebarMenuButton,
-} from "@/shared/ui/sidebar-component";
+import { AdminSidebar } from "@/shared/ui/sidebar-component";
 import { ManagerBlockedScreen } from "@/components/Auth/ManagerBlockedScreen";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { useLeadsRealtime } from "@/hooks/useLeadsRealtime";
