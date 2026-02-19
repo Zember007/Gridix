@@ -3,10 +3,12 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import { useWorkspace } from "@gridix/utils/react";
 import {
@@ -262,9 +264,10 @@ export function AgentSettingsTab() {
   };
 
   const profileLoading = myProfileQuery.isLoading;
+  const themeVariables = getAdminThemeVariables(ADMIN_THEME);
 
   return (
-    <>
+    <div style={themeVariables as CSSProperties}>
       <ModuleHeader
         title={t("common.settings.title")}
         subtitle={t("common.settings.subtitle")}
@@ -337,7 +340,7 @@ export function AgentSettingsTab() {
           />
         ) : (
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center text-[var(--admin-text-muted)]">
               <p className="text-base font-medium">
                 {t("common.workspace.noActiveTitle")}
               </p>
@@ -352,7 +355,7 @@ export function AgentSettingsTab() {
           </Card>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -371,33 +374,33 @@ function AgentUserProfileSection(props: {
       : "company";
 
   return (
-    <Card className="overflow-hidden border-slate-200 shadow-sm transition-all hover:shadow-md">
-      <CardHeader className="border-b border-slate-50 bg-slate-50/50 pb-4">
+    <Card className="overflow-hidden border-[var(--admin-border)] shadow-sm transition-all hover:shadow-md">
+      <CardHeader className="border-b border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-900">
+            <CardTitle className="text-xl font-bold text-[var(--admin-text-primary)]">
               {props.t("adminSettings.profileInfo")}
             </CardTitle>
-            <CardDescription className="text-slate-500">
+            <CardDescription className="text-[var(--admin-text-muted)]">
               {props.t("adminSettings.profileInfoDesc")}
             </CardDescription>
           </div>
-          <BadgeCheck className="text-blue-500" size={24} />
+          <BadgeCheck className="text-[var(--admin-primary)]" size={24} />
         </div>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         {props.loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="border-3 h-8 w-8 animate-spin rounded-full border-primary border-t-transparent" />
+            <div className="border-3 h-8 w-8 animate-spin rounded-full border-[var(--admin-primary)] border-t-transparent" />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--admin-text-muted)]">
                   {props.t("adminSettings.accountType")}
                 </Label>
-                <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50/50 p-1">
+                <div className="grid grid-cols-2 gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-background-secondary)] p-1">
                   <button
                     type="button"
                     onClick={() =>
@@ -405,8 +408,8 @@ function AgentUserProfileSection(props: {
                     }
                     className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-all ${
                       personType === "company"
-                        ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                        : "text-slate-500 hover:text-slate-700"
+                        ? "bg-[var(--admin-card-background)] text-[var(--admin-text-primary)] shadow-sm ring-1 ring-[var(--admin-border)]"
+                        : "text-[var(--admin-text-muted)] hover:text-[var(--admin-text-secondary)]"
                     }`}
                   >
                     <Building2 size={16} /> {props.t("adminSettings.company")}
@@ -418,8 +421,8 @@ function AgentUserProfileSection(props: {
                     }
                     className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-all ${
                       personType === "individual"
-                        ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                        : "text-slate-500 hover:text-slate-700"
+                        ? "bg-[var(--admin-card-background)] text-[var(--admin-text-primary)] shadow-sm ring-1 ring-[var(--admin-border)]"
+                        : "text-[var(--admin-text-muted)] hover:text-[var(--admin-text-secondary)]"
                     }`}
                   >
                     <User size={16} /> {props.t("adminSettings.individual")}
@@ -428,9 +431,9 @@ function AgentUserProfileSection(props: {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
-              <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                <User size={16} className="text-blue-500" />
+            <div className="space-y-4 rounded-2xl border border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] p-4 md:p-6">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--admin-text-primary)]">
+                <User size={16} className="text-[var(--admin-primary)]" />
                 {props.t("adminSettings.contractPersonalDetails")}
               </h3>
 
@@ -438,7 +441,7 @@ function AgentUserProfileSection(props: {
                 <div className="space-y-2">
                   <Label
                     htmlFor="full_name"
-                    className="text-xs font-bold text-slate-600"
+                    className="text-xs font-bold text-[var(--admin-text-secondary)]"
                   >
                     {props.t("adminSettings.fullName")}
                   </Label>
@@ -448,7 +451,7 @@ function AgentUserProfileSection(props: {
                     onChange={(e) =>
                       props.onChange({ ...v, full_name: e.target.value })
                     }
-                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                   />
                 </div>
 
@@ -456,7 +459,7 @@ function AgentUserProfileSection(props: {
                   <div className="space-y-2">
                     <Label
                       htmlFor="company_name"
-                      className="text-xs font-bold text-slate-600"
+                      className="text-xs font-bold text-[var(--admin-text-secondary)]"
                     >
                       {props.t("adminSettings.companyName")}
                     </Label>
@@ -466,7 +469,7 @@ function AgentUserProfileSection(props: {
                       onChange={(e) =>
                         props.onChange({ ...v, company_name: e.target.value })
                       }
-                      className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                      className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                     />
                   </div>
                 )}
@@ -476,7 +479,7 @@ function AgentUserProfileSection(props: {
                 <div className="space-y-2">
                   <Label
                     htmlFor="phone"
-                    className="text-xs font-bold text-slate-600"
+                    className="text-xs font-bold text-[var(--admin-text-secondary)]"
                   >
                     <span className="flex items-center gap-1">
                       <Phone size={12} /> {props.t("adminSettings.phone")}
@@ -488,13 +491,13 @@ function AgentUserProfileSection(props: {
                     onChange={(e) =>
                       props.onChange({ ...v, phone: e.target.value })
                     }
-                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="tax_id"
-                    className="text-xs font-bold text-slate-600"
+                    className="text-xs font-bold text-[var(--admin-text-secondary)]"
                   >
                     {props.t("adminSettings.taxId")}
                   </Label>
@@ -504,7 +507,7 @@ function AgentUserProfileSection(props: {
                     onChange={(e) =>
                       props.onChange({ ...v, tax_id: e.target.value })
                     }
-                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                   />
                 </div>
               </div>
@@ -512,7 +515,7 @@ function AgentUserProfileSection(props: {
               <div className="space-y-2">
                 <Label
                   htmlFor="legal_address"
-                  className="text-xs font-bold text-slate-600"
+                  className="text-xs font-bold text-[var(--admin-text-secondary)]"
                 >
                   <span className="flex items-center gap-1">
                     <MapPin size={12} />{" "}
@@ -525,7 +528,7 @@ function AgentUserProfileSection(props: {
                   onChange={(e) =>
                     props.onChange({ ...v, legal_address: e.target.value })
                   }
-                  className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                  className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                 />
               </div>
 
@@ -535,7 +538,7 @@ function AgentUserProfileSection(props: {
                     <div className="space-y-2">
                       <Label
                         htmlFor="company_type"
-                        className="text-xs font-bold text-slate-600"
+                        className="text-xs font-bold text-[var(--admin-text-secondary)]"
                       >
                         {props.t("common.settings.agentCompanyType")}
                       </Label>
@@ -548,13 +551,13 @@ function AgentUserProfileSection(props: {
                         placeholder={props.t(
                           "adminSettings.companyTypePlaceholder",
                         )}
-                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                        className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label
                         htmlFor="registered_office"
-                        className="text-xs font-bold text-slate-600"
+                        className="text-xs font-bold text-[var(--admin-text-secondary)]"
                       >
                         {props.t("common.settings.agentRegisteredOffice")}
                       </Label>
@@ -567,7 +570,7 @@ function AgentUserProfileSection(props: {
                             registered_office: e.target.value,
                           })
                         }
-                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                        className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                       />
                     </div>
                   </div>
@@ -576,7 +579,7 @@ function AgentUserProfileSection(props: {
                     <div className="space-y-2">
                       <Label
                         htmlFor="rep_name"
-                        className="text-xs font-bold text-slate-600"
+                        className="text-xs font-bold text-[var(--admin-text-secondary)]"
                       >
                         {props.t("common.settings.agentRepresentativeName")}
                       </Label>
@@ -589,13 +592,13 @@ function AgentUserProfileSection(props: {
                             representative_name: e.target.value,
                           })
                         }
-                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                        className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label
                         htmlFor="rep_title"
-                        className="text-xs font-bold text-slate-600"
+                        className="text-xs font-bold text-[var(--admin-text-secondary)]"
                       >
                         {props.t("common.settings.agentRepresentativeTitle")}
                       </Label>
@@ -608,7 +611,7 @@ function AgentUserProfileSection(props: {
                             representative_title: e.target.value,
                           })
                         }
-                        className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                        className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                       />
                     </div>
                   </div>
@@ -616,9 +619,9 @@ function AgentUserProfileSection(props: {
               )}
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-slate-100 bg-blue-50/30 p-4 md:p-6">
-              <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                <CreditCard size={16} className="text-blue-500" />
+            <div className="space-y-4 rounded-2xl border border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] p-4 md:p-6">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--admin-text-primary)]">
+                <CreditCard size={16} className="text-[var(--admin-primary)]" />
                 {props.t("adminSettings.bankBillingDetails")}
               </h3>
 
@@ -626,7 +629,7 @@ function AgentUserProfileSection(props: {
                 <div className="space-y-2">
                   <Label
                     htmlFor="bank_name"
-                    className="text-xs font-bold text-slate-600"
+                    className="text-xs font-bold text-[var(--admin-text-secondary)]"
                   >
                     {props.t("adminSettings.bankName")}
                   </Label>
@@ -636,13 +639,13 @@ function AgentUserProfileSection(props: {
                     onChange={(e) =>
                       props.onChange({ ...v, bank_name: e.target.value })
                     }
-                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="iban"
-                    className="text-xs font-bold text-slate-600"
+                    className="text-xs font-bold text-[var(--admin-text-secondary)]"
                   >
                     {props.t("adminSettings.iban")}
                   </Label>
@@ -652,7 +655,7 @@ function AgentUserProfileSection(props: {
                     onChange={(e) =>
                       props.onChange({ ...v, iban: e.target.value })
                     }
-                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                   />
                 </div>
               </div>
@@ -661,7 +664,7 @@ function AgentUserProfileSection(props: {
                 <div className="space-y-2">
                   <Label
                     htmlFor="billing_currency"
-                    className="text-xs font-bold text-slate-600"
+                    className="text-xs font-bold text-[var(--admin-text-secondary)]"
                   >
                     {props.t("adminSettings.billingCurrency")}
                   </Label>
@@ -674,15 +677,15 @@ function AgentUserProfileSection(props: {
                     placeholder={props.t(
                       "adminSettings.billingCurrencyPlaceholder",
                     )}
-                    className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
+                    className="rounded-xl border-[var(--admin-border)] ring-offset-transparent focus-visible:ring-[var(--admin-primary)]"
                   />
                 </div>
-                <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
+                <div className="flex items-center justify-between rounded-xl border border-[var(--admin-border)] bg-[var(--admin-card-background)] p-4">
                   <div>
-                    <div className="text-sm font-bold text-slate-900">
+                    <div className="text-sm font-bold text-[var(--admin-text-primary)]">
                       {props.t("adminSettings.vatPayer")}
                     </div>
-                    <div className="text-[10px] font-bold uppercase text-slate-400">
+                    <div className="text-[10px] font-bold uppercase text-[var(--admin-text-muted)]">
                       {props.t("adminSettings.billingInfoDesc")}
                     </div>
                   </div>
@@ -699,7 +702,7 @@ function AgentUserProfileSection(props: {
             <div className="flex justify-end pt-4">
               <Button
                 onClick={() => void props.onSave()}
-                className="h-11 rounded-xl bg-blue-600 px-8 font-bold shadow-lg shadow-blue-200 hover:bg-blue-700"
+                className="h-11 rounded-xl bg-[var(--admin-primary)] px-8 font-bold shadow-lg hover:bg-[var(--admin-primary-hover)]"
               >
                 <Save size={18} className="mr-2" />
                 {props.t("adminSettings.save")}
@@ -782,7 +785,7 @@ function AgentSignatureSection(props: {
     if (!ctx) return;
     const p = getPoint(e, canvas);
     ctx.lineTo(p.x, p.y);
-    ctx.strokeStyle = "#0f172a";
+    ctx.strokeStyle = ADMIN_THEME.textPrimary;
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
     ctx.stroke();
@@ -858,13 +861,13 @@ function AgentSignatureSection(props: {
       <CardContent className="space-y-4">
         {showExisting && props.existingSignaturePath ? (
           <div className="space-y-4">
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-100 bg-slate-50/30 p-8">
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] p-8">
               <img
                 src={props.existingSignaturePath}
                 alt={props.t("common.agent.application.signature")}
                 className="max-h-40 w-auto object-contain mix-blend-multiply"
               />
-              <p className="mt-4 text-xs font-medium text-slate-500">
+              <p className="mt-4 text-xs font-medium text-[var(--admin-text-muted)]">
                 {props.t("common.agent.application.currentSignaturePrompt")}
               </p>
             </div>
@@ -873,7 +876,7 @@ function AgentSignatureSection(props: {
                 type="button"
                 variant="outline"
                 onClick={() => setShowExisting(false)}
-                className="rounded-xl border-slate-200"
+                className="rounded-xl border-[var(--admin-border)]"
               >
                 {props.t("common.agent.application.replaceSignature")}
               </Button>
@@ -903,7 +906,7 @@ function AgentSignatureSection(props: {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowExisting(true)}
-                  className="ml-auto text-slate-500"
+                  className="ml-auto text-[var(--admin-text-muted)]"
                 >
                   {props.t("common.common.cancel")}
                 </Button>
@@ -911,7 +914,7 @@ function AgentSignatureSection(props: {
             </div>
 
             {signatureMethod === "draw" ? (
-              <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-inner">
+              <div className="relative overflow-hidden rounded-2xl border-2 border-[var(--admin-border)] bg-[var(--admin-card-background)] shadow-inner">
                 <canvas
                   ref={canvasRef}
                   width={900}
@@ -929,7 +932,7 @@ function AgentSignatureSection(props: {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="absolute right-4 top-4 rounded-lg bg-white/80 backdrop-blur"
+                  className="absolute right-4 top-4 rounded-lg bg-[var(--admin-card-background)] backdrop-blur"
                   onClick={clearCanvas}
                 >
                   {props.t("common.agent.application.clear")}
@@ -937,7 +940,7 @@ function AgentSignatureSection(props: {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 transition-colors hover:border-blue-400">
+                <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--admin-border)] bg-[var(--admin-card-background)] p-12 transition-colors hover:border-[var(--admin-primary)]">
                   <Input
                     type="file"
                     accept="image/*"
@@ -946,11 +949,11 @@ function AgentSignatureSection(props: {
                       void onUploadSignature(e.target.files?.[0] ?? null)
                     }
                   />
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-xs text-[var(--admin-text-muted)]">
                     {props.t("common.agent.application.uploadHint")}
                   </p>
                   {uploadedSignatureDataUrl && (
-                    <div className="mt-6 rounded-lg border border-slate-100 bg-slate-50 p-4">
+                    <div className="mt-6 rounded-lg border border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] p-4">
                       <img
                         src={uploadedSignatureDataUrl}
                         alt={props.t(
@@ -970,7 +973,7 @@ function AgentSignatureSection(props: {
                 disabled={
                   saving || (!signatureDataUrl && !uploadedSignatureDataUrl)
                 }
-                className="h-11 rounded-xl bg-blue-600 px-8 font-bold shadow-lg shadow-blue-200 hover:bg-blue-700"
+                className="h-11 rounded-xl bg-[var(--admin-primary)] px-8 font-bold shadow-lg hover:bg-[var(--admin-primary-hover)]"
               >
                 {saving
                   ? props.t("adminSettings.saving")
@@ -1001,18 +1004,18 @@ function AgentSignedContractsSection(props: {
   if (!props.applicationId) return null;
 
   return (
-    <Card className="overflow-hidden border-slate-200 shadow-sm transition-all hover:shadow-md">
-      <CardHeader className="border-b border-slate-50 bg-slate-50/50 pb-4">
+    <Card className="overflow-hidden border-[var(--admin-border)] shadow-sm transition-all hover:shadow-md">
+      <CardHeader className="border-b border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-900">
+            <CardTitle className="text-xl font-bold text-[var(--admin-text-primary)]">
               {props.t("common.settings.signedContractsTitle")}
             </CardTitle>
-            <CardDescription className="text-slate-500">
+            <CardDescription className="text-[var(--admin-text-muted)]">
               {props.t("common.settings.signedContractsDesc")}
             </CardDescription>
           </div>
-          <FileCheck className="text-green-500" size={24} />
+          <FileCheck className="text-[var(--admin-success)]" size={24} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-6">
@@ -1021,7 +1024,7 @@ function AgentSignedContractsSection(props: {
             variant="outline"
             size="sm"
             onClick={props.onRefresh}
-            className="rounded-lg border-slate-200 font-bold hover:bg-slate-50"
+            className="rounded-lg border-[var(--admin-border)] font-bold hover:bg-[var(--admin-background-secondary)]"
           >
             {props.t("common.settings.refreshContracts")}
           </Button>
@@ -1029,21 +1032,21 @@ function AgentSignedContractsSection(props: {
 
         {props.loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--admin-primary)] border-t-transparent" />
           </div>
         ) : props.error ? (
-          <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 text-center text-sm font-semibold text-red-600">
+          <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-background-secondary)] p-4 text-center text-sm font-semibold text-[var(--admin-error)]">
             {props.t("common.settings.signedContractsLoadError")}
           </div>
         ) : props.contracts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--admin-background-secondary)] text-[var(--admin-text-muted)]">
               <FileText size={20} />
             </div>
-            <p className="text-sm font-bold text-slate-900">
+            <p className="text-sm font-bold text-[var(--admin-text-primary)]">
               {props.t("common.settings.noSignedContracts")}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--admin-text-muted)]">
               {props.t("common.settings.noSignedContractsDesc")}
             </p>
           </div>
@@ -1056,9 +1059,9 @@ function AgentSignedContractsSection(props: {
               return (
                 <div
                   key={c.id}
-                  className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-50"
+                  className="group flex items-center gap-4 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-card-background)] p-4 transition-all hover:border-[var(--admin-primary)] hover:shadow-lg"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition-transform group-hover:scale-110 group-hover:bg-red-100">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-background-secondary)] text-[var(--admin-error)] transition-transform group-hover:scale-110 group-hover:bg-[var(--admin-background-hover)]">
                     {c.signed_contract_mime === "application/pdf" ? (
                       <FileText size={24} />
                     ) : (
@@ -1066,10 +1069,10 @@ function AgentSignedContractsSection(props: {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-black text-slate-900">
+                    <div className="truncate text-sm font-black text-[var(--admin-text-primary)]">
                       {props.t("common.settings.contractLabel")} {lang}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400">
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-[var(--admin-text-muted)]">
                       <span>{c.signed_at?.split("T")[0] ?? "—"}</span>
                       <span>•</span>
                       <span>{props.t("common.settings.pdfLabel")}</span>
@@ -1080,7 +1083,7 @@ function AgentSignedContractsSection(props: {
                     size="icon"
                     asChild
                     disabled={!c.signed_download_url}
-                    className="rounded-full hover:bg-blue-50 hover:text-blue-600"
+                    className="rounded-full hover:bg-[var(--admin-background-hover)] hover:text-[var(--admin-primary)]"
                   >
                     <a
                       href={c.signed_download_url ?? undefined}
@@ -1128,7 +1131,7 @@ function AgentContractCard({
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--admin-primary)] border-t-transparent" />
         </CardContent>
       </Card>
     );
@@ -1137,7 +1140,7 @@ function AgentContractCard({
   if (error) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-sm text-destructive">
+        <CardContent className="py-8 text-center text-sm text-[var(--admin-error)]">
           {t("common.settings.loadError")}
         </CardContent>
       </Card>
@@ -1187,10 +1190,10 @@ function AgentContractCard({
         <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
           {fields.map((f) => (
             <div key={f.label}>
-              <dt className="text-sm font-medium text-muted-foreground">
+              <dt className="text-sm font-medium text-[var(--admin-text-muted)]">
                 {f.label}
               </dt>
-              <dd className="mt-1 text-sm text-foreground">
+              <dd className="mt-1 text-sm text-[var(--admin-text-primary)]">
                 {formatValue(f.value) ?? "—"}
               </dd>
             </div>
@@ -1199,10 +1202,10 @@ function AgentContractCard({
 
         {data.bank_details !== null && data.bank_details !== undefined && (
           <div className="mt-6">
-            <dt className="text-sm font-medium text-muted-foreground">
+            <dt className="text-sm font-medium text-[var(--admin-text-muted)]">
               {t("common.settings.bankDetails")}
             </dt>
-            <dd className="mt-1 whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-sm text-foreground">
+            <dd className="mt-1 whitespace-pre-wrap rounded-md bg-[var(--admin-background-secondary)] p-3 text-sm text-[var(--admin-text-primary)]">
               {formatValue(data.bank_details) ?? "—"}
             </dd>
           </div>
