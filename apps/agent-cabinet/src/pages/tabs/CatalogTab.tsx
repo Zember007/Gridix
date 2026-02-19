@@ -32,6 +32,15 @@ type Project = {
   allow_partner_connect?: boolean | null;
 };
 
+type UnitStatusGroup = "available" | "booked" | "sold";
+
+function getUnitStatusGroup(status: string | null): UnitStatusGroup {
+  const st = String(status ?? "").toLowerCase();
+  if (st === "available") return "available";
+  if (st === "reserved" || st === "booked") return "booked";
+  return "sold";
+}
+
 function getMainAppUrl(): string {
   const env = (import.meta as any).env?.VITE_MAIN_APP_URL;
   const raw = typeof env === "string" && env ? env : "https://app.gridix.live";
@@ -229,6 +238,7 @@ export function CatalogTab() {
           apartment_number: string | null;
           floor_number: number;
           status: string | null;
+          price?: number | null;
         }>,
       [payload],
     );
@@ -239,25 +249,32 @@ export function CatalogTab() {
       return Array.from(set).sort((a, b) => b - a);
     }, [units]);
 
-    const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
-    useEffect(() => {
-      if (selectedFloor !== null) return;
-      setSelectedFloor(floors[0] ?? null);
-    }, [floors, selectedFloor]);
-
-    const floorUnits = useMemo(() => {
-      if (selectedFloor === null) return [];
-      return units
-        .filter((u) => u.floor_number === selectedFloor)
-        .slice()
-        .sort((a, b) =>
+    const unitsByFloor = useMemo(() => {
+      const byFloor = new Map<number, typeof units>();
+      for (const u of units) {
+        const list = byFloor.get(u.floor_number) ?? [];
+        list.push(u);
+        byFloor.set(u.floor_number, list);
+      }
+      for (const list of byFloor.values()) {
+        list.sort((a, b) =>
           String(a.apartment_number ?? "").localeCompare(
             String(b.apartment_number ?? ""),
             undefined,
             { numeric: true },
           ),
         );
-    }, [units, selectedFloor]);
+      }
+      return byFloor;
+    }, [units]);
+
+    const statusStats = useMemo(() => {
+      const stats = { available: 0, booked: 0, sold: 0 };
+      for (const u of units) {
+        stats[getUnitStatusGroup(u.status)] += 1;
+      }
+      return stats;
+    }, [units]);
 
     const openUnit = (apartmentNumber: string | null) => {
       if (!activeWorkspaceId || !slug || !apartmentNumber) return;
@@ -265,6 +282,16 @@ export function CatalogTab() {
         apartmentNumber,
       )}?agent_id=${encodeURIComponent(activeWorkspaceId)}`;
       window.open(url, "_blank", "noopener,noreferrer");
+    };
+
+    const formatUnitPrice = (price: number | null | undefined) => {
+      if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
+        return "—";
+      }
+      if (price >= 1000) {
+        return `$${Math.round(price / 1000)}K`;
+      }
+      return `$${Math.round(price)}`;
     };
 
     if (unitsQuery.isLoading) {
@@ -275,86 +302,87 @@ export function CatalogTab() {
       );
     }
     if (!unitsQuery.data || units.length === 0) {
-      return <div className="p-6 text-sm text-slate-500">Нет объектов</div>;
+      return (
+        <div className="p-6 text-sm text-slate-500">
+          {t("common.drawer.units.empty")}
+        </div>
+      );
     }
 
     return (
       <div className="p-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr]">
-          <div className="rounded-lg border bg-white p-2">
-            <div className="px-2 py-1 text-xs font-bold uppercase tracking-wider text-slate-400">
-              Этаж
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
+            <div className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <span>
+                {t("common.drawer.units.legend.available")} (
+                {statusStats.available})
+              </span>
             </div>
-            <div className="max-h-[420px] overflow-auto">
-              {floors.map((f) => {
-                const count = units.filter((u) => u.floor_number === f).length;
-                const isActive = f === selectedFloor;
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setSelectedFloor(f)}
-                    className={[
-                      "w-full rounded-md px-3 py-2 text-left text-sm transition",
-                      isActive
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-700 hover:bg-slate-50",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>Этаж {f}</span>
-                      <span
-                        className={
-                          isActive ? "text-white/70" : "text-slate-400"
-                        }
-                      >
-                        {count}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+              <span>
+                {t("common.drawer.units.legend.booked")} ({statusStats.booked})
+              </span>
+            </div>
+            <div className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+              <span>
+                {t("common.drawer.units.legend.sold")} ({statusStats.sold})
+              </span>
             </div>
           </div>
 
-          <div className="rounded-lg border bg-white p-3">
-            <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))",
-              }}
-            >
-              {floorUnits.map((u) => {
-                const st = String(u.status ?? "");
-                const isAvailable = st === "available";
-                const isBooked = st === "reserved" || st === "booked";
-                const isSold = st === "sold";
-                const statusColor = isAvailable
-                  ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100"
-                  : isBooked
-                    ? "border-amber-300 bg-amber-50 hover:bg-amber-100"
-                    : isSold
-                      ? "border-slate-200 bg-slate-50"
-                      : "border-slate-200 bg-slate-50 opacity-60";
+          <div className="p-3 md:p-4">
+            <div className="flex flex-col gap-2">
+              {floors.map((f) => {
+                const floorUnits = unitsByFloor.get(f) ?? [];
 
                 return (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => openUnit(u.apartment_number)}
-                    className={[
-                      "rounded-lg border px-2 py-3 text-left transition",
-                      statusColor,
-                    ].join(" ")}
-                    title={u.apartment_number ? `№${u.apartment_number}` : "—"}
+                  <div
+                    key={f}
+                    className="flex items-center gap-3 rounded-md px-1 py-0.5 hover:bg-slate-50"
                   >
-                    <div className="text-sm font-black leading-none">
-                      №{u.apartment_number ?? "—"}
+                    <div className="w-7 shrink-0 text-right text-sm font-medium text-slate-400">
+                      {f}
                     </div>
-                    <div className="mt-1 text-[11px] text-slate-500">
-                      этаж {u.floor_number}
+                    <div className="flex flex-1 flex-wrap items-center gap-1.5">
+                      {floorUnits.map((u) => {
+                        const status = getUnitStatusGroup(u.status);
+                        const statusColor =
+                          status === "available"
+                            ? "border-emerald-400 bg-emerald-400 text-white hover:brightness-95"
+                            : status === "booked"
+                              ? "border-amber-400 bg-amber-400 text-white hover:brightness-95"
+                              : "border-slate-300 bg-slate-300 text-white hover:brightness-95";
+
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => openUnit(u.apartment_number)}
+                            className={[
+                              "flex h-12 w-[62px] shrink-0 flex-col items-center justify-center rounded-md border px-1 text-center transition-colors",
+                              statusColor,
+                            ].join(" ")}
+                            title={u.apartment_number ?? "—"}
+                          >
+                            <span className="truncate text-[13px] font-semibold leading-none">
+                              {u.apartment_number ?? "—"}
+                            </span>
+                            <span className="mt-0.5 truncate text-[9px] font-semibold leading-none text-white">
+                              {status === "sold"
+                                ? t("common.drawer.units.legend.sold")
+                                : status === "booked"
+                                  ? t("common.drawer.units.legend.booked")
+                                  : formatUnitPrice(u.price)}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

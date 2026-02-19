@@ -153,6 +153,7 @@
         "booked": "Бронь",
         "sold": "Продано"
       },
+      "empty": "Нет объектов",
       "downloadPdf": "Скачать PDF"
     },
     "actions": {
