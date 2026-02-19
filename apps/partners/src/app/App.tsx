@@ -29,10 +29,6 @@ function PartnersCabinetRouter() {
           activeSection={activePage}
           onSectionChange={setActivePage}
           autoCreateProfile
-          instructionsBaseUrl={
-            (import.meta as unknown as { env?: { VITE_MAIN_APP_URL?: string } })
-              .env?.VITE_MAIN_APP_URL
-          }
         />
       </div>
     </PartnersCabinetLayout>
