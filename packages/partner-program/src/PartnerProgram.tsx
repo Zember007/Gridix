@@ -336,7 +336,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
         {activeTab === "clients" && <PartnerClientsSection />}
         {activeTab === "instructions" && (
           <PartnerInstructionsSection
-            instructionsBaseUrl={instructionsBaseUrl}
+            instructionsBaseUrl={instructionsBaseUrl || ""}
           />
         )}
       </div>
