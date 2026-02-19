@@ -12,7 +12,7 @@ import {
   UserPlus,
   Wallet,
   ArrowRight,
-  Award,
+  Percent,
 } from "lucide-react";
 import { IncomeChart } from "./IncomeChart";
 import { usePartner } from "@/entities/partner/queries/usePartner";
@@ -40,24 +40,6 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
   const chartDates = incomeHistory.map((point) => point.date);
 
   const trafficStats = useMemo(() => {
-    const clients = stats?.clients || [];
-    if (!clients.length) return [];
-
-    const counts: Record<string, number> = {};
-    let total = 0;
-
-    for (const client of clients) {
-      const rawSource = (client.utm_source || "").trim().toLowerCase();
-      const source = rawSource || "direct";
-      counts[source] = (counts[source] || 0) + 1;
-      total += 1;
-    }
-
-    if (!total) return [];
-
-    const entries = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4);
     const colors = [
       "bg-red-500",
       "bg-blue-500",
@@ -65,35 +47,101 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       "bg-purple-500",
     ];
 
-    return entries.map(([source, count], index) => {
-      let label = source;
-      if (source === "direct") {
-        label = t("partners.sourceDirect");
-      } else if (source === "youtube") {
-        label = "YouTube";
-      } else if (source === "telegram") {
-        label = "Telegram";
-      } else if (source === "instagram") {
-        label = "Instagram";
-      } else if (source === "facebook") {
-        label = "Facebook";
-      } else if (source === "blog") {
-        label = t("partners.sourceBlog");
-      } else if (source === "email_newsletter") {
-        label = t("partners.sourceEmail");
-      } else {
-        label = source.charAt(0).toUpperCase() + source.slice(1);
-      }
+    const formatSourceLabel = (source: string): string => {
+      if (source === "direct") return t("partners.sourceDirect");
+      if (source === "youtube") return "YouTube";
+      if (source === "telegram") return "Telegram";
+      if (source === "instagram") return "Instagram";
+      if (source === "facebook") return "Facebook";
+      if (source === "blog") return t("partners.sourceBlog");
+      if (source === "email_newsletter") return t("partners.sourceEmail");
+      return source.charAt(0).toUpperCase() + source.slice(1);
+    };
 
-      const percent = Math.round((count / total) * 100);
-
-      return {
-        label,
-        percent,
+    const bySource = stats?.traffic_by_source;
+    if (bySource && bySource.length > 0) {
+      const total = bySource.reduce((s, x) => s + x.count, 0);
+      if (total === 0) return [];
+      const entries = [...bySource]
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4);
+      return entries.map((item, index) => ({
+        label: formatSourceLabel(item.source),
+        percent: Math.round((item.count / total) * 100),
         color: colors[index] || "bg-gray-500",
-      };
-    });
-  }, [stats?.clients]);
+      }));
+    }
+
+    const clients = stats?.clients || [];
+    if (!clients.length) return [];
+
+    const counts: Record<string, number> = {};
+    let total = 0;
+    for (const client of clients) {
+      const rawSource = (client.utm_source || "").trim().toLowerCase();
+      const source = rawSource || "direct";
+      counts[source] = (counts[source] || 0) + 1;
+      total += 1;
+    }
+    if (!total) return [];
+
+    const entries = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+    return entries.map(([source, count], index) => ({
+      label: formatSourceLabel(source),
+      percent: Math.round((count / total) * 100),
+      color: colors[index] || "bg-gray-500",
+    }));
+  }, [stats?.traffic_by_source, stats?.clients, t]);
+
+  const TRAFFIC_COLORS = [
+    "bg-red-500",
+    "bg-blue-500",
+    "bg-gray-800",
+    "bg-purple-500",
+  ];
+
+  const buildTrafficRows = useMemo(
+    () =>
+      (
+        items: Array<{ source: string; count: number }>,
+        formatLabel: (value: string) => string,
+      ) => {
+        if (!items.length) return [];
+        const total = items.reduce((s, x) => s + x.count, 0);
+        if (total === 0) return [];
+        return [...items]
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 4)
+          .map((item, index) => ({
+            label: formatLabel(item.source),
+            percent: Math.round((item.count / total) * 100),
+            color: TRAFFIC_COLORS[index] || "bg-gray-500",
+          }));
+      },
+    [],
+  );
+
+  const formatUtmValue = (value: string): string => {
+    if (value === "—" || !value) return t("partners.utmNotSet");
+    return value
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  };
+
+  const trafficMediumStats = useMemo(() => {
+    const byMedium = stats?.traffic_by_medium;
+    if (!byMedium?.length) return [];
+    return buildTrafficRows(byMedium, formatUtmValue);
+  }, [stats?.traffic_by_medium, buildTrafficRows, t]);
+
+  const trafficCampaignStats = useMemo(() => {
+    const byCampaign = stats?.traffic_by_campaign;
+    if (!byCampaign?.length) return [];
+    return buildTrafficRows(byCampaign, formatUtmValue);
+  }, [stats?.traffic_by_campaign, buildTrafficRows, t]);
 
   if (!isPartner) {
     return null;
@@ -121,24 +169,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
     0,
   );
 
-  // Текущая комиссия партнёра: сначала реферальная, затем управляемая
-  const currentCommission =
-    stats?.commission_percentage_referral ??
-    stats?.commission_percentage_managed ??
-    null;
-
-  // Данные по уровням и прогрессу приходят из Supabase функции (вся логика на бэкенде)
-  const totalProjectsLevel =
-    stats?.total_projects ?? stats?.active_clients ?? payingClients;
-  const nextLevelTarget = stats?.next_level_required_active_clients ?? null;
-  const clientsToNextLevel = stats?.clients_to_next_level ?? null;
-  const partnerLevelTitle = stats?.partner_level ?? "Bronze Partner";
-  const nextLevelName = stats?.next_level_name ?? null;
-
-  const levelProgress =
-    nextLevelTarget && nextLevelTarget > 0
-      ? Math.min(Math.round((totalProjectsLevel / nextLevelTarget) * 100), 100)
-      : 100;
+  const referralCommission = stats?.commission_percentage_referral ?? null;
 
   if (loading && !stats) {
     return (
@@ -192,65 +223,6 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
   return (
     <div className="space-y-6 duration-500 animate-in fade-in">
-      {/* Gamification / Level Card */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white shadow-lg">
-        <div className="pointer-events-none absolute right-0 top-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-          <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="rounded-lg bg-white/10 p-1.5">
-                <Award size={18} className="text-yellow-400" />
-              </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                {t("partners.levelLabel")}
-              </span>
-            </div>
-            <h2 className="mb-1 text-2xl font-bold">
-              {partnerLevelTitle}{" "}
-              <span className="text-lg font-normal text-slate-400">
-                {currentCommission !== null ? `(${currentCommission}%)` : ""}
-              </span>
-            </h2>
-            {nextLevelName &&
-            clientsToNextLevel !== null &&
-            clientsToNextLevel > 0 ? (
-              <p className="max-w-lg text-sm text-slate-300">
-                {t("partners.levelHintPrefix")}{" "}
-                <span className="font-bold text-white">
-                  {clientsToNextLevel} {t("partners.levelHintProjects")}
-                </span>
-                ,{" "}
-                <span className="font-bold text-yellow-400">
-                  {t("partners.levelHintReach", { level: nextLevelName })}
-                </span>
-                .
-              </p>
-            ) : (
-              <p className="max-w-lg text-sm text-slate-300">
-                {t("partners.levelMax")}
-              </p>
-            )}
-          </div>
-          {nextLevelTarget && nextLevelTarget > 0 && (
-            <div className="w-full md:w-64">
-              <div className="mb-2 flex justify-between text-xs font-semibold text-slate-400">
-                <span>{t("partners.levelProgress")}</span>
-                <span>
-                  {totalProjectsLevel} / {nextLevelTarget}{" "}
-                  {t("partners.levelProjectsShort")}
-                </span>
-              </div>
-              <div className="h-3 w-full overflow-hidden rounded-full border border-slate-600 bg-slate-700">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                  style={{ width: `${levelProgress}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
@@ -289,14 +261,17 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
         </div>
 
         <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-          <div className="absolute right-5 top-5 text-gray-300 transition-colors group-hover:text-black">
-            <TrendingUp size={20} />
+          <div className="absolute right-5 top-5 text-gray-300 transition-colors group-hover:text-green-600">
+            <Percent size={20} />
           </div>
           <div>
             <div className="mb-1 text-sm font-semibold text-gray-500">
-              {t("partners.partnerCode")}
+              {t("partners.referralCommission")}
             </div>
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mb-2 text-3xl font-bold text-gray-900">
+              {referralCommission !== null ? `${referralCommission}%` : "—"}
+            </div>
+            <div className="mt-1 flex items-center gap-3">
               <Badge className="bg-gray-100 font-mono text-gray-800">
                 {referralCode}
               </Badge>
@@ -433,6 +408,52 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           ) : (
             <div className="space-y-4">
               {trafficStats.map((row) => (
+                <TrafficRow
+                  key={row.label}
+                  label={row.label}
+                  percent={row.percent}
+                  color={row.color}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
+            <PieChart size={20} className="text-gray-400" />
+            {t("partners.trafficByMedium")}
+          </h3>
+          {trafficMediumStats.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              {t("partners.trafficEmpty")}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {trafficMediumStats.map((row) => (
+                <TrafficRow
+                  key={row.label}
+                  label={row.label}
+                  percent={row.percent}
+                  color={row.color}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
+            <PieChart size={20} className="text-gray-400" />
+            {t("partners.trafficByCampaign")}
+          </h3>
+          {trafficCampaignStats.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              {t("partners.trafficEmpty")}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {trafficCampaignStats.map((row) => (
                 <TrafficRow
                   key={row.label}
                   label={row.label}

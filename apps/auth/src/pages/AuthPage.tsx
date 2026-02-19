@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import {
@@ -157,6 +157,33 @@ export default function AuthPage() {
 
   const refCode = searchParams.get("ref");
   const inviteCode = searchParams.get("invite");
+  const clickTrackedForRef = useRef<string | null>(null);
+
+  // Link clicks: при заходе с ?ref= учитываем клик в аналитике партнёра (один раз за визит)
+  const utmSource = searchParams.get("utm_source")?.trim() || null;
+  const utmMedium = searchParams.get("utm_medium") || null;
+  const utmCampaign = searchParams.get("utm_campaign") || null;
+  useEffect(() => {
+    if (!refCode || typeof window === "undefined") return;
+    if (clickTrackedForRef.current === refCode) return;
+    clickTrackedForRef.current = refCode;
+
+    supabase.functions
+      .invoke("partner-program", {
+        body: {
+          action: "track_click",
+          partner_code: refCode,
+          utm_source: utmSource ?? "direct",
+          utm_medium: utmMedium,
+          utm_campaign: utmCampaign,
+        },
+      })
+      .then(({ error }) => {
+        if (error) console.error("Partner track_click:", error);
+      })
+      .catch((err) => console.error("Partner track_click:", err));
+  }, [refCode, utmSource, utmMedium, utmCampaign]);
+
   const [partnerInfo, setPartnerInfo] = useState<{
     id: string;
     partner_code: string;

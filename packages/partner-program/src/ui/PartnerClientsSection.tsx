@@ -8,8 +8,10 @@ import {
   X,
   Save,
   CheckSquare,
+  Award,
 } from "lucide-react";
 import { usePartnerClients } from "../queries/usePartnerClients";
+import { usePartnerStats } from "../queries/usePartnerStats";
 import { useToast } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
 import { useLanguage } from "@gridix/utils/react";
@@ -25,6 +27,7 @@ import {
 
 export const PartnerClientsSection: React.FC = () => {
   const { clients, loading, error } = usePartnerClients();
+  const { stats } = usePartnerStats();
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -459,6 +462,87 @@ export const PartnerClientsSection: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Integrator Level Card */}
+      {(() => {
+        const totalProjectsLevel =
+          stats?.total_projects ?? stats?.active_clients ?? 0;
+        const nextLevelTarget =
+          stats?.next_level_required_active_clients ?? null;
+        const clientsToNextLevel = stats?.clients_to_next_level ?? null;
+        const partnerLevelTitle = stats?.partner_level ?? "Bronze Partner";
+        const nextLevelName = stats?.next_level_name ?? null;
+        const managedCommission = stats?.commission_percentage_managed ?? null;
+        const levelProgress =
+          nextLevelTarget && nextLevelTarget > 0
+            ? Math.min(
+                Math.round((totalProjectsLevel / nextLevelTarget) * 100),
+                100,
+              )
+            : 100;
+
+        return (
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white shadow-lg">
+            <div className="pointer-events-none absolute top-0 right-0 -mt-16 -mr-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+            <div className="relative z-10 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+              <div className="flex-1">
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="rounded-lg bg-white/10 p-1.5">
+                    <Award size={18} className="text-yellow-400" />
+                  </div>
+                  <span className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+                    {t("partners.levelLabel")}
+                  </span>
+                </div>
+                <h2 className="mb-1 text-2xl font-bold">
+                  {partnerLevelTitle}{" "}
+                  <span className="text-lg font-normal text-slate-400">
+                    {managedCommission !== null
+                      ? `(${managedCommission}%)`
+                      : ""}
+                  </span>
+                </h2>
+                {nextLevelName &&
+                clientsToNextLevel !== null &&
+                clientsToNextLevel > 0 ? (
+                  <p className="max-w-lg text-sm text-slate-300">
+                    {t("partners.levelHintPrefix")}{" "}
+                    <span className="font-bold text-white">
+                      {clientsToNextLevel} {t("partners.levelHintProjects")}
+                    </span>
+                    ,{" "}
+                    <span className="font-bold text-yellow-400">
+                      {t("partners.levelHintReach", { level: nextLevelName })}
+                    </span>
+                    .
+                  </p>
+                ) : (
+                  <p className="max-w-lg text-sm text-slate-300">
+                    {t("partners.levelMax")}
+                  </p>
+                )}
+              </div>
+              {nextLevelTarget && nextLevelTarget > 0 && (
+                <div className="w-full lg:w-72 lg:shrink-0">
+                  <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-400">
+                    <span>{t("partners.levelProgress")}</span>
+                    <span className="whitespace-nowrap">
+                      {totalProjectsLevel} / {nextLevelTarget}{" "}
+                      {t("partners.levelProjectsShort")}
+                    </span>
+                  </div>
+                  <div className="h-3 w-full overflow-hidden rounded-full border border-slate-600 bg-slate-700">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                      style={{ width: `${levelProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Шапка секции */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">

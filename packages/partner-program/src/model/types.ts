@@ -66,6 +66,10 @@ export interface PartnerStats {
   total_withdrawn: number;
   available_for_withdrawal: number;
   total_clicks: number;
+  /** Агрегация кликов по utm_source, utm_medium, utm_campaign */
+  traffic_by_source?: Array<{ source: string; count: number }>;
+  traffic_by_medium?: Array<{ source: string; count: number }>;
+  traffic_by_campaign?: Array<{ source: string; count: number }>;
   // Проценты комиссии, рассчитанные той же логикой, что и calculate_and_award_partner_commission
   commission_percentage_referral?: number | null;
   commission_percentage_managed?: number | null;
@@ -169,6 +173,9 @@ export interface PartnerProgramResponse {
   referral_clients?: number;
   managed_clients?: number;
   total_clicks?: number;
+  traffic_by_source?: Array<{ source: string; count: number }>;
+  traffic_by_medium?: Array<{ source: string; count: number }>;
+  traffic_by_campaign?: Array<{ source: string; count: number }>;
   total_earned?: number;
   total_withdrawn?: number;
   available_for_withdrawal?: number;
