@@ -722,6 +722,15 @@ function AgentSignatureSection(props: {
   onUpdated: () => Promise<void>;
   t: (key: string) => string;
 }) {
+  const resolveSignatureUrl = (path: string): string => {
+    if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
+    const normalizedPath = path
+      .replace(/^\/+/, "")
+      .replace(/^project-images\//, "");
+    return supabase.storage.from("project-images").getPublicUrl(normalizedPath)
+      .data.publicUrl;
+  };
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureMethod, setSignatureMethod] = useState<"draw" | "upload">(
@@ -735,12 +744,21 @@ function AgentSignatureSection(props: {
   const [showExisting, setShowExisting] = useState(
     !!props.existingSignaturePath,
   );
+  const existingSignatureUrl = props.existingSignaturePath
+    ? resolveSignatureUrl(props.existingSignaturePath)
+    : null;
 
   useEffect(() => {
     if (props.existingMethod === "draw" || props.existingMethod === "upload") {
       setSignatureMethod(props.existingMethod);
     }
   }, [props.existingMethod]);
+
+  useEffect(() => {
+    if (props.existingSignaturePath) {
+      setShowExisting(true);
+    }
+  }, [props.existingSignaturePath]);
 
   const getPoint = (
     e: ReactMouseEvent | ReactTouchEvent,
@@ -842,6 +860,14 @@ function AgentSignatureSection(props: {
       if (!ok) throw new Error("Failed");
       toast.success(props.t("common.agent.application.signatureUpdated"));
       await props.onUpdated();
+      setShowExisting(true);
+      setSignatureDataUrl(null);
+      setUploadedSignatureDataUrl(null);
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      if (canvas && ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     } catch (e) {
       console.error("Failed to update signature", e);
       toast.error(props.t("common.agent.application.signatureUpdateError"));
@@ -859,11 +885,11 @@ function AgentSignatureSection(props: {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {showExisting && props.existingSignaturePath ? (
+        {showExisting && existingSignatureUrl ? (
           <div className="space-y-4">
             <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] p-8">
               <img
-                src={props.existingSignaturePath}
+                src={existingSignatureUrl}
                 alt={props.t("common.agent.application.signature")}
                 className="max-h-40 w-auto object-contain mix-blend-multiply"
               />
@@ -970,9 +996,7 @@ function AgentSignatureSection(props: {
             <div className="flex justify-end pt-2">
               <Button
                 onClick={() => void saveSignature()}
-                disabled={
-                  saving || (!signatureDataUrl && !uploadedSignatureDataUrl)
-                }
+                disabled={saving || !finalSignatureDataUrl}
                 className="h-11 rounded-xl bg-[var(--admin-primary)] px-8 font-bold shadow-lg hover:bg-[var(--admin-primary-hover)]"
               >
                 {saving
