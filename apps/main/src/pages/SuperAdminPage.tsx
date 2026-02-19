@@ -140,42 +140,21 @@ const SuperAdminPage = () => {
     userEmail: user?.email,
     isCollapsed,
     onToggleCollapse: () => setIsCollapsed(!isCollapsed),
+    mobileOpen: isMobileOpen,
+    onMobileOpenChange: setIsMobileOpen,
     title: "SuperAdmin",
     isMobile,
     onMobileClose: () => setIsMobileOpen(false),
+    showSupportButton: true,
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Mobile Sidebar */}
-      {isMobile ? (
-        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-          <SheetContent side="left" className="w-80 p-0">
-            <SimplifiedSidebar {...sidebarProps} />
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <SimplifiedSidebar {...sidebarProps} />
-      )}
-
+      <SimplifiedSidebar {...sidebarProps} />
       {/* Main Content */}
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed && !isMobile ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
-        {/* Mobile Toggle */}
-        {isMobile && (
-          <div className="flex items-center border-b p-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-            <span className="ml-2 font-semibold">SuperAdmin</span>
-          </div>
-        )}
-
         <main className="h-screen flex-1 overflow-auto bg-slate-50/50">
           {renderContent()}
         </main>

@@ -2,13 +2,7 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Button,
-  Sheet,
-  SheetContent,
-  SimplifiedSidebar,
-  type SimplifiedSidebarNavItem,
-} from "@gridix/ui";
+import { SimplifiedSidebar, type SimplifiedSidebarNavItem } from "@gridix/ui";
 import {
   ChartBar,
   UserCircle as UserIcon,
@@ -16,7 +10,6 @@ import {
   BookOpen,
   Eye,
 } from "@phosphor-icons/react";
-import { Menu } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@gridix/ui";
@@ -105,7 +98,10 @@ export function PartnersCabinetLayout({
       showWorkspaceSwitcher={false}
       syncQueryParam={false}
       isMobile={Boolean(isMobile)}
+      mobileOpen={isMobileOpen}
+      onMobileOpenChange={setIsMobileOpen}
       onMobileClose={() => setIsMobileOpen(false)}
+      showSupportButton={false}
       onSignOut={() => {
         void (async () => {
           await signOut();
@@ -117,15 +113,7 @@ export function PartnersCabinetLayout({
 
   return (
     <div className="flex min-h-screen bg-background">
-      {isMobile ? (
-        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-          <SheetContent side="left" className="w-80 p-0">
-            {sidebar}
-          </SheetContent>
-        </Sheet>
-      ) : (
-        sidebar
-      )}
+      {sidebar}
 
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${
@@ -134,19 +122,6 @@ export function PartnersCabinetLayout({
             : "md:ml-64 md:max-w-[calc(100vw-16rem)]"
         }`}
       >
-        {isMobile ? (
-          <div className="sticky top-0 z-20 flex items-center border-b bg-white p-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-            <span className="ml-2 font-semibold">{t("partners.title")}</span>
-          </div>
-        ) : null}
-
         <main className="h-screen flex-1 overflow-auto bg-[#F8FAFC]">
           {children}
         </main>

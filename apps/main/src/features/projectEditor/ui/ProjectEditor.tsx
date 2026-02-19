@@ -620,9 +620,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
       />
-
-      {/* Mobile menu button */}
-      <ProjectEditorSidebarMenuButton setIsMobileOpen={setIsMobileOpen} />
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
