@@ -255,7 +255,11 @@
       "sign": "Sözleşme imzala",
       "submit": "Başvuruyu gönder",
       "currentSignaturePrompt": "Bu, sözleşmeler için kullanılan mevcut imzanızdır.",
-      "uploadHint": "İmzanızın yüksek kaliteli bir görselini (PNG veya JPG) yükleyin."
+      "uploadHint": "İmzanızın yüksek kaliteli bir görselini (PNG veya JPG) yükleyin.",
+      "signaturePreviewAlt": "İmza önizlemesi",
+      "missingSignature": "İmza eksik",
+      "signatureUpdated": "İmza güncellendi",
+      "signatureUpdateError": "İmza güncellenemedi"
     },
     "status": {
       "pending": "Askıda olması",
@@ -288,6 +292,14 @@
     "notificationsSaved": "Bildirim tercihleri ​​kaydedildi",
     "notificationsSaveError": "Bildirim tercihleri ​​kaydedilemedi",
     "saveAll": "Tümünü kaydet",
-    "loadError": "Sözleşme verileri yüklenemedi"
+    "loadError": "Sözleşme verileri yüklenemedi",
+    "signedContractsTitle": "İmzalı sözleşmeler",
+    "signedContractsDesc": "İmza sırasında oluşturulan sözleşmeleri indirin.",
+    "refreshContracts": "Listeyi yenile",
+    "signedContractsLoadError": "Sözleşmeler yüklenemedi. Lütfen tekrar deneyin.",
+    "noSignedContracts": "Henüz sözleşme yok",
+    "noSignedContractsDesc": "Burada görmek için ilk sözleşmenizi imzalayın.",
+    "contractLabel": "Sözleşme",
+    "pdfLabel": "PDF"
   }
 }

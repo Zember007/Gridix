@@ -395,7 +395,7 @@ function AgentUserProfileSection(props: {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Account Type
+                  {props.t("adminSettings.accountType")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50/50 p-1">
                   <button
@@ -409,7 +409,7 @@ function AgentUserProfileSection(props: {
                         : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
-                    <Building2 size={16} /> Company
+                    <Building2 size={16} /> {props.t("adminSettings.company")}
                   </button>
                   <button
                     type="button"
@@ -422,7 +422,7 @@ function AgentUserProfileSection(props: {
                         : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
-                    <User size={16} /> Individual
+                    <User size={16} /> {props.t("adminSettings.individual")}
                   </button>
                 </div>
               </div>
@@ -431,7 +431,7 @@ function AgentUserProfileSection(props: {
             <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
               <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
                 <User size={16} className="text-blue-500" />
-                Personal details for contracts
+                {props.t("adminSettings.contractPersonalDetails")}
               </h3>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -545,7 +545,9 @@ function AgentUserProfileSection(props: {
                         onChange={(e) =>
                           props.onChange({ ...v, company_type: e.target.value })
                         }
-                        placeholder="e.g. LLC / Ltd"
+                        placeholder={props.t(
+                          "adminSettings.companyTypePlaceholder",
+                        )}
                         className="rounded-xl border-slate-200 ring-offset-transparent focus-visible:ring-blue-500"
                       />
                     </div>
@@ -617,7 +619,7 @@ function AgentUserProfileSection(props: {
             <div className="space-y-4 rounded-2xl border border-slate-100 bg-blue-50/30 p-4 md:p-6">
               <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
                 <CreditCard size={16} className="text-blue-500" />
-                Bank & Billing Details
+                {props.t("adminSettings.bankBillingDetails")}
               </h3>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -820,7 +822,7 @@ function AgentSignatureSection(props: {
   const saveSignature = async () => {
     if (!props.userId) return;
     if (!finalSignatureDataUrl) {
-      toast.error("Missing signature");
+      toast.error(props.t("common.agent.application.missingSignature"));
       return;
     }
     setSaving(true);
@@ -835,11 +837,11 @@ function AgentSignatureSection(props: {
       if (error) throw error;
       const ok = (data as any)?.success === true;
       if (!ok) throw new Error("Failed");
-      toast.success("Signature updated");
+      toast.success(props.t("common.agent.application.signatureUpdated"));
       await props.onUpdated();
     } catch (e) {
       console.error("Failed to update signature", e);
-      toast.error("Failed to update signature");
+      toast.error(props.t("common.agent.application.signatureUpdateError"));
     } finally {
       setSaving(false);
     }
@@ -848,7 +850,7 @@ function AgentSignatureSection(props: {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{props.t("agent.application.signature")}</CardTitle>
+        <CardTitle>{props.t("common.agent.application.signature")}</CardTitle>
         <CardDescription>
           {props.t("common.settings.contractDesc")}
         </CardDescription>
@@ -859,11 +861,11 @@ function AgentSignatureSection(props: {
             <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-100 bg-slate-50/30 p-8">
               <img
                 src={props.existingSignaturePath}
-                alt={props.t("agent.application.signature")}
+                alt={props.t("common.agent.application.signature")}
                 className="max-h-40 w-auto object-contain mix-blend-multiply"
               />
               <p className="mt-4 text-xs font-medium text-slate-500">
-                {props.t("agent.application.currentSignaturePrompt")}
+                {props.t("common.agent.application.currentSignaturePrompt")}
               </p>
             </div>
             <div className="flex justify-center">
@@ -873,7 +875,7 @@ function AgentSignatureSection(props: {
                 onClick={() => setShowExisting(false)}
                 className="rounded-xl border-slate-200"
               >
-                {props.t("agent.application.replaceSignature")}
+                {props.t("common.agent.application.replaceSignature")}
               </Button>
             </div>
           </div>
@@ -886,7 +888,7 @@ function AgentSignatureSection(props: {
                 onClick={() => setSignatureMethod("draw")}
                 className="rounded-xl"
               >
-                {props.t("agent.application.drawSignature")}
+                {props.t("common.agent.application.drawSignature")}
               </Button>
               <Button
                 type="button"
@@ -894,7 +896,7 @@ function AgentSignatureSection(props: {
                 onClick={() => setSignatureMethod("upload")}
                 className="rounded-xl"
               >
-                {props.t("agent.application.uploadSignature")}
+                {props.t("common.agent.application.uploadSignature")}
               </Button>
               {props.existingSignaturePath && (
                 <Button
@@ -903,7 +905,7 @@ function AgentSignatureSection(props: {
                   onClick={() => setShowExisting(true)}
                   className="ml-auto text-slate-500"
                 >
-                  {props.t("common.cancel")}
+                  {props.t("common.common.cancel")}
                 </Button>
               )}
             </div>
@@ -930,7 +932,7 @@ function AgentSignatureSection(props: {
                   className="absolute right-4 top-4 rounded-lg bg-white/80 backdrop-blur"
                   onClick={clearCanvas}
                 >
-                  {props.t("agent.application.clear")}
+                  {props.t("common.agent.application.clear")}
                 </Button>
               </div>
             ) : (
@@ -945,13 +947,15 @@ function AgentSignatureSection(props: {
                     }
                   />
                   <p className="mt-2 text-xs text-slate-400">
-                    {props.t("agent.application.uploadHint")}
+                    {props.t("common.agent.application.uploadHint")}
                   </p>
                   {uploadedSignatureDataUrl && (
                     <div className="mt-6 rounded-lg border border-slate-100 bg-slate-50 p-4">
                       <img
                         src={uploadedSignatureDataUrl}
-                        alt="signature preview"
+                        alt={props.t(
+                          "common.agent.application.signaturePreviewAlt",
+                        )}
                         className="h-28 object-contain mix-blend-multiply"
                       />
                     </div>
@@ -1002,10 +1006,10 @@ function AgentSignedContractsSection(props: {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-bold text-slate-900">
-              Signed contracts
+              {props.t("common.settings.signedContractsTitle")}
             </CardTitle>
             <CardDescription className="text-slate-500">
-              Download the contracts generated during signing.
+              {props.t("common.settings.signedContractsDesc")}
             </CardDescription>
           </div>
           <FileCheck className="text-green-500" size={24} />
@@ -1019,7 +1023,7 @@ function AgentSignedContractsSection(props: {
             onClick={props.onRefresh}
             className="rounded-lg border-slate-200 font-bold hover:bg-slate-50"
           >
-            Refresh List
+            {props.t("common.settings.refreshContracts")}
           </Button>
         </div>
 
@@ -1029,16 +1033,18 @@ function AgentSignedContractsSection(props: {
           </div>
         ) : props.error ? (
           <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 text-center text-sm font-semibold text-red-600">
-            Failed to load contracts. Please try again.
+            {props.t("common.settings.signedContractsLoadError")}
           </div>
         ) : props.contracts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
               <FileText size={20} />
             </div>
-            <p className="text-sm font-bold text-slate-900">No contracts yet</p>
+            <p className="text-sm font-bold text-slate-900">
+              {props.t("common.settings.noSignedContracts")}
+            </p>
             <p className="text-xs text-slate-500">
-              Sign your first contract to see it here.
+              {props.t("common.settings.noSignedContractsDesc")}
             </p>
           </div>
         ) : (
@@ -1061,12 +1067,12 @@ function AgentSignedContractsSection(props: {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-black text-slate-900">
-                      Contract {lang}
+                      {props.t("common.settings.contractLabel")} {lang}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400">
                       <span>{c.signed_at?.split("T")[0] ?? "—"}</span>
                       <span>•</span>
-                      <span>PDF</span>
+                      <span>{props.t("common.settings.pdfLabel")}</span>
                     </div>
                   </div>
                   <Button

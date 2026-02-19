@@ -255,7 +255,11 @@
       "sign": "توقيع الاتفاقية",
       "submit": "تقديم الطلب",
       "currentSignaturePrompt": "هذا هو توقيعك الحالي المستخدم في العقود.",
-      "uploadHint": "قم بتحميل صورة عالية الجودة لتوقيعك (PNG أو JPG)."
+      "uploadHint": "قم بتحميل صورة عالية الجودة لتوقيعك (PNG أو JPG).",
+      "signaturePreviewAlt": "معاينة التوقيع",
+      "missingSignature": "التوقيع مفقود",
+      "signatureUpdated": "تم تحديث التوقيع",
+      "signatureUpdateError": "فشل تحديث التوقيع"
     },
     "status": {
       "pending": "قيد الانتظار",
@@ -288,6 +292,14 @@
     "notificationsSaved": "تم حفظ تفضيلات الإشعارات",
     "notificationsSaveError": "فشل في حفظ تفضيلات الإخطار",
     "saveAll": "احفظ الكل",
-    "loadError": "فشل في تحميل بيانات العقد"
+    "loadError": "فشل في تحميل بيانات العقد",
+    "signedContractsTitle": "العقود الموقعة",
+    "signedContractsDesc": "قم بتنزيل العقود التي تم إنشاؤها أثناء التوقيع.",
+    "refreshContracts": "تحديث القائمة",
+    "signedContractsLoadError": "فشل تحميل العقود. حاول مرة أخرى.",
+    "noSignedContracts": "لا توجد عقود بعد",
+    "noSignedContractsDesc": "وقّع أول عقد لك لعرضه هنا.",
+    "contractLabel": "عقد",
+    "pdfLabel": "PDF"
   }
 }

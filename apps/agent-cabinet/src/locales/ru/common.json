@@ -255,7 +255,11 @@
       "sign": "Подписать договор",
       "submit": "Отправить заявку",
       "currentSignaturePrompt": "Это ваша текущая подпись, используемая в договорах.",
-      "uploadHint": "Загрузите качественное изображение подписи (PNG или JPG)."
+      "uploadHint": "Загрузите качественное изображение подписи (PNG или JPG).",
+      "signaturePreviewAlt": "Превью подписи",
+      "missingSignature": "Подпись отсутствует",
+      "signatureUpdated": "Подпись обновлена",
+      "signatureUpdateError": "Не удалось обновить подпись"
     },
     "status": {
       "pending": "На проверке",
@@ -288,6 +292,14 @@
     "notificationsSaved": "Настройки уведомлений сохранены",
     "notificationsSaveError": "Не удалось сохранить настройки уведомлений",
     "saveAll": "Сохранить всё",
-    "loadError": "Не удалось загрузить данные договора"
+    "loadError": "Не удалось загрузить данные договора",
+    "signedContractsTitle": "Подписанные договоры",
+    "signedContractsDesc": "Скачивайте договоры, сформированные при подписании.",
+    "refreshContracts": "Обновить список",
+    "signedContractsLoadError": "Не удалось загрузить договоры. Попробуйте ещё раз.",
+    "noSignedContracts": "Пока нет договоров",
+    "noSignedContractsDesc": "Подпишите первый договор, чтобы увидеть его здесь.",
+    "contractLabel": "Договор",
+    "pdfLabel": "PDF"
   }
 }

@@ -255,7 +255,11 @@
       "sign": "חתמו על הסכם",
       "submit": "הגש בקשה",
       "currentSignaturePrompt": "זוהי החתימה הנוכחית שלך המשמשת עבור חוזים.",
-      "uploadHint": "העלה תמונה באיכות גבוהה של החתימה שלך (PNG או JPG)."
+      "uploadHint": "העלה תמונה באיכות גבוהה של החתימה שלך (PNG או JPG).",
+      "signaturePreviewAlt": "תצוגה מקדימה של החתימה",
+      "missingSignature": "חסרה חתימה",
+      "signatureUpdated": "החתימה עודכנה",
+      "signatureUpdateError": "עדכון החתימה נכשל"
     },
     "status": {
       "pending": "תָלוּי וְעוֹמֵד",
@@ -288,6 +292,14 @@
     "notificationsSaved": "העדפות ההתראות נשמרו",
     "notificationsSaveError": "שמירת העדפות ההתראות נכשלה",
     "saveAll": "שמור הכל",
-    "loadError": "טעינת נתוני החוזה נכשלה"
+    "loadError": "טעינת נתוני החוזה נכשלה",
+    "signedContractsTitle": "חוזים חתומים",
+    "signedContractsDesc": "הורד את החוזים שנוצרו במהלך החתימה.",
+    "refreshContracts": "רענן רשימה",
+    "signedContractsLoadError": "טעינת החוזים נכשלה. נסה שוב.",
+    "noSignedContracts": "עדיין אין חוזים",
+    "noSignedContractsDesc": "חתום על החוזה הראשון שלך כדי לראות אותו כאן.",
+    "contractLabel": "חוזה",
+    "pdfLabel": "PDF"
   }
 }

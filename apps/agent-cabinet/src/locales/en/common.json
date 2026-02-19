@@ -255,7 +255,11 @@
       "sign": "Sign agreement",
       "submit": "Submit application",
       "currentSignaturePrompt": "This is your current signature used for contracts.",
-      "uploadHint": "Upload a high-quality image of your signature (PNG or JPG)."
+      "uploadHint": "Upload a high-quality image of your signature (PNG or JPG).",
+      "signaturePreviewAlt": "Signature preview",
+      "missingSignature": "Missing signature",
+      "signatureUpdated": "Signature updated",
+      "signatureUpdateError": "Failed to update signature"
     },
     "status": {
       "pending": "Pending",
@@ -288,6 +292,14 @@
     "notificationsSaved": "Notification preferences saved",
     "notificationsSaveError": "Failed to save notification preferences",
     "saveAll": "Save all",
-    "loadError": "Failed to load contract data"
+    "loadError": "Failed to load contract data",
+    "signedContractsTitle": "Signed contracts",
+    "signedContractsDesc": "Download the contracts generated during signing.",
+    "refreshContracts": "Refresh list",
+    "signedContractsLoadError": "Failed to load contracts. Please try again.",
+    "noSignedContracts": "No contracts yet",
+    "noSignedContractsDesc": "Sign your first contract to see it here.",
+    "contractLabel": "Contract",
+    "pdfLabel": "PDF"
   }
 }
