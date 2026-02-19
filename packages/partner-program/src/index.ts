@@ -19,3 +19,14 @@ export type {
   PartnerProgramRequest,
   PartnerProgramResponse,
 } from "./model/types";
+
+// Instructions config (host assets in main app public/instructions/)
+export {
+  DEFAULT_INSTRUCTIONS_CONFIG,
+  instructionsAssetUrl,
+} from "./config/instructionsConfig";
+export type {
+  MaterialItem,
+  VideoItem,
+  FaqItem,
+} from "./config/instructionsConfig";

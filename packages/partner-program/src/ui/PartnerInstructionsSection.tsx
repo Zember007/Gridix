@@ -10,102 +10,29 @@ import {
 } from "lucide-react";
 import { PartnerIncomeCalculator } from "./IncomeCalculator";
 import { useLanguage } from "@gridix/utils/react";
-import { VideoModalPlayer, type VideoChapter } from "./VideoModalPlayer";
+import { VideoModalPlayer } from "./VideoModalPlayer";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@gridix/ui";
+import {
+  DEFAULT_INSTRUCTIONS_CONFIG,
+  instructionsAssetUrl,
+} from "../config/instructionsConfig";
 
-type MaterialItem = {
-  titleKey: string;
-  languages: Array<"RU" | "EN">;
-  files: Record<"RU" | "EN", string>;
-};
+const { MATERIALS, VIDEOS, FAQ_ITEMS, TARGET_AUDIENCE_KEYS } =
+  DEFAULT_INSTRUCTIONS_CONFIG;
 
-type VideoItem = {
-  id: string;
-  titleKey: string;
-  src: string;
-  chapters?: VideoChapter[];
-};
+export interface PartnerInstructionsSectionProps {
+  /** Базовый URL для ресурсов инструкций (видео, PDF). Если не задан — используются относительные пути (main app). Для partners app передайте, например, VITE_MAIN_APP_URL. */
+  instructionsBaseUrl?: string;
+}
 
-type FaqItem = {
-  questionKey: string;
-  answerKey: string;
-};
-
-const MATERIALS: MaterialItem[] = [
-  {
-    titleKey: "instructionsMaterial1",
-    languages: ["RU", "EN"],
-    files: {
-      RU: "/instructions/pdf/GRIDIX-RU.pdf",
-      EN: "/instructions/pdf/GRIDIX-EN.pdf",
-    },
-  },
-];
-
-const VIDEOS: VideoItem[] = [
-  {
-    id: "explore_service",
-    titleKey: "instructionsVideo3",
-    src: "/instructions/videos/Explore_service_.mp4",
-    chapters: [],
-  },
-  {
-    id: "create_project",
-    titleKey: "instructionsVideo1",
-    src: "/instructions/videos/Create_project_.mp4",
-    chapters: [],
-  },
-  {
-    id: "edit_project",
-    titleKey: "instructionsVideo2",
-    src: "/instructions/videos/Edit_project_gridix_.mp4",
-    chapters: [],
-  },
-  {
-    id: "explore_crm",
-    titleKey: "instructionsVideo5",
-    src: "/instructions/videos/Gridix_explore_crm.mp4",
-    chapters: [],
-  },
-];
-
-const FAQ_ITEMS: FaqItem[] = [
-  {
-    questionKey: "instructionsFaq1Question",
-    answerKey: "instructionsFaq1Answer",
-  },
-  {
-    questionKey: "instructionsFaq2Question",
-    answerKey: "instructionsFaq2Answer",
-  },
-  {
-    questionKey: "instructionsFaq3Question",
-    answerKey: "instructionsFaq3Answer",
-  },
-  {
-    questionKey: "instructionsFaq4Question",
-    answerKey: "instructionsFaq4Answer",
-  },
-  {
-    questionKey: "instructionsFaq5Question",
-    answerKey: "instructionsFaq5Answer",
-  },
-];
-
-const TARGET_AUDIENCE_KEYS = [
-  "instructionsAudience1",
-  "instructionsAudience2",
-  "instructionsAudience3",
-  "instructionsAudience4",
-  "instructionsAudience5",
-];
-
-export const PartnerInstructionsSection: React.FC = () => {
+export const PartnerInstructionsSection: React.FC<
+  PartnerInstructionsSectionProps
+> = ({ instructionsBaseUrl }) => {
   const { t, language } = useLanguage();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -131,7 +58,11 @@ export const PartnerInstructionsSection: React.FC = () => {
           if (!open) setActiveVideoId(null);
         }}
         title={activeVideo ? t(`partners.${activeVideo.titleKey}`) : ""}
-        src={activeVideo?.src || ""}
+        src={
+          activeVideo
+            ? instructionsAssetUrl(instructionsBaseUrl, activeVideo.src)
+            : ""
+        }
         chapters={activeVideo?.chapters ?? []}
       />
 
@@ -258,7 +189,10 @@ export const PartnerInstructionsSection: React.FC = () => {
                 </div>
 
                 <a
-                  href={item.files[materialsLang]}
+                  href={instructionsAssetUrl(
+                    instructionsBaseUrl,
+                    item.files[materialsLang],
+                  )}
                   download
                   className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-gray-200 bg-white transition-colors hover:bg-gray-100"
                   aria-label={t("partners.download") || "Скачать"}
@@ -286,7 +220,7 @@ export const PartnerInstructionsSection: React.FC = () => {
               >
                 <div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded-md border border-slate-200 bg-black">
                   <video
-                    src={video.src}
+                    src={instructionsAssetUrl(instructionsBaseUrl, video.src)}
                     preload="metadata"
                     muted
                     playsInline
