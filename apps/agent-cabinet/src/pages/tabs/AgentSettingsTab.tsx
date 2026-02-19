@@ -25,11 +25,22 @@ import {
   Label,
   Switch,
   Button,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@gridix/ui";
 import {
   Save,
   Building2,
   User,
+  Bell,
+  Database,
   CreditCard,
   Download,
   FileText,
@@ -83,6 +94,8 @@ interface AgentApplicationSettings {
   agreement_signed_at: unknown;
   commission_rate: unknown;
 }
+
+type SettingsTabValue = "company" | "account" | "notifications" | "data";
 
 function useMyUserProfile(userId: string | undefined) {
   return useQuery({
@@ -189,6 +202,7 @@ export function AgentSettingsTab() {
   const { user } = useAuth();
   const { activeWorkspaceId } = useWorkspace();
 
+  const [tab, setTab] = useState<SettingsTabValue>("company");
   const [saving, setSaving] = useState(false);
   const notificationSaveFnRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -281,79 +295,150 @@ export function AgentSettingsTab() {
         }}
       />
 
-      <div className="space-y-6 p-4 md:p-6">
-        {/* Editable agent profile (user_profiles) */}
-        <AgentUserProfileSection
-          loading={profileLoading}
-          value={profileForm}
-          onChange={setProfileForm}
-          onSave={async () => {
-            try {
-              await saveUserProfile();
-              toast.success(t("common.settings.profileSaved"));
-            } catch (e) {
-              console.error("Failed to save profile", e);
-              toast.error(t("common.settings.profileSaveError"));
-            }
-          }}
-          t={t}
-        />
+      <div className="p-4 md:p-6">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as SettingsTabValue)}
+          className="space-y-6"
+        >
+          <TabsList className="h-auto w-full justify-start rounded-xl border border-[var(--admin-border)] bg-[var(--admin-background-secondary)] p-2">
+            <div className="w-full sm:hidden">
+              <Select
+                value={tab}
+                onValueChange={(v) => setTab(v as SettingsTabValue)}
+              >
+                <SelectTrigger className="h-10 w-full rounded-lg border-[var(--admin-border)] bg-[var(--admin-card-background)]">
+                  <SelectValue placeholder={t("adminSettings.company")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="company">
+                    <div className="flex items-center gap-2">
+                      <Building2 size={16} />
+                      {t("adminSettings.company")}
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="account">
+                    <div className="flex items-center gap-2">
+                      <User size={16} />
+                      {t("adminSettings.account")}
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="notifications">
+                    <div className="flex items-center gap-2">
+                      <Bell size={16} />
+                      {t("adminSettings.notifications")}
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="data">
+                    <div className="flex items-center gap-2">
+                      <Database size={16} />
+                      {t("adminSettings.data")}
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        {/* Global account security */}
-        <GlobalAccountSecuritySection userEmail={user?.email ?? ""} />
+            <div className="hidden w-full flex-wrap gap-2 sm:flex">
+              <TabsTrigger value="company" className="flex items-center gap-2">
+                <Building2 size={16} />
+                {t("adminSettings.company")}
+              </TabsTrigger>
+              <TabsTrigger value="account" className="flex items-center gap-2">
+                <User size={16} />
+                {t("adminSettings.account")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                className="flex items-center gap-2"
+              >
+                <Bell size={16} />
+                {t("adminSettings.notifications")}
+              </TabsTrigger>
+              <TabsTrigger value="data" className="flex items-center gap-2">
+                <Database size={16} />
+                {t("adminSettings.data")}
+              </TabsTrigger>
+            </div>
+          </TabsList>
 
-        {/* Notification preferences */}
-        <GlobalNotificationSettingsSection
-          userId={user?.id}
-          userEmail={user?.email ?? ""}
-          onReady={onNotificationReady}
-        />
+          <TabsContent value="company" className="space-y-6">
+            <AgentUserProfileSection
+              loading={profileLoading}
+              value={profileForm}
+              onChange={setProfileForm}
+              onSave={async () => {
+                try {
+                  await saveUserProfile();
+                  toast.success(t("common.settings.profileSaved"));
+                } catch (e) {
+                  console.error("Failed to save profile", e);
+                  toast.error(t("common.settings.profileSaveError"));
+                }
+              }}
+              t={t}
+            />
+          </TabsContent>
 
-        {/* Signature (user_profiles.signature_*) */}
-        <AgentSignatureSection
-          userId={user?.id ?? null}
-          existingSignaturePath={myProfileQuery.data?.signature_path ?? null}
-          existingMethod={myProfileQuery.data?.signature_method ?? null}
-          onUpdated={async () => {
-            await myProfileQuery.refetch();
-          }}
-          t={t}
-        />
+          <TabsContent value="account" className="space-y-6">
+            <GlobalAccountSecuritySection userEmail={user?.email ?? ""} />
+          </TabsContent>
 
-        {/* Signed contracts (download only) */}
-        <AgentSignedContractsSection
-          applicationId={activeWorkspaceId ?? null}
-          loading={contractsQuery.isLoading}
-          error={contractsQuery.error as Error | null}
-          contracts={contractsQuery.data ?? []}
-          onRefresh={() => void contractsQuery.refetch()}
-          t={t}
-        />
+          <TabsContent value="notifications" className="space-y-6">
+            <GlobalNotificationSettingsSection
+              userId={user?.id}
+              userEmail={user?.email ?? ""}
+              onReady={onNotificationReady}
+            />
+          </TabsContent>
 
-        {/* Agent contract data (read-only) — only when workspace selected */}
-        {activeWorkspaceId ? (
-          <AgentContractCard
-            data={contractData ?? null}
-            loading={contractLoading}
-            error={contractError}
-            t={t}
-          />
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center text-[var(--admin-text-muted)]">
-              <p className="text-base font-medium">
-                {t("common.workspace.noActiveTitle")}
-              </p>
-              <p className="mt-1 text-sm">
-                {t("common.workspace.pickInSidebar")}
-              </p>
-              <p className="mt-4 text-xs">
-                {t("common.settings.contractTitle")}{" "}
-                {t("common.settings.contractDesc").toLowerCase()}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+          <TabsContent value="data" className="space-y-6">
+            <AgentSignatureSection
+              userId={user?.id ?? null}
+              existingSignaturePath={
+                myProfileQuery.data?.signature_path ?? null
+              }
+              existingMethod={myProfileQuery.data?.signature_method ?? null}
+              onUpdated={async () => {
+                await myProfileQuery.refetch();
+              }}
+              t={t}
+            />
+
+            <AgentSignedContractsSection
+              applicationId={activeWorkspaceId ?? null}
+              loading={contractsQuery.isLoading}
+              error={contractsQuery.error as Error | null}
+              contracts={contractsQuery.data ?? []}
+              onRefresh={() => void contractsQuery.refetch()}
+              t={t}
+            />
+
+            {activeWorkspaceId ? (
+              <AgentContractCard
+                data={contractData ?? null}
+                loading={contractLoading}
+                error={contractError}
+                t={t}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center text-[var(--admin-text-muted)]">
+                  <p className="text-base font-medium">
+                    {t("common.workspace.noActiveTitle")}
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {t("common.workspace.pickInSidebar")}
+                  </p>
+                  <p className="mt-4 text-xs">
+                    {t("common.settings.contractTitle")}{" "}
+                    {t("common.settings.contractDesc").toLowerCase()}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
@@ -910,12 +995,12 @@ function AgentSignatureSection(props: {
           </div>
         ) : (
           <>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 type="button"
                 variant={signatureMethod === "draw" ? "default" : "outline"}
                 onClick={() => setSignatureMethod("draw")}
-                className="rounded-xl"
+                className="min-w-[120px] flex-1 rounded-xl sm:min-w-0 sm:flex-none"
               >
                 {props.t("common.agent.application.drawSignature")}
               </Button>
@@ -923,7 +1008,7 @@ function AgentSignatureSection(props: {
                 type="button"
                 variant={signatureMethod === "upload" ? "default" : "outline"}
                 onClick={() => setSignatureMethod("upload")}
-                className="rounded-xl"
+                className="min-w-[120px] flex-1 rounded-xl sm:min-w-0 sm:flex-none"
               >
                 {props.t("common.agent.application.uploadSignature")}
               </Button>
@@ -932,7 +1017,7 @@ function AgentSignatureSection(props: {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowExisting(true)}
-                  className="ml-auto text-[var(--admin-text-muted)]"
+                  className="w-full justify-center text-[var(--admin-text-muted)] sm:ml-auto sm:w-auto"
                 >
                   {props.t("common.common.cancel")}
                 </Button>
@@ -1079,7 +1164,7 @@ function AgentSignedContractsSection(props: {
             {props.contracts.map((c) => {
               const lang = c.template_lang
                 ? c.template_lang.toUpperCase()
-                : "—";
+                : "\u2014";
               return (
                 <div
                   key={c.id}
@@ -1097,8 +1182,8 @@ function AgentSignedContractsSection(props: {
                       {props.t("common.settings.contractLabel")} {lang}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-[var(--admin-text-muted)]">
-                      <span>{c.signed_at?.split("T")[0] ?? "—"}</span>
-                      <span>•</span>
+                      <span>{c.signed_at?.split("T")[0] ?? "\u2014"}</span>
+                      <span>{"\u2022"}</span>
                       <span>{props.t("common.settings.pdfLabel")}</span>
                     </div>
                   </div>
@@ -1218,7 +1303,7 @@ function AgentContractCard({
                 {f.label}
               </dt>
               <dd className="mt-1 text-sm text-[var(--admin-text-primary)]">
-                {formatValue(f.value) ?? "—"}
+                {formatValue(f.value) ?? "\u2014"}
               </dd>
             </div>
           ))}
@@ -1230,7 +1315,7 @@ function AgentContractCard({
               {t("common.settings.bankDetails")}
             </dt>
             <dd className="mt-1 whitespace-pre-wrap rounded-md bg-[var(--admin-background-secondary)] p-3 text-sm text-[var(--admin-text-primary)]">
-              {formatValue(data.bank_details) ?? "—"}
+              {formatValue(data.bank_details) ?? "\u2014"}
             </dd>
           </div>
         )}
