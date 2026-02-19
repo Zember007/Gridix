@@ -101,7 +101,7 @@ export function PartnersCabinetLayout({
       mobileOpen={isMobileOpen}
       onMobileOpenChange={setIsMobileOpen}
       onMobileClose={() => setIsMobileOpen(false)}
-      showSupportButton={false}
+      showSupportButton={true}
       onSignOut={() => {
         void (async () => {
           await signOut();
