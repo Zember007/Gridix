@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@gridix/utils/api";
+import { useEffect, useMemo } from "react";
+import { useApartmentsByProject } from "@gridix/utils";
 import type { Apartment } from "@/entities/apartment/model/types";
 import { normalizeApartmentData } from "@/entities/apartment/model/types";
 
@@ -26,47 +26,18 @@ export function ObjectUnitSelect({
   selectedApartmentId: string | null;
   onSelect: (apartment: Apartment | null) => void;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [apartments, setApartments] = useState<Apartment[]>([]);
+  const { data, isLoading, error } = useApartmentsByProject(projectId);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setApartments([]);
     onSelect(null);
-
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("apartments")
-          .select(
-            "id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type, polygon",
-          )
-          .eq("project_id", projectId);
-        if (error) throw error;
-        if (cancelled) return;
-        setApartments(
-          (data || []).map(normalizeApartmentData).sort(sortByApartmentNumber),
-        );
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Ошибка загрузки объектов");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const options = useMemo(() => apartments, [apartments]);
+  const options = useMemo(() => {
+    return (data ?? []).map(normalizeApartmentData).sort(sortByApartmentNumber);
+  }, [data]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-xl border bg-background p-6 text-sm text-muted-foreground">
         Загружаем список объектов…
@@ -78,7 +49,9 @@ export function ObjectUnitSelect({
     return (
       <div className="rounded-xl border bg-background p-6">
         <div className="text-sm font-medium">Не удалось загрузить объекты</div>
-        <div className="mt-1 text-sm text-destructive">{error}</div>
+        <div className="mt-1 text-sm text-destructive">
+          {error instanceof Error ? error.message : "Ошибка загрузки объектов"}
+        </div>
       </div>
     );
   }

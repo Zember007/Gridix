@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useCurrentSession } from "@gridix/utils";
-import { supabase } from "@gridix/utils/api";
+import { useCurrentSession, useUserProjects } from "@gridix/utils";
 
 export type CrmProjectLite = {
   id: string;
@@ -14,6 +13,10 @@ export function useCrmProjectsLite(enabled: boolean = true) {
   const [error, setError] = useState<string | null>(null);
   const { data: sessionQuery, isLoading: isSessionLoading } =
     useCurrentSession();
+  const { refetch: refetchProjects } = useUserProjects(
+    sessionQuery?.user?.id ?? null,
+    false,
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -35,14 +38,16 @@ export function useCrmProjectsLite(enabled: boolean = true) {
           return;
         }
 
-        const { data, error: pErr } = await supabase
-          .from("projects")
-          .select("id,name,slug")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+        const projectsData = await refetchProjects();
+        if (projectsData.error) throw projectsData.error;
 
-        if (pErr) throw pErr;
-        if (!cancelled) setProjects((data ?? []) as CrmProjectLite[]);
+        const normalized = (projectsData.data ?? []).map((project) => ({
+          id: project.id,
+          name: project.name,
+          slug: project.slug,
+        }));
+
+        if (!cancelled) setProjects(normalized as CrmProjectLite[]);
       } catch (e: any) {
         console.error(e);
         if (!cancelled)
@@ -57,7 +62,7 @@ export function useCrmProjectsLite(enabled: boolean = true) {
     return () => {
       cancelled = true;
     };
-  }, [enabled, isSessionLoading, sessionQuery?.user]);
+  }, [enabled, isSessionLoading, refetchProjects, sessionQuery?.user]);
 
   return { projects, loading, error };
 }
