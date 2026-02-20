@@ -1,6 +1,7 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 const AuthContext = createContext(undefined);
 export function useAuth() {
   const ctx = useContext(AuthContext);
@@ -16,10 +17,10 @@ export function AuthProvider({ children }) {
     const init = async () => {
       try {
         await supabaseAuthInitPromise;
-        const { data } = await supabase.auth.getSession();
+        const sessionData = await fetchCurrentSession();
         if (!mounted) return;
-        setSession(data.session ?? null);
-        setUser(data.session?.user ?? null);
+        setSession(sessionData.session ?? null);
+        setUser(sessionData.session?.user ?? null);
       } finally {
         if (mounted) setLoading(false);
       }

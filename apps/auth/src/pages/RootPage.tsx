@@ -4,6 +4,7 @@ import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import {
   hasAuthTokensInHash,
   consumeSupabaseSessionFromUrl,
+  useCurrentSession,
 } from "@gridix/utils";
 import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
 
@@ -17,6 +18,11 @@ export default function RootPage() {
     "loading",
   );
   const { lang } = useParams();
+  const {
+    data: sessionQuery,
+    isLoading: isSessionLoading,
+    refetch: refetchSession,
+  } = useCurrentSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -37,16 +43,20 @@ export default function RootPage() {
       }
       if (cancelled) return;
 
-      // Give the client a moment to persist session after setSession, then try getSession (with one retry)
+      // Give the client a moment to persist session after setSession, then refetch query (with one retry)
       await new Promise((r) => setTimeout(r, 50));
       if (cancelled) return;
-      let session = (await supabase.auth.getSession()).data.session;
+      let session = (await refetchSession()).data?.session ?? null;
       if (!session?.user?.id) {
         await new Promise((r) => setTimeout(r, 150));
         if (cancelled) return;
-        session = (await supabase.auth.getSession()).data.session;
+        session = (await refetchSession()).data?.session ?? null;
       }
       if (cancelled) return;
+
+      if (!session?.user?.id && !isSessionLoading && sessionQuery?.session) {
+        session = sessionQuery.session;
+      }
 
       if (session?.user?.id) {
         try {
@@ -67,7 +77,7 @@ export default function RootPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isSessionLoading, lang, refetchSession, sessionQuery?.session]);
 
   if (action === "to-auth") {
     const nextLang = lang || "en";

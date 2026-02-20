@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 
 export type CrmProjectLite = {
@@ -11,6 +12,8 @@ export function useCrmProjectsLite(enabled: boolean = true) {
   const [projects, setProjects] = useState<CrmProjectLite[]>([]);
   const [loading, setLoading] = useState<boolean>(enabled);
   const [error, setError] = useState<string | null>(null);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
   useEffect(() => {
     if (!enabled) {
@@ -25,9 +28,8 @@ export function useCrmProjectsLite(enabled: boolean = true) {
         setLoading(true);
         setError(null);
 
-        const { data: u0, error: uErr } = await supabase.auth.getUser();
-        if (uErr) throw uErr;
-        const user = u0?.user ?? null;
+        if (isSessionLoading) return;
+        const user = sessionQuery?.user ?? null;
         if (!user) {
           if (!cancelled) setProjects([]);
           return;
@@ -55,7 +57,7 @@ export function useCrmProjectsLite(enabled: boolean = true) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, isSessionLoading, sessionQuery?.user]);
 
   return { projects, loading, error };
 }

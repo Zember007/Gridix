@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerClient } from "../model/types";
 
@@ -6,6 +7,8 @@ export function usePartnerClients() {
   const [clients, setClients] = useState<PartnerClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
   const fetchClients = async () => {
     try {
@@ -44,9 +47,11 @@ export function usePartnerClients() {
 
   const addManagedClient = async (clientId: string) => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      if (isSessionLoading) {
+        throw new Error("Auth session is loading");
+      }
+
+      const user = sessionQuery?.user ?? null;
 
       if (!user) {
         throw new Error("User not authenticated");

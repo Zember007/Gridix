@@ -4,6 +4,7 @@ import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import {
   hasAuthTokensInHash,
   consumeSupabaseSessionFromUrl,
+  useCurrentSession,
 } from "@gridix/utils";
 import { useLanguageNavigation, useLanguage } from "@gridix/utils/react";
 import { toast } from "sonner";
@@ -49,12 +50,13 @@ function safeRedirectUrl(input: string | null): string | null {
 }
 
 async function redirectByAccountType(params: {
+  session: Awaited<
+    ReturnType<typeof supabase.auth.getSession>
+  >["data"]["session"];
   redirectToUrl?: string | null;
   lang: string;
 }) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { session } = params;
   if (!session?.user?.id) return;
 
   const userId = session.user.id;
@@ -138,6 +140,11 @@ export default function AuthPage() {
   const { t, language } = useLanguage();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const {
+    data: sessionQuery,
+    isLoading: isSessionLoading,
+    refetch: refetchSession,
+  } = useCurrentSession();
 
   const redirectToUrl = searchParams.get("redirect_to");
   const mode = searchParams.get("mode");
@@ -215,9 +222,11 @@ export default function AuthPage() {
         // ignore
       }
       if (cancelled) return;
-      const { data } = await supabase.auth.getSession();
-      if (cancelled || !data.session?.user?.id) return;
+      const { data } = await refetchSession();
+      const session = data?.session ?? sessionQuery?.session ?? null;
+      if (cancelled || isSessionLoading || !session?.user?.id) return;
       await redirectByAccountType({
+        session,
         redirectToUrl: redirectToUrl ?? null,
         lang: window.location.pathname.split("/")[1] || "en",
       });
@@ -226,7 +235,7 @@ export default function AuthPage() {
     return () => {
       cancelled = true;
     };
-  }, [redirectToUrl]);
+  }, [isSessionLoading, redirectToUrl, refetchSession, sessionQuery?.session]);
 
   useEffect(() => {
     const checkPartner = async () => {
@@ -376,7 +385,10 @@ export default function AuthPage() {
               });
               if (error) throw error;
               toast.success(t("auth.welcome"));
+              const currentSession =
+                (await refetchSession()).data?.session ?? null;
               await redirectByAccountType({
+                session: currentSession,
                 redirectToUrl: redirectToUrl ?? null,
                 lang,
               });

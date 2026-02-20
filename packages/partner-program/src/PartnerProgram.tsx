@@ -8,7 +8,7 @@ import {
   GlobalAccountSecuritySection,
   GlobalNotificationSettingsSection,
 } from "@gridix/utils/react";
-import { supabase } from "@gridix/utils/api";
+import { useCurrentSession } from "@gridix/utils";
 import { PartnerAccountSection } from "./ui/PartnerAccountSection";
 import { PartnerInstructionsSection } from "./ui/PartnerInstructionsSection";
 import { PartnerOverviewSection } from "./ui/PartnerOverviewSection";
@@ -55,14 +55,21 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
     id: string;
     email: string;
   } | null>(null);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
   useEffect(() => {
-    void supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setAuthUser({ id: data.user.id, email: data.user.email ?? "" });
-      }
-    });
-  }, []);
+    if (isSessionLoading) return;
+    if (sessionQuery?.user) {
+      setAuthUser({
+        id: sessionQuery.user.id,
+        email: sessionQuery.user.email ?? "",
+      });
+      return;
+    }
+
+    setAuthUser(null);
+  }, [isSessionLoading, sessionQuery?.user]);
 
   // Internal state for tabs mode; external state for sidebar mode
   const [internalTab, setInternalTab] = useState<PartnerSection>("overview");

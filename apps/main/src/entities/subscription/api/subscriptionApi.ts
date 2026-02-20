@@ -1,15 +1,16 @@
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import type { BillingDetails } from "@/entities/subscription/queries/useSubscription";
 
 export const fetchSubscription = async (projectId: string) => {
-  const session = await supabase.auth.getSession();
+  const sessionData = await fetchCurrentSession();
 
   const { data, error } = await supabase.functions.invoke(
     "subscription-management",
     {
       body: { project_id: projectId },
       headers: {
-        Authorization: `Bearer ${session.data.session?.access_token}`,
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
       },
     },
   );
@@ -20,14 +21,14 @@ export const fetchSubscription = async (projectId: string) => {
 };
 
 export const fetchProjectSubscriptions = async () => {
-  const session = await supabase.auth.getSession();
+  const sessionData = await fetchCurrentSession();
 
   const { data, error } = await supabase.functions.invoke(
     "subscription-management",
     {
       body: { action: "get-project-subscriptions" },
       headers: {
-        Authorization: `Bearer ${session.data.session?.access_token}`,
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
       },
     },
   );
@@ -38,11 +39,11 @@ export const fetchProjectSubscriptions = async () => {
 };
 
 export const fetchPlans = async () => {
-  const session = await supabase.auth.getSession();
+  const sessionData = await fetchCurrentSession();
   const headers: Record<string, string> = {};
 
-  if (session.data.session?.access_token) {
-    headers["Authorization"] = `Bearer ${session.data.session.access_token}`;
+  if (sessionData.session?.access_token) {
+    headers["Authorization"] = `Bearer ${sessionData.session.access_token}`;
   }
 
   const { data, error } = await supabase.functions.invoke(
@@ -63,7 +64,7 @@ export const requestInvoice = async (
   planId: string,
   durationMonths: number,
 ) => {
-  const session = await supabase.auth.getSession();
+  const sessionData = await fetchCurrentSession();
 
   const { data, error } = await supabase.functions.invoke(
     "subscription-management",
@@ -75,7 +76,7 @@ export const requestInvoice = async (
         duration_months: durationMonths,
       },
       headers: {
-        Authorization: `Bearer ${session.data.session?.access_token}`,
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
       },
     },
   );

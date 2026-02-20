@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface Invoice {
@@ -90,7 +91,7 @@ export function useInvoices(projectId?: string) {
             subscription_id: subscriptionId,
           },
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${(await fetchCurrentSession()).session?.access_token}`,
           },
         },
       );
