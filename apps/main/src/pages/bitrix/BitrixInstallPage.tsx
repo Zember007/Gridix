@@ -21,6 +21,7 @@ export default function BitrixInstallPage() {
   );
   const claimAttemptedRef = useRef(false);
   const bxReadyRef = useRef(false);
+  const finishAndReloadDoneRef = useRef(false);
 
   useEffect(() => {
     if (typeof BX24 === "undefined") return;
@@ -49,34 +50,63 @@ export default function BitrixInstallPage() {
     })();
   }, [status, user, claimInstall]);
 
-  // При claimed: завершаем установку в Bitrix, через 100 ms перезагружаем страницу
+  // При claimed: один раз завершаем установку в Bitrix и перезагружаем страницу через 100 ms
   useEffect(() => {
-    if (status !== "claimed") return;
-    try {
-      const finish = () => {
-        try {
-          if (typeof BX24 !== "undefined" && BX24?.installFinish) {
-            BX24.installFinish!();
-          }
-          window.setTimeout(() => window.location.reload(), 300);
-        } catch {
-          // ignore
+    if (status !== "claimed" || finishAndReloadDoneRef.current) return;
+
+    const doFinishAndReload = () => {
+      if (finishAndReloadDoneRef.current) return;
+      finishAndReloadDoneRef.current = true;
+      try {
+        if (typeof BX24 !== "undefined" && BX24?.installFinish) {
+          BX24.installFinish!();
         }
-      };
-      if (typeof BX24 !== "undefined") {
-        if (bxReadyRef.current) {
-          finish();
-        } else {
+      } catch {
+        // ignore
+      }
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    };
+
+    const runWithBx24 = () => {
+      if (typeof BX24 === "undefined") {
+        doFinishAndReload();
+        return;
+      }
+      if (bxReadyRef.current) {
+        doFinishAndReload();
+      } else {
+        try {
           BX24.init(() => {
             bxReadyRef.current = true;
-            finish();
+            doFinishAndReload();
           });
+        } catch {
+          doFinishAndReload();
         }
-      } else {
-        window.setTimeout(() => window.location.reload(), 100);
+        window.setTimeout(() => doFinishAndReload(), 500);
       }
-    } catch {
-      window.setTimeout(() => window.location.reload(), 100);
+    };
+
+    if (typeof BX24 !== "undefined") {
+      runWithBx24();
+    } else {
+      // Скрипт Bitrix может подгрузиться позже — ждём до 1.5 с
+      const deadline = Date.now() + 1500;
+      const check = () => {
+        if (finishAndReloadDoneRef.current) return;
+        if (typeof BX24 !== "undefined") {
+          runWithBx24();
+          return;
+        }
+        if (Date.now() < deadline) {
+          window.setTimeout(check, 100);
+        } else {
+          doFinishAndReload();
+        }
+      };
+      window.setTimeout(check, 50);
     }
   }, [status]);
 
