@@ -21,7 +21,6 @@ export default function BitrixInstallPage() {
   );
   const claimAttemptedRef = useRef(false);
   const bxReadyRef = useRef(false);
-  const finishAndReloadDoneRef = useRef(false);
 
   useEffect(() => {
     if (typeof BX24 === "undefined") return;
@@ -50,63 +49,28 @@ export default function BitrixInstallPage() {
     })();
   }, [status, user, claimInstall]);
 
-  // При claimed: один раз завершаем установку в Bitrix и перезагружаем страницу через 100 ms
+  // BX24.installFinish() — завершаем установку в Bitrix сразу после отображения claimed
   useEffect(() => {
-    if (status !== "claimed" || finishAndReloadDoneRef.current) return;
-
-    const doFinishAndReload = () => {
-      if (finishAndReloadDoneRef.current) return;
-      finishAndReloadDoneRef.current = true;
-      try {
-        if (typeof BX24 !== "undefined" && BX24?.installFinish) {
-          BX24.installFinish!();
-        }
-      } catch {
-        // ignore
-      }
-      window.setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    };
-
-    const runWithBx24 = () => {
-      if (typeof BX24 === "undefined") {
-        doFinishAndReload();
-        return;
-      }
-      if (bxReadyRef.current) {
-        doFinishAndReload();
-      } else {
+    if (status !== "claimed") return;
+    try {
+      if (typeof BX24 === "undefined" || !BX24?.installFinish) return;
+      const finish = () => {
         try {
-          BX24.init(() => {
-            bxReadyRef.current = true;
-            doFinishAndReload();
-          });
+          BX24.installFinish!();
         } catch {
-          doFinishAndReload();
-        }
-        window.setTimeout(() => doFinishAndReload(), 500);
-      }
-    };
-
-    if (typeof BX24 !== "undefined") {
-      runWithBx24();
-    } else {
-      // Скрипт Bitrix может подгрузиться позже — ждём до 1.5 с
-      const deadline = Date.now() + 1500;
-      const check = () => {
-        if (finishAndReloadDoneRef.current) return;
-        if (typeof BX24 !== "undefined") {
-          runWithBx24();
-          return;
-        }
-        if (Date.now() < deadline) {
-          window.setTimeout(check, 100);
-        } else {
-          doFinishAndReload();
+          // ignore
         }
       };
-      window.setTimeout(check, 50);
+      if (bxReadyRef.current) {
+        finish();
+      } else {
+        BX24.init(() => {
+          bxReadyRef.current = true;
+          finish();
+        });
+      }
+    } catch {
+      // ignore
     }
   }, [status]);
 
@@ -131,7 +95,6 @@ export default function BitrixInstallPage() {
   const loading = status === "loading";
   const claimed = status === "claimed";
   const needsInstall = status === "needs_install";
-  const claiming = status === "pending" && !!user;
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-white p-4">
@@ -175,7 +138,7 @@ export default function BitrixInstallPage() {
                   Готово. Интеграция привязана к вашему аккаунту.
                 </div>
               </div>
-            ) : loading || claiming ? (
+            ) : loading ? (
               <div className="flex items-center justify-center py-6">
                 <Loader size="md" />
               </div>
