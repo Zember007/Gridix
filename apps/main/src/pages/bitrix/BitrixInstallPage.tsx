@@ -49,28 +49,34 @@ export default function BitrixInstallPage() {
     })();
   }, [status, user, claimInstall]);
 
-  // BX24.installFinish() — завершаем установку в Bitrix сразу после отображения claimed
+  // При claimed: завершаем установку в Bitrix, через 100 ms перезагружаем страницу
   useEffect(() => {
     if (status !== "claimed") return;
     try {
-      if (typeof BX24 === "undefined" || !BX24?.installFinish) return;
       const finish = () => {
         try {
-          BX24.installFinish!();
+          if (typeof BX24 !== "undefined" && BX24?.installFinish) {
+            BX24.installFinish!();
+          }
+          window.setTimeout(() => window.location.reload(), 300);
         } catch {
           // ignore
         }
       };
-      if (bxReadyRef.current) {
-        finish();
-      } else {
-        BX24.init(() => {
-          bxReadyRef.current = true;
+      if (typeof BX24 !== "undefined") {
+        if (bxReadyRef.current) {
           finish();
-        });
+        } else {
+          BX24.init(() => {
+            bxReadyRef.current = true;
+            finish();
+          });
+        }
+      } else {
+        window.setTimeout(() => window.location.reload(), 100);
       }
     } catch {
-      // ignore
+      window.setTimeout(() => window.location.reload(), 100);
     }
   }, [status]);
 
@@ -95,6 +101,7 @@ export default function BitrixInstallPage() {
   const loading = status === "loading";
   const claimed = status === "claimed";
   const needsInstall = status === "needs_install";
+  const claiming = status === "pending" && !!user;
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-white p-4">
@@ -138,7 +145,7 @@ export default function BitrixInstallPage() {
                   Готово. Интеграция привязана к вашему аккаунту.
                 </div>
               </div>
-            ) : loading ? (
+            ) : loading || claiming ? (
               <div className="flex items-center justify-center py-6">
                 <Loader size="md" />
               </div>
