@@ -425,7 +425,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       e.preventDefault(); // предотвращаем вставку в одно поле
     }
   };
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  const resetFileInput = () => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
   const handlePdfUpload = async (file: File) => {
     if (!user || isNew) {
       toast.error(t("projectEditor.saveProjectFirst"));
@@ -1123,10 +1129,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                             </p>
                             <input
                               type="file"
+                              ref={inputRef}
                               accept=".pdf"
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const file = e.target.files?.[0];
-                                if (file) handlePdfUpload(file);
+                                if (!file) return;
+                                await handlePdfUpload(file);
+                                resetFileInput();
                               }}
                               className="hidden"
                               id="pdf-upload-desktop"
