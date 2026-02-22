@@ -104,6 +104,32 @@ export const PartnerReferralsSection: React.FC = () => {
     }
   };
 
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(generatedLink)}`;
+
+  const handleQrDownload = async () => {
+    try {
+      const res = await fetch(qrImageUrl);
+      if (!res.ok) throw new Error("Failed to fetch QR image");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "referral-qr.png";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({
+        title: t("partners.qrDownloadTitle"),
+        description: t("partners.qrDownloadDesc"),
+      });
+    } catch {
+      toast({
+        title: t("partners.error"),
+        description: t("partners.qrDownloadDesc"),
+        variant: "destructive",
+      });
+    }
+  };
+
   const hasUtmParams = !!(utmSource || utmMedium || utmCampaign);
 
   const sourcePresets = [
@@ -205,9 +231,7 @@ export const PartnerReferralsSection: React.FC = () => {
             </h3>
             <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                  generatedLink,
-                )}`}
+                src={qrImageUrl}
                 alt="Referral QR Code"
                 className="h-48 w-48"
               />
@@ -216,12 +240,7 @@ export const PartnerReferralsSection: React.FC = () => {
               {t("partners.qrDescription")}
             </p>
             <button
-              onClick={() =>
-                toast({
-                  title: t("partners.qrDownloadTitle"),
-                  description: t("partners.qrDownloadDesc"),
-                })
-              }
+              onClick={handleQrDownload}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-3 text-sm font-bold text-white transition-colors hover:bg-slate-800"
             >
               <Download size={16} /> {t("partners.qrDownloadCta")}

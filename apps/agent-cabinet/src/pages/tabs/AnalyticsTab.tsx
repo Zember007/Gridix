@@ -32,12 +32,10 @@ const CrmView = ({
   conversionRate,
   t,
 }: CrmViewProps) => {
-  const totalInFunnel = byStage.reduce((sum, s) => sum + s.count, 0);
-
   return (
     <div className="min-w-0 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center gap-3">
             <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
@@ -48,19 +46,6 @@ const CrmView = ({
             </p>
           </div>
           <h3 className="text-2xl font-black text-slate-900">{leadsCount}</h3>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center gap-3">
-            <div className="rounded-lg bg-purple-50 p-2 text-purple-600">
-              <PieChart size={18} />
-            </div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t("common.analytics.crm.inFunnel")}
-            </p>
-          </div>
-          <h3 className="text-2xl font-black text-slate-900">
-            {totalInFunnel}
-          </h3>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center gap-3">
