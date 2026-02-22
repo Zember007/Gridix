@@ -449,6 +449,7 @@
     "days": "ימים",
     "leadLockHint": "תקופת הגנת הלקוח עבור השותף.",
     "payoutTerms": "תנאי תשלום",
+    "placeholderPayoutTerms": "התגמול משולם תוך 10 ימי עסקים ממועד קבלת הכספים מהלקוח לחשבון היזם. מטבע התשלום תואם למטבע החוזה.",
     "contractPlaceholders": "Contract placeholders",
     "contractPlaceholdersHint": "These values can be inserted into templates via variables.",
     "productsDescription": "Products description",

@@ -449,6 +449,7 @@
     "days": "أيام",
     "leadLockHint": "مدة حماية العميل للشريك.",
     "payoutTerms": "شروط الدفع",
+    "placeholderPayoutTerms": "يتم دفع الأجر خلال عشرة أيام عمل من استلام الأموال من العميل في حساب المطور. وتكون عملة الدفع مطابقة لعملة العقد.",
     "contractPlaceholders": "Contract placeholders",
     "contractPlaceholdersHint": "These values can be inserted into templates via variables.",
     "productsDescription": "Products description",

@@ -565,8 +565,7 @@ export const AgencyGeneralConditions: React.FC = () => {
   const [settings, setSettings] = useState({
     defaultCommission: 4,
     leadLockDays: 30,
-    payoutTerms:
-      "Выплата вознаграждения производится в течение 10 рабочих дней после поступления средств от клиента на счет застройщика. Валюта выплаты соответствует валюте договора.",
+    payoutTerms: t("partners.generalConditions.placeholderPayoutTerms"),
     productsDescription: "",
     territory: "",
     exclusivity: "non-exclusive" as "exclusive" | "non-exclusive",
