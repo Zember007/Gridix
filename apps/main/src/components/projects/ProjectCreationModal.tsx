@@ -377,7 +377,8 @@ const ProjectCreationModal = ({
                     >
                       <a href="/Demo_chess_import.csv" download>
                         <Download className="mr-2 h-4 w-4" />
-                        Скачать демо
+                        {t("admin.project.create.import.demo") ||
+                          "Скачать демо"}
                       </a>
                     </Button>
                   </div>

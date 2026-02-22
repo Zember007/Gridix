@@ -89,6 +89,7 @@
         "description": "Upload an Excel file with apartment data to create a project automatically",
         "processing": "Processing...",
         "template": "Download template",
+        "demo": "Download demo",
         "title": "Import from Excel",
         "uploadButton": "Upload Excel file",
         "uploadTab": "Upload file",

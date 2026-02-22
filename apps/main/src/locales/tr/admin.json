@@ -89,6 +89,7 @@
         "description": "Otomatik olarak bir proje oluşturmak için daire verilerini içeren bir Excel dosyası yükleyin",
         "processing": "İşleme...",
         "template": "Şablonu indir",
+        "demo": "Demoyu indirin",
         "title": "Excel'den içe aktar",
         "uploadButton": "Excel dosyasını yükle",
         "uploadTab": "Dosya yükle",
