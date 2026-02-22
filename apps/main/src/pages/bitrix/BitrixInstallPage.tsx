@@ -49,12 +49,25 @@ export default function BitrixInstallPage() {
     })();
   }, [status, user, claimInstall]);
 
-  // BX24.installFinish() — завершаем установку в Bitrix, когда привязка выполнена
+  // BX24.installFinish() — завершаем установку в Bitrix сразу после отображения claimed
   useEffect(() => {
     if (status !== "claimed") return;
     try {
-      if (typeof BX24 !== "undefined" && BX24?.installFinish) {
-        setTimeout(() => BX24.installFinish!(), 150);
+      if (typeof BX24 === "undefined" || !BX24?.installFinish) return;
+      const finish = () => {
+        try {
+          BX24.installFinish!();
+        } catch {
+          // ignore
+        }
+      };
+      if (bxReadyRef.current) {
+        finish();
+      } else {
+        BX24.init(() => {
+          bxReadyRef.current = true;
+          finish();
+        });
       }
     } catch {
       // ignore
@@ -118,16 +131,16 @@ export default function BitrixInstallPage() {
               Привязка к аккаунту Gridix
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {loading ? (
-              <div className="py-6">
-                <Loader size="md" className="mx-auto" />
-              </div>
-            ) : claimed ? (
+          <CardContent className="min-h-[120px] space-y-3">
+            {claimed ? (
               <div className="space-y-3">
                 <div className="text-sm font-medium text-green-600">
                   Готово. Интеграция привязана к вашему аккаунту.
                 </div>
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader size="md" />
               </div>
             ) : needsInstall ? (
               <div className="space-y-3">
