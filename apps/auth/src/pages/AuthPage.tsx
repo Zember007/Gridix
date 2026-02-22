@@ -224,8 +224,8 @@ export default function AuthPage() {
       }
       if (cancelled) return;
       const { data } = await refetchSession();
-      const session = data?.session ?? sessionQuery?.session ?? null;
-      if (cancelled || isSessionLoading || !session?.user?.id) return;
+      const session = data?.session ?? null;
+      if (cancelled || !session?.user?.id) return;
       await redirectByAccountType({
         session,
         redirectToUrl: redirectToUrl ?? null,
