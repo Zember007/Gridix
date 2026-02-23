@@ -252,7 +252,7 @@ const ProjectCreationModal = ({
                 onClick={() => setShowUrlImporter(false)}
               >
                 <ArrowLeft className="h-4 w-4" />
-                Назад
+                {t("admin.back")}
               </Button>
             </div>
           </DialogHeader>
@@ -267,7 +267,7 @@ const ProjectCreationModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCloseModal}>
-      <DialogContent className="project_creation_modal_usertour max-w-2xl">
+      <DialogContent className="project_creation_modal_usertour max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
@@ -338,33 +338,43 @@ const ProjectCreationModal = ({
                 </TabsList>
 
                 <TabsContent value="file" className="space-y-4">
-                  <div className="flex flex-col gap-4 sm:flex-row">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <Button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isProcessing}
-                      className={`${admin.primary} ${admin.primaryHover} project_import_upload_usertour`}
+                      className={`${admin.primary} ${admin.primaryHover} project_import_upload_usertour h-auto w-full justify-center whitespace-normal py-2 text-center`}
                     >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {isProcessing
-                        ? t("admin.project.create.import.processing")
-                        : t("admin.project.create.import.uploadButton")}
+                      <Upload className="mr-2 h-4 w-4 shrink-0" />
+                      <span className="whitespace-normal break-words">
+                        {isProcessing
+                          ? t("admin.project.create.import.processing")
+                          : t("admin.project.create.import.uploadButton")}
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
                       onClick={downloadTemplate}
-                      className="project_import_template_usertour border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                      className="project_import_template_usertour h-auto w-full justify-center whitespace-normal border-real-estate-300 py-2 text-center text-real-estate-600 hover:bg-real-estate-50"
                     >
-                      <Download className="mr-2 h-4 w-4" />
-                      {t("admin.project.create.import.template")}
+                      <Download className="mr-2 h-4 w-4 shrink-0" />
+                      <span className="whitespace-normal break-words">
+                        {t("admin.project.create.import.template")}
+                      </span>
                     </Button>
                     <Button
                       asChild
                       variant="outline"
-                      className="project_import_demo_usertour"
+                      className="project_import_demo_usertour h-auto w-full justify-center whitespace-normal py-2 text-center"
                     >
-                      <a href="/Demo_chess_import.csv" download>
-                        <Download className="mr-2 h-4 w-4" />
-                        Скачать демо
+                      <a
+                        href="/Demo_chess_import.csv"
+                        download
+                        className="flex items-center justify-center gap-2 whitespace-normal break-words text-center"
+                      >
+                        <Download className="h-4 w-4 shrink-0" />
+                        <span className="whitespace-normal break-words">
+                          {t("admin.project.create.import.demo")}
+                        </span>
                       </a>
                     </Button>
                   </div>
