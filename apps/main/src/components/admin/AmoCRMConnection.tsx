@@ -116,7 +116,7 @@ export const AmoCRMConnection = () => {
       }
     } catch (error) {
       console.error("Auth error:", error);
-      toast.error(t("amocrm.authError") || "Authentication failed");
+      toast.error(t("amocrm.authError"));
     } finally {
       setAuthorizing(false);
     }
@@ -152,12 +152,10 @@ export const AmoCRMConnection = () => {
 
       setConnection(null);
       setShowDisconnectDialog(false);
-      toast.success(
-        t("amocrm.disconnectSuccess") || "Disconnected successfully",
-      );
+      toast.success(t("amocrm.disconnectSuccess"));
     } catch (error) {
       console.error("Error disconnecting AmoCRM:", error);
-      toast.error(t("amocrm.disconnectError") || "Failed to disconnect");
+      toast.error(t("amocrm.disconnectError"));
     } finally {
       setDisconnecting(false);
     }
@@ -189,18 +187,17 @@ export const AmoCRMConnection = () => {
                 variant="secondary"
                 className="bg-green-100 text-green-700 hover:bg-green-200"
               >
-                {t("admin.common.active") || "Active"}
+                {t("admin.common.active")}
               </Badge>
             )}
             {(!isAuthorized || tokenExpired) && (
               <Badge variant="outline" className="text-muted-foreground">
-                {t("admin.common.inactive") || "Inactive"}
+                {t("admin.common.inactive")}
               </Badge>
             )}
           </div>
           <CardDescription className="mt-2">
-            {t("amocrm.description") ||
-              "Automate sales and manage leads with AmoCRM integration."}
+            {t("amocrm.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -210,7 +207,7 @@ export const AmoCRMConnection = () => {
                 <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-green-900">
-                    {t("amocrm.connectedTo") || "Connected to"}{" "}
+                    {t("amocrm.connectedTo")}{" "}
                     <span className="font-bold">
                       {connection?.account_name || connection?.subdomain}
                     </span>
@@ -227,7 +224,7 @@ export const AmoCRMConnection = () => {
                   className="w-full border-red-200 hover:bg-red-50 hover:text-red-700"
                   onClick={() => setShowDisconnectDialog(true)}
                 >
-                  {t("amocrm.disconnect") || "Disconnect"}
+                  {t("amocrm.disconnect")}
                 </Button>
                 <Button
                   variant="outline"
@@ -235,7 +232,7 @@ export const AmoCRMConnection = () => {
                   onClick={handleAuth}
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  {t("amocrm.reconnect") || "Reconnect"}
+                  {t("amocrm.reconnect")}
                 </Button>
               </div>
 
@@ -245,7 +242,7 @@ export const AmoCRMConnection = () => {
                 onClick={() => setShowProjectsModal(true)}
               >
                 <Settings className="mr-2 h-4 w-4" />
-                {t("admin.configureProjects") || "Configure projects"}
+                {t("admin.configureProjects")}
               </Button>
             </div>
           ) : (
@@ -254,7 +251,7 @@ export const AmoCRMConnection = () => {
                 <Alert variant="destructive" className="py-2">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {t("admin.amocrm.tokenExpired") || "Token expired"}
+                    {t("admin.amocrm.tokenExpired")}
                   </AlertDescription>
                 </Alert>
               )}
@@ -268,7 +265,7 @@ export const AmoCRMConnection = () => {
                 ) : (
                   <ExternalLink className="mr-2 h-4 w-4" />
                 )}
-                {t("amocrm.connectAmoCRM") || "Connect AmoCRM"}
+                {t("amocrm.connectAmoCRM")}
               </Button>
             </div>
           )}
@@ -281,12 +278,9 @@ export const AmoCRMConnection = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {t("amocrm.disconnectWarningTitle") || "Disconnect Integration?"}
-            </DialogTitle>
+            <DialogTitle>{t("amocrm.disconnectWarningTitle")}</DialogTitle>
             <DialogDescription>
-              {t("amocrm.disconnectWarningMessage") ||
-                "This will stop all sync processes. You can reconnect later."}
+              {t("amocrm.disconnectWarningMessage")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -294,7 +288,7 @@ export const AmoCRMConnection = () => {
               variant="outline"
               onClick={() => setShowDisconnectDialog(false)}
             >
-              {t("common.cancel") || "Cancel"}
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -304,7 +298,7 @@ export const AmoCRMConnection = () => {
               {disconnecting ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
-                t("common.confirm") || "Confirm"
+                t("admin.amocrm.confirm")
               )}
             </Button>
           </DialogFooter>
@@ -314,12 +308,9 @@ export const AmoCRMConnection = () => {
       <Dialog open={showProjectsModal} onOpenChange={setShowProjectsModal}>
         <DialogContent className="sm:max-w-[720px]">
           <DialogHeader>
-            <DialogTitle>
-              {t("admin.projectsConfig") || "Projects configuration"}
-            </DialogTitle>
+            <DialogTitle>{t("admin.projectsConfig")}</DialogTitle>
             <DialogDescription>
-              {t("amocrm.globalConnectionInfo") ||
-                "Configure funnel and responsible user per project."}
+              {t("amocrm.globalConnectionInfo")}
             </DialogDescription>
           </DialogHeader>
 
@@ -335,7 +326,7 @@ export const AmoCRMConnection = () => {
               variant="outline"
               onClick={() => setShowProjectsModal(false)}
             >
-              {t("common.close") || "Close"}
+              {t("common.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

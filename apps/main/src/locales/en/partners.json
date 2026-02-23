@@ -92,7 +92,9 @@
     "approved": "Approved",
     "paid": "Paid",
     "rejected": "Rejected",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "needsCorrection": "Needs correction",
+    "blocked": "Blocked"
   },
   "account": "Account",
   "instructions": "Instructions",

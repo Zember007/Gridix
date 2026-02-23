@@ -88,5 +88,7 @@
       "partnershipUnavailable": "الشراكة غير متوفرة",
       "openPage": "افتح الصفحة"
     }
-  }
+  },
+  "yes": "نعم",
+  "no": "لا"
 }

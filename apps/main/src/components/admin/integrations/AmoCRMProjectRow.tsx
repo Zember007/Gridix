@@ -219,8 +219,7 @@ export const AmoCRMProjectRow = ({
             <DialogHeader>
               <DialogTitle>{project.name}</DialogTitle>
               <DialogDescription>
-                {t("amocrm.configureProjectDesc") ||
-                  "Configure funnel and responsible user for this project."}
+                {t("amocrm.configureProjectDesc")}
               </DialogDescription>
             </DialogHeader>
 

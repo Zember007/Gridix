@@ -67,10 +67,7 @@ const ProjectCreationModal = ({
       !file.name.endsWith(".xls") &&
       !file.name.endsWith(".csv")
     ) {
-      toast.error(
-        t("admin.project.create.supportedFormats") ||
-          "Поддерживаемые форматы: Excel (.xlsx, .xls) и CSV",
-      );
+      toast.error(t("admin.project.create.supportedFormats"));
       return;
     }
 
@@ -94,7 +91,7 @@ const ProjectCreationModal = ({
         try {
           const result = e.target?.result;
           if (!result) {
-            toast.error(t("errors.file.read") || "Ошибка при чтении файла");
+            toast.error(t("errors.file.read"));
             return;
           }
 
@@ -112,12 +109,12 @@ const ProjectCreationModal = ({
 
           const firstSheetName = workbook.SheetNames[0];
           if (!firstSheetName) {
-            toast.error(t("errors.file.noData") || "Файл не содержит данных");
+            toast.error(t("errors.file.noData"));
             return;
           }
           const worksheet = workbook.Sheets[firstSheetName];
           if (!worksheet) {
-            toast.error(t("errors.file.noData") || "Файл не содержит данных");
+            toast.error(t("errors.file.noData"));
             return;
           }
 
@@ -129,7 +126,7 @@ const ProjectCreationModal = ({
           if (jsonData.length === 0) {
             console.log("jsonData", worksheet);
 
-            toast.error(t("errors.file.noData") || "Файл не содержит данных");
+            toast.error(t("errors.file.noData"));
             setIsProcessing(false);
             return;
           }
@@ -137,7 +134,7 @@ const ProjectCreationModal = ({
           // Получаем заголовки из первой записи
           const firstRow = jsonData[0];
           if (!firstRow) {
-            toast.error(t("errors.file.noData") || "Файл не содержит данных");
+            toast.error(t("errors.file.noData"));
             return;
           }
           const headers = Object.keys(firstRow).filter(
@@ -149,14 +146,14 @@ const ProjectCreationModal = ({
           setShowColumnMapper(true);
           setProgress(100);
           toast.success(
-            (
-              t("messages.fileProcessed") ||
-              "Файл обработан успешно! Найдено {{count}} записей"
-            ).replace("{{count}}", String(jsonData.length)),
+            t("messages.fileProcessed").replace(
+              "{{count}}",
+              String(jsonData.length),
+            ),
           );
         } catch (error) {
           console.error("Ошибка обработки файла:", error);
-          toast.error(t("errors.file.process") || "Ошибка при обработке файла");
+          toast.error(t("errors.file.process"));
         } finally {
           clearInterval(progressInterval);
           setIsProcessing(false);
@@ -166,7 +163,7 @@ const ProjectCreationModal = ({
       };
 
       reader.onerror = () => {
-        toast.error(t("errors.file.read") || "Ошибка при чтении файла");
+        toast.error(t("errors.file.read"));
         clearInterval(progressInterval);
         setIsProcessing(false);
         event.target.value = "";
@@ -178,12 +175,10 @@ const ProjectCreationModal = ({
         reader.readAsArrayBuffer(file);
       }
 
-      toast.info(
-        t("admin.project.create.import.processing") || "Обработка файла...",
-      );
+      toast.info(t("admin.project.create.import.processing"));
     } catch (error) {
       console.error("Ошибка:", error);
-      toast.error(t("errors.file.upload") || "Ошибка при загрузке файла");
+      toast.error(t("errors.file.upload"));
       setIsProcessing(false);
       event.target.value = "";
     }
@@ -211,7 +206,7 @@ const ProjectCreationModal = ({
     link.href = URL.createObjectURL(blob);
     link.download = "apartment_template.csv";
     link.click();
-    toast.success(t("messages.templateDownloaded") || "Шаблон загружен");
+    toast.success(t("messages.templateDownloaded"));
   };
 
   const handleManualCreateClick = () => {
@@ -276,11 +271,10 @@ const ProjectCreationModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
-            {t("admin.project.create.title") || "Создать новый проект"}
+            {t("admin.project.create.title")}
           </DialogTitle>
           <DialogDescription>
-            {t("admin.project.create.description") ||
-              "Выберите способ создания проекта"}
+            {t("admin.project.create.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -293,19 +287,17 @@ const ProjectCreationModal = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-real-estate-600" />
-                {t("admin.project.create.manual.title") || "Ручная настройка"}
+                {t("admin.project.create.manual.title")}
               </CardTitle>
               <CardDescription>
-                {t("admin.project.create.manual.description") ||
-                  "Создать проект с нуля и настроить все самостоятельно"}
+                {t("admin.project.create.manual.description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button
                 className={`w-full ${admin.primary} ${admin.primaryHover}`}
               >
-                {t("admin.project.create.manual.start") ||
-                  "Начать ручное создание"}
+                {t("admin.project.create.manual.start")}
               </Button>
             </CardContent>
           </Card>
@@ -315,11 +307,10 @@ const ProjectCreationModal = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5 text-real-estate-600" />
-                {t("admin.project.create.import.title") || "Импорт из Excel"}
+                {t("admin.project.create.import.title")}
               </CardTitle>
               <CardDescription>
-                {t("admin.project.create.import.description") ||
-                  "Загрузить Excel файл с данными квартир и автоматически создать проект"}
+                {t("admin.project.create.import.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -335,15 +326,14 @@ const ProjectCreationModal = ({
                     className="project_import_file_tab_usertour flex items-center gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    {t("admin.project.create.import.uploadTab") ||
-                      "Загрузить файл"}
+                    {t("admin.project.create.import.uploadTab")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="url"
                     className="project_import_url_tab_usertour flex items-center gap-2"
                   >
                     <Link className="h-4 w-4" />
-                    {t("admin.project.create.import.urlTab") || "По ссылке"}
+                    {t("admin.project.create.import.urlTab")}
                   </TabsTrigger>
                 </TabsList>
 
@@ -356,10 +346,8 @@ const ProjectCreationModal = ({
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       {isProcessing
-                        ? t("admin.project.create.import.processing") ||
-                          "Обработка..."
-                        : t("admin.project.create.import.uploadButton") ||
-                          "Загрузить Excel файл"}
+                        ? t("admin.project.create.import.processing")
+                        : t("admin.project.create.import.uploadButton")}
                     </Button>
                     <Button
                       variant="outline"
@@ -367,8 +355,7 @@ const ProjectCreationModal = ({
                       className="project_import_template_usertour border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                     >
                       <Download className="mr-2 h-4 w-4" />
-                      {t("admin.project.create.import.template") ||
-                        "Скачать шаблон"}
+                      {t("admin.project.create.import.template")}
                     </Button>
                     <Button
                       asChild
@@ -394,8 +381,7 @@ const ProjectCreationModal = ({
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>
-                          {t("admin.project.create.import.processing") ||
-                            "Обработка файла..."}
+                          {t("admin.project.create.import.processing")}
                         </span>
                         <span>{progress}%</span>
                       </div>
@@ -410,30 +396,21 @@ const ProjectCreationModal = ({
                     className={`w-full ${admin.primary} ${admin.primaryHover}`}
                   >
                     <Link className="mr-2 h-4 w-4" />
-                    {t("admin.project.create.import.byLink") ||
-                      "Импорт по ссылке"}
+                    {t("admin.project.create.import.byLink")}
                   </Button>
 
                   <div className="rounded-lg bg-blue-50 p-3">
                     <p className="text-sm text-blue-700">
                       <strong>
-                        {t("admin.project.create.import.benefitsTitle") ||
-                          "Преимущества импорта по ссылке:"}
+                        {t("admin.project.create.import.benefitsTitle")}
                       </strong>
                     </p>
                     <ul className="mt-1 list-inside list-disc text-sm text-blue-600">
+                      <li>{t("admin.project.create.import.benefit.sync")}</li>
                       <li>
-                        {t("admin.project.create.import.benefit.sync") ||
-                          "Автоматическая синхронизация при изменении данных"}
+                        {t("admin.project.create.import.benefit.noReupload")}
                       </li>
-                      <li>
-                        {t("admin.project.create.import.benefit.noReupload") ||
-                          "Не нужно загружать файл повторно"}
-                      </li>
-                      <li>
-                        {t("admin.project.create.import.benefit.fresh") ||
-                          "Данные всегда актуальны"}
-                      </li>
+                      <li>{t("admin.project.create.import.benefit.fresh")}</li>
                     </ul>
                   </div>
                 </TabsContent>
@@ -441,27 +418,19 @@ const ProjectCreationModal = ({
 
               <div className="rounded-md bg-real-estate-50 p-3 text-sm text-real-estate-600">
                 <p>
-                  <strong>
-                    {t("admin.project.create.supportedFormats") ||
-                      "Поддерживаемые форматы:"}
-                  </strong>{" "}
+                  <strong>{t("admin.project.create.supportedFormats")}</strong>{" "}
                   Excel (.xlsx, .xls), CSV{" "}
-                  {t("admin.project.create.googleSheets") || "и Google Sheets"}
+                  {t("admin.project.create.googleSheets")}
                 </p>
                 <p>
                   <strong>
-                    {t("admin.project.create.requiredData.title") ||
-                      "Необходимые данные:"}
+                    {t("admin.project.create.requiredData.title")}
                   </strong>{" "}
-                  {t("admin.project.create.requiredData.fields") ||
-                    "Номера квартир, этажи, комнаты, площадь, цена, статус"}
+                  {t("admin.project.create.requiredData.fields")}
                 </p>
                 <p>
-                  <strong>
-                    {t("admin.project.create.googleSheets") || "Google Sheets:"}
-                  </strong>{" "}
-                  {t("admin.project.create.infoText") ||
-                    "Любой формат ссылки, автоматическое преобразование и синхронизация"}
+                  <strong>{t("admin.project.create.googleSheets")}</strong>{" "}
+                  {t("admin.project.create.infoText")}
                 </p>
               </div>
             </CardContent>

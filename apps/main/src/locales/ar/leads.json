@@ -128,6 +128,24 @@
     "duplicatesNotFound": {
       "title": "نظيف",
       "desc": "لم يتم العثور على تكرارات"
+    },
+    "error": {
+      "title": "خطأ",
+      "updateFailed": "فشل تحديث الرصاص",
+      "missingFields": "يرجى ملء جميع الحقول المطلوبة",
+      "notAuthenticated": "لم تتم مصادقة المستخدم",
+      "noAccessToProjects": "لا يمكن الوصول إلى المشاريع",
+      "noProjects": "لم يتم العثور على مشاريع",
+      "noApartments": "لم يتم العثور على شقق",
+      "createFailed": "فشل إنشاء العميل المحتمل",
+      "addTagFailed": "فشلت إضافة العلامة",
+      "removeTagFailed": "فشلت إزالة العلامة",
+      "masterNotFound": "لم يتم العثور على الرصاص الرئيسي",
+      "mergeFailed": "فشل في دمج العملاء المتوقعين"
+    },
+    "mergeSuccess": {
+      "title": "نجاح",
+      "desc": "تم دمج {{count}} عميل محتمل مكرر"
     }
   },
   "kanban": {
@@ -375,7 +393,10 @@
       "addTag": "إضافة وسم",
       "notification": "إشعار",
       "apartmentStatus": "حالة الشقة"
-    }
+    },
+    "onStageEntryOption": "على دخول المسرح",
+    "timerOption": "بواسطة الموقت",
+    "onTagAddOption": "على العلامة إضافة"
   },
   "cardFields": {
     "none": "بدون قيمة",

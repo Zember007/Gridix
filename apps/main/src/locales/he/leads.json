@@ -128,6 +128,24 @@
     "duplicatesNotFound": {
       "title": "לְנַקוֹת",
       "desc": "No duplicates found"
+    },
+    "error": {
+      "title": "שְׁגִיאָה",
+      "updateFailed": "עדכון הפניה נכשל",
+      "missingFields": "נא למלא את כל השדות הנדרשים",
+      "notAuthenticated": "המשתמש אינו מאומת",
+      "noAccessToProjects": "אין גישה לפרויקטים",
+      "noProjects": "לא נמצאו פרויקטים",
+      "noApartments": "לא נמצאו דירות",
+      "createFailed": "יצירת לידים נכשלה",
+      "addTagFailed": "הוספת התג נכשלה",
+      "removeTagFailed": "הסרת התג נכשלה",
+      "masterNotFound": "מוביל ראשי לא נמצא",
+      "mergeFailed": "מיזוג לידים נכשל"
+    },
+    "mergeSuccess": {
+      "title": "הַצלָחָה",
+      "desc": "מוזגו {{count}} לידים כפולים"
     }
   },
   "kanban": {
@@ -375,7 +393,10 @@
       "addTag": "הוסף תג",
       "notification": "הוֹדָעָה",
       "apartmentStatus": "מצב דירה"
-    }
+    },
+    "onStageEntryOption": "על הכניסה לבמה",
+    "timerOption": "לפי טיימר",
+    "onTagAddOption": "על תג להוסיף"
   },
   "cardFields": {
     "none": "אין ערך",

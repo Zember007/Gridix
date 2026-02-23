@@ -128,6 +128,24 @@
     "duplicatesNotFound": {
       "title": "Temiz",
       "desc": "Kopya bulunamadı"
+    },
+    "error": {
+      "title": "Hata",
+      "updateFailed": "Potansiyel müşteri güncellenemedi",
+      "missingFields": "Lütfen gerekli tüm alanları doldurun",
+      "notAuthenticated": "Kullanıcının kimliği doğrulanmadı",
+      "noAccessToProjects": "Projelere erişim yok",
+      "noProjects": "Hiçbir proje bulunamadı",
+      "noApartments": "Daire bulunamadı",
+      "createFailed": "Potansiyel müşteri oluşturulamadı",
+      "addTagFailed": "Etiket eklenemedi",
+      "removeTagFailed": "Etiket kaldırılamadı",
+      "masterNotFound": "Ana müşteri adayı bulunamadı",
+      "mergeFailed": "Potansiyel müşteriler birleştirilemedi"
+    },
+    "mergeSuccess": {
+      "title": "Başarı",
+      "desc": "{{count}} yinelenen potansiyel müşteri birleştirildi"
     }
   },
   "kanban": {
@@ -375,7 +393,10 @@
       "addTag": "Etiket ekle",
       "notification": "Bildiri",
       "apartmentStatus": "Daire durumu"
-    }
+    },
+    "onStageEntryOption": "Sahne girişinde",
+    "timerOption": "Zamanlayıcıya göre",
+    "onTagAddOption": "Etiket eklemede"
   },
   "cardFields": {
     "none": "Değer yok",

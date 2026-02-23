@@ -92,7 +92,9 @@
     "approved": "Одобрено",
     "paid": "Выплачено",
     "rejected": "Отклонено",
-    "unknown": "Неизвестно"
+    "unknown": "Неизвестно",
+    "needsCorrection": "Требуется коррекция",
+    "blocked": "Заблокировано"
   },
   "account": "Счёт",
   "instructions": "Инструкции",

@@ -92,7 +92,9 @@
     "approved": "מְאוּשָׁר",
     "paid": "בתשלום",
     "rejected": "נִדחֶה",
-    "unknown": "לֹא יְדוּעַ"
+    "unknown": "לֹא יְדוּעַ",
+    "needsCorrection": "צריך תיקון",
+    "blocked": "חָסוּם"
   },
   "account": "חֶשְׁבּוֹן",
   "instructions": "הוראות",

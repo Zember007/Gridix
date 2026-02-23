@@ -117,7 +117,7 @@ const ProjectApartmentsManager = ({
       setApartments(formattedApartments);
     } catch (error) {
       console.error("Error loading apartments:", error);
-      toast.error(t("apartmentsManager.loadError"));
+      toast.error(t("apartmentsManager.loadingError"));
     } finally {
       setLoading(false);
     }

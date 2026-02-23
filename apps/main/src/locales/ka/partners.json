@@ -92,7 +92,9 @@
     "approved": "დამტკიცებული",
     "paid": "გადახდილი",
     "rejected": "უარყოფილი",
-    "unknown": "უცნობი"
+    "unknown": "უცნობი",
+    "needsCorrection": "კორექტირებას საჭიროებს",
+    "blocked": "დაბლოკილია"
   },
   "account": "ანგარიში",
   "instructions": "ინსტრუქციები",

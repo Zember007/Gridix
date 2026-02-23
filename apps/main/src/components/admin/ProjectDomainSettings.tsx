@@ -580,7 +580,7 @@ export default function ProjectDomainSettings({
 
           {loading ? (
             <div className="py-4 text-center text-muted-foreground">
-              {t("loading")}
+              {t("project.loading")}
             </div>
           ) : domains.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">

@@ -43,6 +43,7 @@ import {
 import { Badge } from "@gridix/ui";
 import { Alert, AlertDescription } from "@gridix/ui";
 import { Checkbox } from "@gridix/ui";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Subscription {
   id: string;
@@ -76,6 +77,7 @@ interface Project {
 }
 
 export function SubscriptionsManagement() {
+  const { t } = useLanguage();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<
@@ -183,8 +185,10 @@ export function SubscriptionsManagement() {
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить подписки",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.loadSubscriptionsError",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -223,8 +227,10 @@ export function SubscriptionsManagement() {
   const handleCreateSubscription = async () => {
     if (!createForm.userEmail || !createForm.projectId || !createForm.planId) {
       toast({
-        title: "Ошибка",
-        description: "Заполните все обязательные поля",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.fillRequiredFields",
+        ),
         variant: "destructive",
       });
       return;
@@ -278,8 +284,10 @@ export function SubscriptionsManagement() {
       if (insertError) throw insertError;
 
       toast({
-        title: "Успешно",
-        description: "Подписка создана",
+        title: t("admin.superadmin.subscriptionsManagement.toast.successTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.subscriptionCreated",
+        ),
       });
 
       setCreateForm({
@@ -295,11 +303,13 @@ export function SubscriptionsManagement() {
     } catch (error) {
       console.error("Error creating subscription:", error);
       toast({
-        title: "Ошибка",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
         description:
           error instanceof Error
             ? error.message
-            : "Не удалось создать подписку",
+            : t(
+                "admin.superadmin.subscriptionsManagement.toast.createSubscriptionError",
+              ),
         variant: "destructive",
       });
     } finally {
@@ -326,19 +336,23 @@ export function SubscriptionsManagement() {
       if (error) throw error;
 
       toast({
-        title: "Успешно",
-        description: "PDF-счет сгенерирован и отправлен",
+        title: t("admin.superadmin.subscriptionsManagement.toast.successTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.invoiceGenerated",
+        ),
       });
 
       fetchSubscriptions();
     } catch (error) {
       console.error("Error generating invoice:", error);
       toast({
-        title: "Ошибка",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
         description:
           error instanceof Error
             ? error.message
-            : "Не удалось сгенерировать счет",
+            : t(
+                "admin.superadmin.subscriptionsManagement.toast.generateInvoiceError",
+              ),
         variant: "destructive",
       });
     } finally {
@@ -365,8 +379,10 @@ export function SubscriptionsManagement() {
       if (error) throw error;
 
       toast({
-        title: "Успешно",
-        description: "Оплата подтверждена, подписка активирована",
+        title: t("admin.superadmin.subscriptionsManagement.toast.successTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.paymentConfirmed",
+        ),
       });
 
       setSelectedSubscription(null);
@@ -374,11 +390,13 @@ export function SubscriptionsManagement() {
     } catch (error) {
       console.error("Error activating subscription:", error);
       toast({
-        title: "Ошибка",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
         description:
           error instanceof Error
             ? error.message
-            : "Не удалось активировать подписку",
+            : t(
+                "admin.superadmin.subscriptionsManagement.toast.activateSubscriptionError",
+              ),
         variant: "destructive",
       });
     } finally {
@@ -400,16 +418,20 @@ export function SubscriptionsManagement() {
       if (error) throw error;
 
       toast({
-        title: "Успешно",
-        description: "Подписка отменена",
+        title: t("admin.superadmin.subscriptionsManagement.toast.successTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.subscriptionCancelled",
+        ),
       });
 
       fetchSubscriptions();
     } catch (error) {
       console.error("Error cancelling subscription:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось отменить подписку",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.cancelSubscriptionError",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -515,8 +537,10 @@ export function SubscriptionsManagement() {
       if (error) throw error;
 
       toast({
-        title: "Успешно",
-        description: "Подписка обновлена",
+        title: t("admin.superadmin.subscriptionsManagement.toast.successTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.subscriptionUpdated",
+        ),
       });
 
       setIsEditDialogOpen(false);
@@ -525,8 +549,10 @@ export function SubscriptionsManagement() {
     } catch (error) {
       console.error("Error updating subscription:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить подписку",
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.updateSubscriptionError",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -537,23 +563,49 @@ export function SubscriptionsManagement() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-500">Active</Badge>;
+        return (
+          <Badge className="bg-green-500">
+            {t("admin.superadmin.subscriptionsManagement.status.active")}
+          </Badge>
+        );
       case "trialing":
       case "trial":
-        return <Badge className="bg-blue-500">Trial</Badge>;
+        return (
+          <Badge className="bg-blue-500">
+            {t("admin.superadmin.subscriptionsManagement.status.trial")}
+          </Badge>
+        );
       case "pending_payment":
-        return <Badge className="bg-yellow-500">Pending Payment</Badge>;
+        return (
+          <Badge className="bg-yellow-500">
+            {t(
+              "admin.superadmin.subscriptionsManagement.status.pendingPayment",
+            )}
+          </Badge>
+        );
       case "expired":
-        return <Badge variant="destructive">Expired</Badge>;
+        return (
+          <Badge variant="destructive">
+            {t("admin.superadmin.subscriptionsManagement.status.expired")}
+          </Badge>
+        );
       case "cancelled":
-        return <Badge variant="outline">Cancelled</Badge>;
+        return (
+          <Badge variant="outline">
+            {t("admin.superadmin.subscriptionsManagement.status.cancelled")}
+          </Badge>
+        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
   if (loading) {
-    return <div className="p-6">Загрузка...</div>;
+    return (
+      <div className="p-6">
+        {t("admin.superadmin.subscriptionsManagement.loading")}
+      </div>
+    );
   }
 
   const pendingSubscriptions = subscriptions.filter(
@@ -564,10 +616,14 @@ export function SubscriptionsManagement() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Управление подписками</h2>
+          <h2 className="text-3xl font-bold">
+            {t("admin.superadmin.subscriptionsManagement.title")}
+          </h2>
           {pendingSubscriptions.length > 0 && (
             <p className="mt-1 text-sm text-yellow-600">
-              {pendingSubscriptions.length} запрос(ов) на счет ожидает обработки
+              {t("admin.superadmin.subscriptionsManagement.pendingCount", {
+                count: pendingSubscriptions.length,
+              })}
             </p>
           )}
         </div>
@@ -575,16 +631,25 @@ export function SubscriptionsManagement() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Создать подписку
+              {t("admin.superadmin.subscriptionsManagement.actions.create")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Создать новую подписку</DialogTitle>
+              <DialogTitle>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.dialogs.createTitle",
+                )}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Email пользователя *</Label>
+                <Label>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.fields.userEmail",
+                  )}{" "}
+                  *
+                </Label>
                 <Input
                   type="email"
                   placeholder="user@example.com"
@@ -598,7 +663,10 @@ export function SubscriptionsManagement() {
                 />
               </div>
               <div>
-                <Label>Проект *</Label>
+                <Label>
+                  {t("admin.superadmin.subscriptionsManagement.fields.project")}{" "}
+                  *
+                </Label>
                 <Select
                   value={createForm.projectId}
                   onValueChange={(value) =>
@@ -606,7 +674,11 @@ export function SubscriptionsManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите проект" />
+                    <SelectValue
+                      placeholder={t(
+                        "admin.superadmin.subscriptionsManagement.placeholders.selectProject",
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project) => (
@@ -618,7 +690,9 @@ export function SubscriptionsManagement() {
                 </Select>
               </div>
               <div>
-                <Label>План *</Label>
+                <Label>
+                  {t("admin.superadmin.subscriptionsManagement.fields.plan")} *
+                </Label>
                 <Select
                   value={createForm.planId}
                   onValueChange={(value) =>
@@ -626,19 +700,34 @@ export function SubscriptionsManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите план" />
+                    <SelectValue
+                      placeholder={t(
+                        "admin.superadmin.subscriptionsManagement.placeholders.selectPlan",
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {plans.map((plan) => (
                       <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} - ${plan.base_price}/месяц
+                        {t(
+                          "admin.superadmin.subscriptionsManagement.planOption",
+                          {
+                            name: plan.name,
+                            price: plan.base_price,
+                          },
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Длительность (месяцев) *</Label>
+                <Label>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.fields.durationMonths",
+                  )}{" "}
+                  *
+                </Label>
                 <Input
                   type="number"
                   placeholder="1"
@@ -653,7 +742,11 @@ export function SubscriptionsManagement() {
                 />
               </div>
               <div>
-                <Label>Номер счета</Label>
+                <Label>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.fields.invoiceNumber",
+                  )}
+                </Label>
                 <Input
                   placeholder="INV-12345"
                   value={createForm.invoiceNumber}
@@ -666,7 +759,11 @@ export function SubscriptionsManagement() {
                 />
               </div>
               <div>
-                <Label>URL счета</Label>
+                <Label>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.fields.invoiceUrl",
+                  )}
+                </Label>
                 <Input
                   placeholder="https://..."
                   value={createForm.invoiceUrl}
@@ -686,7 +783,7 @@ export function SubscriptionsManagement() {
                 {isProcessing && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Создать подписку
+                {t("admin.superadmin.subscriptionsManagement.actions.create")}
               </Button>
             </div>
           </DialogContent>
@@ -697,29 +794,58 @@ export function SubscriptionsManagement() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Редактировать подписку</DialogTitle>
+            <DialogTitle>
+              {t("admin.superadmin.subscriptionsManagement.dialogs.editTitle")}
+            </DialogTitle>
           </DialogHeader>
           {selectedSubscription && (
             <div className="space-y-4">
               <div className="rounded-lg bg-muted p-4">
                 <p>
-                  <strong>Пользователь:</strong>{" "}
+                  <strong>
+                    {t(
+                      "admin.superadmin.subscriptionsManagement.dialogs.labels.user",
+                    )}
+                    :
+                  </strong>{" "}
                   {selectedSubscription.user_profiles?.full_name} (
                   {selectedSubscription.user_profiles?.email})
                 </p>
                 <p>
-                  <strong>Проект:</strong> {selectedSubscription.projects?.name}
+                  <strong>
+                    {t(
+                      "admin.superadmin.subscriptionsManagement.dialogs.labels.project",
+                    )}
+                    :
+                  </strong>{" "}
+                  {selectedSubscription.projects?.name}
                 </p>
                 <p>
-                  <strong>Текущий план:</strong>{" "}
+                  <strong>
+                    {t(
+                      "admin.superadmin.subscriptionsManagement.dialogs.labels.currentPlan",
+                    )}
+                    :
+                  </strong>{" "}
                   {selectedSubscription.subscription_plans?.name}
                 </p>
                 <p>
-                  <strong>Текущий статус:</strong> {selectedSubscription.status}
+                  <strong>
+                    {t(
+                      "admin.superadmin.subscriptionsManagement.dialogs.labels.currentStatus",
+                    )}
+                    :
+                  </strong>{" "}
+                  {selectedSubscription.status}
                 </p>
                 {selectedSubscription.current_period_end && (
                   <p>
-                    <strong>Окончание:</strong>{" "}
+                    <strong>
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.dialogs.labels.endsAt",
+                      )}
+                      :
+                    </strong>{" "}
                     {new Date(
                       selectedSubscription.current_period_end,
                     ).toLocaleDateString()}
@@ -728,7 +854,12 @@ export function SubscriptionsManagement() {
               </div>
 
               <div>
-                <Label>Тариф (план) *</Label>
+                <Label>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.fields.tariffPlan",
+                  )}{" "}
+                  *
+                </Label>
                 <Select
                   value={editForm.planId}
                   onValueChange={(value) =>
@@ -736,12 +867,22 @@ export function SubscriptionsManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите план" />
+                    <SelectValue
+                      placeholder={t(
+                        "admin.superadmin.subscriptionsManagement.placeholders.selectPlan",
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {plans.map((plan) => (
                       <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} - ${plan.base_price}/месяц
+                        {t(
+                          "admin.superadmin.subscriptionsManagement.planOption",
+                          {
+                            name: plan.name,
+                            price: plan.base_price,
+                          },
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -749,7 +890,10 @@ export function SubscriptionsManagement() {
               </div>
 
               <div>
-                <Label>Статус *</Label>
+                <Label>
+                  {t("admin.superadmin.subscriptionsManagement.fields.status")}{" "}
+                  *
+                </Label>
                 <Select
                   value={editForm.status}
                   onValueChange={(value) =>
@@ -760,14 +904,36 @@ export function SubscriptionsManagement() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="trialing">Trialing</SelectItem>
-                    <SelectItem value="pending_payment">
-                      Pending Payment
+                    <SelectItem value="active">
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.status.active",
+                      )}
                     </SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                    <SelectItem value="trial_expired">Trial Expired</SelectItem>
+                    <SelectItem value="trialing">
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.status.trialing",
+                      )}
+                    </SelectItem>
+                    <SelectItem value="pending_payment">
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.status.pendingPayment",
+                      )}
+                    </SelectItem>
+                    <SelectItem value="expired">
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.status.expired",
+                      )}
+                    </SelectItem>
+                    <SelectItem value="cancelled">
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.status.cancelled",
+                      )}
+                    </SelectItem>
+                    <SelectItem value="trial_expired">
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.status.trialExpired",
+                      )}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -785,14 +951,20 @@ export function SubscriptionsManagement() {
                   }}
                 />
                 <Label htmlFor="isInfinite" className="cursor-pointer">
-                  Бесконечная подписка (до 2099 года)
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.fields.infiniteSubscription",
+                  )}
                 </Label>
               </div>
 
               {!editForm.isInfinite && (
                 <>
                   <div>
-                    <Label>Длительность (месяцев)</Label>
+                    <Label>
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.fields.durationMonths",
+                      )}
+                    </Label>
                     <Input
                       type="number"
                       placeholder="1"
@@ -806,13 +978,18 @@ export function SubscriptionsManagement() {
                       }
                     />
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Дата окончания будет вычислена автоматически от текущей
-                      даты начала
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.hints.endDateAuto",
+                      )}
                     </p>
                   </div>
 
                   <div>
-                    <Label>Или укажите дату окончания вручную</Label>
+                    <Label>
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.fields.customEndDate",
+                      )}
+                    </Label>
                     <Input
                       type="date"
                       value={editForm.customEndDate}
@@ -824,8 +1001,9 @@ export function SubscriptionsManagement() {
                       }
                     />
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Если указана дата, она будет использована вместо
-                      вычисления по длительности
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.hints.customDateOverrides",
+                      )}
                     </p>
                   </div>
                 </>
@@ -834,8 +1012,9 @@ export function SubscriptionsManagement() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Изменения вступят в силу немедленно. Будьте осторожны при
-                  изменении статуса и даты окончания.
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.hints.applyWarning",
+                  )}
                 </AlertDescription>
               </Alert>
 
@@ -848,7 +1027,7 @@ export function SubscriptionsManagement() {
                   }}
                   disabled={isProcessing}
                 >
-                  Отмена
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={handleSaveSubscription}
@@ -857,7 +1036,9 @@ export function SubscriptionsManagement() {
                   {isProcessing && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Сохранить изменения
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.actions.saveChanges",
+                  )}
                 </Button>
               </div>
             </div>
@@ -870,17 +1051,43 @@ export function SubscriptionsManagement() {
         <Card className="border-yellow-200 bg-yellow-50 p-4 dark:bg-yellow-950">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
             <FileText className="h-5 w-5" />
-            Запросы на счет
+            {t(
+              "admin.superadmin.subscriptionsManagement.pendingRequests.title",
+            )}
           </h3>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Пользователь</TableHead>
-                <TableHead>Проект</TableHead>
-                <TableHead>План</TableHead>
-                <TableHead>Сумма</TableHead>
-                <TableHead>Запрошено</TableHead>
-                <TableHead>Действия</TableHead>
+                <TableHead>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.pendingRequests.table.user",
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.pendingRequests.table.project",
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.pendingRequests.table.plan",
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.pendingRequests.table.amount",
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.pendingRequests.table.requestedAt",
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    "admin.superadmin.subscriptionsManagement.pendingRequests.table.actions",
+                  )}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -917,7 +1124,9 @@ export function SubscriptionsManagement() {
                             disabled={isProcessing}
                           >
                             <FileText className="mr-1 h-4 w-4" />
-                            Сгенерировать PDF
+                            {t(
+                              "admin.superadmin.subscriptionsManagement.pendingRequests.actions.generatePdf",
+                            )}
                           </Button>
                         ) : (
                           <>
@@ -929,7 +1138,9 @@ export function SubscriptionsManagement() {
                               }
                             >
                               <Eye className="mr-1 h-4 w-4" />
-                              Просмотр
+                              {t(
+                                "admin.superadmin.subscriptionsManagement.pendingRequests.actions.view",
+                              )}
                             </Button>
                             <Button
                               variant="outline"
@@ -939,7 +1150,9 @@ export function SubscriptionsManagement() {
                               }
                             >
                               <Download className="mr-1 h-4 w-4" />
-                              Скачать
+                              {t(
+                                "admin.superadmin.subscriptionsManagement.pendingRequests.actions.download",
+                              )}
                             </Button>
                           </>
                         )}
@@ -952,33 +1165,65 @@ export function SubscriptionsManagement() {
                               disabled={!sub.invoice_url || isProcessing}
                             >
                               <Check className="mr-1 h-4 w-4" />
-                              Подтвердить оплату
+                              {t(
+                                "admin.superadmin.subscriptionsManagement.pendingRequests.actions.confirmPayment",
+                              )}
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Подтвердить оплату</DialogTitle>
+                              <DialogTitle>
+                                {t(
+                                  "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.title",
+                                )}
+                              </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4">
                               <div className="rounded-lg bg-muted p-4">
                                 <p>
-                                  <strong>Проект:</strong> {sub.projects?.name}
+                                  <strong>
+                                    {t(
+                                      "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.labels.project",
+                                    )}
+                                    :
+                                  </strong>{" "}
+                                  {sub.projects?.name}
                                 </p>
                                 <p>
-                                  <strong>Пользователь:</strong>{" "}
+                                  <strong>
+                                    {t(
+                                      "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.labels.user",
+                                    )}
+                                    :
+                                  </strong>{" "}
                                   {sub.user_profiles?.full_name}
                                 </p>
                                 <p>
-                                  <strong>План:</strong>{" "}
+                                  <strong>
+                                    {t(
+                                      "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.labels.plan",
+                                    )}
+                                    :
+                                  </strong>{" "}
                                   {sub.subscription_plans?.name}
                                 </p>
                                 <p>
-                                  <strong>Сумма:</strong>{" "}
+                                  <strong>
+                                    {t(
+                                      "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.labels.amount",
+                                    )}
+                                    :
+                                  </strong>{" "}
                                   {sub.final_price?.toFixed(2)} GEL
                                 </p>
                                 {sub.invoice_number && (
                                   <p>
-                                    <strong>Номер счета:</strong>{" "}
+                                    <strong>
+                                      {t(
+                                        "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.labels.invoiceNumber",
+                                      )}
+                                      :
+                                    </strong>{" "}
                                     {sub.invoice_number}
                                   </p>
                                 )}
@@ -986,7 +1231,12 @@ export function SubscriptionsManagement() {
 
                               {sub.invoice_url && (
                                 <div className="rounded-lg border p-4">
-                                  <p className="mb-2 font-medium">Счет:</p>
+                                  <p className="mb-2 font-medium">
+                                    {t(
+                                      "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.invoiceLabel",
+                                    )}
+                                    :
+                                  </p>
                                   <div className="flex items-center gap-2">
                                     <Button
                                       variant="outline"
@@ -996,7 +1246,9 @@ export function SubscriptionsManagement() {
                                       }
                                     >
                                       <Eye className="mr-1 h-4 w-4" />
-                                      Просмотр PDF
+                                      {t(
+                                        "admin.superadmin.subscriptionsManagement.pendingRequests.actions.viewPdf",
+                                      )}
                                     </Button>
                                     <Button
                                       variant="outline"
@@ -1006,7 +1258,9 @@ export function SubscriptionsManagement() {
                                       }
                                     >
                                       <Download className="mr-1 h-4 w-4" />
-                                      Скачать
+                                      {t(
+                                        "admin.superadmin.subscriptionsManagement.pendingRequests.actions.download",
+                                      )}
                                     </Button>
                                   </div>
                                 </div>
@@ -1015,8 +1269,9 @@ export function SubscriptionsManagement() {
                               <Alert>
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertDescription>
-                                  Убедитесь, что оплата поступила на счет,
-                                  прежде чем подтверждать активацию подписки.
+                                  {t(
+                                    "admin.superadmin.subscriptionsManagement.pendingRequests.dialog.warning",
+                                  )}
                                 </AlertDescription>
                               </Alert>
 
@@ -1030,7 +1285,9 @@ export function SubscriptionsManagement() {
                                 {isProcessing && (
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
-                                Подтвердить оплату и активировать
+                                {t(
+                                  "admin.superadmin.subscriptionsManagement.pendingRequests.actions.confirmAndActivate",
+                                )}
                               </Button>
                             </div>
                           </DialogContent>
@@ -1047,17 +1304,47 @@ export function SubscriptionsManagement() {
 
       {/* All Subscriptions */}
       <Card className="p-4">
-        <h3 className="mb-4 text-lg font-semibold">Все подписки</h3>
+        <h3 className="mb-4 text-lg font-semibold">
+          {t("admin.superadmin.subscriptionsManagement.allSubscriptions.title")}
+        </h3>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Пользователь</TableHead>
-              <TableHead>Проект</TableHead>
-              <TableHead>План</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead>Окончание</TableHead>
-              <TableHead>Счет</TableHead>
-              <TableHead>Действия</TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.user",
+                )}
+              </TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.project",
+                )}
+              </TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.plan",
+                )}
+              </TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.status",
+                )}
+              </TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.endDate",
+                )}
+              </TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.invoice",
+                )}
+              </TableHead>
+              <TableHead>
+                {t(
+                  "admin.superadmin.subscriptionsManagement.allSubscriptions.table.actions",
+                )}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1106,10 +1393,14 @@ export function SubscriptionsManagement() {
                       size="sm"
                       onClick={() => handleEditSubscription(sub)}
                       disabled={isProcessing}
-                      title="Редактировать подписку"
+                      title={t(
+                        "admin.superadmin.subscriptionsManagement.actions.editTitle",
+                      )}
                     >
                       <Edit className="mr-1 h-4 w-4" />
-                      Редактировать
+                      {t(
+                        "admin.superadmin.subscriptionsManagement.actions.edit",
+                      )}
                     </Button>
                     {sub.status === "active" && (
                       <Button
@@ -1119,7 +1410,9 @@ export function SubscriptionsManagement() {
                         disabled={isProcessing}
                       >
                         <X className="mr-1 h-4 w-4" />
-                        Отменить
+                        {t(
+                          "admin.superadmin.subscriptionsManagement.actions.cancel",
+                        )}
                       </Button>
                     )}
                   </div>

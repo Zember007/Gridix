@@ -92,7 +92,9 @@
     "approved": "Onaylı",
     "paid": "Paralı",
     "rejected": "Reddedilmiş",
-    "unknown": "Bilinmiyor"
+    "unknown": "Bilinmiyor",
+    "needsCorrection": "Düzeltilmesi gerekiyor",
+    "blocked": "Engellendi"
   },
   "account": "Hesap",
   "instructions": "Talimatlar",

@@ -88,5 +88,7 @@
       "partnershipUnavailable": "Ortaklık mevcut değil",
       "openPage": "Sayfayı aç"
     }
-  }
+  },
+  "yes": "Evet",
+  "no": "HAYIR"
 }

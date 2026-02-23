@@ -236,7 +236,7 @@ const FloorPlanEditor = ({
       }
     } catch (error) {
       console.error("Error loading floor plan:", error);
-      toast.error(t("floorPlan.loadFloorPlanError"));
+      toast.error(t("floorPlan.loading.error"));
     }
   };
 
@@ -277,7 +277,7 @@ const FloorPlanEditor = ({
       setShapes(apartmentShapes);
     } catch (error) {
       console.error("Error loading apartments:", error);
-      toast.error(t("floorPlan.loadApartmentsError"));
+      toast.error(t("floorPlan.apartments.loading.error"));
     }
   };
 

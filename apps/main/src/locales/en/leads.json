@@ -128,90 +128,36 @@
     "duplicatesNotFound": {
       "title": "Clean",
       "desc": "No duplicates found"
+    },
+    "error": {
+      "title": "Error",
+      "updateFailed": "Failed to update lead",
+      "missingFields": "Please fill in all required fields",
+      "notAuthenticated": "User is not authenticated",
+      "noAccessToProjects": "No access to projects",
+      "noProjects": "No projects found",
+      "noApartments": "No apartments found",
+      "createFailed": "Failed to create lead",
+      "addTagFailed": "Failed to add tag",
+      "removeTagFailed": "Failed to remove tag",
+      "masterNotFound": "Master lead not found",
+      "mergeFailed": "Failed to merge leads"
+    },
+    "mergeSuccess": {
+      "title": "Success",
+      "desc": "Merged {{count}} duplicate lead(s)"
     }
   },
   "kanban": {
     "noDeals": "No deals",
     "dragHere": "Drag here",
-    "createDeal": "Create deal"
-  },
-  "list": {
-    "selectAll": "Select all",
-    "selected": "selected"
-  },
-  "drawer": {
-    "contact": "Contact",
-    "details": "Deal details",
-    "tasks": "Tasks",
-    "history": "History",
-    "addTask": "Add task",
-    "addNote": "Add note",
-    "tags": "Tags",
-    "source": "Source",
+    "createDeal": "Create deal",
+    "changeStage": "Change stage",
     "budget": "Budget",
-    "apartment": "Apartment",
-    "created": "Created",
-    "close": "Close"
-  },
-  "createModal": {
-    "title": "New deal",
-    "name": "Client name",
-    "phone": "Phone",
-    "email": "Email (optional)",
-    "create": "Create",
-    "cancel": "Cancel",
-    "duplicateWarning": "Similar lead found!",
-    "duplicateDesc": "A lead with this phone number already exists in the system:"
-  },
-  "funnel": {
-    "title": "Funnel setup",
-    "funnels": "Funnels",
-    "addFunnel": "Add funnel",
-    "archived": "Archived funnels",
-    "addStage": "Add stage",
-    "deleteStage": "Delete stage",
-    "rename": "Rename",
-    "triggers": "Automations",
-    "addTrigger": "Add trigger",
-    "noAutomations": "No automations",
-    "automationDesc": "Add actions when entering this stage",
-    "back": "Back",
-    "save": "Save",
-    "deleteAllTriggers": "Delete all triggers"
-  },
-  "settings": {
-    "import": "Import",
-    "export": "Export (CSV)",
-    "funnelSetup": "Funnel setup",
-    "cardAppearance": "Card appearance",
-    "findDuplicates": "Find duplicates",
-    "massActions": "Mass actions"
-  },
-  "sources": {
-    "instagram": "Instagram",
-    "website": "Website",
-    "referral": "Referral",
-    "walk_in": "Walk-in",
-    "facebook": "Facebook",
-    "admin": "Admin"
-  },
-  "toolbar": {
-    "selected": "selected",
-    "changeStatus": "Change status",
-    "assign": "Assign",
-    "delete": "Delete",
-    "manager": "Manager"
-  },
-  "emptyState": {
-    "notFound": "Nothing found",
-    "tryChangingFilters": "Try changing search parameters or filters.",
-    "resetFilters": "Reset filters"
-  },
-  "warnings": {
-    "funnelTriggersTitle": "Warning: required apartment status triggers are missing",
-    "funnelTriggersDesc": "To correctly handle reservations and sales, set triggers that change the bound apartment status to “Reserved” and “Sold” in every funnel.",
-    "missingFunnels": "Funnels missing triggers",
-    "funnelTriggersCta": "Open funnel setup"
+    "noTasks": "No tasks",
+    "empty": "Empty",
+    "moveHere": "Move here",
+    "quickAdd": "+ Quick add..."
   },
   "list": {
     "selectAll": "Select all",
@@ -228,17 +174,6 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "daysAgo": "days ago"
-  },
-  "kanban": {
-    "noDeals": "No deals",
-    "dragHere": "Drag here",
-    "createDeal": "Create deal",
-    "changeStage": "Change stage",
-    "budget": "Budget",
-    "noTasks": "No tasks",
-    "empty": "Empty",
-    "moveHere": "Move here",
-    "quickAdd": "+ Quick add..."
   },
   "drawer": {
     "contact": "Contact",
@@ -310,6 +245,40 @@
     "moveHere": "Move here",
     "doubleClickToEdit": "Double-click to change name",
     "insertStage": "Insert stage"
+  },
+  "settings": {
+    "import": "Import",
+    "export": "Export (CSV)",
+    "funnelSetup": "Funnel setup",
+    "cardAppearance": "Card appearance",
+    "findDuplicates": "Find duplicates",
+    "massActions": "Mass actions"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "Website",
+    "referral": "Referral",
+    "walk_in": "Walk-in",
+    "facebook": "Facebook",
+    "admin": "Admin"
+  },
+  "toolbar": {
+    "selected": "selected",
+    "changeStatus": "Change status",
+    "assign": "Assign",
+    "delete": "Delete",
+    "manager": "Manager"
+  },
+  "emptyState": {
+    "notFound": "Nothing found",
+    "tryChangingFilters": "Try changing search parameters or filters.",
+    "resetFilters": "Reset filters"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "Warning: required apartment status triggers are missing",
+    "funnelTriggersDesc": "To correctly handle reservations and sales, set triggers that change the bound apartment status to “Reserved” and “Sold” in every funnel.",
+    "missingFunnels": "Funnels missing triggers",
+    "funnelTriggersCta": "Open funnel setup"
   },
   "cardAppearance": {
     "title": "Card appearance",
@@ -424,7 +393,10 @@
       "addTag": "Add tag",
       "notification": "Notification",
       "apartmentStatus": "Apartment status"
-    }
+    },
+    "onStageEntryOption": "On stage entry",
+    "timerOption": "By timer",
+    "onTagAddOption": "On tag add"
   },
   "cardFields": {
     "none": "No value",

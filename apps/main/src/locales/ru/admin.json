@@ -157,7 +157,8 @@
     "notConnected": "Не подключено",
     "connectInAdmin": "Подключите в Админ-панели",
     "connectInAdminDescription": "Сначала необходимо подключить AmoCRM в панели администратора.",
-    "goToAdmin": "Перейти в админ-панель"
+    "goToAdmin": "Перейти в админ-панель",
+    "confirm": "Подтверждать"
   },
   "bitrix24": {
     "description": "CRM, задачи и управление проектами в одном месте.",
@@ -185,6 +186,7 @@
     "notConnected": "Не подключено",
     "connectInAdmin": "Подключите в Админ-панели",
     "connectInAdminDescription": "Сначала необходимо подключить Bitrix24 в панели администратора.",
+    "marketplaceHint": "Для подключения установите на свой портал приложение Gridix из Битрикс24 Маркетплейс.",
     "attached": "Подключено",
     "attachError": "Не удалось подключить",
     "detached": "Отключено",
@@ -262,6 +264,12 @@
         "pending": "В обработке",
         "cancelled": "Отменено"
       },
+      "methodLabels": {
+        "invoice": "Счет",
+        "card": "Банковская карта",
+        "manual": "Руководство",
+        "unknown": "Неизвестный"
+      },
       "unknownProject": "Не указано",
       "projectsCount": "{{count}} проект(а)",
       "downloadInvoice": "Скачать инвойс",
@@ -329,6 +337,344 @@
     "toasts": {
       "invoiceRequestedSingle": "Счет успешно запрошен. Вы можете скачать его в истории заказов.",
       "invoiceRequestedMultiple": "Счета запрошены для {{count}} проектов"
+    },
+    "error": "Ошибка загрузки подписок."
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "Суперадминистратор",
+      "users": "Пользователи",
+      "subscriptions": "Подписки",
+      "projects": "Проекты",
+      "stats": "Аналитика",
+      "partners": "Партнеры",
+      "partnerPayouts": "Выплаты",
+      "settings": "Настройки"
+    },
+    "projectsManagement": {
+      "title": "Управление проектами",
+      "loading": "Загрузка...",
+      "emptyValue": "—",
+      "confirmDelete": "Вы уверены, что хотите удалить этот проект?",
+      "toast": {
+        "errorTitle": "Ошибка",
+        "successTitle": "Успех",
+        "loadProjectsError": "Не удалось загрузить проекты.",
+        "projectPublished": "Проект опубликован",
+        "projectHidden": "Проект скрыт",
+        "updateVisibilityError": "Не удалось изменить видимость проекта.",
+        "projectAddedToFeatured": "Проект добавлен в избранное",
+        "projectRemovedFromFeatured": "Проект удален из избранного",
+        "updateStatusError": "Не удалось изменить статус проекта.",
+        "projectDeleted": "Проект удален",
+        "deleteProjectError": "Не удалось удалить проект"
+      },
+      "table": {
+        "name": "Имя",
+        "owner": "Владелец",
+        "views": "Просмотры",
+        "status": "Статус",
+        "createdAt": "Создано в",
+        "actions": "Действия"
+      },
+      "badges": {
+        "public": "Общественный",
+        "featured": "Рекомендуемые"
+      },
+      "actions": {
+        "hide": "Скрывать",
+        "publishShort": "Паб.",
+        "feature": "Подвиг."
+      }
+    },
+    "partnersManagement": {
+      "title": "Управление партнерами",
+      "description": "Управление партнерской программой и статусами партнеров",
+      "toast": {
+        "errorTitle": "Ошибка",
+        "successTitle": "Успех",
+        "loadPartnersError": "Не удалось загрузить список партнеров.",
+        "partnerSuspended": "Партнер заблокирован",
+        "partnerActivated": "Партнер активирован",
+        "updatePartnerStatusError": "Не удалось обновить статус партнера."
+      },
+      "stats": {
+        "totalPartners": "Всего партнеров",
+        "activeCount": "{{count}} активен",
+        "totalEarnings": "Общий доход",
+        "earnedByPartners": "Заработано партнерами",
+        "paidOut": "Выплачено",
+        "withdrawnByPartners": "Отозвано партнерами",
+        "suspended": "Приостановленный",
+        "inactivePartners": "Неактивные партнеры"
+      },
+      "filters": {
+        "title": "Фильтры",
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск по имени, адресу электронной почты или коду...",
+        "status": "Статус",
+        "allStatuses": "Все статусы"
+      },
+      "table": {
+        "title": "Партнеры",
+        "count": "{{filtered}} из {{total}} партнеров",
+        "partner": "Партнер",
+        "code": "Код",
+        "status": "Статус",
+        "earned": "Заработано",
+        "withdrawn": "снято",
+        "registeredAt": "Дата регистрации",
+        "actions": "Действия"
+      },
+      "status": {
+        "active": "Активный",
+        "suspended": "Приостановленный",
+        "inactive": "Неактивный"
+      },
+      "actions": {
+        "suspend": "Приостановить",
+        "activate": "Активировать"
+      },
+      "dialog": {
+        "suspendTitle": "Приостановить партнерство",
+        "activateTitle": "Активировать партнера",
+        "suspendDescription": "Вы уверены, что хотите заблокировать этого партнера? Они не получат новых комиссий.",
+        "activateDescription": "Вы уверены, что хотите активировать этого партнера? Они снова будут получать комиссионные.",
+        "codeLabel": "Код",
+        "processing": "Обработка..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "Управление выплатами",
+      "description": "Просмотр и обработка запросов на выплаты партнерам",
+      "toast": {
+        "loadPayoutsError": "Не удалось загрузить список выплат.",
+        "payoutApproved": "Выплата одобрена",
+        "payoutRejected": "Выплата отклонена",
+        "payoutMarkedAsPaid": "Выплата отмечена как оплаченная",
+        "updatePayoutStatusError": "Не удалось обновить статус выплаты."
+      },
+      "status": {
+        "pending": "Ожидает рассмотрения",
+        "approved": "Одобренный",
+        "paid": "Оплаченный",
+        "rejected": "Отклоненный",
+        "unknown": "Неизвестный"
+      },
+      "stats": {
+        "pendingReview": "Ожидает рассмотрения",
+        "pendingAmount": "${{сумма}} к выплате",
+        "waitingPayment": "Ожидание оплаты",
+        "completedPayouts": "Завершенные выплаты",
+        "rejectedRequests": "Отклоненные запросы"
+      },
+      "filters": {
+        "title": "Фильтры",
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск по партнеру...",
+        "status": "Статус",
+        "allStatuses": "Все статусы"
+      },
+      "table": {
+        "title": "Запросы на выплату",
+        "count": "{{фильтровано}} из {{total}} запросов",
+        "partner": "Партнер",
+        "amount": "Количество",
+        "status": "Статус",
+        "paymentMethod": "Способ оплаты",
+        "contactInfo": "Контактная информация",
+        "requestedAt": "Дата запроса",
+        "actions": "Действия"
+      },
+      "emptyPaymentMethod": "Не указан",
+      "emptyContactInfo": "Не указан",
+      "actions": {
+        "approve": "Утвердить",
+        "reject": "Отклонять",
+        "markPaid": "Отметить как оплаченное"
+      },
+      "dialog": {
+        "approveTitle": "Утвердить выплату",
+        "rejectTitle": "Отклонить выплату",
+        "markPaidTitle": "Отметить как оплаченное",
+        "approveDescription": "Вы уверены, что хотите утвердить эту выплату?",
+        "rejectDescription": "Вы уверены, что хотите отклонить этот платеж?",
+        "markPaidDescription": "Вы уверены, что эта выплата была завершена?",
+        "codeLabel": "Код",
+        "amountLabel": "Количество",
+        "methodLabel": "Метод",
+        "contactInfoLabel": "Контактная информация:",
+        "noteLabel": "Примечание (необязательно)",
+        "notePlaceholder": "Добавить примечание к этому действию...",
+        "processing": "Обработка..."
+      }
+    },
+    "usersManagement": {
+      "title": "Управление пользователями",
+      "loading": "Загрузка...",
+      "creating": "Создание...",
+      "searchPlaceholder": "Поиск по электронной почте, имени или компании...",
+      "toast": {
+        "errorTitle": "Ошибка",
+        "successTitle": "Успех",
+        "loadUsersError": "Не удалось загрузить пользователей.",
+        "userBanned": "Пользователь заблокирован",
+        "banUserError": "Не удалось заблокировать пользователя",
+        "userUnbanned": "Пользователь разбанен",
+        "unbanUserError": "Не удалось разблокировать пользователя",
+        "emailPasswordRequired": "Требуется адрес электронной почты и пароль",
+        "userCreated": "Пользователь создан",
+        "createUserError": "Не удалось создать пользователя",
+        "impersonateUserError": "Не удалось войти в систему под этим пользователем."
+      },
+      "actions": {
+        "addUser": "Добавить пользователя",
+        "createUser": "Создать пользователя",
+        "ban": "Запретить",
+        "unban": "Разбанить",
+        "loginAs": "Войти"
+      },
+      "dialogs": {
+        "createTitle": "Добавить нового пользователя",
+        "banTitle": "Заблокировать пользователя",
+        "banTarget": "Вы собираетесь запретить:"
+      },
+      "fields": {
+        "password": "Пароль",
+        "fullName": "Полное имя",
+        "company": "Компания",
+        "phone": "Телефон",
+        "banReason": "Причина бана"
+      },
+      "placeholders": {
+        "fullName": "Джон Смит",
+        "company": "ООО «АКМЕ»",
+        "banReason": "Укажите причину..."
+      },
+      "table": {
+        "name": "Имя",
+        "company": "Компания",
+        "status": "Статус",
+        "registeredAt": "Дата регистрации",
+        "actions": "Действия"
+      },
+      "status": {
+        "active": "Активный",
+        "banned": "Запрещено"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "Управление подписками",
+      "loading": "Загрузка...",
+      "pendingCount": "{{count}} запросов на выставление счетов ожидают обработки",
+      "planOption": "{{name}} — ${{price}} долл. США в месяц",
+      "toast": {
+        "errorTitle": "Ошибка",
+        "successTitle": "Успех",
+        "loadSubscriptionsError": "Не удалось загрузить подписки.",
+        "fillRequiredFields": "Заполните все обязательные поля",
+        "subscriptionCreated": "Подписка создана",
+        "createSubscriptionError": "Не удалось создать подписку",
+        "invoiceGenerated": "Счет в формате PDF создан и отправлен",
+        "generateInvoiceError": "Не удалось создать счет-фактуру",
+        "paymentConfirmed": "Платеж подтвержден, подписка активирована",
+        "activateSubscriptionError": "Не удалось активировать подписку",
+        "subscriptionCancelled": "Подписка отменена",
+        "cancelSubscriptionError": "Не удалось отменить подписку",
+        "subscriptionUpdated": "Подписка обновлена",
+        "updateSubscriptionError": "Не удалось обновить подписку"
+      },
+      "actions": {
+        "create": "Создать подписку",
+        "saveChanges": "Сохранить изменения",
+        "editTitle": "Изменить подписку",
+        "edit": "Редактировать",
+        "cancel": "Отмена"
+      },
+      "dialogs": {
+        "createTitle": "Создать новую подписку",
+        "editTitle": "Изменить подписку",
+        "labels": {
+          "user": "Пользователь",
+          "project": "Проект",
+          "currentPlan": "Текущий план",
+          "currentStatus": "Текущий статус",
+          "endsAt": "Заканчивается в"
+        }
+      },
+      "fields": {
+        "userEmail": "Электронная почта пользователя",
+        "project": "Проект",
+        "plan": "План",
+        "durationMonths": "Продолжительность (месяцев)",
+        "invoiceNumber": "Номер счета",
+        "invoiceUrl": "URL-адрес счета-фактуры",
+        "tariffPlan": "Тариф (план)",
+        "status": "Статус",
+        "infiniteSubscription": "Бесконечная подписка (до 2099 г.)",
+        "customEndDate": "Или установите дату окончания вручную"
+      },
+      "placeholders": {
+        "selectProject": "Выберите проект",
+        "selectPlan": "Выберите план"
+      },
+      "hints": {
+        "endDateAuto": "Дата окончания будет рассчитана автоматически на основе текущей даты начала.",
+        "customDateOverrides": "Если указана дата, она будет использоваться вместо расчета продолжительности.",
+        "applyWarning": "Изменения вступают в силу немедленно. Будьте осторожны при изменении статуса и даты окончания."
+      },
+      "status": {
+        "active": "Активный",
+        "trial": "Пробный",
+        "trialing": "испытание",
+        "pendingPayment": "Ожидает платежа",
+        "expired": "Истекший",
+        "cancelled": "Отменено",
+        "trialExpired": "Срок действия пробной версии истек"
+      },
+      "pendingRequests": {
+        "title": "Запросы счетов",
+        "table": {
+          "user": "Пользователь",
+          "project": "Проект",
+          "plan": "План",
+          "amount": "Количество",
+          "requestedAt": "Запрошено в",
+          "actions": "Действия"
+        },
+        "actions": {
+          "generatePdf": "Создать PDF",
+          "view": "Вид",
+          "viewPdf": "Посмотреть PDF",
+          "download": "Скачать",
+          "confirmPayment": "Подтвердить платеж",
+          "confirmAndActivate": "Подтвердите оплату и активируйте"
+        },
+        "dialog": {
+          "title": "Подтвердить платеж",
+          "invoiceLabel": "Счет",
+          "warning": "Прежде чем подтверждать активацию подписки, убедитесь, что оплата получена.",
+          "labels": {
+            "project": "Проект",
+            "user": "Пользователь",
+            "plan": "План",
+            "amount": "Количество",
+            "invoiceNumber": "Номер счета"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "Все подписки",
+        "table": {
+          "user": "Пользователь",
+          "project": "Проект",
+          "plan": "План",
+          "status": "Статус",
+          "endDate": "Дата окончания",
+          "invoice": "Счет",
+          "actions": "Действия"
+        }
+      }
     }
   }
 }

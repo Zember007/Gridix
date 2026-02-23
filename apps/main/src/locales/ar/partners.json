@@ -92,7 +92,9 @@
     "approved": "موافق عليه",
     "paid": "مدفوع",
     "rejected": "مرفوض",
-    "unknown": "غير معروف"
+    "unknown": "غير معروف",
+    "needsCorrection": "يحتاج إلى تصحيح",
+    "blocked": "محظور"
   },
   "account": "الحساب",
   "instructions": "التعليمات",
