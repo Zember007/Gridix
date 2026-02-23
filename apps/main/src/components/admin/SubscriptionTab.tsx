@@ -8,6 +8,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { toast } from "sonner";
 import { ProjectSubscriptionsList } from "./subscription/ProjectSubscriptionsList";
 import { DurationSelector } from "./subscription/DurationSelector";
@@ -79,8 +80,8 @@ export default function SubscriptionTab() {
   const handleViewInvoice = async (subscriptionId?: string) => {
     if (!subscriptionId) return;
     try {
-      const session = await supabase.auth.getSession();
-      if (!session.data.session?.access_token) {
+      const sessionData = await fetchCurrentSession();
+      if (!sessionData.session?.access_token) {
         toast.error("Please log in to view invoice");
         return;
       }
@@ -91,7 +92,7 @@ export default function SubscriptionTab() {
         {
           body: { subscription_id: subscriptionId },
           headers: {
-            Authorization: `Bearer ${session.data.session.access_token}`,
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
         },
       );

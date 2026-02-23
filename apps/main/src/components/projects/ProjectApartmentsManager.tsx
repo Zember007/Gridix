@@ -45,7 +45,8 @@ import {
 } from "@/entities/apartment/model/types";
 import type { Json } from "@gridix/types/database";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProject } from "@/entities/project/queries/useProjects";
+import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
+import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { ADMIN_THEME, cn } from "@gridix/utils/lib";
 import { trackUsertourEvent } from "@gridix/utils/integrations";
 
@@ -87,7 +88,8 @@ const ProjectApartmentsManager = ({
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(1);
   const { t } = useLanguage();
-  const { project } = useProject(projectId);
+  const { project } = useProjectInEditorScope(projectId);
+  const editorData = useProjectEditorDataContext();
 
   const [newApartment, setNewApartment] = useState<Partial<Apartment>>({
     apartment_number: "",
@@ -111,8 +113,7 @@ const ProjectApartmentsManager = ({
 
       if (error) throw error;
 
-      // Use the normalizeApartmentData function to ensure proper type casting
-      const formattedApartments = data.map(normalizeApartmentData);
+      const formattedApartments = (data ?? []).map(normalizeApartmentData);
       setApartments(formattedApartments);
     } catch (error) {
       console.error("Error loading apartments:", error);
@@ -123,8 +124,14 @@ const ProjectApartmentsManager = ({
   }, [projectId, t]);
 
   useEffect(() => {
+    if (editorData?.data?.apartments != null) {
+      const formatted = editorData.data.apartments.map(normalizeApartmentData);
+      setApartments(formatted);
+      setLoading(false);
+      return;
+    }
     loadApartments();
-  }, [loadApartments]);
+  }, [editorData?.data?.apartments, loadApartments]);
 
   useEffect(() => {
     // Update newApartment type when currentType changes

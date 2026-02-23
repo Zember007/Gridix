@@ -15,7 +15,7 @@ import {
 } from "@gridix/ui";
 import { Settings, ChevronDown, ChevronRight, Layers3 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProject } from "@/entities/project/queries/useProjects";
+import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import FloorPlanEditor from "@/components/visualization/FloorPlanEditor";
 import PolygonCustomizationSettings from "@/components/visualization/PolygonCustomizationSettings";
 
@@ -55,7 +55,7 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
   const [currentFloor, setCurrentFloor] = useState<number>(1);
 
   const { t } = useLanguage();
-  const { project } = useProject(projectId);
+  const { project } = useProjectInEditorScope(projectId);
 
   useEffect(() => {
     if (project) {

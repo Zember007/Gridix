@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { Button } from "@gridix/ui";
 import { Card } from "@gridix/ui";
 import {
@@ -317,7 +318,7 @@ export function SubscriptionsManagement() {
             subscription_id: subscriptionId,
           },
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${(await fetchCurrentSession()).session?.access_token}`,
           },
         },
       );
@@ -356,7 +357,7 @@ export function SubscriptionsManagement() {
             subscription_id: subscriptionId,
           },
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${(await fetchCurrentSession()).session?.access_token}`,
           },
         },
       );

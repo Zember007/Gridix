@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 
 type AuthContextValue = {
   user: User | null;
@@ -31,10 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const init = async () => {
       try {
         await supabaseAuthInitPromise;
-        const { data } = await supabase.auth.getSession();
+        const sessionData = await fetchCurrentSession();
         if (!mounted) return;
-        setSession(data.session ?? null);
-        setUser(data.session?.user ?? null);
+        setSession(sessionData.session ?? null);
+        setUser(sessionData.session?.user ?? null);
       } finally {
         if (mounted) setLoading(false);
       }

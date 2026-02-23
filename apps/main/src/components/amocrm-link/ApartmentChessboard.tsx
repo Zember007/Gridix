@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@gridix/utils/api";
+import { useApartmentsByProject } from "@gridix/utils";
 import type { Apartment } from "@/entities/apartment/model/types";
 import { normalizeApartmentData } from "@/entities/apartment/model/types";
 
@@ -26,50 +26,25 @@ export function ApartmentChessboard({
   selectedApartmentId: string | null;
   onSelect: (apartment: Apartment | null) => void;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const { data, isLoading, error } = useApartmentsByProject(projectId);
 
-  // Minimal data loader (local state) — enough for iframe linking use-case.
-  // We keep it here (instead of reusing the widget selector) to avoid pulling heavy UI logic.
+  const apartments = useMemo(() => {
+    return (data ?? []).map(normalizeApartmentData).sort(sortByApartmentNumber);
+  }, [data]);
+
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setApartments([]);
     setSelectedFloor(null);
     onSelect(null);
-
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("apartments")
-          .select(
-            "id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type, polygon",
-          )
-          .eq("project_id", projectId);
-        if (error) throw error;
-        if (cancelled) return;
-        const normalized = (data || []).map(normalizeApartmentData);
-        setApartments(normalized);
-        const floors = Array.from(
-          new Set(normalized.map((a) => a.floor_number)),
-        ).sort((a, b) => b - a);
-        setSelectedFloor(floors[0] ?? null);
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Ошибка загрузки квартир");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
+  useEffect(() => {
+    const nextFloors = Array.from(
+      new Set(apartments.map((a) => a.floor_number)),
+    ).sort((a, b) => b - a);
+    setSelectedFloor((prev) => prev ?? nextFloors[0] ?? null);
+  }, [apartments]);
 
   const floors = useMemo(() => {
     return Array.from(new Set(apartments.map((a) => a.floor_number))).sort(
@@ -84,7 +59,7 @@ export function ApartmentChessboard({
     return filtered.slice().sort(sortByApartmentNumber);
   }, [apartments, selectedFloor]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-xl border bg-background p-6 text-sm text-muted-foreground">
         Загружаем план…
@@ -96,7 +71,9 @@ export function ApartmentChessboard({
     return (
       <div className="rounded-xl border bg-background p-6">
         <div className="text-sm font-medium">Не удалось загрузить квартиры</div>
-        <div className="mt-1 text-sm text-destructive">{error}</div>
+        <div className="mt-1 text-sm text-destructive">
+          {error instanceof Error ? error.message : "Ошибка загрузки квартир"}
+        </div>
       </div>
     );
   }
@@ -121,7 +98,6 @@ export function ApartmentChessboard({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr]">
-        {/* Floors */}
         <div className="rounded-lg border bg-card p-2">
           <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
             Этаж
@@ -162,7 +138,6 @@ export function ApartmentChessboard({
           </div>
         </div>
 
-        {/* Grid */}
         <div className="rounded-lg border bg-card p-3">
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">

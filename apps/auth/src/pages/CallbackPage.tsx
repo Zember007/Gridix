@@ -4,6 +4,7 @@ import { supabase } from "@gridix/utils/api";
 import {
   consumeSupabaseSessionFromUrl,
   exchangeAmoSsoToken,
+  fetchCurrentSession,
 } from "@gridix/utils";
 import type { AmoSsoSupabaseClient } from "@gridix/utils";
 import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
@@ -28,8 +29,7 @@ export default function CallbackPage() {
           );
         }
         await consumeSupabaseSessionFromUrl(supabase);
-        const { data } = await supabase.auth.getSession();
-        const session = data.session;
+        const { session } = await fetchCurrentSession();
         if (!session?.user?.id) throw new Error("No session after callback");
 
         // Apply pending account type selection (Google OAuth flow)

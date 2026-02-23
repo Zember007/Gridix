@@ -23,7 +23,10 @@ export interface UseProjectDomainsResult {
   refresh: () => Promise<void>;
 }
 
-export function useProjectDomains(projectId?: string): UseProjectDomainsResult {
+export function useProjectDomains(
+  projectId?: string,
+  initialDomains?: ProjectDomain[] | null,
+): UseProjectDomainsResult {
   const [domains, setDomains] = useState<ProjectDomain[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,8 +157,13 @@ export function useProjectDomains(projectId?: string): UseProjectDomainsResult {
   );
 
   useEffect(() => {
+    if (initialDomains != null && Array.isArray(initialDomains)) {
+      setDomains(initialDomains);
+      setLoading(false);
+      return;
+    }
     loadDomains();
-  }, [loadDomains]);
+  }, [loadDomains, initialDomains]);
 
   return {
     domains,

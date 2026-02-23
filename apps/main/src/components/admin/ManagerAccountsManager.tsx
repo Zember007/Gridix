@@ -44,6 +44,7 @@ import {
 import { Checkbox } from "@gridix/ui";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Spinner } from "@/shared/ui/Spinner";
 
@@ -192,9 +193,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     setSubmitting(true);
     try {
       // Получаем информацию о текущем разработчике
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await fetchCurrentSession();
       if (!user) {
         toast.error("Unauthorized");
         return;

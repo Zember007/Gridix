@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Button,
   Card,
@@ -42,7 +42,15 @@ import { useLanguage, useLanguageNavigation } from "@gridix/utils/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
-import { useProject } from "@/entities/project/queries/useProjects";
+import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
+import {
+  uploadProjectPdf,
+  removeProjectPdf,
+} from "@/features/projectEditor/api/projectEditorApi";
+import {
+  ProjectEditorDataProvider,
+  useProjectEditorDataContext,
+} from "@/features/projectEditor/context/ProjectEditorDataContext";
 import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsManager";
 import BuildingImageEditor from "@/components/visualization/BuildingImageEditor";
 import AllFieldsManager from "@/components/admin/AllFieldsManager";
@@ -92,7 +100,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
-  const { project: cachedProject } = useProject(projectId);
+  const { project: cachedProject } = useProjectInEditorScope(projectId);
+  const editorDataContext = useProjectEditorDataContext();
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
   const startedProjectChecklistRef = useRef(false);
@@ -128,65 +137,68 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   }, [searchParams]);
 
+  const projectSource = editorDataContext?.data?.project ?? cachedProject;
+
+  const mapDbProjectToEditor = useCallback((row: typeof cachedProject) => {
+    if (!row) return;
+    setProject({
+      id: row.id,
+      name: row.name || "",
+      description: row.description || "",
+      address: row.address || "",
+      floors: row.floors || 1,
+      has_parking: row.has_parking || false,
+      has_commercial: row.has_commercial || false,
+      building_image_url: row.building_image_url,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      currency: (row.currency as CurrencyType) || DEFAULT_CURRENCY,
+      installment_enabled: row.installment_enabled || false,
+      min_down_payment_percent: row.min_down_payment_percent || 20,
+      max_installment_months: row.max_installment_months || 24,
+      pdf_presentation_url: row.pdf_presentation_url,
+      theme_color:
+        ((row as unknown as Record<string, unknown>).theme_color as string) ||
+        "#000000",
+      project_type:
+        ((row as unknown as Record<string, unknown>).project_type as
+          | "building"
+          | "object"
+          | null) || "building",
+      facade_open:
+        ((row as unknown as Record<string, unknown>).facade_open as boolean) ||
+        false,
+      available_languages: parseAvailableLanguages(
+        (row as unknown as Record<string, unknown>).available_languages,
+      ),
+    });
+  }, []);
+
   useEffect(() => {
-    if (isNew || !projectId || !cachedProject) {
-      return;
-    }
+    if (isNew || !projectId) return;
+    const source = projectSource;
+    if (!source) return;
 
     try {
-      // Проверяем права на редактирование
       const canEdit =
         user &&
-        // Владелец проекта может редактировать
-        (cachedProject.user_id === user.id ||
-          // Менеджер может редактировать, если проект принадлежит застройщику активного workspace
+        (source.user_id === user.id ||
           (isManagerMode &&
             activeWorkspaceId &&
-            cachedProject.user_id === activeWorkspaceId) ||
-          // Или если менеджер имеет доступ к этому застройщику
-          (isManager && developerIds.includes(cachedProject.user_id ?? "")));
+            source.user_id === activeWorkspaceId) ||
+          (isManager && developerIds.includes(source.user_id ?? "")));
 
       if (!canEdit) {
         setAccessError(t("projectEditor.noEditRights"));
         return;
       }
-
-      setProject({
-        id: cachedProject.id,
-        name: cachedProject.name || "",
-        description: cachedProject.description || "",
-        address: cachedProject.address || "",
-        floors: cachedProject.floors || 1,
-        has_parking: cachedProject.has_parking || false,
-        has_commercial: cachedProject.has_commercial || false,
-        building_image_url: cachedProject.building_image_url,
-        latitude: cachedProject.latitude,
-        longitude: cachedProject.longitude,
-        currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY,
-        installment_enabled: cachedProject.installment_enabled || false,
-        min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
-        max_installment_months: cachedProject.max_installment_months || 24,
-        pdf_presentation_url: cachedProject.pdf_presentation_url,
-        theme_color:
-          ((cachedProject as unknown as Record<string, unknown>)
-            .theme_color as string) || "#000000",
-        project_type:
-          ((cachedProject as unknown as Record<string, unknown>)
-            .project_type as "building" | "object" | null) || "building",
-        facade_open:
-          ((cachedProject as unknown as Record<string, unknown>)
-            .facade_open as boolean) || false,
-        available_languages: parseAvailableLanguages(
-          (cachedProject as unknown as Record<string, unknown>)
-            .available_languages,
-        ),
-      });
+      mapDbProjectToEditor(source);
     } catch (error) {
       console.error("Error loading project:", error);
       toast.error(t("projectEditor.errorLoading"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, cachedProject?.id]);
+  }, [projectId, projectSource?.id, isNew, mapDbProjectToEditor]);
 
   // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
   useEffect(() => {
@@ -437,15 +449,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       toast.error(t("projectEditor.saveProjectFirst"));
       return;
     }
-
-    // Validate file type
     if (file.type !== "application/pdf") {
       toast.error(t("projectEditor.onlyPdfAllowed"));
       return;
     }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error(t("projectEditor.fileTooLarge"));
       return;
@@ -454,48 +462,20 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     setUploadingPdf(true);
     try {
       const { PDFDocument } = await import("pdf-lib");
-
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer, {
         ignoreEncryption: true,
       });
-      const pageCount = pdfDoc.getPageCount();
-
-      if (pageCount === 0) {
+      if (pdfDoc.getPageCount() === 0) {
         toast.error(t("projectEditor.invalidPdf"));
         setUploadingPdf(false);
         return;
       }
 
-      const compressedFile = new Blob([arrayBuffer], {
-        type: "application/pdf",
-      });
-
-      const fileName = `${user.id}/${project.id}/presentation_${Date.now()}.pdf`;
-
-      const { error } = await supabase.storage
-        .from("project-files")
-        .upload(fileName, compressedFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (error) throw error;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("project-files").getPublicUrl(fileName);
-
-      // Update project with new PDF URL
-      const { error: updateError } = await supabase
-        .from("projects")
-        .update({ pdf_presentation_url: publicUrl })
-        .eq("id", project.id);
-
-      if (updateError) throw updateError;
-
+      const { publicUrl } = await uploadProjectPdf(project.id, file);
       setProject((prev) => ({ ...prev, pdf_presentation_url: publicUrl }));
       toast.success(t("projectEditor.pdfUploadSuccess"));
+      void editorDataContext?.refresh();
     } catch (error) {
       console.error("Error uploading PDF:", error);
       toast.error(t("projectEditor.pdfUploadError"));
@@ -506,28 +486,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
   const handleRemovePdf = async () => {
     if (!user || !project.pdf_presentation_url) return;
-
     try {
-      // Extract file path from URL
-      const url = new URL(project.pdf_presentation_url);
-      const filePath = url.pathname.split("/").pop();
-
-      if (filePath) {
-        await supabase.storage
-          .from("project-files")
-          .remove([`${project.id}/${filePath}`]);
-      }
-
-      // Update project to remove PDF URL
-      const { error } = await supabase
-        .from("projects")
-        .update({ pdf_presentation_url: null })
-        .eq("id", project.id);
-
-      if (error) throw error;
-
+      await removeProjectPdf(project.id, project.pdf_presentation_url);
       setProject((prev) => ({ ...prev, pdf_presentation_url: null }));
       toast.success(t("projectEditor.pdfRemoveSuccess"));
+      void editorDataContext?.refresh();
     } catch (error) {
       console.error("Error removing PDF:", error);
       toast.error(t("projectEditor.pdfRemoveError"));

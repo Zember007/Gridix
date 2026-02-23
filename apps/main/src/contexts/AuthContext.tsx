@@ -9,6 +9,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { processPendingReferralAfterAuth } from "@/features/partnerProgram/referralTracking";
 import { preloadUsertour, resetUsertour } from "@gridix/utils/integrations";
 
@@ -251,9 +252,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // If this tab was opened via a partner "login as client" link (#access_token=...),
         // initialize the tab-scoped session first so `getSession()` returns the right user.
         await supabaseAuthInitPromise;
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const { session } = await fetchCurrentSession();
         if (abortController.signal.aborted) return;
 
         setSession(session);

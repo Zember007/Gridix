@@ -33,6 +33,7 @@ import { useState, useEffect } from "react";
 import { useAsyncAction } from "@/shared/hooks/useAsyncAction";
 import { generateApartmentPdf } from "@/features/apartment/lib/generateApartmentPdf";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import {
   Apartment,
   normalizeApartmentData,
@@ -100,9 +101,7 @@ export default function DomainApartmentPage() {
       if (!apartment || !domainProject?.id || viewTracked) return;
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { user } = await fetchCurrentSession();
 
         await supabase.from("apartment_views").insert({
           apartment_id: apartment.id,

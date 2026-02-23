@@ -13,9 +13,49 @@ export interface FieldSetting {
   sort_order: number;
   is_required?: boolean;
   field_options?: string[];
+  field_label_translations?: Record<string, string>;
 }
 
-export const useFields = (projectId: string | null) => {
+/** Build FieldSetting[] from raw DB rows (same merge as loadFieldSettings). */
+function mergeFieldsFromRaw(
+  settingsData: Array<Record<string, unknown>>,
+  customData: Array<Record<string, unknown>>,
+): FieldSetting[] {
+  const allFields: FieldSetting[] = [
+    ...settingsData.map((field) => ({
+      id: field.id as string,
+      field_name: field.field_name as string,
+      field_label: field.field_label as string,
+      field_type: field.field_type as "text" | "number" | "select" | "boolean",
+      is_custom: Boolean(field.is_custom),
+      is_visible: Boolean(field.is_visible),
+      sort_order: Number(field.sort_order),
+    })),
+    ...customData.map((field) => ({
+      id: field.id as string,
+      field_name: field.field_name as string,
+      field_label: field.field_label as string,
+      field_type: field.field_type as "text" | "number" | "select" | "boolean",
+      is_custom: true,
+      is_visible: field.is_visible !== false,
+      sort_order: Number(field.sort_order) || 999,
+      field_label_translations:
+        (field.field_label_translations as Record<string, string>) || {},
+    })),
+  ];
+  allFields.sort((a, b) => a.sort_order - b.sort_order);
+  return allFields;
+}
+
+export interface UseFieldsInitialData {
+  fieldSettings: Array<Record<string, unknown>>;
+  customFields: Array<Record<string, unknown>>;
+}
+
+export const useFields = (
+  projectId: string | null,
+  initialData?: UseFieldsInitialData | null,
+) => {
   const [fields, setFields] = useState<FieldSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,39 +87,10 @@ export const useFields = (projectId: string | null) => {
 
       if (customError) throw customError;
 
-      // Объединяем данные
-      const allFields: FieldSetting[] = [
-        ...settingsData.map((field) => ({
-          id: field.id,
-          field_name: field.field_name,
-          field_label: field.field_label,
-          field_type: field.field_type as
-            | "text"
-            | "number"
-            | "select"
-            | "boolean",
-          is_custom: field.is_custom,
-          is_visible: field.is_visible,
-          sort_order: field.sort_order,
-        })),
-        ...customData.map((field) => ({
-          id: field.id,
-          field_name: field.field_name,
-          field_label: field.field_label,
-          field_type: field.field_type as
-            | "text"
-            | "number"
-            | "select"
-            | "boolean",
-          is_custom: true,
-          is_visible: field.is_visible !== false,
-          sort_order: field.sort_order || 999,
-          field_label_translations: field.field_label_translations || {},
-        })),
-      ];
-
-      // Сортируем по sort_order
-      allFields.sort((a, b) => a.sort_order - b.sort_order);
+      const allFields = mergeFieldsFromRaw(
+        settingsData as Array<Record<string, unknown>>,
+        customData as Array<Record<string, unknown>>,
+      );
       setFields(allFields);
     } catch (error) {
       console.error("Error loading field settings:", error);
@@ -196,8 +207,24 @@ export const useFields = (projectId: string | null) => {
   }, [loadFieldSettings]);
 
   useEffect(() => {
+    if (
+      initialData?.fieldSettings != null &&
+      initialData?.customFields != null &&
+      Array.isArray(initialData.fieldSettings) &&
+      Array.isArray(initialData.customFields)
+    ) {
+      setFields(
+        mergeFieldsFromRaw(initialData.fieldSettings, initialData.customFields),
+      );
+      setLoading(false);
+      return;
+    }
     loadFieldSettings();
-  }, [loadFieldSettings]);
+  }, [
+    loadFieldSettings,
+    initialData?.fieldSettings,
+    initialData?.customFields,
+  ]);
 
   return {
     fields,

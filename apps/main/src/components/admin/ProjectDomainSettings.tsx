@@ -22,6 +22,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useProjectDomains } from "@/entities/project/queries/useProjectDomains";
+import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import { Alert, AlertDescription } from "@gridix/ui";
 import {
   AlertDialog,
@@ -55,7 +56,15 @@ export default function ProjectDomainSettings({
   projectId,
   projectName,
 }: ProjectDomainSettingsProps) {
-  const { domains, loading, updateDomain } = useProjectDomains(projectId);
+  const editorData = useProjectEditorDataContext();
+  const initialDomains =
+    editorData?.data?.domains != null && Array.isArray(editorData.data.domains)
+      ? editorData.data.domains
+      : null;
+  const { domains, loading, updateDomain } = useProjectDomains(
+    projectId,
+    initialDomains,
+  );
   const [newDomain, setNewDomain] = useState("");
   const [isAddingDomain, setIsAddingDomain] = useState(false);
   const [dnsProvider, setDnsProvider] = useState<"manual" | "cloudflare">(

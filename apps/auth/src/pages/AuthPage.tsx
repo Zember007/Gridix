@@ -4,6 +4,9 @@ import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import {
   hasAuthTokensInHash,
   consumeSupabaseSessionFromUrl,
+  useCurrentSession,
+  usePartnerByCode,
+  linkPartnerToClient,
 } from "@gridix/utils";
 import { useLanguageNavigation, useLanguage } from "@gridix/utils/react";
 import { toast } from "sonner";
@@ -49,12 +52,13 @@ function safeRedirectUrl(input: string | null): string | null {
 }
 
 async function redirectByAccountType(params: {
+  session: Awaited<
+    ReturnType<typeof supabase.auth.getSession>
+  >["data"]["session"];
   redirectToUrl?: string | null;
   lang: string;
 }) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { session } = params;
   if (!session?.user?.id) return;
 
   const userId = session.user.id;
@@ -138,6 +142,11 @@ export default function AuthPage() {
   const { t, language } = useLanguage();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const {
+    data: sessionQuery,
+    isLoading: isSessionLoading,
+    refetch: refetchSession,
+  } = useCurrentSession();
 
   const redirectToUrl = searchParams.get("redirect_to");
   const mode = searchParams.get("mode");
@@ -184,12 +193,11 @@ export default function AuthPage() {
       .catch((err) => console.error("Partner track_click:", err));
   }, [refCode, utmSource, utmMedium, utmCampaign]);
 
-  const [partnerInfo, setPartnerInfo] = useState<{
-    id: string;
-    partner_code: string;
-    user_profiles: { full_name: string | null; email: string | null };
-  } | null>(null);
-  const [checkingPartner, setCheckingPartner] = useState(false);
+  const {
+    data: partnerInfo,
+    isLoading: checkingPartner,
+    error: partnerError,
+  } = usePartnerByCode(refCode);
 
   const hashIndicatesRecovery = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -215,9 +223,11 @@ export default function AuthPage() {
         // ignore
       }
       if (cancelled) return;
-      const { data } = await supabase.auth.getSession();
-      if (cancelled || !data.session?.user?.id) return;
+      const { data } = await refetchSession();
+      const session = data?.session ?? null;
+      if (cancelled || !session?.user?.id) return;
       await redirectByAccountType({
+        session,
         redirectToUrl: redirectToUrl ?? null,
         lang: window.location.pathname.split("/")[1] || "en",
       });
@@ -226,46 +236,15 @@ export default function AuthPage() {
     return () => {
       cancelled = true;
     };
-  }, [redirectToUrl]);
+  }, [isSessionLoading, redirectToUrl, refetchSession, sessionQuery?.session]);
 
   useEffect(() => {
-    const checkPartner = async () => {
-      if (!refCode) {
-        setPartnerInfo(null);
-        return;
-      }
-      setCheckingPartner(true);
-      try {
-        const { data, error } = await supabase
-          .from("partner_profiles")
-          .select(
-            `
-            id,
-            partner_code,
-            user_profiles!partner_profiles_user_id_fkey (
-              full_name,
-              email
-            )
-          `,
-          )
-          .eq("partner_code", refCode)
-          .single();
-
-        if (error || !data) {
-          toast.error(t("auth.invalidReferralCode"));
-          setPartnerInfo(null);
-          return;
-        }
-        setPartnerInfo(data as any);
-      } catch (error: unknown) {
-        console.error("Error checking partner:", error);
-        toast.error(t("auth.failedToCheckPartner"));
-      } finally {
-        setCheckingPartner(false);
-      }
-    };
-    void checkPartner();
-  }, [refCode, t]);
+    if (!refCode) return;
+    if (checkingPartner) return;
+    if (!partnerInfo || partnerError) {
+      toast.error(t("auth.invalidReferralCode"));
+    }
+  }, [checkingPartner, partnerError, partnerInfo, refCode, t]);
 
   const handleSendReset = async () => {
     if (!resetEmail) {
@@ -376,7 +355,10 @@ export default function AuthPage() {
               });
               if (error) throw error;
               toast.success(t("auth.welcome"));
+              const currentSession =
+                (await refetchSession()).data?.session ?? null;
               await redirectByAccountType({
+                session: currentSession,
                 redirectToUrl: redirectToUrl ?? null,
                 lang,
               });
@@ -403,32 +385,12 @@ export default function AuthPage() {
             if (error) throw error;
 
             if (authData.user) {
-              if (refCode && partnerInfo) {
-                const { error: linkError } = await supabase
-                  .from("partner_links")
-                  .insert({
-                    partner_id: partnerInfo.id,
-                    client_id: authData.user.id,
-                    type: "referral",
-                    status: "active",
-                    accepted_at: new Date().toISOString(),
-                  } as any);
-                if (linkError)
-                  console.error("Error creating partner link:", linkError);
-              }
-
-              if (inviteCode) {
-                const { error: inviteError } = await supabase
-                  .from("partner_invitations")
-                  .update({
-                    status: "accepted",
-                    accepted_at: new Date().toISOString(),
-                  } as any)
-                  .eq("invitation_code", inviteCode)
-                  .eq("email", payload.email);
-                if (inviteError)
-                  console.error("Error updating invitation:", inviteError);
-              }
+              await linkPartnerToClient({
+                authUserId: authData.user.id,
+                partnerId: partnerInfo?.id ?? null,
+                inviteCode,
+                email: payload.email,
+              });
             }
 
             toast.success(t("auth.checkEmail"));

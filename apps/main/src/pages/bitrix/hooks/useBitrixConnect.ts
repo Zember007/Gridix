@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 
 export type BitrixConnectStatus =
@@ -38,6 +39,8 @@ export function useBitrixConnect(
   const [status, setStatus] = useState<BitrixConnectStatus>("loading");
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
   const checkStatus = useCallback(async () => {
     if (!normDomain || !normMemberId) {
@@ -48,8 +51,8 @@ export function useBitrixConnect(
     try {
       setError(null);
 
-      const { data: u0 } = await supabase.auth.getUser();
-      const currentUser = u0?.user ?? null;
+      if (isSessionLoading) return;
+      const currentUser = sessionQuery?.user ?? null;
       setUser(
         currentUser
           ? { id: currentUser.id, email: currentUser.email ?? undefined }
@@ -106,7 +109,7 @@ export function useBitrixConnect(
       setStatus("error");
       setError(e instanceof Error ? e.message : "Ошибка подключения");
     }
-  }, [normDomain, normMemberId]);
+  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user]);
 
   useEffect(() => {
     void checkStatus();
@@ -151,7 +154,7 @@ export function useBitrixConnect(
       setError(e instanceof Error ? e.message : "Ошибка привязки");
       return false;
     }
-  }, [normDomain, normMemberId]);
+  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user]);
 
   const buildAuthUrl = useCallback((): string => {
     const redirect = `/embed/connect/bitrix24?domain=${encodeURIComponent(normDomain)}&member_id=${encodeURIComponent(normMemberId)}`;
@@ -161,7 +164,7 @@ export function useBitrixConnect(
     sp.set("bitrix_domain", normDomain);
     sp.set("bitrix_member_id", normMemberId);
     return `/ru/auth?${sp.toString()}`;
-  }, [normDomain, normMemberId]);
+  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user]);
 
   const connectUrl =
     normDomain && normMemberId
