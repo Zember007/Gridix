@@ -11,6 +11,7 @@ import {
 } from "@gridix/ui";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
 import { useLanguage } from "@gridix/utils/react";
 
@@ -29,10 +30,8 @@ export default function ResetPasswordForm({
 
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
+      const sessionData = await fetchCurrentSession();
+      if (sessionData.session?.user) {
         setIsValidSession(true);
       } else {
         toast.error(t("auth.invalidRecoverySession"));

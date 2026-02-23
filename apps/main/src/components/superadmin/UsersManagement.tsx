@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Card } from "@gridix/ui";
@@ -109,7 +110,7 @@ export function UsersManagement() {
     if (!selectedUserId) return;
 
     try {
-      const bannedBy = (await supabase.auth.getUser()).data.user?.id;
+      const bannedBy = (await fetchCurrentSession()).user?.id;
       if (!bannedBy) {
         throw new Error("No authenticated user");
       }
@@ -142,11 +143,9 @@ export function UsersManagement() {
 
   const handleUnbanUser = async (userId: string) => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const sessionData = await fetchCurrentSession();
 
-      if (!session) {
+      if (!sessionData.session) {
         throw new Error("No session");
       }
 
@@ -156,7 +155,7 @@ export function UsersManagement() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
           body: JSON.stringify({
             action: "unban_user",
@@ -200,11 +199,9 @@ export function UsersManagement() {
     setIsCreating(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const sessionData = await fetchCurrentSession();
 
-      if (!session) {
+      if (!sessionData.session) {
         throw new Error("No session");
       }
 
@@ -214,7 +211,7 @@ export function UsersManagement() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
           body: JSON.stringify({
             action: "create_user",
@@ -265,11 +262,9 @@ export function UsersManagement() {
 
   const handleImpersonateUser = async (userId: string) => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const sessionData = await fetchCurrentSession();
 
-      if (!session) {
+      if (!sessionData.session) {
         throw new Error("No session");
       }
 
@@ -279,7 +274,7 @@ export function UsersManagement() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
           body: JSON.stringify({
             action: "impersonate_user",

@@ -25,6 +25,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAsyncAction } from "@/shared/hooks/useAsyncAction";
 import { generateApartmentPdf } from "@/features/apartment/lib/generateApartmentPdf";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import {
   Apartment,
   normalizeApartmentData,
@@ -191,10 +192,10 @@ const ApartmentDetailsPage = ({
   };
 
   const ensureGridixAuth = useCallback(async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data?.user)
+    const { user } = await fetchCurrentSession();
+    if (!user)
       throw new Error("Нужно подключить Bitrix к аккаунту Gridix (SSO)");
-    return data.user;
+    return user;
   }, []);
 
   const loadBitrixUnlinkedDeals = useCallback(async () => {
@@ -335,9 +336,7 @@ const ApartmentDetailsPage = ({
 
     const trackApartmentView = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { user } = await fetchCurrentSession();
 
         await supabase.from("apartment_views").insert({
           apartment_id: apartment.id,

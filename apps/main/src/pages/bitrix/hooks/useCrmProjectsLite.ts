@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@gridix/utils/api";
+import { useCurrentSession, useUserProjects } from "@gridix/utils";
 
 export type CrmProjectLite = {
   id: string;
@@ -11,6 +11,12 @@ export function useCrmProjectsLite(enabled: boolean = true) {
   const [projects, setProjects] = useState<CrmProjectLite[]>([]);
   const [loading, setLoading] = useState<boolean>(enabled);
   const [error, setError] = useState<string | null>(null);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
+  const { refetch: refetchProjects } = useUserProjects(
+    sessionQuery?.user?.id ?? null,
+    false,
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -25,22 +31,23 @@ export function useCrmProjectsLite(enabled: boolean = true) {
         setLoading(true);
         setError(null);
 
-        const { data: u0, error: uErr } = await supabase.auth.getUser();
-        if (uErr) throw uErr;
-        const user = u0?.user ?? null;
+        if (isSessionLoading) return;
+        const user = sessionQuery?.user ?? null;
         if (!user) {
           if (!cancelled) setProjects([]);
           return;
         }
 
-        const { data, error: pErr } = await supabase
-          .from("projects")
-          .select("id,name,slug")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+        const projectsData = await refetchProjects();
+        if (projectsData.error) throw projectsData.error;
 
-        if (pErr) throw pErr;
-        if (!cancelled) setProjects((data ?? []) as CrmProjectLite[]);
+        const normalized = (projectsData.data ?? []).map((project) => ({
+          id: project.id,
+          name: project.name,
+          slug: project.slug,
+        }));
+
+        if (!cancelled) setProjects(normalized as CrmProjectLite[]);
       } catch (e: any) {
         console.error(e);
         if (!cancelled)
@@ -55,7 +62,7 @@ export function useCrmProjectsLite(enabled: boolean = true) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, isSessionLoading, refetchProjects, sessionQuery?.user]);
 
   return { projects, loading, error };
 }

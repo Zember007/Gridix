@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import { Button, Card, CardContent, Loader } from "@gridix/ui";
 import { toast } from "sonner";
@@ -80,6 +81,8 @@ export default function BitrixPage() {
   );
   const [dealId, setDealId] = useState<number | null>(initialDealId);
   const [ssoAttempted, setSsoAttempted] = useState(false);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
   const { status, user, connectUrl } = useBitrixConnect(bxDomain, bxMemberId);
   const { projects, loading: projectsLoading } = useCrmProjectsLite(
@@ -125,8 +128,8 @@ export default function BitrixPage() {
   useEffect(() => {
     const run = async () => {
       if (ssoAttempted || !bxDomain || !bxMemberId) return;
-      const { data: u0 } = await supabase.auth.getUser();
-      if (u0?.user) return;
+      if (isSessionLoading) return;
+      if (sessionQuery?.user) return;
 
       setSsoAttempted(true);
       try {
@@ -164,7 +167,13 @@ export default function BitrixPage() {
       }
     };
     void run();
-  }, [bxDomain, bxMemberId, ssoAttempted]);
+  }, [
+    bxDomain,
+    bxMemberId,
+    isSessionLoading,
+    sessionQuery?.user,
+    ssoAttempted,
+  ]);
 
   const loading = status === "loading";
   const needsConnect =
