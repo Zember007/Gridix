@@ -59,7 +59,7 @@
     "tableContact": "კონტაქტი",
     "tableType": "ტიპი",
     "tablePhone": "ტელეფონი",
-    "tableEmail": "Email",
+    "tableEmail": "ელფოსტა",
     "tableDetails": "დეტალები",
     "tableDate": "თარიღი",
     "loading": "იტვირთება...",
@@ -384,7 +384,7 @@
       "actions": {
         "hide": "დამალვა",
         "publishShort": "პაბი.",
-        "feature": "Feat."
+        "feature": "ფუნქ."
       }
     },
     "partnersManagement": {

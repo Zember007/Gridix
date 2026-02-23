@@ -66,7 +66,7 @@ interface TaskComposerProps {
 }
 
 export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const TASK_TYPES = getTaskTypes(t);
   const [text, setText] = useState("");
   const [type, setType] = useState<TaskType>("call");
@@ -218,6 +218,7 @@ export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
             {showDate && (
               <input
                 type="date"
+                lang={i18n.language}
                 className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-slate-200 bg-white p-2 shadow-xl"
                 onChange={(e) => {
                   if (e.target.value) {

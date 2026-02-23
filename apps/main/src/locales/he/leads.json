@@ -51,7 +51,7 @@
     "savedOnly": "נשמר בלבד",
     "sent": "נשלח ל-CRM",
     "total": "סך כל הפניות",
-    "deals": "deals"
+    "deals": "עסקאות"
   },
   "status": {
     "all": "כֹּל",
@@ -127,7 +127,7 @@
     },
     "duplicatesNotFound": {
       "title": "לְנַקוֹת",
-      "desc": "No duplicates found"
+      "desc": "לא נמצאו כפילויות"
     },
     "error": {
       "title": "שְׁגִיאָה",
@@ -233,6 +233,13 @@
     "addFunnel": "הוסף משפך",
     "archived": "משפכים בארכיון",
     "addStage": "הוסף שלב",
+    "defaultFunnelName": "משפך ראשי",
+    "newFunnelName": "משפך חדש",
+    "newStageName": "שלב חדש",
+    "stageUnparsed": "לא מסווג",
+    "stageNewLead": "ליד חדש",
+    "stageTakenForWork": "בטיפול",
+    "stageNoContact": "אין קשר",
     "deleteStage": "מחק שלב",
     "rename": "שנה שם",
     "triggers": "אוטומציות",

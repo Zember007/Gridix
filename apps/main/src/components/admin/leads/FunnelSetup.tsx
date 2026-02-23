@@ -366,10 +366,10 @@ export const FunnelSetup: React.FC<FunnelSetupProps> = ({
                               <Package size={18} />
                             </div>
                             <p className="text-xs font-medium text-slate-500">
-                              Нет автоматизаций
+                              {t("leads.funnel.noAutomations")}
                             </p>
                             <p className="mt-1 text-[10px] text-slate-400">
-                              Добавьте действия при переходе на этот этап
+                              {t("leads.funnel.automationDesc")}
                             </p>
                           </div>
                         )}
@@ -451,7 +451,7 @@ export const FunnelSetup: React.FC<FunnelSetupProps> = ({
                           <Plus size={14} />
                         </div>
                         <span className="text-xs font-bold uppercase tracking-wide">
-                          Добавить триггер
+                          {t("leads.funnel.addTrigger")}
                         </span>
                       </button>
                     )}

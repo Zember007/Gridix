@@ -77,7 +77,7 @@ interface Project {
 }
 
 export function SubscriptionsManagement() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<
@@ -992,6 +992,7 @@ export function SubscriptionsManagement() {
                     </Label>
                     <Input
                       type="date"
+                      lang={language}
                       value={editForm.customEndDate}
                       onChange={(e) =>
                         setEditForm((prev) => ({

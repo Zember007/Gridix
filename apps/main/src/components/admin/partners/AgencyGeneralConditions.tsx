@@ -1,4 +1,4 @@
-import React, {
+﻿import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -565,8 +565,7 @@ export const AgencyGeneralConditions: React.FC = () => {
   const [settings, setSettings] = useState({
     defaultCommission: 4,
     leadLockDays: 30,
-    payoutTerms:
-      "Выплата вознаграждения производится в течение 10 рабочих дней после поступления средств от клиента на счет застройщика. Валюта выплаты соответствует валюте договора.",
+    payoutTerms: t("partners.generalConditions.defaultPayoutTerms"),
     productsDescription: "",
     territory: "",
     exclusivity: "non-exclusive" as "exclusive" | "non-exclusive",
@@ -1060,7 +1059,9 @@ export const AgencyGeneralConditions: React.FC = () => {
       });
       if (error) throw error;
       if (!data?.success || !data?.url)
-        throw new Error(data?.error || "Не удалось получить ссылку скачивания");
+        throw new Error(
+          data?.error || t("partners.generalConditions.errorDownload"),
+        );
       window.open(String(data.url), "_blank");
     } catch (e) {
       console.error("Failed to get download url", e);
@@ -1160,10 +1161,12 @@ export const AgencyGeneralConditions: React.FC = () => {
           });
         if (urlErr) throw urlErr;
         const url = String(urlData?.url ?? "");
-        if (!url) throw new Error("URL шаблона не найден");
+        if (!url)
+          throw new Error(t("partners.generalConditions.templateNotFound"));
 
         const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error("Не удалось загрузить файл");
+        if (!response.ok)
+          throw new Error(t("partners.generalConditions.errorDownload"));
         const arrayBuffer = await response.arrayBuffer();
         const result = await mammoth.convertToHtml({ arrayBuffer });
         setEditingTemplate((prev) =>
@@ -1181,17 +1184,19 @@ export const AgencyGeneralConditions: React.FC = () => {
           });
         if (urlErr) throw urlErr;
         const url = String(urlData?.url ?? "");
-        if (!url) throw new Error("URL шаблона не найден");
+        if (!url)
+          throw new Error(t("partners.generalConditions.templateNotFound"));
 
         const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error("Не удалось загрузить PDF");
+        if (!response.ok)
+          throw new Error(t("partners.generalConditions.errorDownload"));
         const arrayBuffer = await response.arrayBuffer();
         const html = await extractPdfToHtml(arrayBuffer);
         setEditingTemplate((prev) =>
           prev ? { ...prev, content_html: html } : prev,
         );
       } else {
-        throw new Error("Неподдерживаемый формат шаблона");
+        throw new Error(t("partners.generalConditions.onlyDocxPdf"));
       }
     } catch (e) {
       console.error("Failed to open template editor", e);

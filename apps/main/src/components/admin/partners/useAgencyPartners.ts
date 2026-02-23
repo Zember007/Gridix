@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { AgencyPartner, PartnerFilter } from "./types";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ export function useAgencyPartners() {
     dateFrom: undefined,
     dateTo: undefined,
   });
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { user } = useAuth();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
 
@@ -147,7 +147,7 @@ export function useAgencyPartners() {
       );
     } catch (error: unknown) {
       console.error("Error fetching partners:", error);
-      toast.error("Ошибка при загрузке партнеров");
+      toast.error(t("partners.agencyNotifications.loadError"));
     } finally {
       setLoading(false);
     }
@@ -224,13 +224,13 @@ export function useAgencyPartners() {
       setPartners((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status: "active" } : p)),
       );
-      toast.success("Партнёр активирован. Письмо отправлено.");
+      toast.success(t("partners.agencyNotifications.activated"));
     } catch (error: unknown) {
       console.error("approvePartner error:", error);
       toast.error(
         error instanceof Error
           ? error.message
-          : "Ошибка при активации партнёра",
+          : t("partners.agencyNotifications.activateError"),
       );
     }
   };
@@ -267,10 +267,10 @@ export function useAgencyPartners() {
       setPartners((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status, rejectionReason } : p)),
       );
-      toast.success("Статус обновлен");
+      toast.success(t("partners.agencyNotifications.statusUpdated"));
     } catch (error: unknown) {
       console.error("updatePartnerStatus error:", error);
-      toast.error("Ошибка при обновлении статуса");
+      toast.error(t("partners.agencyNotifications.statusUpdateError"));
     }
   };
 
@@ -286,9 +286,9 @@ export function useAgencyPartners() {
       setPartners((prev) =>
         prev.map((p) => (p.id === id ? { ...p, commissionRate: rate } : p)),
       );
-      toast.success("Ставка обновлена");
+      toast.success(t("partners.agencyNotifications.rateUpdated"));
     } catch (error: unknown) {
-      toast.error("Ошибка при обновлении ставки");
+      toast.error(t("partners.agencyNotifications.rateUpdateError"));
     }
   };
 
@@ -303,10 +303,10 @@ export function useAgencyPartners() {
 
       if (error) throw error;
 
-      toast.success("Отмечено как выплачено");
+      toast.success(t("partners.agencyNotifications.markedPaid"));
       fetchPartners(); // Refresh stats
     } catch (error: unknown) {
-      toast.error("Ошибка при обновлении статуса выплат");
+      toast.error(t("partners.agencyNotifications.payoutStatusError"));
     }
   };
 
