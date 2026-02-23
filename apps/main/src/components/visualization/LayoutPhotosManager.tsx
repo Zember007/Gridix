@@ -121,8 +121,8 @@ const LayoutPhotosManager = ({
       setLayoutTypes(deriveLayoutTypesFromApartments(normalizedApartments));
 
       // Автоматически выбираем первый тип планировки
-      if (types.length > 0) {
-        const first = types[0];
+      if (layoutTypes.length > 0) {
+        const first = layoutTypes[0];
         if (first) setSelectedLayoutType(first.key);
       }
     } catch (error) {
