@@ -7,6 +7,7 @@
   "minPrice": "Minimum fiyat",
   "priceRange": "Fiyat aralığı",
   "resetFilters": "Filtreleri sıfırla",
+  "noFiltersAvailable": "Kullanılabilir filtre yok",
   "search": "Aramak...",
   "status": "Durum"
 }

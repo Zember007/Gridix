@@ -7,6 +7,7 @@
   "minPrice": "أقل سعر",
   "priceRange": "نطاق الأسعار",
   "resetFilters": "إعادة تعيين التصفيات",
+  "noFiltersAvailable": "لا توجد فلاتر متاحة",
   "search": "بحث...",
   "status": "الحالة"
 }

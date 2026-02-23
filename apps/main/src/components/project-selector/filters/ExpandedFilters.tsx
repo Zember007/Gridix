@@ -61,7 +61,7 @@ export const ExpandedFilters = ({
       <div className="space-y-2">
         <Label>
           {t("project.area")}: {areaRange[0] ?? minArea} -{" "}
-          {areaRange[1] ?? maxArea} м²
+          {areaRange[1] ?? maxArea} {t("apartment.sqm")}
         </Label>
         <Slider
           value={areaRange}

@@ -65,5 +65,8 @@
   "total": "სულ",
   "type": "ტიპი",
   "viewApartments": "იხილე {{count}} ვარიანტი",
+  "viewDetails": "დეტალების ნახვა",
+  "openMenu": "მენიუს გახსნა",
+  "closeMenu": "მენიუს დახურვა",
   "plan_floor": "{{floor}} სართულის გეგმა"
 }

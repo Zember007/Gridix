@@ -7,6 +7,7 @@
   "minPrice": "Min price",
   "priceRange": "Price range",
   "resetFilters": "Reset filters",
+  "noFiltersAvailable": "No filters available",
   "search": "Search...",
   "status": "Status"
 }

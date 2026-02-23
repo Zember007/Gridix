@@ -96,32 +96,6 @@ export const ProjectSidePanel = ({
     [t],
   );
 
-  const ui = useMemo(() => {
-    const isRu = language === "ru";
-    return {
-      open: isRu ? "Открыть" : "Open",
-      openFloorPlan: isRu ? "Открыть план этажа" : "Open floor plan",
-      details: isRu ? "Подробнее" : "Details",
-      unitsFound: isRu ? "помещений" : "units",
-      book: isRu ? "Забронировать" : "Book",
-      rooms: isRu ? "к" : "rooms",
-      floor: isRu ? "этаж" : "floor",
-      area: isRu ? "м²" : "m²",
-      share: isRu ? "Поделиться" : "Share",
-      priceFrom: isRu ? "от" : "from",
-      available: isRu ? "Свободно" : "Available",
-      reserved: isRu ? "Забронировано" : "Reserved",
-      sold: isRu ? "Продано" : "Sold",
-      studio: isRu ? "Студия" : "Studio",
-      found: isRu ? "Найдено" : "Found",
-      summary: isRu ? "Характеристики" : "Summary",
-      apartmentNumber: isRu ? "Номер квартиры" : "Apartment number",
-      status: isRu ? "Статус" : "Status",
-      onRequest: isRu ? "По запросу" : "On request",
-      viewDetails: isRu ? "Посмотреть детали" : "View Details",
-    };
-  }, [language]);
-
   const floorApartments = useMemo(() => {
     if (!state || state.kind !== "floor") return [];
     return filteredApartments.filter(
@@ -315,7 +289,7 @@ export const ProjectSidePanel = ({
       if (navigator.share) {
         try {
           await navigator.share({
-            title: `${project.name} - Apt ${state.apartment.apartment_number} `,
+            title: `${project.name} - ${tt("project.apartmentNumber")} ${state.apartment.apartment_number}`,
             url,
           });
         } catch (err) {
@@ -381,7 +355,7 @@ export const ProjectSidePanel = ({
             ) : null
           ) : (
             <h2 className="text-xl font-bold text-gray-900">
-              {state.floorNumber} {ui.floor}
+              {state.floorNumber} {tt("project.floor").toLowerCase()}
             </h2>
           )}
         </div>
@@ -452,7 +426,7 @@ export const ProjectSidePanel = ({
                         />
                       ) : (
                         <span className="text-center text-[10px] leading-tight text-gray-300">
-                          No Img
+                          {tt("project.noImage")}
                         </span>
                       );
                     })()
@@ -473,12 +447,14 @@ export const ProjectSidePanel = ({
                           {fieldVisibility.rooms
                             ? apt.rooms === 0 || apt.rooms === "0"
                               ? tt("apartment.studio")
-                              : `${apt.rooms}${ui.rooms} `
+                              : `${apt.rooms} ${tt("apartment.room")} `
                             : ""}
                           {fieldVisibility.rooms && fieldVisibility.area
                             ? ", "
                             : ""}
-                          {fieldVisibility.area ? `${apt.area} ${ui.area}` : ""}
+                          {fieldVisibility.area
+                            ? `${apt.area} ${tt("apartment.sqm")}`
+                            : ""}
                         </div>
                       )}
                     </div>
@@ -491,10 +467,10 @@ export const ProjectSidePanel = ({
                         )}
                       >
                         {apt.status === "available"
-                          ? ui.available
+                          ? tt("project.available")
                           : apt.status === "reserved"
-                            ? ui.reserved
-                            : ui.sold}
+                            ? tt("project.reserved")
+                            : tt("project.sold")}
                       </Badge>
                     )}
                   </div>
@@ -518,7 +494,7 @@ export const ProjectSidePanel = ({
                 <span className="text-xl font-bold text-gray-900">
                   {state.apartment.rooms === 0 || state.apartment.rooms === "0"
                     ? tt("apartment.studio")
-                    : `${state.apartment.rooms}${ui.rooms} `}
+                    : `${state.apartment.rooms} ${tt("apartment.room")} `}
                 </span>
               </div>
             )}
@@ -531,7 +507,7 @@ export const ProjectSidePanel = ({
                 <span className="text-xl font-bold text-gray-900">
                   {state.apartment.area}{" "}
                   <span className="text-base font-medium text-gray-500">
-                    {ui.area}
+                    {tt("apartment.sqm")}
                   </span>
                 </span>
               </div>
@@ -544,7 +520,7 @@ export const ProjectSidePanel = ({
                 <span className="text-xl font-bold text-gray-900">
                   {state.apartment.floor_number}{" "}
                   <span className="text-base font-medium text-gray-500">
-                    {ui.floor}
+                    {tt("project.floor").toLowerCase()}
                   </span>
                 </span>
               </div>
@@ -559,10 +535,10 @@ export const ProjectSidePanel = ({
                   )}
                 >
                   {state.apartment.status === "available"
-                    ? ui.available
+                    ? tt("project.available")
                     : state.apartment.status === "reserved"
-                      ? ui.reserved
-                      : ui.sold}
+                      ? tt("project.reserved")
+                      : tt("project.sold")}
                 </Badge>
               </div>
             )}
@@ -578,13 +554,13 @@ export const ProjectSidePanel = ({
                 ) : currentApartmentImage ? (
                   <img
                     src={currentApartmentImage}
-                    alt="Plan"
+                    alt={tt("project.layoutPreview")}
                     className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
                     onClick={() => onOpenApartmentDetails(state.apartment)}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-gray-300">
-                    No Image
+                    {tt("project.noImage")}
                   </div>
                 )}
               </div>
@@ -606,7 +582,7 @@ export const ProjectSidePanel = ({
                       state.apartment.price ?? undefined,
                       state.apartment.area,
                     )}{" "}
-                    / {ui.area}
+                    / {tt("apartment.sqm")}
                   </span>
                 )}
               </div>
@@ -620,7 +596,7 @@ export const ProjectSidePanel = ({
                 style={{ backgroundColor: themeColor }}
                 onClick={() => onOpenApartmentDetails(state.apartment)}
               >
-                {ui.viewDetails}
+                {tt("project.viewDetails")}
               </Button>
               <div className={"flex gap-3"}>
                 <Button
