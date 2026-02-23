@@ -285,9 +285,9 @@ async function identifyImpl(
 async function getAuthedUserId(): Promise<string | null> {
   if (!isBrowser()) return null;
   try {
-    const { supabase } = await import("../api/supabase");
-    const { data } = await supabase.auth.getUser();
-    return data.user?.id ?? null;
+    const { fetchCurrentSession } = await import("../auth/currentSession");
+    const sessionData = await fetchCurrentSession();
+    return sessionData.user?.id ?? null;
   } catch {
     return null;
   }

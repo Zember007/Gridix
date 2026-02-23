@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerProfile } from "../model/types";
 
@@ -16,15 +17,15 @@ export function usePartner() {
     null,
   );
   const [loading, setLoading] = useState(true);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
   const checkPartnerStatus = useCallback(async () => {
     let userId: string | null = null;
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      userId = session?.user?.id ?? null;
+      if (isSessionLoading) return;
+      userId = sessionQuery?.user?.id ?? null;
 
       if (!userId) {
         setIsPartner(false);
@@ -89,7 +90,7 @@ export function usePartner() {
       }
       setLoading(false);
     }
-  }, []);
+  }, [isSessionLoading, sessionQuery?.user?.id]);
 
   useEffect(() => {
     void checkPartnerStatus();
@@ -97,10 +98,10 @@ export function usePartner() {
 
   const createPartnerProfile = async () => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      if (isSessionLoading) {
+        throw new Error("Auth session is loading");
+      }
+      const userId = sessionQuery?.user?.id;
 
       if (!userId) {
         throw new Error("User not authenticated");

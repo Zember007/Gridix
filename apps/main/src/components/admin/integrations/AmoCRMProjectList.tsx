@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useUserProjects } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import { AmoCRMProjectRow } from "./AmoCRMProjectRow";
 import { Loader2 } from "lucide-react";
@@ -33,6 +34,7 @@ export const AmoCRMProjectList = ({
   const [amoData, setAmoData] = useState<any | null>(null);
 
   const ownerUserId = activeWorkspaceId ?? user?.id ?? null;
+  const { refetch: refetchProjects } = useUserProjects(ownerUserId, false);
 
   const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
 
@@ -90,11 +92,7 @@ export const AmoCRMProjectList = ({
       setLoading(true);
       try {
         const [projectsResp, amoResp] = await Promise.all([
-          supabase
-            .from("projects")
-            .select("id, name, created_at")
-            .eq("user_id", ownerUserId)
-            .order("created_at", { ascending: false }),
+          refetchProjects(),
           // Fetch pipelines/users once per modal open
           supabase.functions.invoke("amocrm-api", {
             body: { action: "fetch_data" },
@@ -102,7 +100,11 @@ export const AmoCRMProjectList = ({
         ]);
 
         if (projectsResp.error) throw projectsResp.error;
-        const nextProjects = projectsResp.data ?? [];
+        const nextProjects = (projectsResp.data ?? []).map((project) => ({
+          id: project.id,
+          name: project.name,
+          created_at: project.created_at,
+        }));
         setProjects(nextProjects);
 
         if (amoResp.error) throw amoResp.error;
@@ -117,7 +119,7 @@ export const AmoCRMProjectList = ({
     };
 
     fetchAll();
-  }, [open, ownerUserId, connection?.id, refreshAllSettings]);
+  }, [open, ownerUserId, connection?.id, refreshAllSettings, refetchProjects]);
 
   if (loading) {
     return (

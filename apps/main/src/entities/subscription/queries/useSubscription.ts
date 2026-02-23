@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
+import { fetchCurrentSession } from "@gridix/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface SubscriptionPlan {
@@ -136,7 +137,7 @@ export function useSubscription(projectId?: string) {
         {
           body: { project_id: targetProjectId },
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${(await fetchCurrentSession()).session?.access_token}`,
           },
         },
       );
@@ -163,14 +164,14 @@ export function useSubscription(projectId?: string) {
     }
 
     try {
-      const session = await supabase.auth.getSession();
+      const sessionData = await fetchCurrentSession();
 
       const { data, error } = await supabase.functions.invoke(
         "subscription-management",
         {
           body: { action: "get-project-subscriptions" },
           headers: {
-            Authorization: `Bearer ${session.data.session?.access_token}`,
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
           },
         },
       );
@@ -195,13 +196,12 @@ export function useSubscription(projectId?: string) {
   const fetchPlans = async () => {
     setPlansLoading(true);
     try {
-      const session = await supabase.auth.getSession();
+      const sessionData = await fetchCurrentSession();
       const headers: Record<string, string> = {};
 
       // Add authorization header only if user is logged in
-      if (session.data.session?.access_token) {
-        headers["Authorization"] =
-          `Bearer ${session.data.session.access_token}`;
+      if (sessionData.session?.access_token) {
+        headers["Authorization"] = `Bearer ${sessionData.session.access_token}`;
       }
 
       const { data, error } = await supabase.functions.invoke(
@@ -244,7 +244,7 @@ export function useSubscription(projectId?: string) {
             duration_months: durationMonths,
           },
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${(await fetchCurrentSession()).session?.access_token}`,
           },
         },
       );
@@ -447,11 +447,11 @@ export function useSubscription(projectId?: string) {
     });
 
   const getPurchaseLinks = async () => {
-    const session = await supabase.auth.getSession();
+    const sessionData = await fetchCurrentSession();
     const headers: Record<string, string> = {};
 
-    if (session.data.session?.access_token) {
-      headers["Authorization"] = `Bearer ${session.data.session.access_token}`;
+    if (sessionData.session?.access_token) {
+      headers["Authorization"] = `Bearer ${sessionData.session.access_token}`;
     }
 
     const { data, error } = await supabase.functions.invoke(

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { usePartnerStats } from "../queries/usePartnerStats";
 import { toast } from "sonner";
+import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerPayout } from "../model/types";
 import { useLanguage } from "@gridix/utils/react";
@@ -44,18 +45,15 @@ export function PayoutRequests() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [contactInfo, setContactInfo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: sessionQuery, isLoading: isSessionLoading } =
+    useCurrentSession();
 
-  useEffect(() => {
-    fetchPayouts();
-  }, []);
-
-  const fetchPayouts = async () => {
+  const fetchPayouts = useCallback(async () => {
     try {
       setLoading(true);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      if (isSessionLoading) return;
+      const user = sessionQuery?.user ?? null;
       if (!user) return;
 
       // Получаем профиль партнёра
@@ -85,7 +83,11 @@ export function PayoutRequests() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSessionLoading, sessionQuery?.user]);
+
+  useEffect(() => {
+    void fetchPayouts();
+  }, [fetchPayouts]);
 
   const handleCreatePayout = async () => {
     const amount = parseFloat(payoutAmount);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@gridix/utils/api";
+import { useUserProjects } from "@gridix/utils";
 import { Bitrix24ProjectRow } from "./Bitrix24ProjectRow";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -27,24 +27,26 @@ export const Bitrix24ProjectList = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const ownerUserId = activeWorkspaceId ?? user?.id ?? null;
+  const { refetch: refetchProjects } = useUserProjects(ownerUserId, false);
+
   useEffect(() => {
     if (!open) return;
     if (!connection?.id) return;
 
-    const ownerUserId = activeWorkspaceId ?? user?.id ?? null;
     if (!ownerUserId) return;
 
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("projects")
-          .select("id, name, created_at")
-          .eq("user_id", ownerUserId)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setProjects(data || []);
+        const response = await refetchProjects();
+        if (response.error) throw response.error;
+        const normalized = (response.data ?? []).map((project) => ({
+          id: project.id,
+          name: project.name,
+          created_at: project.created_at,
+        }));
+        setProjects(normalized);
       } catch (error) {
         console.error("Error fetching projects:", error);
       } finally {
@@ -52,8 +54,15 @@ export const Bitrix24ProjectList = ({
       }
     };
 
-    fetchProjects();
-  }, [open, connection?.id, activeWorkspaceId, user?.id]);
+    void fetchProjects();
+  }, [
+    open,
+    connection?.id,
+    activeWorkspaceId,
+    ownerUserId,
+    user?.id,
+    refetchProjects,
+  ]);
 
   if (loading) {
     return (

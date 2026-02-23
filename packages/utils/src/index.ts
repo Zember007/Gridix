@@ -1,10 +1,16 @@
 // Main exports
 export * from "./api/queryClient";
 export * from "./api/supabase";
+export * from "./api/partnerReferral";
 export * from "./config/urls";
 export * from "./auth/session";
 export * from "./auth/password";
+export * from "./auth/currentSession";
 export * from "./auth/amoSso";
+export * from "./queries/useCurrentSession";
+export * from "./queries/useUserProjects";
+export * from "./queries/useApartmentsByProject";
+export * from "./queries/usePartnerByCode";
 export * from "./lib/admin-theme-config";
 export * from "./lib/cn";
 export * from "./lib/currency-utils";
