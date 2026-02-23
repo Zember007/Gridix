@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import { SuccessNotification } from "@gridix/ui";
+import { getAttributedAgentId } from "@/shared/lib/agent-attribution";
 
 interface ApartmentReservationFormProps {
   apartmentId: string;
@@ -56,11 +57,7 @@ const ApartmentReservationForm = ({
             phone,
             apartmentId,
             projectId,
-            agentId:
-              new URLSearchParams(window.location.search).get("agent_id") ||
-              JSON.parse(
-                localStorage.getItem(`agent_context:${projectId}`) || "{}",
-              )?.agent_id,
+            agentId: getAttributedAgentId(projectId),
           },
         },
       );

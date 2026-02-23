@@ -775,11 +775,23 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               {isConnected ? (
                 <button
                   type="button"
-                  onClick={() => onLock?.(project)}
+                  onClick={() => {
+                    if (onOpenPublicPage) {
+                      onOpenPublicPage(project);
+                      return;
+                    }
+                    onLock?.(project);
+                  }}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--admin-primary)] py-3 font-bold text-[var(--admin-text-on-primary)] shadow-md shadow-slate-200 transition-all hover:bg-[var(--admin-primary-hover)]"
                 >
-                  <Lock size={16} />
-                  {t("drawer.actions.lock")}
+                  {onOpenPublicPage ? (
+                    <ExternalLink size={16} />
+                  ) : (
+                    <Lock size={16} />
+                  )}
+                  {onOpenPublicPage
+                    ? t("drawer.actions.openPage")
+                    : t("drawer.actions.lock")}
                 </button>
               ) : isPending ? (
                 <div className="flex flex-1 cursor-default items-center justify-center gap-2 rounded-xl bg-slate-100 py-3 font-bold text-slate-500">
