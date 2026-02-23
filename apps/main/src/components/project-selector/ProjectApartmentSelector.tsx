@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@gridix/ui";
-import { Project, useProject } from "@/entities/project/queries/useProjects";
+import type { Project } from "@/entities/project/queries/useProjects";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@gridix/utils/react";
 import { useFields } from "@/hooks/useFields";
@@ -19,7 +19,7 @@ import { FilterFieldKey, useProjectFilters } from "./hooks/useProjectFilters";
 import type { FieldVisibility } from "./types";
 import { ChessView } from "./views/ChessView";
 import LoaderView from "./views/LoaderView";
-import { useApartmentsData } from "./hooks/useApartmentsData";
+import { useProjectSelectorInitial } from "./hooks/useProjectSelectorInitial";
 import { useBuildingImage } from "./hooks/useBuildingImage";
 import { useFloorPolygons } from "./hooks/useFloorPolygons";
 import { useWidgetScroll } from "./hooks/useWidgetScroll";
@@ -66,8 +66,21 @@ const ProjectApartmentSelector = ({
 
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
-  const { project } = useProject(projectId);
-  const { fields: fieldSettings } = useFields(project?.id || null);
+
+  const {
+    project,
+    apartments,
+    setApartments,
+    apartmentsLoaded,
+    preloadedLayoutPhotosByRooms,
+    fieldSettings: rawFieldSettings,
+    customFields: rawCustomFields,
+  } = useProjectSelectorInitial(projectId);
+
+  const { fields: fieldSettings } = useFields(project?.id || null, {
+    fieldSettings: rawFieldSettings,
+    customFields: rawCustomFields,
+  });
   const { favoritesCount } = useFavorites(project?.id || undefined);
   const { user } = useAuth();
 
@@ -101,13 +114,6 @@ const ProjectApartmentSelector = ({
     }),
     [visibleFilterFields],
   );
-
-  const {
-    apartments,
-    setApartments,
-    apartmentsLoaded,
-    preloadedLayoutPhotosByRooms,
-  } = useApartmentsData({ projectId: project?.id });
 
   // Facade data (TanStack Query)
   const shouldLoadFacadeData = viewMode === "facade" && !!project?.id;

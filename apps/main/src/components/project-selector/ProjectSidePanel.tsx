@@ -9,7 +9,7 @@ import FloorPlanView from "@/components/visualization/FloorPlanView";
 import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
 import { Loader2, Share2, X, Heart, FileDown } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
-import { supabase } from "@gridix/utils/api";
+import { loadSelectorApartmentPhotos } from "@/features/projectSelector/api/projectSelectorApi";
 import { toast } from "sonner";
 import { useAsyncAction } from "@/shared/hooks/useAsyncAction";
 import { generateApartmentPdf } from "@/features/apartment/lib/generateApartmentPdf";
@@ -164,24 +164,7 @@ export const ProjectSidePanel = ({
         const requestPromise =
           existingRequest ??
           (async () => {
-            const { data, error } = await supabase
-              .from("apartment_photos")
-              .select("apartment_id, image_url, order_index")
-              .in("apartment_id", idsToFetch)
-              .order("order_index", { ascending: true });
-
-            if (error) throw error;
-
-            const resolvedById: Record<string, string | null> = {};
-            for (const row of data ?? []) {
-              const apartmentId = (row as { apartment_id?: string | null })
-                .apartment_id;
-              const imageUrl = (row as { image_url?: string | null }).image_url;
-              if (!apartmentId || !imageUrl) continue;
-              if (!(apartmentId in resolvedById)) {
-                resolvedById[apartmentId] = imageUrl;
-              }
-            }
+            const resolvedById = await loadSelectorApartmentPhotos(idsToFetch);
 
             for (const id of idsToFetch) {
               if (!(id in resolvedById)) resolvedById[id] = null;
