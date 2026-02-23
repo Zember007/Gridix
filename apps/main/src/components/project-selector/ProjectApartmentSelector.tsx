@@ -25,6 +25,7 @@ import { useFloorPolygons } from "./hooks/useFloorPolygons";
 import { useWidgetScroll } from "./hooks/useWidgetScroll";
 import { useFieldHelpers } from "./hooks/useFieldHelpers";
 import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
+import { persistAgentAttribution } from "@/shared/lib/agent-attribution";
 import { useSubscriptionStatus } from "./hooks/useSubscriptionStatus";
 import { useFacadeData } from "./hooks/useFacadeData";
 import { useUrlState } from "./hooks/useUrlState";
@@ -320,20 +321,12 @@ const ProjectApartmentSelector = ({
 
   // Persistence for agent_id
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlAgentId = params.get("agent_id");
+    const urlAgentId = searchParams.get("agent_id")?.trim();
 
-    if (urlAgentId && projectId) {
-      localStorage.setItem(
-        `agent_context:${projectId}`,
-        JSON.stringify({
-          agent_id: urlAgentId,
-          set_at: new Date().toISOString(),
-          source: "link",
-        }),
-      );
+    if (urlAgentId) {
+      persistAgentAttribution(urlAgentId, projectId);
     }
-  }, [projectId]);
+  }, [projectId, searchParams]);
 
   const loaderBlock = (
     <div className="absolute inset-0 grid h-full w-full place-items-center">
