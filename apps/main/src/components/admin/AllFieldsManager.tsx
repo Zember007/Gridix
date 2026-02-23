@@ -21,6 +21,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Language } from "@gridix/utils/lib";
 import CustomFieldsManager from "@/components/fields/CustomFieldsManager";
+import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import { useFields, FieldSetting } from "@/hooks/useFields";
 
 interface CustomField {
@@ -58,6 +59,20 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     return field.field_label;
   };
 
+  const editorData = useProjectEditorDataContext();
+  const initialFieldsData =
+    editorData?.data?.fieldSettings != null &&
+    editorData?.data?.customFields != null
+      ? {
+          fieldSettings: editorData.data.fieldSettings as Array<
+            Record<string, unknown>
+          >,
+          customFields: editorData.data.customFields as Array<
+            Record<string, unknown>
+          >,
+        }
+      : null;
+
   const {
     fields,
     loading,
@@ -66,7 +81,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     updateFieldVisibility,
     deleteField,
     refreshFields,
-  } = useFields(projectId);
+  } = useFields(projectId, initialFieldsData);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);

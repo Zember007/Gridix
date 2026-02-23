@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -22,9 +22,14 @@ import { Copy, Home, Image as ImageIcon, Layout, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import {
+  uploadApartmentPhoto,
+  deleteApartmentPhoto,
+} from "@/features/projectEditor/api/projectEditorApi";
+import {
   Apartment,
   normalizeApartmentData,
 } from "@/entities/apartment/model/types";
+import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import LayoutPhotosManager from "@/components/visualization/LayoutPhotosManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@gridix/utils/react";
@@ -51,18 +56,9 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { t } = useLanguage();
+  const editorData = useProjectEditorDataContext();
 
-  useEffect(() => {
-    loadApartments();
-  }, [projectId]);
-
-  useEffect(() => {
-    if (selectedApartment) {
-      loadPhotos();
-    }
-  }, [selectedApartment]);
-
-  const loadApartments = async () => {
+  const loadApartments = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("apartments")
@@ -80,9 +76,19 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
-  const loadPhotos = async () => {
+  useEffect(() => {
+    if (editorData?.data?.apartments != null) {
+      setApartments(editorData.data.apartments.map(normalizeApartmentData));
+      setLoading(false);
+      return;
+    }
+    loadApartments();
+  }, [projectId, editorData?.data?.apartments, loadApartments]);
+
+  const loadPhotos = useCallback(async () => {
+    if (!selectedApartment) return;
     try {
       const { data, error } = await supabase
         .from("apartment_photos")
@@ -96,50 +102,36 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     } catch (error) {
       console.error("Error loading photos:", error);
     }
-  };
+  }, [selectedApartment]);
+
+  useEffect(() => {
+    if (selectedApartment) {
+      loadPhotos();
+    }
+  }, [selectedApartment, loadPhotos]);
 
   const handlePhotoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
     if (!files || !selectedApartment) return;
-
-    // Проверяем аутентификацию пользователя
     if (!user) {
       toast.error(t("photosManager.authRequired"));
       return;
     }
-
     setUploading(true);
     try {
       const uploadPromises = Array.from(files).map(async (file_get, index) => {
-        const file = await compressToWebP(file_get);
-
-        const fileName = `${selectedApartment}-${Date.now()}-${index}.webp`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("project-images")
-          .upload(`apartments/${fileName}`, file);
-
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage
-          .from("project-images")
-          .getPublicUrl(`apartments/${fileName}`);
-
-        const { error: insertError } = await supabase
-          .from("apartment_photos")
-          .insert({
-            apartment_id: selectedApartment,
-            image_url: publicUrl,
-            order_index: photos.length + index,
-          });
-
-        if (insertError) throw insertError;
+        const blob = await compressToWebP(file_get);
+        const file = new File([blob], `photo-${index}.webp`, {
+          type: "image/webp",
+        });
+        await uploadApartmentPhoto(
+          selectedApartment,
+          photos.length + index,
+          file,
+        );
       });
-
       await Promise.all(uploadPromises);
       toast.success(t("photosManager.uploadSuccess"));
       loadPhotos();
@@ -153,20 +145,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
   const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
     try {
-      const { error: dbError } = await supabase
-        .from("apartment_photos")
-        .delete()
-        .eq("id", photoId);
-
-      if (dbError) throw dbError;
-
-      const fileName = imageUrl.split("/").pop();
-      if (fileName) {
-        await supabase.storage
-          .from("project-images")
-          .remove([`apartments/${fileName}`]);
-      }
-
+      await deleteApartmentPhoto(photoId, imageUrl);
       toast.success(t("photosManager.deleteSuccess"));
       loadPhotos();
     } catch (error) {
@@ -374,7 +353,10 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         </TabsContent>
 
         <TabsContent value="layouts">
-          <LayoutPhotosManager projectId={projectId} />
+          <LayoutPhotosManager
+            projectId={projectId}
+            initialApartments={apartments}
+          />
         </TabsContent>
       </Tabs>
     </div>

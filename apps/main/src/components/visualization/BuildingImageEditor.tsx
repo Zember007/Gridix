@@ -36,7 +36,7 @@ import PolygonCustomizationSettings, {
   type PolygonSettings,
 } from "./PolygonCustomizationSettings";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProject } from "@/entities/project/queries/useProjects";
+import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { useLanguage } from "@gridix/utils/react";
 import { Shape } from "./polygon-editor/GeometryShapes";
 import { compressToWebP } from "@gridix/utils/lib";
@@ -125,7 +125,7 @@ const BuildingImageEditor = ({
   const undoStackRef = useRef<Shape[]>([]);
   const redoStackRef = useRef<Shape[]>([]);
   const { user } = useAuth();
-  const { project } = useProject(projectId);
+  const { project } = useProjectInEditorScope(projectId);
   const { t } = useLanguage();
 
   // Determine if this is an object project (villas/townhouses) or building

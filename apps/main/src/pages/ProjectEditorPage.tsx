@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import ProjectEditor from "@/components/projects/ProjectEditor";
+import { ProjectEditorDataProvider } from "@/features/projectEditor/context/ProjectEditorDataContext";
 
 interface ProjectEditorPageProps {
   useId?: boolean;
@@ -52,7 +53,16 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
   };
 
   return (
-    <ProjectEditor projectId={actualProjectId} isNew={isNew} onBack={goBack} />
+    <ProjectEditorDataProvider
+      projectId={isNew ? null : actualProjectId}
+      enabled={!isNew}
+    >
+      <ProjectEditor
+        projectId={actualProjectId}
+        isNew={isNew}
+        onBack={goBack}
+      />
+    </ProjectEditorDataProvider>
   );
 };
 

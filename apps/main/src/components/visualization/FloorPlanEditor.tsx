@@ -32,6 +32,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
+import {
+  uploadFloorPlan,
+  uploadApartmentPhoto,
+  deleteApartmentPhoto,
+} from "@/features/projectEditor/api/projectEditorApi";
+import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import PolygonCustomizationSettings from "./PolygonCustomizationSettings";
 import { TooltipProvider } from "@gridix/ui";
 import PolygonAnnotator, {
@@ -41,7 +47,7 @@ import { Shape } from "./polygon-editor/GeometryShapes";
 import ApartmentCustomFields from "@/components/apartment/ApartmentCustomFields";
 import ApartmentSyncDialog from "@/components/apartment/ApartmentSyncDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProject } from "@/entities/project/queries/useProjects";
+import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { useLanguage } from "@gridix/utils/react";
 import { getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { Apartment as GlobalApartment } from "@/entities/apartment/model/types";
@@ -143,16 +149,50 @@ const FloorPlanEditor = ({
   const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
 
   const { user } = useAuth();
-  const { project } = useProject(projectId);
+  const { project } = useProjectInEditorScope(projectId);
+  const editorData = useProjectEditorDataContext();
   const { t } = useLanguage();
 
   useEffect(() => {
-    loadFloorPlan();
-    loadApartments();
+    const pid = project?.id || projectId;
+    if (editorData?.data) {
+      const floorPlan = editorData.data.floorPlans.find(
+        (p) => p.floor_number === floorNumber,
+      );
+      setImageUrl(floorPlan?.image_url ?? "");
+
+      const floorApartments = editorData.data.apartments.filter(
+        (a) => a.floor_number === floorNumber,
+      );
+      const transformedApartments: Apartment[] = floorApartments.map((apt) => ({
+        id: apt.id,
+        apartment_number: apt.apartment_number,
+        rooms: apt.rooms,
+        area: Number(apt.area),
+        price: Number(apt.price) || 0,
+        status: apt.status as "available" | "sold" | "reserved",
+        polygon: Array.isArray(apt.polygon)
+          ? (apt.polygon as unknown as Point[])
+          : [],
+        custom_fields: apt.custom_fields as Json | null,
+      }));
+      setApartments(transformedApartments);
+      const apartmentShapes: Shape[] = transformedApartments.map((apt) => ({
+        id: apt.id,
+        type: "polygon" as const,
+        points: apt.polygon,
+        color: getStatusColor(apt.status),
+        isSelected: false,
+      }));
+      setShapes(apartmentShapes);
+    } else {
+      loadFloorPlan();
+      loadApartments();
+    }
     loadPolygonSettings();
     loadProjectFloors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, floorNumber, project]);
+  }, [projectId, floorNumber, project, editorData?.data]);
 
   const loadProjectFloors = async () => {
     try {
@@ -289,66 +329,27 @@ const FloorPlanEditor = ({
   };
 
   const uploadImage = async (file_get: File) => {
-    // Проверяем аутентификацию пользователя
     if (!user) {
       toast.error(t("floorPlan.upload.authRequired"));
       return;
     }
-
     setLoading(true);
     try {
-      const file = await compressToWebP(file_get);
-
-      const fileName = `${projectId}/floor-${floorNumber}-${Date.now()}.webp`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("project-images")
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("project-images")
-        .getPublicUrl(fileName);
-
-      const newImageUrl = urlData.publicUrl;
+      const blob = await compressToWebP(file_get);
+      const file = new File([blob], `floor-${floorNumber}.webp`, {
+        type: "image/webp",
+      });
+      const pid = project?.id || projectId;
+      const { publicUrl: newImageUrl } = await uploadFloorPlan(
+        pid,
+        floorNumber,
+        file,
+      );
       setImageUrl(newImageUrl);
-
-      const { data: existingPlan } = await supabase
-        .from("floor_plans")
-        .select("id")
-        .eq("project_id", project?.id || projectId)
-        .eq("floor_number", floorNumber)
-        .maybeSingle();
-
-      if (existingPlan) {
-        const { error: updateError } = await supabase
-          .from("floor_plans")
-          .update({
-            image_url: newImageUrl,
-          })
-          .eq("id", existingPlan.id);
-
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from("floor_plans")
-          .insert({
-            project_id: project?.id || projectId,
-            floor_number: floorNumber,
-            image_url: newImageUrl,
-          });
-
-        if (insertError) throw insertError;
-      }
-
       toast.success(t("floorPlan.upload.success"));
       void trackUsertourEvent({
         eventName: "gridix_project_floorplan_uploaded",
-        properties: {
-          project_id: project?.id || projectId,
-          floor_number: floorNumber,
-        },
+        properties: { project_id: pid, floor_number: floorNumber },
         onceKey: "gridix_project_floorplan_uploaded",
       });
     } catch (error) {
@@ -380,43 +381,23 @@ const FloorPlanEditor = ({
   ) => {
     const files = event.target.files;
     if (!files || !editingApartment || editingApartment === "new") return;
-
-    // Проверяем аутентификацию пользователя
     if (!user) {
       toast.error(t("floorPlan.upload.authRequired"));
       return;
     }
-
     setUploadingPhotos(true);
     try {
       const uploadPromises = Array.from(files).map(async (file_get, index) => {
-        const file = await compressToWebP(file_get);
-
-        const fileName = `${editingApartment}-${Date.now()}-${index}.webp`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("project-images")
-          .upload(`apartments/${fileName}`, file);
-
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage
-          .from("project-images")
-          .getPublicUrl(`apartments/${fileName}`);
-
-        const { error: insertError } = await supabase
-          .from("apartment_photos")
-          .insert({
-            apartment_id: editingApartment,
-            image_url: publicUrl,
-            order_index: apartmentPhotos.length + index,
-          });
-
-        if (insertError) throw insertError;
+        const blob = await compressToWebP(file_get);
+        const file = new File([blob], `photo-${index}.webp`, {
+          type: "image/webp",
+        });
+        await uploadApartmentPhoto(
+          editingApartment,
+          apartmentPhotos.length + index,
+          file,
+        );
       });
-
       await Promise.all(uploadPromises);
       toast.success(t("floorPlan.apartments.photoUploadSuccess"));
       loadApartmentPhotos(editingApartment);
@@ -433,20 +414,7 @@ const FloorPlanEditor = ({
     imageUrl: string,
   ) => {
     try {
-      const { error: dbError } = await supabase
-        .from("apartment_photos")
-        .delete()
-        .eq("id", photoId);
-
-      if (dbError) throw dbError;
-
-      const fileName = imageUrl.split("/").pop();
-      if (fileName) {
-        await supabase.storage
-          .from("project-images")
-          .remove([`apartments/${fileName}`]);
-      }
-
+      await deleteApartmentPhoto(photoId, imageUrl);
       toast.success(t("floorPlan.apartments.photoDeleteSuccess"));
       if (editingApartment && editingApartment !== "new") {
         loadApartmentPhotos(editingApartment);

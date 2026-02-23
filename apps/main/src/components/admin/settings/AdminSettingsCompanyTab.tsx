@@ -87,7 +87,7 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
         </div>
       </div>
 
-      <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
+      {/*  <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
         <div className="flex items-center gap-2">
           <LinkIcon className="h-4 w-4 text-muted-foreground" />
           <div className="font-medium">
@@ -100,7 +100,7 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
         <p className="text-xs text-muted-foreground">
           {props.t("adminSettings.systemDomainHint")}
         </p>
-      </div>
+      </div> */}
 
       <div>
         <Label htmlFor="brand_name">{props.t("adminSettings.brandName")}</Label>

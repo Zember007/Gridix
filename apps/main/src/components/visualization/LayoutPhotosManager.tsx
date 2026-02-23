@@ -29,6 +29,8 @@ import { Spinner } from "@/shared/ui/Spinner";
 
 interface LayoutPhotosManagerProps {
   projectId: string;
+  /** When provided, apartments are not fetched again (e.g. from project editor context). */
+  initialApartments?: Apartment[] | null;
 }
 
 interface LayoutPhoto {
@@ -46,7 +48,57 @@ interface LayoutType {
   rooms: number;
 }
 
-const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
+function deriveLayoutTypesFromApartments(
+  normalizedApartments: Apartment[],
+): LayoutType[] {
+  const roomTypeMap = new Map<
+    string,
+    { rooms: number; type: string; isFreeLayout?: boolean }
+  >();
+  normalizedApartments.forEach((apt) => {
+    const key = `${apt.rooms}-${apt.type}`;
+    if (!roomTypeMap.has(key)) {
+      const roomsValue = apt.rooms === "free_layout" ? -1 : Number(apt.rooms);
+      roomTypeMap.set(key, {
+        rooms: roomsValue,
+        type: apt.type,
+        isFreeLayout: apt.rooms === "free_layout",
+      });
+    }
+  });
+  const uniqueRoomCounts = Array.from(roomTypeMap.values());
+  return uniqueRoomCounts.map((data) => {
+    if (data.type === "apartment") {
+      if ((data as { isFreeLayout?: boolean }).isFreeLayout) {
+        return { key: "free_layout", label: "Свободная планировка", rooms: -1 };
+      } else if (data.rooms === 0) {
+        return { key: "studio", label: "Студия", rooms: 0 };
+      } else {
+        return {
+          key: `${data.rooms}-room`,
+          label: `${data.rooms}-комнатная`,
+          rooms: data.rooms,
+        };
+      }
+    } else {
+      return {
+        key: data.type,
+        label:
+          data.type === "commercial"
+            ? "Коммерческие помещения"
+            : data.type === "parking"
+              ? "Паркинги"
+              : data.type,
+        rooms: data.rooms,
+      };
+    }
+  });
+}
+
+const LayoutPhotosManager = ({
+  projectId,
+  initialApartments = null,
+}: LayoutPhotosManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [layoutTypes, setLayoutTypes] = useState<LayoutType[]>([]);
   const [selectedLayoutType, setSelectedLayoutType] = useState<string>("");
@@ -66,63 +118,7 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
 
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
-
-      // Определяем доступные типы планировок на основе квартир
-      const roomTypeMap = new Map<
-        string,
-        { rooms: number; type: string; isFreeLayout?: boolean }
-      >();
-
-      normalizedApartments.forEach((apt) => {
-        const key = `${apt.rooms}-${apt.type}`;
-        if (!roomTypeMap.has(key)) {
-          const roomsValue =
-            apt.rooms === "free_layout" ? -1 : Number(apt.rooms);
-          roomTypeMap.set(key, {
-            rooms: roomsValue,
-            type: apt.type,
-            isFreeLayout: apt.rooms === "free_layout",
-          });
-        }
-      });
-
-      const uniqueRoomCounts = Array.from(roomTypeMap.values());
-      const types: LayoutType[] = uniqueRoomCounts.map((data) => {
-        if (data.type === "apartment") {
-          if ((data as any).isFreeLayout) {
-            return {
-              key: "free_layout",
-              label: "Свободная планировка",
-              rooms: -1,
-            };
-          } else if (data.rooms == 0) {
-            return {
-              key: "studio",
-              label: "Студия",
-              rooms: 0,
-            };
-          } else {
-            return {
-              key: `${data.rooms}-room`,
-              label: `${data.rooms}-комнатная`,
-              rooms: data.rooms,
-            };
-          }
-        } else {
-          return {
-            key: data.type,
-            label:
-              data.type === "commercial"
-                ? "Коммерческие помещения"
-                : data.type === "parking"
-                  ? "Паркинги"
-                  : data.type,
-            rooms: data.rooms,
-          };
-        }
-      });
-
-      setLayoutTypes(types);
+      setLayoutTypes(deriveLayoutTypesFromApartments(normalizedApartments));
 
       // Автоматически выбираем первый тип планировки
       if (types.length > 0) {
@@ -154,8 +150,14 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
   }, [projectId, selectedLayoutType]);
 
   useEffect(() => {
+    if (initialApartments != null && Array.isArray(initialApartments)) {
+      setApartments(initialApartments);
+      setLayoutTypes(deriveLayoutTypesFromApartments(initialApartments));
+      setLoading(false);
+      return;
+    }
     loadApartments();
-  }, [loadApartments]);
+  }, [loadApartments, initialApartments]);
 
   useEffect(() => {
     if (selectedLayoutType) {
