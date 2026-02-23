@@ -3290,6 +3290,10 @@ export type Database = {
         Args: { p_link_type: string; partner_id_param: string };
         Returns: number;
       };
+      get_referral_commission_percentage: {
+        Args: { p_level: number };
+        Returns: number;
+      };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
