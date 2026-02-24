@@ -154,8 +154,16 @@ const FloorPlanEditor = ({
   const { t } = useLanguage();
 
   useEffect(() => {
-    const pid = project?.id || projectId;
-    if (editorData?.data) {
+    if (editorData) {
+      if (editorData.loading) {
+        return;
+      }
+      if (!editorData.data) {
+        setImageUrl("");
+        setApartments([]);
+        setShapes([]);
+        return;
+      }
       const floorPlan = editorData.data.floorPlans.find(
         (p) => p.floor_number === floorNumber,
       );
