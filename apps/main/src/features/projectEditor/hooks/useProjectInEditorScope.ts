@@ -8,11 +8,23 @@ import { useProjectEditorDataContext } from "../context/ProjectEditorDataContext
 export function useProjectInEditorScope(projectId: string | undefined) {
   const editorContext = useProjectEditorDataContext();
   const projectFromEditor = editorContext?.data?.project ?? null;
+  const fallbackProjectQuery = useProject(
+    editorContext ? undefined : projectId,
+  );
+
+  if (editorContext) {
+    return {
+      project: projectFromEditor,
+      loading: editorContext.loading,
+      error: editorContext.error,
+      refresh: editorContext.refresh,
+    };
+  }
 
   return {
-    project: projectFromEditor,
-    loading: editorContext?.data != null ? false : true,
-    error: editorContext?.error,
-    refresh: editorContext?.refresh,
+    project: fallbackProjectQuery.project,
+    loading: fallbackProjectQuery.loading,
+    error: fallbackProjectQuery.error,
+    refresh: fallbackProjectQuery.refresh,
   };
 }

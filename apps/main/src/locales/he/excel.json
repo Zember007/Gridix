@@ -68,6 +68,36 @@
       "selectColumnPlaceholder": "-- בחר עמודה --"
     }
   },
+  "sync": {
+    "button": "סנכרון Excel",
+    "dialog": {
+      "title": "סנכרון דירות באמצעות Excel",
+      "description": "עדכן נתוני דירות קיימים על ידי העלאת קובץ Excel. הדירות מותאמות לפי מספר."
+    },
+    "import": {
+      "title": "ייבוא נתונים",
+      "description": "העלה קובץ או ספק קישור לגיליון עם נתוני דירות",
+      "matchBy": "התאמה:",
+      "matchByDesc": "הדירות מתעדכנות לפי מספר. לא נוצרות דירות חדשות."
+    },
+    "columns": {
+      "title": "מפה עמודות Excel",
+      "description": "בחר עמודות לעדכון. מספר דירה הוא חובה, שדות אחרים אופציונליים."
+    },
+    "preview": {
+      "description": "נתונים לעדכון ({{count}} רשומות)"
+    },
+    "errors": {
+      "fillRequired": "בחר את עמודת מספר הדירה ולפחות שדה אחד לעדכון",
+      "syncFailed": "שגיאה בסנכרון נתונים"
+    },
+    "result": {
+      "success": "הסנכרון הושלם: {{updated}} דירות עודכנו",
+      "withNotFound": "עודכנו {{updated}} מתוך {{total}}. לא נמצאו: {{notFound}}"
+    },
+    "syncing": "מסנכרן...",
+    "syncButton": "סנכרן"
+  },
   "url": {
     "autoConvert": "הקישור יומר אוטומטית לייבוא ​​נתונים",
     "check": "לִבדוֹק",

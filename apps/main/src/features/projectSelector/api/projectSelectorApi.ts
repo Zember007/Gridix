@@ -289,3 +289,42 @@ export async function loadApartmentDetails(
     thumbnails: result.thumbnails ?? {},
   };
 }
+
+// ── Excel apartment sync ──
+
+export interface ApartmentSyncUpdate {
+  apartment_number: string;
+  floor_number?: number;
+  rooms?: string | number;
+  area?: number;
+  price?: number | null;
+  status?: "available" | "sold" | "reserved";
+  custom_fields?: Record<string, unknown>;
+}
+
+export interface SyncApartmentsResult {
+  updatedCount: number;
+  notFound: string[];
+  total: number;
+}
+
+export async function syncApartmentsFromExcel(
+  projectId: string,
+  updates: ApartmentSyncUpdate[],
+): Promise<SyncApartmentsResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "sync-apartments-from-excel",
+      projectId,
+      updates,
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    updatedCount: result.updatedCount ?? 0,
+    notFound: result.notFound ?? [],
+    total: result.total ?? 0,
+  };
+}
