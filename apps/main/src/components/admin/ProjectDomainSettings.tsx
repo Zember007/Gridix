@@ -57,12 +57,19 @@ export default function ProjectDomainSettings({
   projectName,
 }: ProjectDomainSettingsProps) {
   const editorData = useProjectEditorDataContext();
+  const isEditorContext = Boolean(editorData);
+  const isWaitingForEditorData = Boolean(editorData?.loading);
   const initialDomains =
     editorData?.data?.domains != null && Array.isArray(editorData.data.domains)
       ? editorData.data.domains
       : null;
+  const projectIdForDomains = isEditorContext
+    ? editorData?.data
+      ? projectId
+      : undefined
+    : projectId;
   const { domains, loading, updateDomain } = useProjectDomains(
-    projectId,
+    projectIdForDomains,
     initialDomains,
   );
   const [newDomain, setNewDomain] = useState("");
@@ -578,7 +585,7 @@ export default function ProjectDomainSettings({
         <div className="space-y-4">
           <Label>{t("domains.connectedDomains")}</Label>
 
-          {loading ? (
+          {isWaitingForEditorData || loading ? (
             <div className="py-4 text-center text-muted-foreground">
               {t("project.loading")}
             </div>

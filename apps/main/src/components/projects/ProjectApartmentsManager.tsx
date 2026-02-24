@@ -28,6 +28,7 @@ import {
   Building,
   Copy,
   Edit2,
+  FileSpreadsheet,
   Plus,
   RefreshCw,
   Save,
@@ -39,6 +40,7 @@ import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import ApartmentCustomFields from "@/components/apartment/ApartmentCustomFields";
 import ApartmentSyncDialog from "@/components/apartment/ApartmentSyncDialog";
+import ProjectApartmentsExcelSyncDialog from "@/components/projects/ProjectApartmentsExcelSyncDialog";
 import {
   Apartment,
   normalizeApartmentData,
@@ -86,6 +88,7 @@ const ProjectApartmentsManager = ({
     [],
   );
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
+  const [excelSyncDialogOpen, setExcelSyncDialogOpen] = useState(false);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(1);
   const { t } = useLanguage();
   const { project } = useProjectInEditorScope(projectId);
@@ -124,14 +127,23 @@ const ProjectApartmentsManager = ({
   }, [projectId, t]);
 
   useEffect(() => {
-    if (editorData?.data?.apartments != null) {
+    if (editorData) {
+      if (editorData.loading) {
+        setLoading(true);
+        return;
+      }
+      if (editorData?.data?.apartments == null) {
+        setApartments([]);
+        setLoading(false);
+        return;
+      }
       const formatted = editorData.data.apartments.map(normalizeApartmentData);
       setApartments(formatted);
       setLoading(false);
       return;
     }
     loadApartments();
-  }, [editorData?.data?.apartments, loadApartments]);
+  }, [editorData, editorData?.data?.apartments, loadApartments]);
 
   useEffect(() => {
     // Update newApartment type when currentType changes
@@ -755,6 +767,14 @@ const ProjectApartmentsManager = ({
             </CardDescription>
           </div>
           <div className="flex w-full gap-2 sm:w-auto">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setExcelSyncDialogOpen(true)}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              {t("excel.sync.button")}
+            </Button>
             {projectType !== "object" && (
               <Button
                 variant="outline"
@@ -1072,6 +1092,21 @@ const ProjectApartmentsManager = ({
         onSyncComplete={handleSyncComplete}
         getStatusColor={getStatusColor}
         getStatusLabel={getStatusLabel}
+      />
+
+      {/* Диалог синхронизации через Excel */}
+      <ProjectApartmentsExcelSyncDialog
+        open={excelSyncDialogOpen}
+        onClose={() => setExcelSyncDialogOpen(false)}
+        projectId={projectId}
+        projectType={projectType ?? null}
+        onSyncDone={() => {
+          if (editorData) {
+            void editorData.refresh();
+            return;
+          }
+          loadApartments();
+        }}
       />
 
       {/* Диалог управления этажами */}

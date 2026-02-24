@@ -18,7 +18,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@gridix/ui";
-import { Copy, Home, Image as ImageIcon, Layout, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Home,
+  Image as ImageIcon,
+  Layout,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import {
@@ -52,6 +60,13 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<string>("");
   const [photos, setPhotos] = useState<ApartmentPhoto[]>([]);
+  const [photoCountsByApartment, setPhotoCountsByApartment] = useState<
+    Record<string, number>
+  >({});
+  const [isCoverageExpanded, setIsCoverageExpanded] = useState(false);
+  const [coverageFilter, setCoverageFilter] = useState<
+    "all" | "with" | "without"
+  >("all");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -79,13 +94,22 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   }, [projectId]);
 
   useEffect(() => {
-    if (editorData?.data?.apartments != null) {
+    if (editorData) {
+      if (editorData.loading) {
+        setLoading(true);
+        return;
+      }
+      if (editorData?.data?.apartments == null) {
+        setApartments([]);
+        setLoading(false);
+        return;
+      }
       setApartments(editorData.data.apartments.map(normalizeApartmentData));
       setLoading(false);
       return;
     }
     loadApartments();
-  }, [projectId, editorData?.data?.apartments, loadApartments]);
+  }, [editorData, editorData?.data?.apartments, loadApartments]);
 
   const loadPhotos = useCallback(async () => {
     if (!selectedApartment) return;
@@ -109,6 +133,47 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       loadPhotos();
     }
   }, [selectedApartment, loadPhotos]);
+
+  const loadPhotoCoverage = useCallback(async () => {
+    const apartmentIds = apartments.map((apartment) => apartment.id);
+    if (apartmentIds.length === 0) {
+      setPhotoCountsByApartment({});
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("apartment_photos")
+        .select("apartment_id")
+        .in("apartment_id", apartmentIds);
+
+      if (error) throw error;
+
+      const defaultCounts = apartmentIds.reduce<Record<string, number>>(
+        (acc, apartmentId) => {
+          acc[apartmentId] = 0;
+          return acc;
+        },
+        {},
+      );
+
+      const counts = (data || []).reduce<Record<string, number>>(
+        (acc, photo) => {
+          acc[photo.apartment_id] = (acc[photo.apartment_id] || 0) + 1;
+          return acc;
+        },
+        defaultCounts,
+      );
+
+      setPhotoCountsByApartment(counts);
+    } catch (error) {
+      console.error("Error loading apartment photo coverage:", error);
+    }
+  }, [apartments]);
+
+  useEffect(() => {
+    loadPhotoCoverage();
+  }, [loadPhotoCoverage]);
 
   const handlePhotoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -135,6 +200,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       await Promise.all(uploadPromises);
       toast.success(t("photosManager.uploadSuccess"));
       loadPhotos();
+      loadPhotoCoverage();
     } catch (error) {
       console.error("Error uploading photos:", error);
       toast.error(t("photosManager.uploadError"));
@@ -148,6 +214,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       await deleteApartmentPhoto(photoId, imageUrl);
       toast.success(t("photosManager.deleteSuccess"));
       loadPhotos();
+      loadPhotoCoverage();
     } catch (error) {
       console.error("Error deleting photo:", error);
       toast.error(t("photosManager.deleteError"));
@@ -216,6 +283,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
           count: similarApartments.length,
         }),
       );
+      loadPhotoCoverage();
     } catch (error) {
       console.error("Error duplicating photos:", error);
       toast.error(t("photosManager.duplicateError"));
@@ -231,6 +299,23 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       </Card>
     );
   }
+
+  const apartmentsWithPhotos = apartments.filter(
+    (apartment) => (photoCountsByApartment[apartment.id] || 0) > 0,
+  );
+  const apartmentsWithoutPhotos = apartments.filter(
+    (apartment) => (photoCountsByApartment[apartment.id] || 0) === 0,
+  );
+  const orderedApartments = [
+    ...apartmentsWithoutPhotos,
+    ...apartmentsWithPhotos,
+  ];
+  const filteredApartments =
+    coverageFilter === "with"
+      ? apartmentsWithPhotos
+      : coverageFilter === "without"
+        ? apartmentsWithoutPhotos
+        : orderedApartments;
 
   return (
     <div className="space-y-6">
@@ -281,6 +366,148 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-3 rounded-lg border p-4">
+                <button
+                  type="button"
+                  className="flex w-full items-start justify-between rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/40"
+                  onClick={() => setIsCoverageExpanded((prev) => !prev)}
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      {t("photosManager.coverageTitle")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("photosManager.coverageDescription")}
+                    </p>
+                  </div>
+                  {isCoverageExpanded ? (
+                    <ChevronUp className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+
+                {isCoverageExpanded && (
+                  <>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <Button
+                        type="button"
+                        aria-pressed={coverageFilter === "all"}
+                        variant="outline"
+                        className={`h-auto justify-start rounded-lg p-3 text-left transition-all ${
+                          coverageFilter === "all"
+                            ? "border-primary/40 bg-primary/10 shadow-sm"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => setCoverageFilter("all")}
+                      >
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            {t("photosManager.totalApartments")}
+                          </p>
+                          <p className="text-xl font-semibold">
+                            {apartments.length}
+                          </p>
+                        </div>
+                      </Button>
+                      <Button
+                        type="button"
+                        aria-pressed={coverageFilter === "with"}
+                        variant="outline"
+                        className={`h-auto justify-start rounded-md p-3 text-left ${
+                          coverageFilter === "with"
+                            ? "border-green-500/40 bg-green-500/15 shadow-sm"
+                            : "border-green-500/20 bg-green-500/5 hover:bg-green-500/10"
+                        }`}
+                        onClick={() => setCoverageFilter("with")}
+                      >
+                        <div>
+                          <p className="text-xs text-green-700 dark:text-green-400">
+                            {t("photosManager.withPhotos")}
+                          </p>
+                          <p className="text-xl font-semibold">
+                            {apartmentsWithPhotos.length}
+                          </p>
+                        </div>
+                      </Button>
+                      <Button
+                        type="button"
+                        aria-pressed={coverageFilter === "without"}
+                        variant="outline"
+                        className={`h-auto justify-start rounded-md p-3 text-left ${
+                          coverageFilter === "without"
+                            ? "border-amber-500/40 bg-amber-500/20 shadow-sm"
+                            : "border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/15"
+                        }`}
+                        onClick={() => setCoverageFilter("without")}
+                      >
+                        <div>
+                          <p className="text-xs text-amber-700 dark:text-amber-400">
+                            {t("photosManager.withoutPhotos")}
+                          </p>
+                          <p className="text-xl font-semibold">
+                            {apartmentsWithoutPhotos.length}
+                          </p>
+                        </div>
+                      </Button>
+                    </div>
+
+                    {apartments.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          {t("photosManager.missingFirstHint")}
+                        </p>
+                        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                          {filteredApartments.map((apartment) => {
+                            const photoCount =
+                              photoCountsByApartment[apartment.id] || 0;
+                            const hasNoPhotos = photoCount === 0;
+
+                            return (
+                              <Button
+                                key={apartment.id}
+                                type="button"
+                                variant="outline"
+                                className={`w-full justify-between text-left ${
+                                  selectedApartment === apartment.id
+                                    ? "border-primary/40 bg-primary/10 shadow-sm"
+                                    : hasNoPhotos
+                                      ? "border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10"
+                                      : "hover:bg-muted/40"
+                                }`}
+                                onClick={() =>
+                                  setSelectedApartment(apartment.id)
+                                }
+                              >
+                                <span>
+                                  {t("photosManager.apartmentOption", {
+                                    number: apartment.apartment_number,
+                                    floor: apartment.floor_number,
+                                  })}
+                                </span>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-xs ${
+                                    hasNoPhotos
+                                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                      : "bg-green-500/15 text-green-700 dark:text-green-300"
+                                  }`}
+                                >
+                                  {hasNoPhotos
+                                    ? t("photosManager.noIndividualPhotosShort")
+                                    : t("photosManager.photoCountShort", {
+                                        count: photoCount,
+                                      })}
+                                </span>
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {selectedApartment && (
