@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-02-24T16:30:00.000Z",
+  "mode": "static_analysis",
+  "url": "http://localhost:8080/en/admin",
+  "globalQueryConfig": {
+    "staleTime": 300000,
+    "gcTime": 1800000,
+    "refetchOnWindowFocus": false,
+    "refetchOnReconnect": true,
+    "retry": 1
+  },
+  "queriesOnInitialLoad": {
+    "defaultTab": "projects",
+    "estimatedSupabaseRequests": {
+      "developer": {
+        "total": "5-6",
+        "breakdown": [
+          {
+            "source": "useLeads (AdminDashboard)",
+            "requests": 2,
+            "description": "leads + lead_reads"
+          },
+          {
+            "source": "useAllFailedLeadsStats (LeadsStats)",
+            "requests": 1,
+            "description": "leads stats"
+          },
+          {
+            "source": "useWorkspaceProjects (ProjectList)",
+            "requests": 1,
+            "description": "projects"
+          },
+          {
+            "source": "useUserRole",
+            "requests": 1,
+            "description": "user role resolution"
+          }
+        ]
+      },
+      "manager": {
+        "total": "13-18",
+        "breakdown": [
+          {
+            "source": "useLeads → getManagerProjectIds",
+            "requests": "2-3",
+            "description": "manager perms + leads + lead_reads"
+          },
+          {
+            "source": "useAllFailedLeadsStats → getManagerProjectIds",
+            "requests": "2-3",
+            "description": "manager perms + leads stats"
+          },
+          {
+            "source": "useWorkspaceProjects → getManagerProjectIds",
+            "requests": "2-3",
+            "description": "manager perms + projects"
+          },
+          {
+            "source": "useUserRole + useWorkspace",
+            "requests": "2-3",
+            "description": "user role + workspace resolution"
+          }
+        ]
+      }
+    }
+  },
+  "uncachedEffects": [
+    {
+      "file": "hooks/useAdminLeadsData.ts",
+      "lines": "347-382",
+      "description": "Funnel stages + triggers via useEffect (no TQ cache)",
+      "requestsPerFire": 2
+    },
+    {
+      "file": "hooks/useAdminLeadsData.ts",
+      "lines": "384-449",
+      "description": "Lead details (tasks + history + partner) via useEffect",
+      "requestsPerFire": "2-3"
+    }
+  ],
+  "duplicateFetchPatterns": [
+    {
+      "type": "getManagerProjectIds bare function",
+      "callSites": 4,
+      "requestsPerCall": "2-3",
+      "cachedAlternativeExists": true,
+      "cachedHook": "useManagerProjectIds"
+    }
+  ]
+}
