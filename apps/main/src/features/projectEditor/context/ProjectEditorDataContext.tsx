@@ -33,12 +33,13 @@ export function ProjectEditorDataProvider({
   children,
 }: ProjectEditorDataProviderProps) {
   const [data, setData] = useState<ProjectEditorLoadResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(projectId && enabled));
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!projectId || !enabled) {
       setData(null);
+      setLoading(false);
       setError(null);
       return;
     }

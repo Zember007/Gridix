@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
-import { supabase } from "@gridix/utils/api";
+import { loadSelectorFloorPolygons } from "@/features/projectSelector/api/projectSelectorApi";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { ViewMode } from "../types";
 
-/** Minimal shape returned from the Supabase query (`id` + `polygon`). */
 interface PolygonRow {
   id: string;
   polygon: unknown;
@@ -46,7 +45,6 @@ export const useFloorPolygons = ({
     const loadPolygonsForFloor = async (floor: number) => {
       if (!projectId || polygonsLoadingRef.current.has(floor)) return;
 
-      // Check cache first
       const cached = loadedPolygonsForFloorsRef.current.get(floor);
       if (cached && cached.length > 0) {
         mergePolygons(floor, cached);
@@ -56,19 +54,16 @@ export const useFloorPolygons = ({
       polygonsLoadingRef.current.add(floor);
 
       try {
-        const { data, error } = await supabase
-          .from("apartments")
-          .select("id, polygon")
-          .eq("project_id", projectId)
-          .eq("floor_number", floor);
+        const { polygonsByFloor } = await loadSelectorFloorPolygons(projectId, [
+          floor,
+        ]);
 
-        if (error) throw error;
+        const rows: PolygonRow[] = (polygonsByFloor[floor] ?? []).map((d) => ({
+          id: d.id,
+          polygon: d.polygon,
+        }));
 
-        if (data && data.length > 0) {
-          const rows: PolygonRow[] = data.map((d) => ({
-            id: d.id,
-            polygon: d.polygon,
-          }));
+        if (rows.length > 0) {
           loadedPolygonsForFloorsRef.current.set(floor, rows);
           mergePolygons(floor, rows);
         }

@@ -68,6 +68,36 @@
       "selectColumnPlaceholder": "-- Select column --"
     }
   },
+  "sync": {
+    "button": "Excel sync",
+    "dialog": {
+      "title": "Sync apartments via Excel",
+      "description": "Update existing apartment data by uploading an Excel file. Apartments are matched by number."
+    },
+    "import": {
+      "title": "Import data",
+      "description": "Upload a file or provide a link to a spreadsheet with apartment data",
+      "matchBy": "Matching:",
+      "matchByDesc": "Apartments are updated by number. No new apartments are created."
+    },
+    "columns": {
+      "title": "Map Excel columns",
+      "description": "Select columns to update. Apartment number is required, other fields are optional."
+    },
+    "preview": {
+      "description": "Data to update ({{count}} records)"
+    },
+    "errors": {
+      "fillRequired": "Select the apartment number column and at least one field to update",
+      "syncFailed": "Error syncing data"
+    },
+    "result": {
+      "success": "Sync complete: {{updated}} apartments updated",
+      "withNotFound": "Updated {{updated}} of {{total}}. Not found: {{notFound}}"
+    },
+    "syncing": "Syncing...",
+    "syncButton": "Sync"
+  },
   "url": {
     "autoConvert": "The link will be automatically converted for data import",
     "check": "Check",

@@ -1,8 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProject } from "@/entities/project/queries/useProjects";
-import { useApartment } from "@/entities/apartment/queries/useApartment";
-import { useFields } from "@/hooks/useFields";
+import type { Project } from "@/entities/project/queries/useProjects";
+import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { formatPriceWithCurrency, convertPrice } from "@gridix/utils/lib";
 import CurrencyToggle from "@/components/common/CurrencyToggle";
 import { Language } from "@gridix/utils/lib";
@@ -30,6 +29,8 @@ import {
   Apartment,
   normalizeApartmentData,
 } from "@/entities/apartment/model/types";
+import { loadApartmentDetails } from "@/features/projectSelector/api/projectSelectorApi";
+import type { FieldSetting } from "@/hooks/useFields";
 import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
 import RecommendedApartmentCard from "@/pages/components/RecommendedApartmentCard";
 import ApartmentPhotosViewer from "@/components/apartment/ApartmentPhotosViewer";
@@ -69,28 +70,20 @@ const ApartmentDetailsPage = ({
     : apartmentNumber || apartmentId;
 
   const { t, language } = useLanguage();
-  const {
-    project,
-    loading: projectLoading,
-    error: projectError,
-  } = useProject(projectIdentifier || "");
-  const {
-    apartment,
-    loading: apartmentLoading,
-    error: apartmentError,
-  } = useApartment(projectIdentifier, apartmentIdentifier, { useId });
-  const { fields: fieldSettings } = useFields(project?.id || "");
+  const { incrementViewCount } = useProjectCRUD();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { calculateMonthlyPayment } = useInstallment(
-    project?.installment_enabled && project
-      ? {
-          ...project,
-          installment_enabled: project.installment_enabled,
-          min_down_payment_percent: project.min_down_payment_percent || 20,
-          max_installment_months: project.max_installment_months || 24,
-        }
-      : undefined,
-  );
+
+  const [project, setProject] = useState<Project | null>(null);
+  const [apartment, setApartment] = useState<Apartment | null>(null);
+  const [fieldSettings, setFieldSettings] = useState<FieldSetting[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
+  const [recommendedApartments, setRecommendedApartments] = useState<
+    Apartment[]
+  >([]);
+  const [recommendationThumbnails, setRecommendationThumbnails] = useState<
+    Record<string, string | null>
+  >({});
 
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
@@ -101,14 +94,20 @@ const ApartmentDetailsPage = ({
     Array<{ id: number; title: string; stage_id?: string | null }>
   >([]);
   const [bitrixDealsQuery, setBitrixDealsQuery] = useState("");
-  const [recommendedApartments, setRecommendedApartments] = useState<
-    Apartment[]
-  >([]);
-  const [recommendationThumbnails, setRecommendationThumbnails] = useState<
-    Record<string, string | null>
-  >({});
   const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const trackedApartmentViewsRef = useRef<Set<string>>(new Set());
+  const trackedProjectViewsRef = useRef<Set<string>>(new Set());
+
+  const { calculateMonthlyPayment } = useInstallment(
+    project?.installment_enabled && project
+      ? {
+          ...project,
+          installment_enabled: project.installment_enabled,
+          min_down_payment_percent: project.min_down_payment_percent || 20,
+          max_installment_months: project.max_installment_months || 24,
+        }
+      : undefined,
+  );
 
   const bitrixContext = useMemo(() => {
     const sp = new URLSearchParams(location.search);
@@ -322,22 +321,146 @@ const ApartmentDetailsPage = ({
     }
   };
 
-  // Трекинг просмотра квартиры
+  interface CombinedPhoto {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+    type: "layout" | "apartment";
+  }
+  const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
+
+  // Single edge function call for ALL read data
   useEffect(() => {
-    if (!apartment || !project?.id || apartmentLoading || projectLoading) {
+    if (!projectIdentifier || !apartmentIdentifier) {
+      setDataLoading(false);
       return;
     }
 
-    const trackingKey = `${project.id}:${apartment.id}`;
-    if (trackedApartmentViewsRef.current.has(trackingKey)) {
-      return;
+    let cancelled = false;
+    const fetchAll = async () => {
+      setDataLoading(true);
+      setDataError(null);
+      try {
+        const result = await loadApartmentDetails(
+          projectIdentifier,
+          apartmentIdentifier,
+          useId,
+        );
+
+        if (cancelled) return;
+
+        if (!result.project) {
+          setDataError("Проект не найден");
+          setDataLoading(false);
+          return;
+        }
+
+        setProject(result.project);
+
+        if (result.apartment) {
+          setApartment(normalizeApartmentData(result.apartment));
+        } else {
+          setApartment(null);
+        }
+
+        const mergedFields: FieldSetting[] = [
+          ...(result.fieldSettings ?? []).map((f) => ({
+            id: f.id,
+            field_name: f.field_name,
+            field_label: f.field_label,
+            field_type: f.field_type as
+              | "text"
+              | "number"
+              | "select"
+              | "boolean",
+            is_custom: Boolean(f.is_custom),
+            is_visible: Boolean(f.is_visible),
+            sort_order: Number(f.sort_order),
+          })),
+          ...(result.customFields ?? []).map((f) => ({
+            id: f.id,
+            field_name: f.field_name,
+            field_label: f.field_label,
+            field_type: f.field_type as
+              | "text"
+              | "number"
+              | "select"
+              | "boolean",
+            is_custom: true,
+            is_visible: f.is_visible !== false,
+            sort_order: Number(f.sort_order) || 999,
+            field_label_translations:
+              (f.field_label_translations as Record<string, string>) || {},
+          })),
+        ].sort((a, b) => a.sort_order - b.sort_order);
+        setFieldSettings(mergedFields);
+
+        const aptPhotos: CombinedPhoto[] = result.apartmentPhotos.map((p) => ({
+          id: p.id,
+          image_url: p.image_url,
+          description: p.description ?? null,
+          order_index: p.order_index,
+          type: "apartment" as const,
+        }));
+
+        const layoutPhotos: CombinedPhoto[] =
+          result.project.id !== "04bcb797-a155-479c-a9ae-131ce850375f"
+            ? []
+            : result.layoutPhotos.map((p) => ({
+                id: p.id,
+                image_url: p.image_url,
+                description: p.description ?? null,
+                order_index: p.order_index,
+                type: "layout" as const,
+              }));
+
+        setPhotos(
+          [...layoutPhotos, ...aptPhotos].sort(
+            (a, b) => a.order_index - b.order_index,
+          ),
+        );
+
+        const normalizedRec = result.recommended.map(normalizeApartmentData);
+        setRecommendedApartments(normalizedRec);
+        setRecommendationThumbnails(result.thumbnails);
+
+        if (result.project.currency) {
+          setSelectedCurrency(result.project.currency);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Error loading apartment details:", err);
+        setDataError(err instanceof Error ? err.message : "Ошибка загрузки");
+      } finally {
+        if (!cancelled) setDataLoading(false);
+      }
+    };
+
+    fetchAll();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectIdentifier, apartmentIdentifier, useId]);
+
+  // View tracking (fire-and-forget writes, kept separate)
+  useEffect(() => {
+    if (!apartment || !project?.id || dataLoading) return;
+
+    if (!trackedProjectViewsRef.current.has(project.id)) {
+      trackedProjectViewsRef.current.add(project.id);
+      incrementViewCount(project.id).catch((err: unknown) => {
+        console.error("Error tracking project view:", err);
+      });
     }
+
+    const trackingKey = `${project.id}:${apartment.id}`;
+    if (trackedApartmentViewsRef.current.has(trackingKey)) return;
     trackedApartmentViewsRef.current.add(trackingKey);
 
     const trackApartmentView = async () => {
       try {
         const { user } = await fetchCurrentSession();
-
         await supabase.from("apartment_views").insert({
           apartment_id: apartment.id,
           project_id: project.id,
@@ -352,18 +475,7 @@ const ApartmentDetailsPage = ({
     };
 
     void trackApartmentView();
-  }, [apartment, project, apartmentLoading, projectLoading]);
-
-  // Photos preloading moved to parent component
-  interface CombinedPhoto {
-    id: string;
-    image_url: string;
-    description?: string | null;
-    order_index: number;
-    type: "layout" | "apartment";
-  }
-  const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
-  const [photosLoading, setPhotosLoading] = useState<boolean>(true);
+  }, [apartment, project, dataLoading, incrementViewCount]);
 
   const handleShare = async () => {
     try {
@@ -386,80 +498,6 @@ const ApartmentDetailsPage = ({
       }
     }
   };
-
-  // Initialize currency from project if available
-  useEffect(() => {
-    if (project?.currency) {
-      setSelectedCurrency(project.currency);
-    }
-  }, [project?.currency]);
-
-  const getLayoutType = (rooms: number): string => {
-    return rooms == 0 ? "studio" : `${rooms}-room`;
-  };
-
-  // Load photos (layout + apartment) in parent and pass down
-  useEffect(() => {
-    const loadPhotos = async () => {
-      if (!apartment || !project?.id) return;
-      setPhotosLoading(true);
-      try {
-        const currentRooms = apartment.rooms;
-        const layoutType = getLayoutType(
-          typeof currentRooms === "number"
-            ? currentRooms
-            : Number(currentRooms),
-        );
-
-        const [aptRes, layoutRes] = await Promise.all([
-          supabase
-            .from("apartment_photos")
-            .select("*")
-            .eq("apartment_id", apartment.id)
-            .order("order_index", { ascending: true }),
-          supabase
-            .from("layout_photos")
-            .select("*")
-            .eq("project_id", project.id)
-            .eq("layout_type", layoutType)
-            .order("order_index", { ascending: true }),
-        ]);
-
-        const apartmentPhotos = (aptRes.data || []).map((photo) => ({
-          id: photo.id as string,
-          image_url: photo.image_url as string,
-          description:
-            (photo as { description?: string | null }).description ?? null,
-          order_index: (photo as { order_index: number }).order_index,
-          type: "apartment" as const,
-        }));
-
-        const layoutPhotos =
-          project.id !== "04bcb797-a155-479c-a9ae-131ce850375f"
-            ? []
-            : (layoutRes.data || []).map((photo) => ({
-                id: photo.id,
-                image_url: photo.image_url,
-                description: photo.description ?? null,
-                order_index: photo.order_index,
-                type: "layout" as const,
-              }));
-
-        setPhotos(
-          [...layoutPhotos, ...apartmentPhotos].sort(
-            (a, b) => a.order_index - b.order_index,
-          ),
-        );
-      } catch (err) {
-        console.error("Error loading photos in parent:", err);
-        setPhotos([]);
-      } finally {
-        setPhotosLoading(false);
-      }
-    };
-
-    loadPhotos();
-  }, [apartment, project?.id]);
 
   const handleToggleFavorite = () => {
     if (!apartment) return;
@@ -626,120 +664,6 @@ const ApartmentDetailsPage = ({
     window.location.href = url;
   };
 
-  // Load recommended apartments
-  const loadRecommendedApartments = useCallback(async () => {
-    if (!apartment || !project?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("apartments")
-        .select(
-          "id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type",
-        )
-        .eq("project_id", project.id)
-        .eq("rooms", apartment.rooms.toString())
-        .neq("id", apartment.id)
-        .eq("status", "available")
-        .limit(4);
-
-      if (error) throw error;
-
-      const normalizedApartments = (data || []).map(normalizeApartmentData);
-      setRecommendedApartments(normalizedApartments);
-      if (normalizedApartments.length === 0) {
-        setRecommendationThumbnails({});
-        return;
-      }
-
-      // После загрузки рекомендаций грузим превью батчем:
-      // 1) все первые фото квартир, 2) все первые планировки для нужных layout_type.
-      try {
-        const apartmentIds = normalizedApartments.map((item) => item.id);
-        const layoutTypeByApartmentId = new Map<string, string>();
-        for (const item of normalizedApartments) {
-          const layoutType =
-            item.rooms == 0
-              ? "studio"
-              : item.rooms === "free_layout"
-                ? "free_layout"
-                : `${item.rooms}-room`;
-          layoutTypeByApartmentId.set(item.id, layoutType);
-        }
-
-        const uniqueLayoutTypes = Array.from(
-          new Set(layoutTypeByApartmentId.values()),
-        );
-
-        const [apartmentPhotosRes, layoutPhotosRes] = await Promise.all([
-          supabase
-            .from("apartment_photos")
-            .select("apartment_id, image_url, order_index")
-            .in("apartment_id", apartmentIds)
-            .order("order_index", { ascending: true }),
-          supabase
-            .from("layout_photos")
-            .select("layout_type, image_url, order_index")
-            .eq("project_id", project.id)
-            .in("layout_type", uniqueLayoutTypes)
-            .order("order_index", { ascending: true }),
-        ]);
-
-        if (apartmentPhotosRes.error) {
-          throw apartmentPhotosRes.error;
-        }
-        if (layoutPhotosRes.error) {
-          throw layoutPhotosRes.error;
-        }
-
-        const firstApartmentPhotoById = new Map<string, string>();
-        for (const photo of apartmentPhotosRes.data || []) {
-          const apartmentId = (photo as { apartment_id?: string | null })
-            .apartment_id;
-          const imageUrl = (photo as { image_url?: string | null }).image_url;
-          if (!apartmentId || !imageUrl) continue;
-          if (!firstApartmentPhotoById.has(apartmentId)) {
-            firstApartmentPhotoById.set(apartmentId, imageUrl);
-          }
-        }
-        const firstLayoutPhotoByType = new Map<string, string>();
-        for (const photo of layoutPhotosRes.data || []) {
-          const layoutType = (photo as { layout_type?: string | null })
-            .layout_type;
-          const imageUrl = (photo as { image_url?: string | null }).image_url;
-          if (!layoutType || !imageUrl) continue;
-          if (!firstLayoutPhotoByType.has(layoutType)) {
-            firstLayoutPhotoByType.set(layoutType, imageUrl);
-          }
-        }
-
-        const thumbnails: Record<string, string | null> = {};
-        for (const item of normalizedApartments) {
-          const apartmentCover = firstApartmentPhotoById.get(item.id);
-          if (apartmentCover) {
-            thumbnails[item.id] = apartmentCover;
-            continue;
-          }
-
-          const layoutType = layoutTypeByApartmentId.get(item.id);
-          thumbnails[item.id] =
-            (layoutType && firstLayoutPhotoByType.get(layoutType)) ?? null;
-        }
-
-        setRecommendationThumbnails(thumbnails);
-      } catch (thumbError) {
-        console.error("Error loading recommendation thumbnails:", thumbError);
-      }
-    } catch (error) {
-      console.error("Error loading recommended apartments:", error);
-    }
-  }, [apartment, project?.id]);
-
-  useEffect(() => {
-    if (apartment && project?.id) {
-      loadRecommendedApartments();
-    }
-  }, [apartment, project?.id, loadRecommendedApartments]);
-
   const { run: runGeneratePdf, isRunning: isGeneratingPDF } = useAsyncAction(
     generateApartmentPdf,
     {
@@ -766,19 +690,16 @@ const ApartmentDetailsPage = ({
   const floorVisible = fieldVisibility.floor;
   const numberVisible = fieldVisibility.number;
 
-  const loading = projectLoading || apartmentLoading || photosLoading;
+  const loading = dataLoading;
 
-  // Обработка ошибок
-  if (projectError || apartmentError) {
+  if (dataError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="mb-2 text-xl font-bold text-foreground">
             {t("common.error")}
           </h1>
-          <p className="text-muted-foreground">
-            {projectError || apartmentError}
-          </p>
+          <p className="text-muted-foreground">{dataError}</p>
         </div>
       </div>
     );

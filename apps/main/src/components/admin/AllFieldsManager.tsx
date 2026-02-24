@@ -60,6 +60,8 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
   };
 
   const editorData = useProjectEditorDataContext();
+  const isEditorContext = Boolean(editorData);
+  const isWaitingForEditorData = Boolean(editorData?.loading);
   const initialFieldsData =
     editorData?.data?.fieldSettings != null &&
     editorData?.data?.customFields != null
@@ -73,6 +75,12 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
         }
       : null;
 
+  const projectIdForFields = isEditorContext
+    ? editorData?.data
+      ? projectId
+      : null
+    : projectId;
+
   const {
     fields,
     loading,
@@ -81,7 +89,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     updateFieldVisibility,
     deleteField,
     refreshFields,
-  } = useFields(projectId, initialFieldsData);
+  } = useFields(projectIdForFields, initialFieldsData);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -169,6 +177,10 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
         <CustomFieldsManager
           projectId={projectId}
           onFieldsChange={() => {
+            if (editorData) {
+              void editorData.refresh();
+              return;
+            }
             refreshFields();
           }}
           editingField={editingField}
@@ -181,7 +193,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     );
   }
 
-  if (loading) {
+  if (isWaitingForEditorData || loading) {
     return <div className="p-4 text-center">{t("customFields.loading")}</div>;
   }
 

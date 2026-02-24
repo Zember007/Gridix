@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@gridix/utils/api";
 import { Building2 } from "lucide-react";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import FloorPlanView from "@/components/visualization/FloorPlanView";
 import { Project } from "@/entities/project/queries/useProjectsManager";
 import { FieldSetting } from "@/hooks/useFields";
+import { loadSelectorFloorsLight } from "@/features/projectSelector/api/projectSelectorApi";
 
 interface ApartmentFloorPlanProps {
   projectId: string;
@@ -37,31 +37,24 @@ const ApartmentFloorPlan = ({
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 
   useEffect(() => {
-    // Загружаем только список этажей (id, floor_number)
-    const loadFloorsLight = async () => {
+    const fetchFloors = async () => {
       try {
-        const { data, error } = await supabase
-          .from("building_floors")
-          .select("id, floor_number")
-          .eq("project_id", projectId)
-          .order("floor_number");
+        const { floors } = await loadSelectorFloorsLight(projectId);
 
-        if (error) throw error;
-
-        const processedFloors = (data || []).map((floor) => ({
-          id: floor.id,
-          floor_number: floor.floor_number,
-          polygon: [],
-          color: "#000000",
-        }));
-
-        setBuildingFloors(processedFloors);
+        setBuildingFloors(
+          floors.map((f) => ({
+            id: f.id,
+            floor_number: f.floor_number,
+            polygon: [],
+            color: "#000000",
+          })),
+        );
       } catch (error) {
         console.error("Error loading building floors:", error);
       }
     };
 
-    loadFloorsLight();
+    fetchFloors();
   }, [projectId]);
 
   // Определяем выбранный этаж: используем переданный prop или первый доступный этаж

@@ -61,6 +61,7 @@ import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
+import { Spinner } from "@/shared/ui/Spinner";
 import {
   isDevTourMode,
   startProjectChecklist,
@@ -100,7 +101,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
-  const { project: cachedProject } = useProjectInEditorScope(projectId);
+  const { project: cachedProject, loading: projectLoading } =
+    useProjectInEditorScope(projectId);
   const editorDataContext = useProjectEditorDataContext();
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
@@ -499,6 +501,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
   const [isCollapsed, setIsCollapsed] = useState(true);
 
+  const isEditorDataLoading =
+    !isNew && (editorDataContext?.loading ?? projectLoading);
+
   if (accessError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -653,643 +658,659 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           </div>
         </div>
 
-        <div className="project_editor_content_usertour flex-1 overflow-y-auto px-6 py-4 lg:py-6">
-          {/* Show content based on activeTab without Tabs wrapper */}
+        {isEditorDataLoading ? (
+          <div className="flex min-h-full items-center justify-center">
+            <Spinner size="md" />
+          </div>
+        ) : (
+          <div className="project_editor_content_usertour flex-1 overflow-y-auto px-6 py-4 lg:py-6">
+            {/* Show content based on activeTab without Tabs wrapper */}
 
-          {(activeTab === "basic" || activeTab === "building") && (
-            <div className="space-y-6">
-              {/* Sub-navigation for basic/building sections - only on desktop */}
-              <div className="mb-6 hidden gap-2 lg:flex">
-                <Button
-                  variant={activeTab === "basic" ? "default" : "outline"}
-                  onClick={() => setActiveTab("basic")}
-                  className="flex items-center gap-2"
-                >
-                  <Building2 className="h-4 w-4" />
-                  {t("projectEditor.basicInfo")}
-                </Button>
-                <Button
-                  variant={activeTab === "building" ? "default" : "outline"}
-                  onClick={() => setActiveTab("building")}
-                  disabled={isNew}
-                  className="flex items-center gap-2"
-                >
-                  <Image className="h-4 w-4" />
-                  {project.project_type === "object"
-                    ? "Object Image"
-                    : t("projectEditor.buildingImage")}
-                </Button>
-              </div>
+            {(activeTab === "basic" || activeTab === "building") && (
+              <div className="space-y-6">
+                {/* Sub-navigation for basic/building sections - only on desktop */}
+                <div className="mb-6 hidden gap-2 lg:flex">
+                  <Button
+                    variant={activeTab === "basic" ? "default" : "outline"}
+                    onClick={() => setActiveTab("basic")}
+                    className="flex items-center gap-2"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    {t("projectEditor.basicInfo")}
+                  </Button>
+                  <Button
+                    variant={activeTab === "building" ? "default" : "outline"}
+                    onClick={() => setActiveTab("building")}
+                    disabled={isNew}
+                    className="flex items-center gap-2"
+                  >
+                    <Image className="h-4 w-4" />
+                    {project.project_type === "object"
+                      ? "Object Image"
+                      : t("projectEditor.buildingImage")}
+                  </Button>
+                </div>
 
-              {activeTab === "basic" && (
-                <>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t("projectEditor.basicInfo")}</CardTitle>
-                      <CardDescription>
-                        {t("projectEditor.basicInfo")}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">
-                          {t("projectEditor.projectName")} *
-                        </Label>
-                        <Input
-                          id="name"
-                          value={project.name}
-                          onChange={(e) =>
-                            setProject((prev) => ({
-                              ...prev,
-                              name: e.target.value,
-                            }))
-                          }
-                          placeholder={t("projectEditor.projectName")}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">
-                          {t("projectEditor.description")}
-                        </Label>
-                        <Textarea
-                          id="description"
-                          value={project.description}
-                          onChange={(e) =>
-                            setProject((prev) => ({
-                              ...prev,
-                              description: e.target.value,
-                            }))
-                          }
-                          placeholder={t("projectEditor.description")}
-                          rows={3}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="address">
-                          {t("projectEditor.address")}
-                        </Label>
-                        <Input
-                          id="address"
-                          value={project.address}
-                          onChange={(e) =>
-                            setProject((prev) => ({
-                              ...prev,
-                              address: e.target.value,
-                            }))
-                          }
-                          placeholder={t("projectEditor.address")}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{t("projectEditor.availableLanguages")}</Label>
-                        <p className="text-xs text-gray-500">
-                          {t("projectEditor.availableLanguagesDesc")}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
-                          {SUPPORTED_LANGUAGES.map((code) => {
-                            const checked =
-                              project.available_languages.includes(code);
-                            const id = `available-language-${code}`;
-                            return (
-                              <div
-                                key={code}
-                                className="flex items-center space-x-2"
-                              >
-                                <Checkbox
-                                  id={id}
-                                  checked={checked}
-                                  onCheckedChange={(next) => {
-                                    const shouldEnable = next === true;
-                                    if (
-                                      !shouldEnable &&
-                                      project.available_languages.length <= 1
-                                    ) {
-                                      toast.error(
-                                        t("projectEditor.atLeastOneLanguage"),
-                                      );
-                                      return;
-                                    }
-
-                                    setProject((prev) => {
-                                      const current = prev.available_languages;
-                                      if (shouldEnable) {
-                                        if (current.includes(code)) return prev;
-                                        return {
-                                          ...prev,
-                                          available_languages: [
-                                            ...current,
-                                            code,
-                                          ],
-                                        };
-                                      }
-
-                                      if (!current.includes(code)) return prev;
-                                      if (current.length <= 1) return prev;
-                                      return {
-                                        ...prev,
-                                        available_languages: current.filter(
-                                          (l) => l !== code,
-                                        ),
-                                      };
-                                    });
-                                  }}
-                                />
-                                <Label
-                                  htmlFor={id}
-                                  className="cursor-pointer select-none"
-                                >
-                                  <span className="mr-2">
-                                    {LANGUAGE_CONFIG[code].flag}
-                                  </span>
-                                  {LANGUAGE_CONFIG[code].name}
-                                </Label>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {activeTab === "basic" && (
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t("projectEditor.basicInfo")}</CardTitle>
+                        <CardDescription>
+                          {t("projectEditor.basicInfo")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
                         <div>
-                          <Label htmlFor="project-type-desktop">
-                            {t("projectEditor.projectType")}
+                          <Label htmlFor="name">
+                            {t("projectEditor.projectName")} *
                           </Label>
-                          <Select
-                            value={project.project_type || "building"}
-                            onValueChange={(v: "building" | "object") =>
+                          <Input
+                            id="name"
+                            value={project.name}
+                            onChange={(e) =>
                               setProject((prev) => ({
                                 ...prev,
-                                project_type: v,
+                                name: e.target.value,
+                              }))
+                            }
+                            placeholder={t("projectEditor.projectName")}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="description">
+                            {t("projectEditor.description")}
+                          </Label>
+                          <Textarea
+                            id="description"
+                            value={project.description}
+                            onChange={(e) =>
+                              setProject((prev) => ({
+                                ...prev,
+                                description: e.target.value,
+                              }))
+                            }
+                            placeholder={t("projectEditor.description")}
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="address">
+                            {t("projectEditor.address")}
+                          </Label>
+                          <Input
+                            id="address"
+                            value={project.address}
+                            onChange={(e) =>
+                              setProject((prev) => ({
+                                ...prev,
+                                address: e.target.value,
+                              }))
+                            }
+                            placeholder={t("projectEditor.address")}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t("projectEditor.availableLanguages")}</Label>
+                          <p className="text-xs text-gray-500">
+                            {t("projectEditor.availableLanguagesDesc")}
+                          </p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {SUPPORTED_LANGUAGES.map((code) => {
+                              const checked =
+                                project.available_languages.includes(code);
+                              const id = `available-language-${code}`;
+                              return (
+                                <div
+                                  key={code}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <Checkbox
+                                    id={id}
+                                    checked={checked}
+                                    onCheckedChange={(next) => {
+                                      const shouldEnable = next === true;
+                                      if (
+                                        !shouldEnable &&
+                                        project.available_languages.length <= 1
+                                      ) {
+                                        toast.error(
+                                          t("projectEditor.atLeastOneLanguage"),
+                                        );
+                                        return;
+                                      }
+
+                                      setProject((prev) => {
+                                        const current =
+                                          prev.available_languages;
+                                        if (shouldEnable) {
+                                          if (current.includes(code))
+                                            return prev;
+                                          return {
+                                            ...prev,
+                                            available_languages: [
+                                              ...current,
+                                              code,
+                                            ],
+                                          };
+                                        }
+
+                                        if (!current.includes(code))
+                                          return prev;
+                                        if (current.length <= 1) return prev;
+                                        return {
+                                          ...prev,
+                                          available_languages: current.filter(
+                                            (l) => l !== code,
+                                          ),
+                                        };
+                                      });
+                                    }}
+                                  />
+                                  <Label
+                                    htmlFor={id}
+                                    className="cursor-pointer select-none"
+                                  >
+                                    <span className="mr-2">
+                                      {LANGUAGE_CONFIG[code].flag}
+                                    </span>
+                                    {LANGUAGE_CONFIG[code].name}
+                                  </Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div>
+                            <Label htmlFor="project-type-desktop">
+                              {t("projectEditor.projectType")}
+                            </Label>
+                            <Select
+                              value={project.project_type || "building"}
+                              onValueChange={(v: "building" | "object") =>
+                                setProject((prev) => ({
+                                  ...prev,
+                                  project_type: v,
+                                }))
+                              }
+                            >
+                              <SelectTrigger id="project-type-desktop">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="building">
+                                  {t("projectEditor.typeBuilding")}
+                                </SelectItem>
+                                <SelectItem value="object">
+                                  {t("projectEditor.typeObject")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {project.project_type !== "object" && (
+                            <div>
+                              <Label htmlFor="floors">
+                                {t("projectEditor.floors")} *
+                              </Label>
+                              <Input
+                                id="floors"
+                                type="number"
+                                min="1"
+                                value={project.floors}
+                                onChange={(e) =>
+                                  setProject((prev) => ({
+                                    ...prev,
+                                    floors: parseInt(e.target.value) || 1,
+                                  }))
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Дополнительные типы помещений */}
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="has-parking"
+                              checked={project.has_parking}
+                              onCheckedChange={(checked) =>
+                                setProject((prev) => ({
+                                  ...prev,
+                                  has_parking: checked,
+                                }))
+                              }
+                            />
+                            <Label htmlFor="has-parking">
+                              {t("projectEditor.hasParking")}
+                            </Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="has-commercial"
+                              checked={project.has_commercial}
+                              onCheckedChange={(checked) =>
+                                setProject((prev) => ({
+                                  ...prev,
+                                  has_commercial: checked,
+                                }))
+                              }
+                            />
+                            <Label htmlFor="has-commercial">
+                              {t("projectEditor.hasCommercial")}
+                            </Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="facade-open-desktop"
+                              checked={project.facade_open}
+                              onCheckedChange={(checked) =>
+                                setProject((prev) => ({
+                                  ...prev,
+                                  facade_open: checked,
+                                }))
+                              }
+                            />
+                            <Label htmlFor="facade-open-desktop">
+                              {t("projectEditor.facadeOpen")}
+                            </Label>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {t("projectEditor.facadeOpenDesc")}
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="latitude">
+                            {t("projectEditor.latitude")}
+                          </Label>
+                          <Input
+                            id="latitude"
+                            type="number"
+                            step="0.000001"
+                            value={project.latitude ?? ""}
+                            onPaste={handlePaste}
+                            onChange={(e) =>
+                              setProject((prev) => ({
+                                ...prev,
+                                latitude: e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : null,
+                              }))
+                            }
+                            placeholder={t("projectEditor.latitudePlaceholder")}
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            {t("projectEditor.latitudeExample")}
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="longitude">
+                            {t("projectEditor.longitude")}
+                          </Label>
+                          <Input
+                            id="longitude"
+                            type="number"
+                            step="0.000001"
+                            value={project.longitude ?? ""}
+                            onPaste={handlePaste}
+                            onChange={(e) =>
+                              setProject((prev) => ({
+                                ...prev,
+                                longitude: e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : null,
+                              }))
+                            }
+                            placeholder={t(
+                              "projectEditor.longitudePlaceholder",
+                            )}
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            {t("projectEditor.longitudeExample")}
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="currency">
+                            {t("projectEditor.currency")}
+                          </Label>
+                          <Select
+                            value={project.currency}
+                            onValueChange={(value: CurrencyType) =>
+                              setProject((prev) => ({
+                                ...prev,
+                                currency: value,
                               }))
                             }
                           >
-                            <SelectTrigger id="project-type-desktop">
-                              <SelectValue />
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={t("projectEditor.currency")}
+                              />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="building">
-                                {t("projectEditor.typeBuilding")}
-                              </SelectItem>
-                              <SelectItem value="object">
-                                {t("projectEditor.typeObject")}
-                              </SelectItem>
+                              {Object.entries(CURRENCIES).map(
+                                ([code, info]) => (
+                                  <SelectItem key={code} value={code}>
+                                    {t(info.translationKey)}
+                                  </SelectItem>
+                                ),
+                              )}
                             </SelectContent>
                           </Select>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {t("projectEditor.currencyDesc")}
+                          </p>
                         </div>
-                        {project.project_type !== "object" && (
-                          <div>
-                            <Label htmlFor="floors">
-                              {t("projectEditor.floors")} *
-                            </Label>
-                            <Input
-                              id="floors"
-                              type="number"
-                              min="1"
-                              value={project.floors}
-                              onChange={(e) =>
-                                setProject((prev) => ({
-                                  ...prev,
-                                  floors: parseInt(e.target.value) || 1,
-                                }))
-                              }
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Дополнительные типы помещений */}
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="has-parking"
-                            checked={project.has_parking}
-                            onCheckedChange={(checked) =>
-                              setProject((prev) => ({
-                                ...prev,
-                                has_parking: checked,
-                              }))
-                            }
-                          />
-                          <Label htmlFor="has-parking">
-                            {t("projectEditor.hasParking")}
+                        <div>
+                          <Label htmlFor="theme-color">
+                            {t("projectEditor.themeColor")}
                           </Label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="has-commercial"
-                            checked={project.has_commercial}
-                            onCheckedChange={(checked) =>
-                              setProject((prev) => ({
-                                ...prev,
-                                has_commercial: checked,
-                              }))
-                            }
-                          />
-                          <Label htmlFor="has-commercial">
-                            {t("projectEditor.hasCommercial")}
-                          </Label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="facade-open-desktop"
-                            checked={project.facade_open}
-                            onCheckedChange={(checked) =>
-                              setProject((prev) => ({
-                                ...prev,
-                                facade_open: checked,
-                              }))
-                            }
-                          />
-                          <Label htmlFor="facade-open-desktop">
-                            {t("projectEditor.facadeOpen")}
-                          </Label>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          {t("projectEditor.facadeOpenDesc")}
-                        </p>
-                      </div>
-                      <div>
-                        <Label htmlFor="latitude">
-                          {t("projectEditor.latitude")}
-                        </Label>
-                        <Input
-                          id="latitude"
-                          type="number"
-                          step="0.000001"
-                          value={project.latitude ?? ""}
-                          onPaste={handlePaste}
-                          onChange={(e) =>
-                            setProject((prev) => ({
-                              ...prev,
-                              latitude: e.target.value
-                                ? parseFloat(e.target.value)
-                                : null,
-                            }))
-                          }
-                          placeholder={t("projectEditor.latitudePlaceholder")}
-                        />
-                        <p className="mt-1 text-xs text-gray-500">
-                          {t("projectEditor.latitudeExample")}
-                        </p>
-                      </div>
-                      <div>
-                        <Label htmlFor="longitude">
-                          {t("projectEditor.longitude")}
-                        </Label>
-                        <Input
-                          id="longitude"
-                          type="number"
-                          step="0.000001"
-                          value={project.longitude ?? ""}
-                          onPaste={handlePaste}
-                          onChange={(e) =>
-                            setProject((prev) => ({
-                              ...prev,
-                              longitude: e.target.value
-                                ? parseFloat(e.target.value)
-                                : null,
-                            }))
-                          }
-                          placeholder={t("projectEditor.longitudePlaceholder")}
-                        />
-                        <p className="mt-1 text-xs text-gray-500">
-                          {t("projectEditor.longitudeExample")}
-                        </p>
-                      </div>
-                      <div>
-                        <Label htmlFor="currency">
-                          {t("projectEditor.currency")}
-                        </Label>
-                        <Select
-                          value={project.currency}
-                          onValueChange={(value: CurrencyType) =>
-                            setProject((prev) => ({ ...prev, currency: value }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={t("projectEditor.currency")}
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(CURRENCIES).map(([code, info]) => (
-                              <SelectItem key={code} value={code}>
-                                {t(info.translationKey)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {t("projectEditor.currencyDesc")}
-                        </p>
-                      </div>
-                      <div>
-                        <Label htmlFor="theme-color">
-                          {t("projectEditor.themeColor")}
-                        </Label>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-4">
-                            <Input
-                              id="theme-color"
-                              type="color"
-                              value={project.theme_color}
-                              onChange={(e) =>
-                                setProject((prev) => ({
-                                  ...prev,
-                                  theme_color: e.target.value,
-                                }))
-                              }
-                              className="h-10 w-20 cursor-pointer rounded border p-1"
-                            />
-                            <Input
-                              type="text"
-                              value={project.theme_color}
-                              onChange={(e) =>
-                                setProject((prev) => ({
-                                  ...prev,
-                                  theme_color: e.target.value,
-                                }))
-                              }
-                              placeholder="#000000"
-                              className="flex-1"
-                            />
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {[
-                              "#000000",
-                              "#3b82f6",
-                              "#ef4444",
-                              "#10b981",
-                              "#f59e0b",
-                              "#8b5cf6",
-                              "#ec4899",
-                              "#14b8a6",
-                            ].map((color) => (
-                              <button
-                                key={color}
-                                type="button"
-                                className="h-8 w-8 rounded-full border-2 border-gray-300 transition-colors hover:border-gray-400"
-                                style={{ backgroundColor: color }}
-                                onClick={() =>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-4">
+                              <Input
+                                id="theme-color"
+                                type="color"
+                                value={project.theme_color}
+                                onChange={(e) =>
                                   setProject((prev) => ({
                                     ...prev,
-                                    theme_color: color,
+                                    theme_color: e.target.value,
                                   }))
                                 }
-                                title={color}
+                                className="h-10 w-20 cursor-pointer rounded border p-1"
                               />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {t("projectEditor.themeColorDesc")}
-                        </p>
-                      </div>
-
-                      {/* PDF Presentation Upload */}
-                      <div className="space-y-4 border-t pt-4">
-                        <h4 className="flex items-center gap-2 text-sm font-medium">
-                          <FileText className="h-4 w-4" />
-                          {t("projectEditor.pdfPresentation")}
-                        </h4>
-
-                        {project.pdf_presentation_url ? (
-                          <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-red-600" />
-                              <span className="text-sm">
-                                {t("projectEditor.pdfUploaded")}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  window.open(
-                                    project.pdf_presentation_url!,
-                                    "_blank",
-                                  )
+                              <Input
+                                type="text"
+                                value={project.theme_color}
+                                onChange={(e) =>
+                                  setProject((prev) => ({
+                                    ...prev,
+                                    theme_color: e.target.value,
+                                  }))
                                 }
-                              >
-                                {t("projectEditor.view")}
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={handleRemovePdf}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+                                placeholder="#000000"
+                                className="flex-1"
+                              />
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                "#000000",
+                                "#3b82f6",
+                                "#ef4444",
+                                "#10b981",
+                                "#f59e0b",
+                                "#8b5cf6",
+                                "#ec4899",
+                                "#14b8a6",
+                              ].map((color) => (
+                                <button
+                                  key={color}
+                                  type="button"
+                                  className="h-8 w-8 rounded-full border-2 border-gray-300 transition-colors hover:border-gray-400"
+                                  style={{ backgroundColor: color }}
+                                  onClick={() =>
+                                    setProject((prev) => ({
+                                      ...prev,
+                                      theme_color: color,
+                                    }))
+                                  }
+                                  title={color}
+                                />
+                              ))}
                             </div>
                           </div>
-                        ) : (
-                          <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
-                            <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                            <p className="mb-4 text-sm text-muted-foreground">
-                              {t("projectEditor.pdfPresentationDesc")}
-                            </p>
-                            <input
-                              type="file"
-                              ref={inputRef}
-                              accept=".pdf"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                await handlePdfUpload(file);
-                                resetFileInput();
-                              }}
-                              className="hidden"
-                              id="pdf-upload-desktop"
-                              disabled={isNew || uploadingPdf}
-                            />
-                            <label htmlFor="pdf-upload-desktop">
-                              <Button
-                                variant="outline"
-                                disabled={isNew || uploadingPdf}
-                                asChild
-                              >
-                                <span>
-                                  <Upload className="mr-2 h-4 w-4" />
-                                  {uploadingPdf
-                                    ? t("projectEditor.uploading")
-                                    : t("projectEditor.uploadPdf")}
+                          <p className="mt-1 text-xs text-gray-500">
+                            {t("projectEditor.themeColorDesc")}
+                          </p>
+                        </div>
+
+                        {/* PDF Presentation Upload */}
+                        <div className="space-y-4 border-t pt-4">
+                          <h4 className="flex items-center gap-2 text-sm font-medium">
+                            <FileText className="h-4 w-4" />
+                            {t("projectEditor.pdfPresentation")}
+                          </h4>
+
+                          {project.pdf_presentation_url ? (
+                            <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-red-600" />
+                                <span className="text-sm">
+                                  {t("projectEditor.pdfUploaded")}
                                 </span>
-                              </Button>
-                            </label>
-                            {isNew && (
-                              <p className="mt-2 text-xs text-muted-foreground">
-                                {t("projectEditor.saveProjectFirstNote")}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(
+                                      project.pdf_presentation_url!,
+                                      "_blank",
+                                    )
+                                  }
+                                >
+                                  {t("projectEditor.view")}
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={handleRemovePdf}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+                              <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                              <p className="mb-4 text-sm text-muted-foreground">
+                                {t("projectEditor.pdfPresentationDesc")}
                               </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Настройки рассрочки */}
-                      <div className="space-y-4 border-t pt-4">
-                        <h4 className="text-sm font-medium">
-                          {t("projectEditor.installmentSettings")}
-                        </h4>
-
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="installment-enabled"
-                            checked={project.installment_enabled}
-                            onCheckedChange={(checked) =>
-                              setProject((prev) => ({
-                                ...prev,
-                                installment_enabled: checked,
-                              }))
-                            }
-                          />
-                          <Label htmlFor="installment-enabled">
-                            {t("projectEditor.enableInstallment")}
-                          </Label>
+                              <input
+                                type="file"
+                                ref={inputRef}
+                                accept=".pdf"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  await handlePdfUpload(file);
+                                  resetFileInput();
+                                }}
+                                className="hidden"
+                                id="pdf-upload-desktop"
+                                disabled={isNew || uploadingPdf}
+                              />
+                              <label htmlFor="pdf-upload-desktop">
+                                <Button
+                                  variant="outline"
+                                  disabled={isNew || uploadingPdf}
+                                  asChild
+                                >
+                                  <span>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    {uploadingPdf
+                                      ? t("projectEditor.uploading")
+                                      : t("projectEditor.uploadPdf")}
+                                  </span>
+                                </Button>
+                              </label>
+                              {isNew && (
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                  {t("projectEditor.saveProjectFirstNote")}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
 
-                        {project.installment_enabled && (
-                          <>
-                            <div>
-                              <Label htmlFor="min-down-payment">
-                                {t("projectEditor.minDownPaymentPercent")}
-                              </Label>
-                              <Input
-                                id="min-down-payment"
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={project.min_down_payment_percent}
-                                onChange={(e) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    min_down_payment_percent: Math.min(
-                                      100,
-                                      Math.max(
-                                        0,
-                                        parseInt(e.target.value) || 0,
-                                      ),
-                                    ),
-                                  }))
-                                }
-                                placeholder="20"
-                              />
-                              <p className="mt-1 text-xs text-gray-500">
-                                {t("projectEditor.minDownPaymentDesc")}
-                              </p>
-                            </div>
+                        {/* Настройки рассрочки */}
+                        <div className="space-y-4 border-t pt-4">
+                          <h4 className="text-sm font-medium">
+                            {t("projectEditor.installmentSettings")}
+                          </h4>
 
-                            <div>
-                              <Label htmlFor="max-installment-months">
-                                {t("projectEditor.maxInstallmentMonths")}
-                              </Label>
-                              <Input
-                                id="max-installment-months"
-                                type="number"
-                                min="1"
-                                max="120"
-                                value={project.max_installment_months}
-                                onChange={(e) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    max_installment_months: Math.min(
-                                      120,
-                                      Math.max(
-                                        1,
-                                        parseInt(e.target.value) || 1,
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="installment-enabled"
+                              checked={project.installment_enabled}
+                              onCheckedChange={(checked) =>
+                                setProject((prev) => ({
+                                  ...prev,
+                                  installment_enabled: checked,
+                                }))
+                              }
+                            />
+                            <Label htmlFor="installment-enabled">
+                              {t("projectEditor.enableInstallment")}
+                            </Label>
+                          </div>
+
+                          {project.installment_enabled && (
+                            <>
+                              <div>
+                                <Label htmlFor="min-down-payment">
+                                  {t("projectEditor.minDownPaymentPercent")}
+                                </Label>
+                                <Input
+                                  id="min-down-payment"
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={project.min_down_payment_percent}
+                                  onChange={(e) =>
+                                    setProject((prev) => ({
+                                      ...prev,
+                                      min_down_payment_percent: Math.min(
+                                        100,
+                                        Math.max(
+                                          0,
+                                          parseInt(e.target.value) || 0,
+                                        ),
                                       ),
-                                    ),
-                                  }))
-                                }
-                                placeholder="24"
-                              />
-                              <p className="mt-1 text-xs text-gray-500">
-                                {t("projectEditor.maxInstallmentMonthsDesc")}
-                              </p>
-                            </div>
-                          </>
+                                    }))
+                                  }
+                                  placeholder="20"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">
+                                  {t("projectEditor.minDownPaymentDesc")}
+                                </p>
+                              </div>
+
+                              <div>
+                                <Label htmlFor="max-installment-months">
+                                  {t("projectEditor.maxInstallmentMonths")}
+                                </Label>
+                                <Input
+                                  id="max-installment-months"
+                                  type="number"
+                                  min="1"
+                                  max="120"
+                                  value={project.max_installment_months}
+                                  onChange={(e) =>
+                                    setProject((prev) => ({
+                                      ...prev,
+                                      max_installment_months: Math.min(
+                                        120,
+                                        Math.max(
+                                          1,
+                                          parseInt(e.target.value) || 1,
+                                        ),
+                                      ),
+                                    }))
+                                  }
+                                  placeholder="24"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">
+                                  {t("projectEditor.maxInstallmentMonthsDesc")}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {isNew && (
+                          <Button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="w-full"
+                            style={{
+                              backgroundColor: ADMIN_THEME.primary,
+                              color: ADMIN_THEME.textOnPrimary,
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!saving) {
+                                e.currentTarget.style.backgroundColor =
+                                  ADMIN_THEME.primaryHover;
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!saving) {
+                                e.currentTarget.style.backgroundColor =
+                                  ADMIN_THEME.primary;
+                              }
+                            }}
+                          >
+                            <Save className="mr-2 h-4 w-4" />
+                            {saving
+                              ? t("projectEditor.saving")
+                              : t("projectEditor.save&continue")}
+                          </Button>
                         )}
-                      </div>
+                      </CardContent>
+                    </Card>
 
-                      {isNew && (
-                        <Button
-                          onClick={handleSave}
-                          disabled={saving}
-                          className="w-full"
-                          style={{
-                            backgroundColor: ADMIN_THEME.primary,
-                            color: ADMIN_THEME.textOnPrimary,
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!saving) {
-                              e.currentTarget.style.backgroundColor =
-                                ADMIN_THEME.primaryHover;
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!saving) {
-                              e.currentTarget.style.backgroundColor =
-                                ADMIN_THEME.primary;
-                            }
-                          }}
-                        >
-                          <Save className="mr-2 h-4 w-4" />
-                          {saving
-                            ? t("projectEditor.saving")
-                            : t("projectEditor.save&continue")}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
+                    {!isNew && <ProjectPriceManager projectId={project.id} />}
+                  </>
+                )}
 
-                  {!isNew && <ProjectPriceManager projectId={project.id} />}
-                </>
-              )}
+                {activeTab === "building" && (
+                  <BuildingImageEditor
+                    projectId={project.id}
+                    currentImageUrl={project.building_image_url}
+                    onImageUpdate={(imageUrl) =>
+                      setProject((prev) => ({
+                        ...prev,
+                        building_image_url: imageUrl,
+                      }))
+                    }
+                  />
+                )}
+              </div>
+            )}
 
-              {activeTab === "building" && (
-                <BuildingImageEditor
+            {activeTab === "floors" && project.project_type !== "object" && (
+              <ProjectFloorsManager projectId={project.id} />
+            )}
+
+            {activeTab === "apartments" && (
+              <div className="space-y-4">
+                <ProjectApartmentsManager
                   projectId={project.id}
-                  currentImageUrl={project.building_image_url}
-                  onImageUpdate={(imageUrl) =>
-                    setProject((prev) => ({
-                      ...prev,
-                      building_image_url: imageUrl,
-                    }))
-                  }
+                  projectType={project.project_type ?? "building"}
                 />
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {activeTab === "floors" && project.project_type !== "object" && (
-            <ProjectFloorsManager projectId={project.id} />
-          )}
+            {activeTab === "fields" && (
+              <AllFieldsManager projectId={project.id} />
+            )}
 
-          {activeTab === "apartments" && (
-            <div className="space-y-4">
-              <ProjectApartmentsManager
+            {activeTab === "photos" && (
+              <ApartmentPhotosManager projectId={project.id} />
+            )}
+
+            {activeTab === "domains" && (
+              <ProjectDomainSettings
                 projectId={project.id}
-                projectType={project.project_type ?? "building"}
+                projectName={project.name}
               />
-            </div>
-          )}
-
-          {activeTab === "fields" && (
-            <AllFieldsManager projectId={project.id} />
-          )}
-
-          {activeTab === "photos" && (
-            <ApartmentPhotosManager projectId={project.id} />
-          )}
-
-          {activeTab === "domains" && (
-            <ProjectDomainSettings
-              projectId={project.id}
-              projectName={project.name}
-            />
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
