@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@gridix/utils/react";
-import { LANGUAGE_CONFIG, type Language } from "@gridix/utils";
+import { LANGUAGE_CONFIG, SUPPORTED_LANGUAGES } from "@gridix/utils";
 import { ChevronDown } from "lucide-react";
-
-const AUTH_SUPPORTED_LANGUAGES: Language[] = ["en", "ru", "tr"];
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
@@ -21,7 +19,7 @@ export function LanguageSwitcher() {
   }, []);
 
   const current = LANGUAGE_CONFIG[language];
-  const options = AUTH_SUPPORTED_LANGUAGES.filter((code) => code !== language);
+  const options = SUPPORTED_LANGUAGES.filter((code) => code !== language);
 
   return (
     <div ref={ref} className="relative z-50">
