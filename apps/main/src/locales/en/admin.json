@@ -239,7 +239,46 @@
       "monthsShort": "month",
       "monthsShortPlural": "months",
       "savings": "savings",
-      "choosePlan": "Choose {{name}}"
+      "choosePlan": "Choose {{name}}",
+      "planContent": {
+        "basic": {
+          "description": "Basic plan for small projects with limited functionality",
+          "features": {
+            "1": "Project management",
+            "2": "Interactive catalog - up to 500 lots",
+            "3": "Interactive chessboard",
+            "4": "Branding with your color scheme and GRIDIX mention",
+            "5": "Demand analytics",
+            "6": "Dynamic pricing",
+            "7": "Built-in CRM module",
+            "8": "Chessboard widget for your website",
+            "9": "Installment / mortgage management",
+            "10": "PDF presentations",
+            "11": "Currency selection",
+            "12": "Language selection",
+            "13": "Custom fields",
+            "14": "Roles and permissions management"
+          }
+        },
+        "pro": {
+          "description": "Professional plan with CRM integrations and White Label support",
+          "features": {
+            "1": "Everything included in Basic +",
+            "2": "Interactive catalog - unlimited lots",
+            "3": "Integrations with AmoCRM / Bitrix24 and others",
+            "4": "Bulk updates",
+            "5": "White Label without GRIDIX mention",
+            "6": "Custom domain (e.g. sales.company.com)",
+            "7": "Extended CRM module",
+            "8": "Advanced analytics",
+            "9": "Agency network module / partner account",
+            "10": "Mortgage calculator (coming soon)",
+            "11": "Online booking (coming soon)",
+            "12": "Data export module to real estate portals (coming soon)",
+            "13": "Priority support"
+          }
+        }
+      }
     },
     "history": {
       "title": "Order history",

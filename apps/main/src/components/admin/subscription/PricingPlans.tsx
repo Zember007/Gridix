@@ -3,6 +3,7 @@ import { Crown, CheckCircle } from "lucide-react";
 import { Button } from "@gridix/ui";
 import { SubscriptionPlan } from "@/entities/subscription/queries/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getAdminPricingContentBySlug } from "@/entities/subscription/model/adminPricingContent";
 
 interface PricingPlansProps {
   plans: SubscriptionPlan[];
@@ -28,6 +29,7 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
           plan.pricing?.find((p) => p.durationMonths === selectedDuration) ||
           plan.pricing?.[0];
         const isPro = plan.slug === "pro";
+        const planContent = getAdminPricingContentBySlug(plan.slug);
 
         // Calculate savings properly - round to 2 decimal places
         const savings = pricing?.savings
@@ -65,7 +67,7 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
                       isPro ? "text-slate-400" : "text-muted-foreground"
                     }`}
                   >
-                    {plan.description}
+                    {t(planContent.descriptionKey)}
                   </p>
                 </div>
               </div>
@@ -129,9 +131,9 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
               )}
 
               <ul className="mb-6 flex-1 space-y-3">
-                {plan.features.map((feature) => (
+                {planContent.featureKeys.map((featureKey) => (
                   <li
-                    key={feature}
+                    key={featureKey}
                     className="flex items-start gap-3 text-left text-sm"
                   >
                     <div
@@ -146,7 +148,7 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
                     <span
                       className={isPro ? "text-slate-100" : "text-foreground"}
                     >
-                      {feature}
+                      {t(featureKey)}
                     </span>
                   </li>
                 ))}
