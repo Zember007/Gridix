@@ -245,20 +245,32 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
   const computedTitle = useMemo(() => {
     if (title != null) return title;
-    return (
-      <span className="font-light tracking-tighter text-foreground">
-        {mode === "signin" ? signInTitle : signUpTitle}
-      </span>
-    );
+    return <span>{mode === "signin" ? signInTitle : signUpTitle}</span>;
   }, [mode, signInTitle, signUpTitle, title]);
 
   const computedDescription = useMemo(() => {
     if (description != null) return description;
     return mode === "signin" ? signInDescription : signUpDescription;
   }, [description, mode, signInDescription, signUpDescription]);
+  const titleBlockClassName =
+    mode === "signin"
+      ? "animate-delay-100 animate-element relative flex w-[85%] flex-col gap-1.5 pt-5 mb-3 before:absolute before:left-[-36px] before:right-[0] before:top-0 before:h-[2px] before:bg-slate-200 after:absolute after:bottom-[-14px] after:right-0 after:top-0 after:w-[2px] after:bg-slate-200"
+      : "";
+  const titleClassName =
+    mode === "signin"
+      ? "text-[28px] font-bold tracking-tight text-slate-900"
+      : "text-4xl font-medium leading-tight md:text-5xl";
+  const titleAnimationClassName =
+    mode === "signin" ? "" : "animate-delay-100 animate-element";
+  const descriptionClassName =
+    mode === "signin"
+      ? "text-sm font-semibold text-slate-400"
+      : "text-muted-foreground";
+  const descriptionAnimationClassName =
+    mode === "signin" ? "" : "animate-delay-200 animate-element";
 
   const oauthBlock = (
-    <>
+    <div className="my-3 flex flex-col gap-3">
       <div className="animate-delay-700 relative flex animate-element items-center justify-center">
         <span className="w-full border-t border-border"></span>
         <span className="absolute bg-background px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -296,7 +308,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <span>{facebookButton}</span>
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -304,20 +316,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {/* Left column: auth form */}
       <section className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="flex flex-col gap-6">
-            <h1 className="animate-delay-100 animate-element text-4xl font-semibold leading-tight md:text-5xl">
-              {computedTitle}
-            </h1>
-            {computedDescription && (
-              <p className="animate-delay-200 animate-element text-muted-foreground">
-                {computedDescription}
-              </p>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className={titleBlockClassName}>
+              <h1 className={`${titleAnimationClassName} ${titleClassName}`}>
+                {computedTitle}
+              </h1>
+              {computedDescription && (
+                <p
+                  className={`${descriptionAnimationClassName} ${descriptionClassName}`}
+                >
+                  {computedDescription}
+                </p>
+              )}
+            </div>
 
             {banner}
 
             <form
-              className="space-y-5"
+              className="flex flex-col gap-3.5"
               onSubmit={async (e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
