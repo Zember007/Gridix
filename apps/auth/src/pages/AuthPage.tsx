@@ -161,7 +161,6 @@ export default function AuthPage() {
   const [loading] = useState(false);
 
   const isSignup = location.pathname.includes("/signup");
-  const isSignin = location.pathname.includes("/signin");
   const lang = window.location.pathname.split("/")[1] || "en";
 
   const refCode = searchParams.get("ref");
@@ -209,7 +208,7 @@ export default function AuthPage() {
     if (mode === "recovery" || hashIndicatesRecovery) setIsRecovery(true);
   }, [mode, hashIndicatesRecovery]);
 
-  // When magic link lands on /en/auth#access_token=... (or any path with hash tokens), consume and redirect
+  // When magic link lands on /en/auth/signin#access_token=... (or any path with hash tokens), consume and redirect
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!hasAuthTokensInHash()) return;
@@ -254,7 +253,7 @@ export default function AuthPage() {
     setResetLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/${lang}/auth?mode=recovery`,
+        redirectTo: `${window.location.origin}/${lang}/auth/signin?mode=recovery`,
       });
       if (error) throw error;
       toast.success(t("auth.resetEmailSent"));
@@ -277,7 +276,7 @@ export default function AuthPage() {
       <ResetPasswordForm
         onSuccess={() => {
           if (typeof window !== "undefined") window.location.hash = "";
-          navigate("/auth");
+          navigate("/auth/signin");
         }}
       />
     );
@@ -289,7 +288,10 @@ export default function AuthPage() {
         <LanguageSwitcher />
       </div>
       <SignInPage
-        defaultMode={isSignup ? "signup" : isSignin ? "signin" : "signin"}
+        defaultMode={isSignup ? "signup" : "signin"}
+        onModeChange={(nextMode) =>
+          navigate(`/auth/${nextMode}${location.search}`)
+        }
         heroImageSrc={SIGNIN_HERO_IMAGE}
         banner={
           <>

@@ -82,6 +82,7 @@ export interface SignInPageProps {
     mode: AuthMode;
     accountType: AccountType;
   }) => void;
+  onModeChange?: (mode: AuthMode) => void;
   defaultMode?: AuthMode;
   accountType?: AccountType;
   onAccountTypeChange?: (accountType: AccountType) => void;
@@ -161,6 +162,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   heroImageSrc,
   testimonials = [],
   onGoogleSignIn,
+  onModeChange,
   onResetPassword,
   onSubmit,
   defaultMode = "signin",
@@ -176,6 +178,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     useState<AccountType>("developer");
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    setMode(defaultMode);
+  }, [defaultMode]);
 
   useEffect(() => {
     if (videoReady && videoRef.current) {
@@ -523,7 +529,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  setMode(mode === "signin" ? "signup" : "signin");
+                  const nextMode = mode === "signin" ? "signup" : "signin";
+                  if (onModeChange) {
+                    onModeChange(nextMode);
+                    return;
+                  }
+                  setMode(nextMode);
                 }}
                 className="text-[var(--admin-primary)] transition-colors hover:underline"
               >
