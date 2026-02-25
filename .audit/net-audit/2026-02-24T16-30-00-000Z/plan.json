@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "timestamp": "2026-02-24T16:30:00.000Z",
+  "url": "http://localhost:8080/en/admin",
+  "app": "main",
+  "approveToken": "net-audit-2026-02-24-a7f3c9e1",
+  "findings": [
+    {
+      "id": "F1",
+      "title": "Heavy leads fetch on every admin tab for badge count",
+      "severity": "high",
+      "pattern": "double_source",
+      "autoSafe": false,
+      "files": ["apps/main/src/components/admin/AdminDashboard.tsx"]
+    },
+    {
+      "id": "F2",
+      "title": "useAllFailedLeadsStats overlaps with useLeads data",
+      "severity": "medium",
+      "pattern": "duplicate_request",
+      "autoSafe": false,
+      "files": ["apps/main/src/hooks/useAllFailedLeadsStats.ts"]
+    },
+    {
+      "id": "F3",
+      "title": "getManagerProjectIds called as bare function in multiple queryFn",
+      "severity": "medium",
+      "pattern": "duplicate_request",
+      "autoSafe": false,
+      "files": [
+        "apps/main/src/entities/lead/queries/useLeadsQuery.ts",
+        "apps/main/src/entities/workspace/queries/useWorkspaceProjects.ts",
+        "apps/main/src/hooks/useAllFailedLeadsStats.ts"
+      ]
+    },
+    {
+      "id": "F4",
+      "title": "Funnel stages/triggers loaded via bare useEffect, no cache",
+      "severity": "medium",
+      "pattern": "missing_cache",
+      "autoSafe": true,
+      "files": ["apps/main/src/hooks/useAdminLeadsData.ts"],
+      "edits": [
+        {
+          "file": "apps/main/src/hooks/useAdminLeadsData.ts",
+          "description": "Convert funnel stages/triggers useEffect to useQuery with cache",
+          "action": "replace_useEffect_with_useQuery",
+          "lineRange": "347-382"
+        },
+        {
+          "file": "apps/main/src/hooks/useAdminLeadsData.ts",
+          "description": "Replace handleSaveFunnelSetup body with invalidateQueries",
+          "action": "replace_manual_fetch_with_invalidate",
+          "lineRange": "1654-1686"
+        },
+        {
+          "file": "apps/main/src/hooks/useAdminLeadsData.ts",
+          "description": "Replace handleResetFunnelSetup body with invalidateQueries",
+          "action": "replace_manual_fetch_with_invalidate",
+          "lineRange": "1688-1720"
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "title": "Lead details loaded via bare useEffect, no cache",
+      "severity": "low-medium",
+      "pattern": "missing_cache",
+      "autoSafe": true,
+      "files": ["apps/main/src/hooks/useAdminLeadsData.ts"],
+      "edits": [
+        {
+          "file": "apps/main/src/hooks/useAdminLeadsData.ts",
+          "description": "Convert lead details useEffect to useQuery",
+          "action": "replace_useEffect_with_useQuery",
+          "lineRange": "384-449"
+        }
+      ]
+    },
+    {
+      "id": "F6",
+      "title": "Sequential requests in fetchLeads could be combined",
+      "severity": "low",
+      "pattern": "sequential_requests",
+      "autoSafe": false,
+      "files": ["apps/main/src/entities/lead/api/leadApi.ts"]
+    },
+    {
+      "id": "F7",
+      "title": "Redundant refetchOnWindowFocus: false overrides",
+      "severity": "low",
+      "pattern": "redundant_config",
+      "autoSafe": true,
+      "files": [
+        "apps/main/src/components/admin/analytics/AdminAnalytics.tsx",
+        "apps/main/src/entities/workspace/queries/useWorkspaceProjects.ts",
+        "apps/main/src/hooks/useManagerProjectIds.ts",
+        "apps/main/src/hooks/useAllFailedLeadsStats.ts"
+      ],
+      "edits": [
+        {
+          "file": "apps/main/src/components/admin/analytics/AdminAnalytics.tsx",
+          "description": "Remove redundant refetchOnWindowFocus: false",
+          "action": "remove_line",
+          "lineRange": "130"
+        },
+        {
+          "file": "apps/main/src/entities/workspace/queries/useWorkspaceProjects.ts",
+          "description": "Remove redundant refetchOnWindowFocus: false",
+          "action": "remove_line",
+          "lineRange": "44"
+        },
+        {
+          "file": "apps/main/src/hooks/useManagerProjectIds.ts",
+          "description": "Remove redundant refetchOnWindowFocus: false",
+          "action": "remove_line",
+          "lineRange": "86"
+        },
+        {
+          "file": "apps/main/src/hooks/useAllFailedLeadsStats.ts",
+          "description": "Remove redundant refetchOnWindowFocus: false",
+          "action": "remove_line",
+          "lineRange": "32"
+        }
+      ]
+    }
+  ]
+}

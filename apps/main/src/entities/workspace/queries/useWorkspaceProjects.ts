@@ -41,7 +41,9 @@ export const useWorkspaceProjects = () => {
     enabled: !!user && userRole.type !== "loading",
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: "always",
+    refetchOnMount: "always",
+    refetchOnReconnect: true,
     queryFn: async (): Promise<Project[]> => {
       if (!user) return [];
 
