@@ -254,7 +254,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   }, [description, mode, signInDescription, signUpDescription]);
   const titleBlockClassName =
     mode === "signin"
-      ? "animate-delay-100 animate-element relative flex w-[85%] flex-col gap-1.5 pt-5 mb-3 before:absolute before:left-[-36px] before:right-[0] before:top-0 before:h-[2px] before:bg-slate-200 after:absolute after:bottom-[-14px] after:right-0 after:top-0 after:w-[2px] after:bg-slate-200"
+      ? "animate-delay-100 animate-element relative flex w-[90%] flex-col gap-1.5 pt-5 pr-3 mb-3 before:absolute before:left-[-36px] before:right-[0] before:top-0 before:h-[2px] before:bg-slate-200 after:absolute after:bottom-[-14px] after:right-0 after:top-0 after:w-[2px] after:bg-slate-200"
       : "";
   const titleClassName =
     mode === "signin"
@@ -291,7 +291,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             }
             // TODO: Wire up Google OAuth flow.
           }}
-          className="flex items-center justify-center gap-3 rounded-2xl border border-border py-3 font-medium transition-colors hover:bg-secondary"
+          className="flex items-center justify-center gap-3 rounded-2xl border border-border py-2 font-medium transition-colors hover:bg-secondary"
         >
           <GoogleIcon />
           <span>{googleButton}</span>
@@ -302,7 +302,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           onClick={() => {
             // TODO: Wire up Facebook OAuth flow.
           }}
-          className="flex items-center justify-center gap-3 rounded-2xl bg-[#1877F2] py-3 font-medium text-white transition-colors hover:bg-[#166FE5]"
+          className="flex items-center justify-center gap-3 rounded-2xl bg-[#1877F2] py-2 font-medium text-white transition-colors hover:bg-[#166FE5]"
         >
           <FacebookIcon />
           <span>{facebookButton}</span>
@@ -312,9 +312,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   );
 
   return (
-    <div className="flex h-[100dvh] w-[100dvw] flex-col font-sans md:flex-row">
+    <div className="flex min-h-[100dvh] w-full flex-col overflow-x-clip font-sans md:flex-row">
       {/* Left column: auth form */}
-      <section className="flex flex-1 items-center justify-center p-8">
+      <section className="flex flex-1 items-start justify-center p-4 pt-[68px]">
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-2">
             <div className={titleBlockClassName}>
@@ -334,7 +334,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
             <form
               key={`auth-form-${mode}`}
-              className="flex flex-col gap-3.5"
+              className="flex flex-col gap-3"
               onSubmit={async (e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
@@ -445,7 +445,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="fullName"
                       type="text"
                       placeholder={fullNamePlaceholder}
-                      className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
                       autoComplete="name"
                       required
                     />
@@ -463,7 +463,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="companyName"
                       type="text"
                       placeholder={companyNamePlaceholder}
-                      className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
                       autoComplete="organization"
                     />
                   </GlassInputWrapper>
@@ -480,7 +480,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="phone"
                       type="tel"
                       placeholder={phonePlaceholder}
-                      className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
                       autoComplete="tel"
                     />
                   </GlassInputWrapper>
@@ -496,7 +496,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     name="email"
                     type="email"
                     placeholder={emailPlaceholder}
-                    className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
+                    className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
                     autoComplete="email"
                     required
                   />
@@ -513,7 +513,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder={passwordPlaceholder}
-                      className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent px-4 py-3 pr-12 text-sm focus:outline-none"
                       autoComplete={
                         mode === "signup" ? "new-password" : "current-password"
                       }

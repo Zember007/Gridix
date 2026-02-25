@@ -286,7 +286,7 @@ export default function AuthPage() {
 
   return (
     <>
-      <div className="fixed right-6 top-6 z-50 md:left-6 md:right-auto">
+      <div className="absolute right-6 top-6 z-50 md:left-6 md:right-auto">
         <LanguageSwitcher />
       </div>
       <SignInPage
