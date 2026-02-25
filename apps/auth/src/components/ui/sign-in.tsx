@@ -30,6 +30,17 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const FacebookIcon = () => (
+  <svg
+    fill="#fff"
+    className="h-5 w-5"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M13.397 20.997v-8.196h2.765l.411-3.209h-3.176V7.548c0-.926.258-1.56 1.587-1.56h1.684V3.127A22.336 22.336 0 0 0 14.201 3c-2.444 0-4.122 1.492-4.122 4.231v2.355H7.332v3.209h2.753v8.202h3.312z" />
+  </svg>
+);
+
 // --- TYPE DEFINITIONS ---
 
 export interface Testimonial {
@@ -116,7 +127,9 @@ export interface SignInPageProps {
     signInButton?: string;
     signUpButton?: string;
     orContinueWith?: string;
-    continueWithGoogle?: string;
+    orViaSocials?: string;
+    googleButton?: string;
+    facebookButton?: string;
     createAccountPrompt?: string;
     createAccountLink?: string;
     alreadyHaveAccountPrompt?: string;
@@ -215,7 +228,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     signInButton = "Sign In",
     signUpButton = "Create account",
     orContinueWith = "Or continue with",
-    continueWithGoogle = "Continue with Google",
+    orViaSocials = "ИЛИ ЧЕРЕЗ СОЦСЕТИ",
+    googleButton = "Google",
+    facebookButton = "Facebook",
     createAccountPrompt = "New to our platform?",
     createAccountLink = "Create Account",
     alreadyHaveAccountPrompt = "Already have an account?",
@@ -241,6 +256,48 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     if (description != null) return description;
     return mode === "signin" ? signInDescription : signUpDescription;
   }, [description, mode, signInDescription, signUpDescription]);
+
+  const oauthBlock = (
+    <>
+      <div className="animate-delay-700 relative flex animate-element items-center justify-center">
+        <span className="w-full border-t border-border"></span>
+        <span className="absolute bg-background px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {orViaSocials || orContinueWith}
+        </span>
+      </div>
+
+      <div className="animate-delay-800 grid animate-element grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (onGoogleSignIn) {
+              void onGoogleSignIn({
+                mode,
+                accountType: resolvedAccountType,
+              });
+              return;
+            }
+            // TODO: Wire up Google OAuth flow.
+          }}
+          className="flex items-center justify-center gap-3 rounded-2xl border border-border py-3 font-medium transition-colors hover:bg-secondary"
+        >
+          <GoogleIcon />
+          <span>{googleButton}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            // TODO: Wire up Facebook OAuth flow.
+          }}
+          className="flex items-center justify-center gap-3 rounded-2xl bg-[#1877F2] py-3 font-medium text-white transition-colors hover:bg-[#166FE5]"
+        >
+          <FacebookIcon />
+          <span>{facebookButton}</span>
+        </button>
+      </div>
+    </>
+  );
 
   return (
     <div className="flex h-[100dvh] w-[100dvw] flex-col font-sans md:flex-row">
@@ -464,6 +521,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </GlassInputWrapper>
               </div>
 
+              {mode === "signup" && oauthBlock}
+
               {mode === "signup" ? (
                 <div className="animate-delay-500 flex animate-element flex-col gap-3 text-sm">
                   <label className="flex cursor-pointer items-start gap-3">
@@ -520,27 +579,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </button>
             </form>
 
-            {onGoogleSignIn && (
-              <>
-                <div className="animate-delay-700 relative flex animate-element items-center justify-center">
-                  <span className="w-full border-t border-border"></span>
-                  <span className="absolute bg-background px-4 text-sm text-muted-foreground">
-                    {orContinueWith}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    onGoogleSignIn?.({ mode, accountType: resolvedAccountType })
-                  }
-                  className="animate-delay-800 flex w-full animate-element items-center justify-center gap-3 rounded-2xl border border-border py-4 transition-colors hover:bg-secondary"
-                >
-                  <GoogleIcon />
-                  {continueWithGoogle}
-                </button>
-              </>
-            )}
+            {mode === "signin" && oauthBlock}
 
             <p className="animate-delay-900 animate-element text-center text-sm text-muted-foreground">
               {mode === "signin"

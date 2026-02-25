@@ -365,7 +365,7 @@ export default function AuthPage() {
           signInButton: t("auth.signInButton"),
           signUpButton: t("auth.signUpButton"),
           orContinueWith: t("auth.orContinueWith"),
-          continueWithGoogle: t("auth.continueWithGoogle"),
+          orViaSocials: t("auth.orViaSocials"),
           createAccountPrompt: t("auth.createAccountPrompt"),
           createAccountLink: t("auth.createAccountLink"),
           alreadyHaveAccountPrompt: t("auth.alreadyHaveAccountPrompt"),
@@ -430,6 +430,8 @@ export default function AuthPage() {
             setAuthLoading(false);
           }
         }}
+        /* TODO(auth-oauth): Re-enable this handler when Google OAuth flow is wired from SignInPage.
+           Keep this block in sync with CallbackPage pending keys/redirect behavior. */
         /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
           try {
             localStorage.setItem(LS_PENDING_ACCOUNT_TYPE, selectedAccountType);
