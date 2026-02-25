@@ -54,7 +54,7 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
             {props.companySettings.logo_url ? (
               <img
                 src={props.companySettings.logo_url}
-                alt="Company logo"
+                alt={props.t("adminSettings.companyLogo")}
                 className="h-full w-full object-cover"
               />
             ) : (

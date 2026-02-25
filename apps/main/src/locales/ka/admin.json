@@ -59,7 +59,7 @@
     "tableContact": "კონტაქტი",
     "tableType": "ტიპი",
     "tablePhone": "ტელეფონი",
-    "tableEmail": "Email",
+    "tableEmail": "ელფოსტა",
     "tableDetails": "დეტალები",
     "tableDate": "თარიღი",
     "loading": "იტვირთება...",
@@ -89,6 +89,7 @@
         "description": "ატვირთეთ ბინების მონაცემებით Excel ფაილი პროექტის ავტომატურად შესაქმნელად",
         "processing": "დამუშავება...",
         "template": "შაბლონის ჩამოტვირთვა",
+        "demo": "დემოს ჩამოტვირთვა",
         "title": "იმპორტი Excel-დან",
         "uploadButton": "ატვირთეთ Excel ფაილი",
         "uploadTab": "ფაილის ატვირთვა",
@@ -157,7 +158,8 @@
     "notConnected": "არ არის დაკავშირებული",
     "connectInAdmin": "დაკავშირება ადმინისტრაციულ პანელში",
     "connectInAdminDescription": "ჯერ უნდა დააკავშიროთ AmoCRM ადმინისტრაციულ პანელში.",
-    "goToAdmin": "გადადით ადმინისტრაციულ პანელზე"
+    "goToAdmin": "გადადით ადმინისტრაციულ პანელზე",
+    "confirm": "დაადასტურეთ"
   },
   "bitrix24": {
     "description": "CRM, ამოცანები და პროექტის მენეჯმენტი ერთ ადგილას.",
@@ -185,6 +187,7 @@
     "notConnected": "არ არის დაკავშირებული",
     "connectInAdmin": "დაკავშირება ადმინისტრაციულ პანელში",
     "connectInAdminDescription": "ჯერ უნდა დააკავშიროთ Bitrix24 ადმინისტრაციულ პანელში.",
+    "marketplaceHint": "დასაკავშირებლად დააინსტალირეთ Gridix აპი Bitrix24 Marketplace-დან თქვენს პორტალზე.",
     "attached": "დაკავშირებულია",
     "attachError": "ვერ მოხერხდა დაკავშირება",
     "detached": "გამოირთო",
@@ -262,6 +265,12 @@
         "pending": "მიმდინარეობს",
         "cancelled": "გაუქმდა"
       },
+      "methodLabels": {
+        "invoice": "ინვოისი",
+        "card": "საბანკო ბარათი",
+        "manual": "სახელმძღვანელო",
+        "unknown": "უცნობი"
+      },
       "unknownProject": "არ არის მითითებული",
       "projectsCount": "{{count}} პროექტი",
       "downloadInvoice": "ინვოისის ჩამოტვირთვა",
@@ -329,6 +338,344 @@
     "toasts": {
       "invoiceRequestedSingle": "ინვოისი მოითხოვა წარმატებით. შეგიძლიათ გადმოწეროთ შეკვეთის ისტორიაში.",
       "invoiceRequestedMultiple": "ინვოისები მოთხოვნილია {{count}} პროექტისთვის"
+    },
+    "error": "შეცდომა გამოწერების ჩატვირთვისას"
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "სუპერ ადმინი",
+      "users": "მომხმარებლები",
+      "subscriptions": "გამოწერები",
+      "projects": "პროექტები",
+      "stats": "ანალიტიკა",
+      "partners": "პარტნიორები",
+      "partnerPayouts": "გადახდები",
+      "settings": "პარამეტრები"
+    },
+    "projectsManagement": {
+      "title": "პროექტების მენეჯმენტი",
+      "loading": "იტვირთება...",
+      "emptyValue": "-",
+      "confirmDelete": "დარწმუნებული ხართ, რომ გსურთ ამ პროექტის წაშლა?",
+      "toast": {
+        "errorTitle": "შეცდომა",
+        "successTitle": "წარმატებები",
+        "loadProjectsError": "პროექტების ჩატვირთვა ვერ მოხერხდა",
+        "projectPublished": "პროექტი გამოქვეყნდა",
+        "projectHidden": "პროექტი დამალულია",
+        "updateVisibilityError": "პროექტის ხილვადობის შეცვლა ვერ მოხერხდა",
+        "projectAddedToFeatured": "პროექტი დაემატა გამორჩეულს",
+        "projectRemovedFromFeatured": "პროექტი ამოღებულია გამორჩეულიდან",
+        "updateStatusError": "პროექტის სტატუსის შეცვლა ვერ მოხერხდა",
+        "projectDeleted": "პროექტი წაიშალა",
+        "deleteProjectError": "პროექტის წაშლა ვერ მოხერხდა"
+      },
+      "table": {
+        "name": "სახელი",
+        "owner": "მფლობელი",
+        "views": "ნახვები",
+        "status": "სტატუსი",
+        "createdAt": "შექმნილია ზე",
+        "actions": "მოქმედებები"
+      },
+      "badges": {
+        "public": "საჯარო",
+        "featured": "გამორჩეული"
+      },
+      "actions": {
+        "hide": "დამალვა",
+        "publishShort": "პაბი.",
+        "feature": "ფუნქ."
+      }
+    },
+    "partnersManagement": {
+      "title": "პარტნიორების მენეჯმენტი",
+      "description": "პარტნიორის პროგრამისა და პარტნიორის სტატუსების მართვა",
+      "toast": {
+        "errorTitle": "შეცდომა",
+        "successTitle": "წარმატებები",
+        "loadPartnersError": "პარტნიორების სიის ჩატვირთვა ვერ მოხერხდა",
+        "partnerSuspended": "პარტნიორი შეჩერებულია",
+        "partnerActivated": "პარტნიორი გააქტიურებულია",
+        "updatePartnerStatusError": "პარტნიორის სტატუსის განახლება ვერ მოხერხდა"
+      },
+      "stats": {
+        "totalPartners": "სულ პარტნიორები",
+        "activeCount": "{{count}} აქტიურია",
+        "totalEarnings": "მთლიანი შემოსავალი",
+        "earnedByPartners": "მიღებული პარტნიორების მიერ",
+        "paidOut": "გადახდილი",
+        "withdrawnByPartners": "გამოყვანილია პარტნიორების მიერ",
+        "suspended": "შეჩერებულია",
+        "inactivePartners": "არააქტიური პარტნიორები"
+      },
+      "filters": {
+        "title": "ფილტრები",
+        "search": "ძიება",
+        "searchPlaceholder": "მოძებნეთ სახელის, ელფოსტის ან კოდის მიხედვით...",
+        "status": "სტატუსი",
+        "allStatuses": "ყველა სტატუსი"
+      },
+      "table": {
+        "title": "პარტნიორები",
+        "count": "{{გაფილტრული}} / {{სულ}} პარტნიორიდან",
+        "partner": "პარტნიორი",
+        "code": "კოდი",
+        "status": "სტატუსი",
+        "earned": "გამომუშავებული",
+        "withdrawn": "გამოყვანილია",
+        "registeredAt": "რეგისტრაციის თარიღი",
+        "actions": "მოქმედებები"
+      },
+      "status": {
+        "active": "აქტიური",
+        "suspended": "შეჩერებულია",
+        "inactive": "არააქტიური"
+      },
+      "actions": {
+        "suspend": "შეაჩერე",
+        "activate": "გააქტიურება"
+      },
+      "dialog": {
+        "suspendTitle": "შეაჩერე პარტნიორი",
+        "activateTitle": "პარტნიორის გააქტიურება",
+        "suspendDescription": "დარწმუნებული ხართ, რომ გსურთ ამ პარტნიორის შეჩერება? ისინი არ მიიღებენ ახალ საკომისიოს.",
+        "activateDescription": "დარწმუნებული ხართ, რომ გსურთ ამ პარტნიორის გააქტიურება? ისინი კვლავ მიიღებენ საკომისიოს.",
+        "codeLabel": "კოდი",
+        "processing": "დამუშავება..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "გადახდების მენეჯმენტი",
+      "description": "პარტნიორის გადახდის მოთხოვნების განხილვა და დამუშავება",
+      "toast": {
+        "loadPayoutsError": "გადახდების სიის ჩატვირთვა ვერ მოხერხდა",
+        "payoutApproved": "გადახდა დამტკიცებულია",
+        "payoutRejected": "გადახდა უარყოფილია",
+        "payoutMarkedAsPaid": "გადახდა მონიშნულია, როგორც გადახდილი",
+        "updatePayoutStatusError": "გადახდის სტატუსის განახლება ვერ მოხერხდა"
+      },
+      "status": {
+        "pending": "ელოდება განხილვას",
+        "approved": "დამტკიცებულია",
+        "paid": "გადახდილი",
+        "rejected": "უარყოფილია",
+        "unknown": "უცნობი"
+      },
+      "stats": {
+        "pendingReview": "ელოდება განხილვას",
+        "pendingAmount": "${{amount}} გადასახდელად",
+        "waitingPayment": "ელოდება გადახდას",
+        "completedPayouts": "დასრულებული გადახდები",
+        "rejectedRequests": "უარყოფილი მოთხოვნები"
+      },
+      "filters": {
+        "title": "ფილტრები",
+        "search": "ძიება",
+        "searchPlaceholder": "პარტნიორის მიხედვით ძიება...",
+        "status": "სტატუსი",
+        "allStatuses": "ყველა სტატუსი"
+      },
+      "table": {
+        "title": "გადახდის მოთხოვნები",
+        "count": "{{გაფილტრული}} {{სულ}} მოთხოვნიდან",
+        "partner": "პარტნიორი",
+        "amount": "თანხა",
+        "status": "სტატუსი",
+        "paymentMethod": "გადახდის მეთოდი",
+        "contactInfo": "საკონტაქტო ინფორმაცია",
+        "requestedAt": "მოთხოვნის თარიღი",
+        "actions": "მოქმედებები"
+      },
+      "emptyPaymentMethod": "არ არის მითითებული",
+      "emptyContactInfo": "არ არის მითითებული",
+      "actions": {
+        "approve": "დამტკიცება",
+        "reject": "უარყოფა",
+        "markPaid": "მონიშნეთ, როგორც გადახდილი"
+      },
+      "dialog": {
+        "approveTitle": "გადახდის დამტკიცება",
+        "rejectTitle": "უარი თქვას გადახდაზე",
+        "markPaidTitle": "მონიშნეთ, როგორც გადახდილი",
+        "approveDescription": "დარწმუნებული ხართ, რომ გსურთ დაამტკიცოთ ეს გადახდა?",
+        "rejectDescription": "დარწმუნებული ხართ, რომ გსურთ ამ გადახდაზე უარის თქმა?",
+        "markPaidDescription": "დარწმუნებული ხართ, რომ ეს გადახდა დასრულდა?",
+        "codeLabel": "კოდი",
+        "amountLabel": "თანხა",
+        "methodLabel": "მეთოდი",
+        "contactInfoLabel": "საკონტაქტო ინფორმაცია:",
+        "noteLabel": "შენიშვნა (სურვილისამებრ)",
+        "notePlaceholder": "დაამატეთ შენიშვნა ამ მოქმედებისთვის...",
+        "processing": "დამუშავება..."
+      }
+    },
+    "usersManagement": {
+      "title": "მომხმარებელთა მენეჯმენტი",
+      "loading": "იტვირთება...",
+      "creating": "იქმნება...",
+      "searchPlaceholder": "მოძებნეთ ელექტრონული ფოსტით, სახელით ან კომპანიის საშუალებით...",
+      "toast": {
+        "errorTitle": "შეცდომა",
+        "successTitle": "წარმატებები",
+        "loadUsersError": "მომხმარებლების ჩატვირთვა ვერ მოხერხდა",
+        "userBanned": "მომხმარებელი აკრძალულია",
+        "banUserError": "მომხმარებლის აკრძალვა ვერ მოხერხდა",
+        "userUnbanned": "მომხმარებელი აკრძალულია",
+        "unbanUserError": "მომხმარებლის აკრძალვის გაუქმება ვერ მოხერხდა",
+        "emailPasswordRequired": "საჭიროა ელ. ფოსტა და პაროლი",
+        "userCreated": "მომხმარებელი შეიქმნა",
+        "createUserError": "მომხმარებლის შექმნა ვერ მოხერხდა",
+        "impersonateUserError": "ამ მომხმარებლის სახელით შესვლა ვერ მოხერხდა"
+      },
+      "actions": {
+        "addUser": "მომხმარებლის დამატება",
+        "createUser": "მომხმარებლის შექმნა",
+        "ban": "აკრძალვა",
+        "unban": "გაუქმება",
+        "loginAs": "შესვლა"
+      },
+      "dialogs": {
+        "createTitle": "ახალი მომხმარებლის დამატება",
+        "banTitle": "მომხმარებლის აკრძალვა",
+        "banTarget": "თქვენ აპირებთ აკრძალვას:"
+      },
+      "fields": {
+        "password": "პაროლი",
+        "fullName": "სრული სახელი",
+        "company": "კომპანია",
+        "phone": "ტელეფონი",
+        "banReason": "აკრძალვის მიზეზი"
+      },
+      "placeholders": {
+        "fullName": "ჯონ სმიტი",
+        "company": "შპს ACME",
+        "banReason": "დააკონკრეტე მიზეზი..."
+      },
+      "table": {
+        "name": "სახელი",
+        "company": "კომპანია",
+        "status": "სტატუსი",
+        "registeredAt": "რეგისტრაციის თარიღი",
+        "actions": "მოქმედებები"
+      },
+      "status": {
+        "active": "აქტიური",
+        "banned": "აკრძალული"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "გამოწერების მენეჯმენტი",
+      "loading": "იტვირთება...",
+      "pendingCount": "{{count}} ინვოისის მოთხოვნა(ები) ელოდება დამუშავებას",
+      "planOption": "{{name}} - ${{ფასი}}/თვეში",
+      "toast": {
+        "errorTitle": "შეცდომა",
+        "successTitle": "წარმატებები",
+        "loadSubscriptionsError": "გამოწერების ჩატვირთვა ვერ მოხერხდა",
+        "fillRequiredFields": "შეავსეთ ყველა საჭირო ველი",
+        "subscriptionCreated": "გამოწერა შეიქმნა",
+        "createSubscriptionError": "გამოწერის შექმნა ვერ მოხერხდა",
+        "invoiceGenerated": "PDF ინვოისი გენერირებული და გაგზავნილი",
+        "generateInvoiceError": "ინვოისის გენერირება ვერ მოხერხდა",
+        "paymentConfirmed": "გადახდა დადასტურებულია, გამოწერა გააქტიურებულია",
+        "activateSubscriptionError": "გამოწერის გააქტიურება ვერ მოხერხდა",
+        "subscriptionCancelled": "გამოწერა გაუქმდა",
+        "cancelSubscriptionError": "გამოწერის გაუქმება ვერ მოხერხდა",
+        "subscriptionUpdated": "გამოწერა განახლდა",
+        "updateSubscriptionError": "გამოწერის განახლება ვერ მოხერხდა"
+      },
+      "actions": {
+        "create": "შექმენით გამოწერა",
+        "saveChanges": "ცვლილებების შენახვა",
+        "editTitle": "გამოწერის რედაქტირება",
+        "edit": "რედაქტირება",
+        "cancel": "გაუქმება"
+      },
+      "dialogs": {
+        "createTitle": "შექმენით ახალი გამოწერა",
+        "editTitle": "გამოწერის რედაქტირება",
+        "labels": {
+          "user": "მომხმარებელი",
+          "project": "პროექტი",
+          "currentPlan": "მიმდინარე გეგმა",
+          "currentStatus": "ამჟამინდელი მდგომარეობა",
+          "endsAt": "მთავრდება"
+        }
+      },
+      "fields": {
+        "userEmail": "მომხმარებლის ელ.ფოსტა",
+        "project": "პროექტი",
+        "plan": "გეგმავენ",
+        "durationMonths": "ხანგრძლივობა (თვეები)",
+        "invoiceNumber": "ინვოისის ნომერი",
+        "invoiceUrl": "ინვოისის URL",
+        "tariffPlan": "ტარიფი (გეგმა)",
+        "status": "სტატუსი",
+        "infiniteSubscription": "უსასრულო გამოწერა (2099 წლამდე)",
+        "customEndDate": "ან ხელით დააყენეთ დასრულების თარიღი"
+      },
+      "placeholders": {
+        "selectProject": "აირჩიეთ პროექტი",
+        "selectPlan": "აირჩიეთ გეგმა"
+      },
+      "hints": {
+        "endDateAuto": "დასრულების თარიღი ავტომატურად გამოითვლება მიმდინარე დაწყების თარიღიდან",
+        "customDateOverrides": "თუ მითითებულია თარიღი, ის გამოყენებული იქნება ხანგრძლივობის გაანგარიშების ნაცვლად",
+        "applyWarning": "ცვლილებები მოქმედებს დაუყოვნებლივ. ფრთხილად იყავით სტატუსისა და დასრულების თარიღის შეცვლისას."
+      },
+      "status": {
+        "active": "აქტიური",
+        "trial": "სასამართლო პროცესი",
+        "trialing": "საცდელი",
+        "pendingPayment": "მომლოდინე გადახდა",
+        "expired": "ვადა გაუვიდა",
+        "cancelled": "გაუქმდა",
+        "trialExpired": "სასამართლო პროცესი ამოიწურა"
+      },
+      "pendingRequests": {
+        "title": "ინვოისის მოთხოვნები",
+        "table": {
+          "user": "მომხმარებელი",
+          "project": "პროექტი",
+          "plan": "გეგმავენ",
+          "amount": "თანხა",
+          "requestedAt": "მოთხოვნილი",
+          "actions": "მოქმედებები"
+        },
+        "actions": {
+          "generatePdf": "PDF-ის გენერირება",
+          "view": "ხედი",
+          "viewPdf": "PDF ნახვა",
+          "download": "ჩამოტვირთვა",
+          "confirmPayment": "დაადასტურეთ გადახდა",
+          "confirmAndActivate": "დაადასტურეთ გადახდა და გააქტიურეთ"
+        },
+        "dialog": {
+          "title": "დაადასტურეთ გადახდა",
+          "invoiceLabel": "ინვოისი",
+          "warning": "დარწმუნდით, რომ გადახდა მიღებულია ხელმოწერის აქტივაციის დადასტურებამდე.",
+          "labels": {
+            "project": "პროექტი",
+            "user": "მომხმარებელი",
+            "plan": "გეგმავენ",
+            "amount": "თანხა",
+            "invoiceNumber": "ინვოისის ნომერი"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "ყველა გამოწერა",
+        "table": {
+          "user": "მომხმარებელი",
+          "project": "პროექტი",
+          "plan": "გეგმავენ",
+          "status": "სტატუსი",
+          "endDate": "დასრულების თარიღი",
+          "invoice": "ინვოისი",
+          "actions": "მოქმედებები"
+        }
+      }
     }
   }
 }

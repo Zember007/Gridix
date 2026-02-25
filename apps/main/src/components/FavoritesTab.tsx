@@ -118,7 +118,7 @@ const FavoritesTab = ({
 
   const handleShareFavorites = async () => {
     const url = buildShareUrl();
-    const title = t("favorites.title") || "Подборка";
+    const title = t("favorites.title");
     try {
       if (navigator.share) {
         await navigator.share({ title, url });
@@ -154,8 +154,7 @@ const FavoritesTab = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">
-          {t("favorites.title") || "Избранные квартиры"} (
-          {projectFavorites.length})
+          {t("favorites.title")} ({projectFavorites.length})
         </h2>
         <Button variant="outline" size="sm" onClick={handleShareFavorites}>
           <Share2 className="mr-2 h-4 w-4" />

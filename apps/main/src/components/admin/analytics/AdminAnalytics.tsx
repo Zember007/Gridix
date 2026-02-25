@@ -98,7 +98,7 @@ function safeNumber(value: unknown): number {
 }
 
 export const AdminAnalytics = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const { userRole } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
@@ -251,7 +251,7 @@ export const AdminAnalytics = () => {
     const msg =
       queryError instanceof Error
         ? queryError.message
-        : t("admin.analytics.loading") || "Error loading analytics";
+        : t("admin.analytics.loading");
 
     return (
       <div className="space-y-6">
@@ -327,6 +327,7 @@ export const AdminAnalytics = () => {
               <div className="relative">
                 <Input
                   type="date"
+                  lang={language}
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
                   className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
@@ -343,6 +344,7 @@ export const AdminAnalytics = () => {
               <div className="relative">
                 <Input
                   type="date"
+                  lang={language}
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
                   className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
@@ -424,6 +426,7 @@ export const AdminAnalytics = () => {
                 <Line
                   type="monotone"
                   dataKey="views"
+                  name={t("admin.analytics.views")}
                   stroke="#0088FE"
                   strokeWidth={2}
                 />
@@ -451,6 +454,7 @@ export const AdminAnalytics = () => {
                 <Line
                   type="monotone"
                   dataKey="leads"
+                  name={t("admin.analytics.leads")}
                   stroke="#00C49F"
                   strokeWidth={2}
                 />

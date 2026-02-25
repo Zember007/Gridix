@@ -64,6 +64,8 @@
   "profileInfoDesc": "Your personal details",
   "fullName": "Full name",
   "fullNamePlaceholder": "John Smith",
+  "language": "Language",
+  "languageHint": "Used for emails and default UI language.",
 
   "companyLogo": "Company logo",
   "uploadLogo": "Upload logo",

@@ -100,15 +100,7 @@ export const AdvancedFilters = ({
   visibleFilterFields,
   hasAnyVisibleFilter,
 }: Props) => {
-  const { t, language } = useLanguage();
-
-  const ui = useMemo(
-    () => ({
-      apply: language === "ru" ? "Применить" : "Apply",
-      reset: language === "ru" ? "Сброс" : "Reset",
-    }),
-    [language],
-  );
+  const { t } = useLanguage();
 
   const roomsOptions = useMemo(() => {
     const base = [{ value: "all", label: t("project.allTypes") }];
@@ -272,7 +264,7 @@ export const AdvancedFilters = ({
           }}
         >
           <RotateCcw className="h-4 w-4" />
-          {t("project.resetFilters") || ui.reset}
+          {t("project.resetFilters")}
         </Button>
       </div>
 
@@ -401,7 +393,7 @@ export const AdvancedFilters = ({
           max={maxArea}
           value={advArea}
           onChange={(next) => setAdvArea(next)}
-          unit="м²"
+          unit={t("apartment.sqm")}
           clamp={true}
         />
       )}
@@ -420,7 +412,7 @@ export const AdvancedFilters = ({
 
       {!hasAnyVisibleFilter && (
         <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-3 py-4 text-sm text-gray-500">
-          Фильтровать не по чему
+          {t("filters.noFiltersAvailable")}
         </div>
       )}
 
@@ -443,7 +435,7 @@ export const AdvancedFilters = ({
             onClick={handleApplyFilters}
             style={{ backgroundColor: themeColor, color: "#fff" }}
           >
-            {ui.apply}
+            {t("filters.applyFilters")}
           </Button>
         )}
       </div>

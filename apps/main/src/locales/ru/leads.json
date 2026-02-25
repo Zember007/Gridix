@@ -128,6 +128,24 @@
     "duplicatesNotFound": {
       "title": "Чисто",
       "desc": "Дублей не найдено"
+    },
+    "error": {
+      "title": "Ошибка",
+      "updateFailed": "Не удалось обновить интерес.",
+      "missingFields": "Пожалуйста, заполните все обязательные поля",
+      "notAuthenticated": "Пользователь не авторизован",
+      "noAccessToProjects": "Нет доступа к проектам",
+      "noProjects": "Проекты не найдены",
+      "noApartments": "Квартиры не найдены",
+      "createFailed": "Не удалось создать интерес.",
+      "addTagFailed": "Не удалось добавить тег",
+      "removeTagFailed": "Не удалось удалить тег",
+      "masterNotFound": "Главный лид не найден",
+      "mergeFailed": "Не удалось объединить интересы."
+    },
+    "mergeSuccess": {
+      "title": "Успех",
+      "desc": "Объединено повторяющихся потенциальных клиентов ({{count}})"
     }
   },
   "kanban": {
@@ -215,6 +233,13 @@
     "addFunnel": "Добавить воронку",
     "archived": "Архивные воронки",
     "addStage": "Добавить этап",
+    "defaultFunnelName": "Основная воронка",
+    "newFunnelName": "Новая воронка",
+    "newStageName": "Новый этап",
+    "stageUnparsed": "Неразобранные",
+    "stageNewLead": "Новый лид",
+    "stageTakenForWork": "В работе",
+    "stageNoContact": "Нет контакта",
     "deleteStage": "Удалить этап",
     "rename": "Переименовать",
     "triggers": "Автоматизации",
@@ -375,7 +400,10 @@
       "addTag": "Добавить тег",
       "notification": "Уведомление",
       "apartmentStatus": "Статус квартиры"
-    }
+    },
+    "onStageEntryOption": "На выходе на сцену",
+    "timerOption": "По таймеру",
+    "onTagAddOption": "При добавлении тега"
   },
   "cardFields": {
     "none": "Без значения",

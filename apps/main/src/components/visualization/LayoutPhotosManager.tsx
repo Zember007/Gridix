@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@gridix/ui";
 import {
   Card,
@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { compressToWebP } from "@gridix/utils/lib";
 import { Spinner } from "@/shared/ui/Spinner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LayoutPhotosManagerProps {
   projectId: string;
@@ -44,8 +45,9 @@ interface LayoutPhoto {
 
 interface LayoutType {
   key: string;
-  label: string;
   rooms: number;
+  type: string;
+  isFreeLayout?: boolean;
 }
 
 function deriveLayoutTypesFromApartments(
@@ -70,26 +72,26 @@ function deriveLayoutTypesFromApartments(
   return uniqueRoomCounts.map((data) => {
     if (data.type === "apartment") {
       if ((data as { isFreeLayout?: boolean }).isFreeLayout) {
-        return { key: "free_layout", label: "Свободная планировка", rooms: -1 };
+        return {
+          key: "free_layout",
+          rooms: -1,
+          type: data.type,
+          isFreeLayout: true,
+        };
       } else if (data.rooms === 0) {
-        return { key: "studio", label: "Студия", rooms: 0 };
+        return { key: "studio", rooms: 0, type: data.type };
       } else {
         return {
           key: `${data.rooms}-room`,
-          label: `${data.rooms}-комнатная`,
           rooms: data.rooms,
+          type: data.type,
         };
       }
     } else {
       return {
         key: data.type,
-        label:
-          data.type === "commercial"
-            ? "Коммерческие помещения"
-            : data.type === "parking"
-              ? "Паркинги"
-              : data.type,
         rooms: data.rooms,
+        type: data.type,
       };
     }
   });
@@ -106,6 +108,7 @@ const LayoutPhotosManager = ({
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const loadApartments = useCallback(async () => {
     try {
@@ -117,12 +120,14 @@ const LayoutPhotosManager = ({
       if (error) throw error;
 
       const normalizedApartments = (data || []).map(normalizeApartmentData);
-      setApartments(normalizedApartments);
-      setLayoutTypes(deriveLayoutTypesFromApartments(normalizedApartments));
+      const derivedLayoutTypes =
+        deriveLayoutTypesFromApartments(normalizedApartments);
 
-      // Автоматически выбираем первый тип планировки
-      if (layoutTypes.length > 0) {
-        const first = layoutTypes[0];
+      setApartments(normalizedApartments);
+      setLayoutTypes(derivedLayoutTypes);
+
+      if (derivedLayoutTypes.length > 0) {
+        const first = derivedLayoutTypes[0];
         if (first) setSelectedLayoutType(first.key);
       }
     } catch (error) {
@@ -152,7 +157,13 @@ const LayoutPhotosManager = ({
   useEffect(() => {
     if (initialApartments != null && Array.isArray(initialApartments)) {
       setApartments(initialApartments);
-      setLayoutTypes(deriveLayoutTypesFromApartments(initialApartments));
+      const derivedLayoutTypes =
+        deriveLayoutTypesFromApartments(initialApartments);
+      setLayoutTypes(derivedLayoutTypes);
+      if (derivedLayoutTypes.length > 0) {
+        const first = derivedLayoutTypes[0];
+        if (first) setSelectedLayoutType(first.key);
+      }
       setLoading(false);
       return;
     }
@@ -171,9 +182,8 @@ const LayoutPhotosManager = ({
     const files = event.target.files;
     if (!files || !selectedLayoutType) return;
 
-    // Проверяем аутентификацию пользователя
     if (!user) {
-      toast.error("Необходимо войти в систему для загрузки фотографий");
+      toast.error(t("photosManager.authRequired"));
       return;
     }
 
@@ -209,11 +219,11 @@ const LayoutPhotosManager = ({
       });
 
       await Promise.all(uploadPromises);
-      toast.success("Фотографии планировки загружены");
+      toast.success(t("photosManager.layoutUploadSuccess"));
       loadLayoutPhotos();
     } catch (error) {
       console.error("Error uploading layout photos:", error);
-      toast.error("Ошибка загрузки фотографий планировки");
+      toast.error(t("photosManager.layoutUploadError"));
     } finally {
       setUploading(false);
     }
@@ -235,11 +245,11 @@ const LayoutPhotosManager = ({
           .remove([`layouts/${fileName}`]);
       }
 
-      toast.success("Фото планировки удалено");
+      toast.success(t("photosManager.layoutDeleteSuccess"));
       loadLayoutPhotos();
     } catch (error) {
       console.error("Error deleting layout photo:", error);
-      toast.error("Ошибка удаления фото планировки");
+      toast.error(t("photosManager.layoutDeleteError"));
     }
   };
 
@@ -247,23 +257,50 @@ const LayoutPhotosManager = ({
     const layoutType = layoutTypes.find((lt) => lt.key === layoutKey);
     if (!layoutType) return 0;
 
-    // Для коммерческих помещений и паркингов ищем по типу
     if (layoutKey === "commercial" || layoutKey === "parking") {
       return apartments.filter((apt) => apt.type === layoutKey).length;
     }
 
-    // Для свободной планировки
     if (layoutKey === "free_layout") {
       return apartments.filter(
         (apt) => apt.type === "apartment" && apt.rooms === "free_layout",
       ).length;
     }
 
-    // Для квартир ищем по количеству комнат
     return apartments.filter(
       (apt) => apt.type === "apartment" && apt.rooms === layoutType.rooms,
     ).length;
   };
+
+  const getLayoutTypeLabel = useCallback(
+    (layoutType: LayoutType): string => {
+      if (layoutType.type === "apartment") {
+        if (layoutType.isFreeLayout || layoutType.key === "free_layout") {
+          return t("photosManager.layoutType.freeLayout");
+        }
+        if (layoutType.rooms === 0 || layoutType.key === "studio") {
+          return t("photosManager.layoutType.studio");
+        }
+        return t("photosManager.layoutType.room", { count: layoutType.rooms });
+      }
+
+      if (layoutType.type === "commercial") {
+        return t("photosManager.layoutType.commercial");
+      }
+      if (layoutType.type === "parking") {
+        return t("photosManager.layoutType.parking");
+      }
+      return layoutType.type;
+    },
+    [t],
+  );
+
+  const selectedLayoutLabel = useMemo(() => {
+    const currentLayoutType = layoutTypes.find(
+      (layoutType) => layoutType.key === selectedLayoutType,
+    );
+    return currentLayoutType ? getLayoutTypeLabel(currentLayoutType) : "";
+  }, [layoutTypes, selectedLayoutType, getLayoutTypeLabel]);
 
   if (loading) {
     return (
@@ -279,28 +316,31 @@ const LayoutPhotosManager = ({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Управление фотографиями планировок</CardTitle>
+          <CardTitle>{t("photosManager.layoutTitle")}</CardTitle>
           <CardDescription>
-            Загружайте фотографии для каждого типа планировки. Эти фотографии
-            будут отображаться для всех квартир соответствующего типа.
+            {t("photosManager.layoutDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="layout-select">Выберите тип планировки</Label>
+            <Label htmlFor="layout-select">
+              {t("photosManager.selectLayoutType")}
+            </Label>
             <Select
               value={selectedLayoutType}
               onValueChange={setSelectedLayoutType}
             >
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Выберите тип планировки" />
+                <SelectValue
+                  placeholder={t("photosManager.selectLayoutTypePlaceholder")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {layoutTypes.map((layoutType) => (
                   <SelectItem key={layoutType.key} value={layoutType.key}>
                     <div className="flex items-center gap-2">
                       <Home className="h-4 w-4" />
-                      {layoutType.label} (
+                      {getLayoutTypeLabel(layoutType)} (
                       {getApartmentCountForLayout(layoutType.key)})
                     </div>
                   </SelectItem>
@@ -313,7 +353,7 @@ const LayoutPhotosManager = ({
             <div className="space-y-4">
               <div>
                 <Label htmlFor="layout-photo-upload">
-                  Загрузить фотографии планировки
+                  {t("photosManager.uploadLayoutPhotos")}
                 </Label>
                 <Input
                   id="layout-photo-upload"
@@ -325,21 +365,18 @@ const LayoutPhotosManager = ({
                   className="mt-1"
                 />
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Фотографии будут отображаться для всех квартир типа "
-                  {
-                    layoutTypes.find((lt) => lt.key === selectedLayoutType)
-                      ?.label
-                  }
-                  "
+                  {t("photosManager.layoutTypeInfo", {
+                    type: selectedLayoutLabel,
+                  })}
                 </p>
               </div>
 
               {photos.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
                   <ImageIcon className="mx-auto mb-2 h-12 w-12" />
-                  <p>Фотографии планировки не загружены</p>
+                  <p>{t("photosManager.layoutNoPhotos")}</p>
                   <p className="text-sm">
-                    Загрузите фотографии для выбранного типа планировки
+                    {t("photosManager.layoutNoPhotosDesc")}
                   </p>
                 </div>
               ) : (
@@ -348,7 +385,9 @@ const LayoutPhotosManager = ({
                     <div key={photo.id} className="group relative">
                       <img
                         src={photo.image_url}
-                        alt={photo.description || "Фото планировки"}
+                        alt={
+                          photo.description || t("photosManager.layoutPhotoAlt")
+                        }
                         className="h-32 w-full rounded-lg object-cover"
                       />
                       <Button

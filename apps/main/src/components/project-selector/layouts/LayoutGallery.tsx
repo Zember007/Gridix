@@ -395,8 +395,8 @@ export const LayoutGallery = ({
                               const minArea = Math.min(...areas);
                               const maxArea = Math.max(...areas);
                               return minArea === maxArea
-                                ? `${minArea} м²`
-                                : `${minArea}-${maxArea} м²`;
+                                ? `${minArea} ${t("apartment.sqm")}`
+                                : `${minArea}-${maxArea} ${t("apartment.sqm")}`;
                             })()}
                           </span>
                         </div>

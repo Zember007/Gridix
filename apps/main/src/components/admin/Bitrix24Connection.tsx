@@ -90,10 +90,10 @@ export const Bitrix24Connection = () => {
       }
       setConnection(null);
       setShowDisconnectDialog(false);
-      toast.success("Bitrix24 disconnected");
+      toast.success(t("admin.bitrix24.disconnectSuccess"));
     } catch (error) {
       console.error("Error disconnecting Bitrix24:", error);
-      toast.error("Failed to disconnect");
+      toast.error(t("admin.bitrix24.disconnectError"));
     } finally {
       setBusy(false);
     }
@@ -125,16 +125,16 @@ export const Bitrix24Connection = () => {
                 variant="secondary"
                 className="bg-green-100 text-green-700 hover:bg-green-200"
               >
-                Active
+                {t("admin.common.active")}
               </Badge>
             ) : (
               <Badge variant="outline" className="text-muted-foreground">
-                Inactive
+                {t("admin.common.inactive")}
               </Badge>
             )}
           </div>
           <CardDescription className="mt-2">
-            Connect your Bitrix24 portal to sync leads and deals.
+            {t("admin.bitrix24.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="mt-auto">
@@ -144,7 +144,7 @@ export const Bitrix24Connection = () => {
                 <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-green-900">
-                    Connected to{" "}
+                    {t("admin.bitrix24.connectedTo")}{" "}
                     <span className="font-bold">
                       {connection.base_domain || connection.subdomain}
                     </span>
@@ -156,7 +156,7 @@ export const Bitrix24Connection = () => {
                 className="w-full border-red-200 text-red-600 hover:bg-red-50"
                 onClick={() => setShowDisconnectDialog(true)}
               >
-                Disconnect
+                {t("admin.bitrix24.disconnect")}
               </Button>
 
               <Button
@@ -165,7 +165,7 @@ export const Bitrix24Connection = () => {
                 onClick={() => setShowProjectsModal(true)}
               >
                 <Settings className="mr-2 h-4 w-4" />
-                {t("admin.configureProjects") || "Configure projects"}
+                {t("admin.configureProjects")}
               </Button>
             </div>
           ) : (
@@ -173,8 +173,7 @@ export const Bitrix24Connection = () => {
               <Alert className="border-blue-100 bg-blue-50 text-blue-800">
                 <Info className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-xs">
-                  To connect, install the Gridix app from the Bitrix24
-                  Marketplace in your portal.
+                  {t("admin.bitrix24.marketplaceHint")}
                 </AlertDescription>
               </Alert>
               <Button
@@ -184,7 +183,7 @@ export const Bitrix24Connection = () => {
                 }
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
-                Go to Marketplace
+                {t("admin.bitrix24.installApp")}
               </Button>
             </div>
           )}
@@ -197,10 +196,11 @@ export const Bitrix24Connection = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Disconnect Bitrix24?</DialogTitle>
+            <DialogTitle>
+              {t("admin.bitrix24.disconnectWarningTitle")}
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove this connection? You will need to
-              reinstall the app to reconnect.
+              {t("admin.bitrix24.disconnectWarningMessage")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -208,7 +208,7 @@ export const Bitrix24Connection = () => {
               variant="outline"
               onClick={() => setShowDisconnectDialog(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -218,7 +218,7 @@ export const Bitrix24Connection = () => {
               {busy ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
-                "Confirm"
+                t("admin.common.confirm")
               )}
             </Button>
           </DialogFooter>
@@ -228,12 +228,9 @@ export const Bitrix24Connection = () => {
       <Dialog open={showProjectsModal} onOpenChange={setShowProjectsModal}>
         <DialogContent className="sm:max-w-[720px]">
           <DialogHeader>
-            <DialogTitle>
-              {t("admin.projectsConfig") || "Projects configuration"}
-            </DialogTitle>
+            <DialogTitle>{t("admin.projectsConfig")}</DialogTitle>
             <DialogDescription>
-              {t("admin.bitrix24.configureProjectDesc") ||
-                "Select the Bitrix24 funnel for each project."}
+              {t("admin.bitrix24.configureProjectDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -249,7 +246,7 @@ export const Bitrix24Connection = () => {
               variant="outline"
               onClick={() => setShowProjectsModal(false)}
             >
-              {t("common.close") || "Close"}
+              {t("common.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

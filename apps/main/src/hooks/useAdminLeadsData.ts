@@ -156,8 +156,11 @@ function patchSelectedExtendedLead(
 }
 
 // Map DB lead to ExtendedLead used by UI
-function mapDbLeadToExtended(dbLead: DbLead): ExtendedLead {
-  const projectName = dbLead.projects?.name || "Не указан";
+function mapDbLeadToExtended(
+  dbLead: DbLead,
+  unknownProjectLabel: string,
+): ExtendedLead {
+  const projectName = dbLead.projects?.name || unknownProjectLabel;
   const apt = dbLead.apartments;
 
   const apartment = apt
@@ -199,10 +202,107 @@ function mapDbLeadToExtended(dbLead: DbLead): ExtendedLead {
   } as ExtendedLead;
 }
 
+type TranslationFn = (key: string) => string;
+type LegacyNameGroup = { key: string; aliases: string[] };
+
+const LEGACY_FUNNEL_NAME_GROUPS: LegacyNameGroup[] = [
+  {
+    key: "leads.funnel.defaultFunnelName",
+    aliases: [
+      "main funnel",
+      "default funnel",
+      "основная воронка",
+      "главная воронка",
+      "ძირითადი ძაბრი",
+      "القمع الرئيسي",
+      "משפך ראשי",
+      "ana huni",
+    ],
+  },
+];
+
+const LEGACY_STAGE_NAME_GROUPS: LegacyNameGroup[] = [
+  {
+    key: "leads.funnel.stageUnparsed",
+    aliases: [
+      "unparsed",
+      "unparseled",
+      "неразобранные",
+      "неразобран",
+      "დაუმუშავებელი",
+      "غير مصنف",
+      "לא מסווג",
+      "ayrıştırılmamış",
+    ],
+  },
+  {
+    key: "leads.funnel.stageNewLead",
+    aliases: [
+      "new lead",
+      "новый лид",
+      "ახალი ლიდი",
+      "عميل محتمل جديد",
+      "ליד חדש",
+      "yeni potansiyel müşteri",
+    ],
+  },
+  {
+    key: "leads.funnel.stageTakenForWork",
+    aliases: [
+      "taken for work",
+      "taken to work",
+      "в работе",
+      "взят в работу",
+      "სამუშაოში მიღებული",
+      "قيد المتابعة",
+      "בטיפול",
+      "işleme alındı",
+    ],
+  },
+  {
+    key: "leads.funnel.stageNoContact",
+    aliases: [
+      "no contact",
+      "нет контакта",
+      "без контакта",
+      "კონტაქტი არ არის",
+      "لا يوجد تواصل",
+      "אין קשר",
+      "iletişim yok",
+    ],
+  },
+];
+
+function normalizeLegacyName(value: string): string {
+  return value
+    .toLocaleLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function localizeLegacyName(
+  name: string,
+  t: TranslationFn,
+  groups: LegacyNameGroup[],
+): string {
+  const normalized = normalizeLegacyName(name);
+  const matched = groups.find((group) => group.aliases.includes(normalized));
+  return matched ? t(matched.key) : name;
+}
+
+function localizeLegacyFunnelName(name: string, t: TranslationFn): string {
+  return localizeLegacyName(name, t, LEGACY_FUNNEL_NAME_GROUPS);
+}
+
+function localizeLegacyStageName(name: string, t: TranslationFn): string {
+  return localizeLegacyName(name, t, LEGACY_STAGE_NAME_GROUPS);
+}
+
 export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
   const { leads: dbLeads, loading: leadsLoading } = useLeads(filtersOverride);
@@ -320,7 +420,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   useEffect(() => {
     const data = funnelsQuery.data;
     if (data && data.length > 0) {
-      setFunnels(data);
+      setFunnels(
+        data.map((funnel) => ({
+          ...funnel,
+          name: localizeLegacyFunnelName(funnel.name, t),
+        })),
+      );
       if (!activeFunnelId) {
         // Try to load from localStorage first
         try {
@@ -341,7 +446,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         }
       }
     }
-  }, [funnelsQuery.data, activeFunnelId]);
+  }, [funnelsQuery.data, activeFunnelId, i18n.language, t]);
 
   // Load stages and triggers for active funnel
   useEffect(() => {
@@ -363,7 +468,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       ]);
 
       setFunnelStages(
-        (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color })),
+        (stages || []).map((s) => ({
+          id: s.id,
+          name: localizeLegacyStageName(s.name, t),
+          color: s.color,
+        })),
       );
       setFunnelTriggers(
         (triggers || []).map((t) => ({
@@ -379,7 +488,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     };
 
     load();
-  }, [activeFunnelId]);
+  }, [activeFunnelId, i18n.language, t]);
 
   // Load Lead details (tasks, history) when a lead is selected
   useEffect(() => {
@@ -492,8 +601,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   // Map DB leads to extended leads with computed fields
   const leads: ExtendedLead[] = useMemo(
-    () => dbLeads.map(mapDbLeadToExtended),
-    [dbLeads],
+    () =>
+      dbLeads.map((lead) => mapDbLeadToExtended(lead, t("leads.list.unknown"))),
+    [dbLeads, t],
   );
 
   const totalUnreadCount = useMemo(() => {
@@ -1322,7 +1432,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     if (!user) return;
     const { data, error } = await supabase
       .from("crm_funnels")
-      .insert({ user_id: user.id, name: "Новая воронка" })
+      .insert({ user_id: user.id, name: t("leads.funnel.newFunnelName") })
       .select("*")
       .single();
     if (error) {
@@ -1396,7 +1506,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       .from("crm_funnel_stages")
       .insert({
         funnel_id: activeFunnelId,
-        name: "Новый этап",
+        name: t("leads.funnel.newStageName"),
         color: "slate",
         order_index: insertIndex,
       })
@@ -1670,7 +1780,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     ]);
 
     setFunnelStages(
-      (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color })),
+      (stages || []).map((s) => ({
+        id: s.id,
+        name: localizeLegacyStageName(s.name, t),
+        color: s.color,
+      })),
     );
     setFunnelTriggers(
       (triggers || []).map((t) => ({
@@ -1704,7 +1818,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     ]);
 
     setFunnelStages(
-      (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color })),
+      (stages || []).map((s) => ({
+        id: s.id,
+        name: localizeLegacyStageName(s.name, t),
+        color: s.color,
+      })),
     );
     setFunnelTriggers(
       (triggers || []).map((t) => ({

@@ -58,7 +58,7 @@ export const ViewModeButtons = ({
   const getModeLabel = (mode: ViewMode) => {
     switch (mode) {
       case "chess":
-        return t("project.chess") || "Шахматка";
+        return t("project.chess");
       case "facade":
         return t("project.facade");
       case "list":
@@ -83,7 +83,9 @@ export const ViewModeButtons = ({
             <Button
               variant="ghost"
               size="icon"
-              aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
+              aria-label={
+                isMenuOpen ? t("project.closeMenu") : t("project.openMenu")
+              }
               className="`h-9 relative z-20 block w-9 cursor-pointer p-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 lg:hidden"
             >
               <Menu
@@ -268,7 +270,7 @@ export const ViewModeButtons = ({
         <Heart
           className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
         />
-        {!isMobile && (t("favorites.title") || "Избранное")}
+        {!isMobile && t("favorites.title")}
         {favoritesCount > 0 && (
           <span className="absolute right-0 top-0 flex h-4 w-4 -translate-y-1/2 translate-x-1/2 transform items-center justify-center rounded-full bg-red-500 text-[10px] text-white sm:h-5 sm:w-5 sm:text-xs">
             {favoritesCount > 99 ? "99+" : favoritesCount}

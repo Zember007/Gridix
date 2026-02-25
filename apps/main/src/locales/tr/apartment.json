@@ -24,5 +24,18 @@
   "freeLayout": "Ücretsiz düzen",
   "yes": "Evet",
   "sendRequest": "İstek gönder",
-  "requestSent": "İstek başarıyla gönderildi! Yakında sizinle iletişime geçeceğiz."
+  "requestSent": "İstek başarıyla gönderildi! Yakında sizinle iletişime geçeceğiz.",
+  "calculator": "Hesap Makinesi",
+  "downloadPDF": "PDF'yi indir",
+  "fetchError": "Daire ayrıntıları alınırken hata oluştu",
+  "generatingPDF": "PDF oluşturuluyor...",
+  "goBack": "Geri gitmek",
+  "installmentCalculator": "Taksit hesaplayıcı",
+  "invalidId": "Geçersiz apartman kimliği",
+  "linkCopied": "Bağlantı kopyalandı",
+  "notFound": "Daire bulunamadı",
+  "notFoundDescription": "İstenilen daire bulunamadı.",
+  "pdfGenerationError": "PDF oluşturulurken hata oluştu",
+  "reserve": "Rezerv",
+  "reserveTitle": "Daire rezervasyonu"
 }

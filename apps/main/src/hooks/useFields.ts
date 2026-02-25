@@ -94,7 +94,7 @@ export const useFields = (
       setFields(allFields);
     } catch (error) {
       console.error("Error loading field settings:", error);
-      toast.error(t("customFields.loadError"));
+      toast.error(t("customFields.loadingError"));
     } finally {
       setLoading(false);
     }

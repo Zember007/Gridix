@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PartnerWithUser {
   id: string;
@@ -60,6 +61,7 @@ interface PartnerWithUser {
 }
 
 export function PartnersManagement() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [partners, setPartners] = useState<PartnerWithUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,8 +101,10 @@ export function PartnersManagement() {
     } catch (error) {
       console.error("Error fetching partners:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить список партнёров",
+        title: t("admin.superadmin.partnersManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.partnersManagement.toast.loadPartnersError",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -140,8 +144,11 @@ export function PartnersManagement() {
       }
 
       toast({
-        title: "Успешно",
-        description: `Партнёр ${action === "suspend" ? "приостановлен" : "активирован"}`,
+        title: t("admin.superadmin.partnersManagement.toast.successTitle"),
+        description:
+          action === "suspend"
+            ? t("admin.superadmin.partnersManagement.toast.partnerSuspended")
+            : t("admin.superadmin.partnersManagement.toast.partnerActivated"),
       });
 
       // Обновляем список
@@ -151,11 +158,13 @@ export function PartnersManagement() {
     } catch (error) {
       console.error("Error updating partner:", error);
       toast({
-        title: "Ошибка",
+        title: t("admin.superadmin.partnersManagement.toast.errorTitle"),
         description:
           error instanceof Error
             ? error.message
-            : "Не удалось обновить статус партнёра",
+            : t(
+                "admin.superadmin.partnersManagement.toast.updatePartnerStatusError",
+              ),
         variant: "destructive",
       });
     } finally {
@@ -208,9 +217,11 @@ export function PartnersManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Управление партнёрами</h2>
+          <h2 className="text-2xl font-bold">
+            {t("admin.superadmin.partnersManagement.title")}
+          </h2>
           <p className="text-muted-foreground">
-            Управляйте партнёрской программой и статусами партнёров
+            {t("admin.superadmin.partnersManagement.description")}
           </p>
         </div>
       </div>
@@ -220,21 +231,25 @@ export function PartnersManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Всего партнёров
+              {t("admin.superadmin.partnersManagement.stats.totalPartners")}
             </CardTitle>
             <Handshake className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{partners.length}</div>
             <p className="text-xs text-muted-foreground">
-              {partners.filter((p) => p.status === "active").length} активных
+              {t("admin.superadmin.partnersManagement.stats.activeCount", {
+                count: partners.filter((p) => p.status === "active").length,
+              })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Общий доход</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("admin.superadmin.partnersManagement.stats.totalEarnings")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -242,14 +257,16 @@ export function PartnersManagement() {
               ${partners.reduce((sum, p) => sum + p.total_earned, 0).toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Заработано партнёрами
+              {t("admin.superadmin.partnersManagement.stats.earnedByPartners")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Выплачено</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("admin.superadmin.partnersManagement.stats.paidOut")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -259,14 +276,18 @@ export function PartnersManagement() {
                 .reduce((sum, p) => sum + p.total_withdrawn, 0)
                 .toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">Выведено партнёрами</p>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "admin.superadmin.partnersManagement.stats.withdrawnByPartners",
+              )}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Приостановлено
+              {t("admin.superadmin.partnersManagement.stats.suspended")}
             </CardTitle>
             <UserX className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -275,7 +296,7 @@ export function PartnersManagement() {
               {partners.filter((p) => p.status === "suspended").length}
             </div>
             <p className="text-xs text-muted-foreground">
-              Неактивных партнёров
+              {t("admin.superadmin.partnersManagement.stats.inactivePartners")}
             </p>
           </CardContent>
         </Card>
@@ -286,18 +307,22 @@ export function PartnersManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Фильтры
+            {t("admin.superadmin.partnersManagement.filters.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="search">Поиск</Label>
+              <Label htmlFor="search">
+                {t("admin.superadmin.partnersManagement.filters.search")}
+              </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Поиск по имени, email или коду..."
+                  placeholder={t(
+                    "admin.superadmin.partnersManagement.filters.searchPlaceholder",
+                  )}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -306,7 +331,9 @@ export function PartnersManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Статус</Label>
+              <Label htmlFor="status">
+                {t("admin.superadmin.partnersManagement.filters.status")}
+              </Label>
               <Select
                 value={statusFilter}
                 onValueChange={(
@@ -317,10 +344,20 @@ export function PartnersManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все статусы</SelectItem>
-                  <SelectItem value="active">Активные</SelectItem>
-                  <SelectItem value="suspended">Приостановленные</SelectItem>
-                  <SelectItem value="inactive">Неактивные</SelectItem>
+                  <SelectItem value="all">
+                    {t(
+                      "admin.superadmin.partnersManagement.filters.allStatuses",
+                    )}
+                  </SelectItem>
+                  <SelectItem value="active">
+                    {t("admin.superadmin.partnersManagement.status.active")}
+                  </SelectItem>
+                  <SelectItem value="suspended">
+                    {t("admin.superadmin.partnersManagement.status.suspended")}
+                  </SelectItem>
+                  <SelectItem value="inactive">
+                    {t("admin.superadmin.partnersManagement.status.inactive")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -331,22 +368,41 @@ export function PartnersManagement() {
       {/* Таблица партнёров */}
       <Card>
         <CardHeader>
-          <CardTitle>Партнёры</CardTitle>
+          <CardTitle>
+            {t("admin.superadmin.partnersManagement.table.title")}
+          </CardTitle>
           <CardDescription>
-            {filteredPartners.length} из {partners.length} партнёров
+            {t("admin.superadmin.partnersManagement.table.count", {
+              filtered: filteredPartners.length,
+              total: partners.length,
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Партнёр</TableHead>
-                <TableHead>Код</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Заработано</TableHead>
-                <TableHead>Выведено</TableHead>
-                <TableHead>Дата регистрации</TableHead>
-                <TableHead>Действия</TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.partner")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.code")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.status")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.earned")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.withdrawn")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.registeredAt")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnersManagement.table.actions")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -378,10 +434,14 @@ export function PartnersManagement() {
                       }
                     >
                       {partner.status === "active"
-                        ? "Активный"
+                        ? t("admin.superadmin.partnersManagement.status.active")
                         : partner.status === "suspended"
-                          ? "Приостановлен"
-                          : "Неактивный"}
+                          ? t(
+                              "admin.superadmin.partnersManagement.status.suspended",
+                            )
+                          : t(
+                              "admin.superadmin.partnersManagement.status.inactive",
+                            )}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -406,7 +466,9 @@ export function PartnersManagement() {
                           onClick={() => openActionDialog(partner, "suspend")}
                         >
                           <UserX className="mr-1 h-4 w-4" />
-                          Приостановить
+                          {t(
+                            "admin.superadmin.partnersManagement.actions.suspend",
+                          )}
                         </Button>
                       ) : (
                         <Button
@@ -415,7 +477,9 @@ export function PartnersManagement() {
                           onClick={() => openActionDialog(partner, "activate")}
                         >
                           <UserCheck className="mr-1 h-4 w-4" />
-                          Активировать
+                          {t(
+                            "admin.superadmin.partnersManagement.actions.activate",
+                          )}
                         </Button>
                       )}
                     </div>
@@ -433,13 +497,17 @@ export function PartnersManagement() {
           <DialogHeader>
             <DialogTitle>
               {action === "suspend"
-                ? "Приостановить партнёра"
-                : "Активировать партнёра"}
+                ? t("admin.superadmin.partnersManagement.dialog.suspendTitle")
+                : t("admin.superadmin.partnersManagement.dialog.activateTitle")}
             </DialogTitle>
             <DialogDescription>
               {action === "suspend"
-                ? "Вы уверены, что хотите приостановить этого партнёра? Он не сможет получать новые комиссии."
-                : "Вы уверены, что хотите активировать этого партнёра? Он снова сможет получать комиссии."}
+                ? t(
+                    "admin.superadmin.partnersManagement.dialog.suspendDescription",
+                  )
+                : t(
+                    "admin.superadmin.partnersManagement.dialog.activateDescription",
+                  )}
             </DialogDescription>
           </DialogHeader>
           {selectedPartner && (
@@ -452,7 +520,8 @@ export function PartnersManagement() {
                   {selectedPartner.user_profiles.email}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Код: {selectedPartner.partner_code}
+                  {t("admin.superadmin.partnersManagement.dialog.codeLabel")}:{" "}
+                  {selectedPartner.partner_code}
                 </p>
               </div>
 
@@ -461,7 +530,7 @@ export function PartnersManagement() {
                   variant="outline"
                   onClick={() => setIsActionDialogOpen(false)}
                 >
-                  Отмена
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant={action === "suspend" ? "destructive" : "default"}
@@ -472,10 +541,12 @@ export function PartnersManagement() {
                   disabled={isProcessing}
                 >
                   {isProcessing
-                    ? "Обработка..."
+                    ? t("admin.superadmin.partnersManagement.dialog.processing")
                     : action === "suspend"
-                      ? "Приостановить"
-                      : "Активировать"}
+                      ? t("admin.superadmin.partnersManagement.actions.suspend")
+                      : t(
+                          "admin.superadmin.partnersManagement.actions.activate",
+                        )}
                 </Button>
               </div>
             </div>
