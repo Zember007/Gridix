@@ -333,6 +333,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             {banner}
 
             <form
+              key={`auth-form-${mode}`}
               className="flex flex-col gap-3.5"
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -597,7 +598,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
             {mode === "signin" && oauthBlock}
 
-            <p className="animate-delay-900 animate-element text-center text-sm text-muted-foreground">
+            <p
+              key={`auth-mode-link-${mode}`}
+              className="animate-delay-900 animate-element text-center text-sm text-muted-foreground"
+            >
               {mode === "signin"
                 ? createAccountPrompt
                 : alreadyHaveAccountPrompt}{" "}

@@ -18,8 +18,23 @@
 .animate-delay-200 {
   animation-delay: 200ms;
 }
+.animate-delay-220 {
+  animation-delay: 220ms;
+}
+.animate-delay-250 {
+  animation-delay: 250ms;
+}
 .animate-delay-300 {
   animation-delay: 300ms;
+}
+.animate-delay-320 {
+  animation-delay: 320ms;
+}
+.animate-delay-340 {
+  animation-delay: 340ms;
+}
+.animate-delay-360 {
+  animation-delay: 360ms;
 }
 .animate-delay-400 {
   animation-delay: 400ms;
