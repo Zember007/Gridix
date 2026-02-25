@@ -242,7 +242,46 @@
       "monthsShort": "ay",
       "monthsShortPlural": "aylar",
       "savings": "tasarruf",
-      "choosePlan": "{{name}}'yi seçin"
+      "choosePlan": "{{name}}'yi seçin",
+      "planContent": {
+        "basic": {
+          "description": "Sınırlı işlevselliğe sahip küçük projeler için temel tarife planı",
+          "features": {
+            "1": "Proje yönetimi",
+            "2": "Etkileşimli katalog - 500 lote kadar",
+            "3": "Etkileşimli satranç tahtası",
+            "4": "GRIDIX referansıyla marka renk şemanıza göre özelleştirme",
+            "5": "Talep analitiği",
+            "6": "Dinamik fiyatlandırma",
+            "7": "Yerleşik CRM modülü",
+            "8": "Web siteniz için satranç tahtası widget'ı",
+            "9": "Taksit / ipotek yönetimi",
+            "10": "PDF sunumları",
+            "11": "Para birimi seçimi",
+            "12": "Dil seçimi",
+            "13": "Özel alanlar",
+            "14": "Rol ve yetki yönetimi"
+          }
+        },
+        "pro": {
+          "description": "CRM entegrasyonları ve White Label desteği sunan profesyonel plan",
+          "features": {
+            "1": "Basic planındaki her şey +",
+            "2": "Etkileşimli katalog - sınırsız lot",
+            "3": "AmoCRM / Bitrix24 ve diğerleriyle entegrasyonlar",
+            "4": "Toplu değişiklikler",
+            "5": "GRIDIX referansı olmadan White Label",
+            "6": "Özel alan adı (örn. sales.company.com)",
+            "7": "Gelişmiş CRM modülü",
+            "8": "Gelişmiş analitik",
+            "9": "Acenta ağı modülü / partner paneli",
+            "10": "İpotek hesaplayıcı (yakında)",
+            "11": "Çevrimiçi rezervasyon (yakında)",
+            "12": "Emlak portallarına veri dışa aktarma modülü (yakında)",
+            "13": "Öncelikli destek"
+          }
+        }
+      }
     },
     "history": {
       "title": "Sipariş geçmişi",
