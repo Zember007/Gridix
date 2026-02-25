@@ -16,6 +16,7 @@ export interface SelectorInitialResult {
   layoutPhotosByRooms: Record<string, LayoutPhoto[]>;
   fieldSettings: Tables<"project_field_settings">[];
   customFields: Tables<"project_custom_fields">[];
+  customDomain: string | null;
 }
 
 export interface SelectorFacadeResult {
@@ -89,6 +90,7 @@ export async function loadSelectorInitial(
     layoutPhotosByRooms: result.layoutPhotosByRooms ?? {},
     fieldSettings: result.fieldSettings ?? [],
     customFields: result.customFields ?? [],
+    customDomain: result.customDomain ?? null,
   };
 }
 

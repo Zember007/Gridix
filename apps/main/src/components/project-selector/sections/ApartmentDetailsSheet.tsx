@@ -1,5 +1,5 @@
 import { Suspense, lazy, type ReactNode } from "react";
-import { Sheet, SheetContent } from "@gridix/ui";
+import { Sheet, SheetContent, SheetTitle } from "@gridix/ui";
 import type { Apartment } from "@/entities/apartment/model/types";
 
 const ApartmentDetailsPage = lazy(() => import("@/pages/ApartmentDetailsPage"));
@@ -29,7 +29,13 @@ export const ApartmentDetailsSheet = ({
       side="right"
       noCloseButton
       className="z-[60] w-full !max-w-full overflow-y-auto p-0"
+      aria-describedby={undefined}
     >
+      <SheetTitle className="sr-only">
+        {apartment
+          ? `Apartment ${apartment.apartment_number}`
+          : "Apartment details"}
+      </SheetTitle>
       {apartment && (
         <Suspense fallback={loaderFallback}>
           <ApartmentDetailsPage

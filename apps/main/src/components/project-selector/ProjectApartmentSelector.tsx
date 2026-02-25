@@ -75,6 +75,7 @@ const ProjectApartmentSelector = ({
     preloadedLayoutPhotosByRooms,
     fieldSettings: rawFieldSettings,
     customFields: rawCustomFields,
+    customDomain,
   } = useProjectSelectorInitial(projectId);
 
   const { fields: fieldSettings } = useFields(project?.id || null, {
@@ -243,11 +244,11 @@ const ProjectApartmentSelector = ({
   // ── Handlers ──
 
   const openApartmentDetails = async (apartment: Apartment) => {
-    /*  if (isWidget) {
-             scrollWidgetToTop();
-             ui.openApartmentModal(apartment);
-             return;
-         } */
+    if (isWidget) {
+      scrollWidgetToTop();
+      ui.openApartmentModal(apartment);
+      return;
+    }
 
     ui.openApartmentDetails(apartment);
 
@@ -255,10 +256,14 @@ const ProjectApartmentSelector = ({
       const projectPath = project?.slug
         ? project.slug
         : `id/${project?.id || projectId}`;
-      const base = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+      const path = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+
+      const baseOrigin = customDomain
+        ? `https://${customDomain}`
+        : window.location.origin;
 
       const currentUrl = new URL(window.location.href);
-      const newUrl = new URL(base, window.location.origin);
+      const newUrl = new URL(path, baseOrigin);
       currentUrl.searchParams.forEach((value, key) => {
         newUrl.searchParams.set(key, value);
       });

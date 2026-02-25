@@ -24,6 +24,7 @@ interface UseProjectSelectorInitialResult {
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
   fieldSettings: Array<Record<string, unknown>>;
   customFields: Array<Record<string, unknown>>;
+  customDomain: string | null;
 }
 
 export const useProjectSelectorInitial = (
@@ -68,5 +69,6 @@ export const useProjectSelectorInitial = (
       (query.data?.fieldSettings as Array<Record<string, unknown>>) ?? [],
     customFields:
       (query.data?.customFields as Array<Record<string, unknown>>) ?? [],
+    customDomain: query.data?.customDomain ?? null,
   };
 };
