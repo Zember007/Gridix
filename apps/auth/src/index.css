@@ -51,7 +51,21 @@
 
 @layer components {
   .custom-checkbox {
-    @apply h-4 w-4 rounded border border-input bg-background accent-primary;
+    @apply h-4 w-4 shrink-0 rounded border border-input bg-background transition-colors;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .custom-checkbox:checked {
+    @apply border-primary bg-primary;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3e%3cpath d='M12.6 4.6L6.7 10.5L3.4 7.2' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.75rem 0.75rem;
+  }
+
+  .custom-checkbox:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 

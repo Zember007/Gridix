@@ -109,6 +109,7 @@ export interface SignInPageProps {
     accountTypeLabel?: string;
     accountTypeDeveloper?: string;
     accountTypePartner?: string;
+    privacyOfferAgreement?: React.ReactNode;
     marketingEmailsConsent?: string;
     rememberMe?: string;
     resetPassword?: string;
@@ -207,6 +208,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     accountTypeLabel = "Account type",
     accountTypeDeveloper = "Developer",
     accountTypePartner = "Partner",
+    privacyOfferAgreement = "By continuing, you agree to our Privacy Policy and Offer agreement",
     marketingEmailsConsent = "I agree to receive marketing emails",
     rememberMe = "Keep me signed in",
     resetPassword = "Reset password",
@@ -293,6 +295,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     "marketingEmailsConsent",
                   ) as HTMLInputElement | null
                 )?.checked;
+                const privacyOfferAgreementAccepted = (
+                  form.elements.namedItem(
+                    "privacyOfferAgreement",
+                  ) as HTMLInputElement | null
+                )?.checked;
                 const rememberMe = (
                   form.elements.namedItem(
                     "rememberMe",
@@ -301,6 +308,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
                 if (!email || !password) return;
                 if (mode === "signup" && !fullName) return;
+                if (mode === "signup" && !privacyOfferAgreementAccepted) return;
 
                 const payload: SubmitPayload = {
                   mode,
@@ -457,16 +465,29 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </div>
 
               {mode === "signup" ? (
-                <label className="animate-delay-500 flex animate-element cursor-pointer items-start gap-3 text-sm">
-                  <input
-                    type="checkbox"
-                    name="marketingEmailsConsent"
-                    className="custom-checkbox mt-0.5"
-                  />
-                  <span className="text-foreground/90">
-                    {marketingEmailsConsent}
-                  </span>
-                </label>
+                <div className="animate-delay-500 flex animate-element flex-col gap-3 text-sm">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      name="privacyOfferAgreement"
+                      className="custom-checkbox mt-0.5"
+                      required
+                    />
+                    <span className="text-foreground/90">
+                      {privacyOfferAgreement}
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      name="marketingEmailsConsent"
+                      className="custom-checkbox mt-0.5"
+                    />
+                    <span className="text-foreground/90">
+                      {marketingEmailsConsent}
+                    </span>
+                  </label>
+                </div>
               ) : (
                 <div className="animate-delay-500 flex animate-element items-center justify-between text-sm">
                   <label className="flex cursor-pointer items-center gap-3">

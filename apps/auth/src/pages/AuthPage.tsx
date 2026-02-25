@@ -162,6 +162,8 @@ export default function AuthPage() {
 
   const isSignup = location.pathname.includes("/signup");
   const lang = window.location.pathname.split("/")[1] || "en";
+  const privacyPolicyUrl = `https://gridix.live/${lang}/privacy/`;
+  const offerAgreementUrl = `https://gridix.live/${lang}/offerta/`;
 
   const refCode = searchParams.get("ref");
   const inviteCode = searchParams.get("invite");
@@ -334,6 +336,29 @@ export default function AuthPage() {
           accountTypeLabel: t("auth.selectAccountType"),
           accountTypeDeveloper: t("auth.developer"),
           accountTypePartner: t("auth.partner"),
+          privacyOfferAgreement: (
+            <>
+              {t("auth.privacyOfferAgreementPrefix")}{" "}
+              <a
+                href={privacyPolicyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[var(--admin-primary)] underline underline-offset-2 transition-colors"
+              >
+                {t("auth.privacyPolicyLabel")}
+              </a>{" "}
+              {t("auth.privacyOfferAgreementAnd")}{" "}
+              <a
+                href={offerAgreementUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[var(--admin-primary)] underline underline-offset-2 transition-colors"
+              >
+                {t("auth.offerAgreementLabel")}
+              </a>
+              .
+            </>
+          ),
           marketingEmailsConsent: t("auth.marketingEmailsConsent"),
           rememberMe: t("auth.keepMeSignedIn"),
           resetPassword: t("auth.resetPasswordLink"),
