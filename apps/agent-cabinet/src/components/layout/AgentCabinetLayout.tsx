@@ -115,6 +115,7 @@ export function AgentCabinetLayout({
       onMobileOpenChange={setIsMobileOpen}
       onMobileClose={() => setIsMobileOpen(false)}
       showSupportButton={true}
+      {...(user?.id ? { userId: user.id } : {})}
       onSignOut={() => {
         void (async () => {
           await signOut();
