@@ -290,7 +290,7 @@ export default function AuthPage() {
       <div className="fixed right-4 top-6 z-50 md:left-4 md:right-auto">
         <LanguageSwitcher />
       </div>
-      <div className="fixed left-4 top-6 z-40 md:left-auto md:right-[calc(50%+30px)]">
+      <div className="fixed top-6 z-40 [inset-inline-start:1rem] md:[inset-inline-end:calc(50vw+30px)] md:[inset-inline-start:auto]">
         <a
           href={aboutPlatformUrl}
           target="_blank"

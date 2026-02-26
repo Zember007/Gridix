@@ -628,7 +628,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {/* Right column: hero video (async) / image fallback + testimonials */}
       {heroImageSrc && (
         <section className="relative hidden flex-1 p-4 md:block">
-          <div className="fixed bottom-4 left-[calc(50%+8px)] right-4 top-4">
+          <div className="fixed bottom-4 top-4 w-[calc(50vw-24px)] [inset-inline-start:calc(50vw+8px)]">
             {/* Fallback/initial background */}
             <div
               className="animate-delay-300 relative h-full w-full animate-slide-right rounded-3xl bg-cover bg-center"
