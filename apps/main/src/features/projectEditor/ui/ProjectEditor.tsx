@@ -653,7 +653,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           </div>
         </div>
 
-        <div className="project_editor_content_usertour flex-1 overflow-y-auto px-6 py-4 lg:py-6">
+        <div className="project_editor_content_usertour flex-1 overflow-y-auto py-4 lg:px-6 lg:py-6">
           {/* Show content based on activeTab without Tabs wrapper */}
 
           {(activeTab === "basic" || activeTab === "building") && (
