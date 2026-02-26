@@ -545,6 +545,7 @@ const ProjectApartmentSelector = ({
             projectId={project.id}
             loaderFallback={loaderBlock}
             portalContainer={widgetPortalContainer}
+            isWidget={isWidget}
           />
         </>
       )}
