@@ -79,7 +79,7 @@ export function AdminSettingsNotificationsTab(
         </div>
       </div>
 
-      <div className="space-y-3">
+      {/*  <div className="space-y-3">
         <div className="text-sm font-semibold text-muted-foreground">
           {props.t("adminSettings.notificationIntegrations")}
         </div>
@@ -126,7 +126,7 @@ export function AdminSettingsNotificationsTab(
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="space-y-3">
         <div className="text-sm font-semibold text-muted-foreground">
