@@ -112,6 +112,7 @@ const ProjectApartmentsManager = ({
   });
 
   const loadApartments = useCallback(async () => {
+    if (!projectId) return;
     try {
       const { data, error } = await supabase
         .from("apartments")
