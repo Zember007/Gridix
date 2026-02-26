@@ -162,6 +162,7 @@ export default function AuthPage() {
 
   const isSignup = location.pathname.includes("/signup");
   const lang = window.location.pathname.split("/")[1] || "en";
+  const aboutPlatformUrl = `https://gridix.live/${lang === "ru" ? "" : lang}`;
   const privacyPolicyUrl = `https://gridix.live/${lang}/privacy/`;
   const offerAgreementUrl = `https://gridix.live/${lang}/offerta/`;
 
@@ -286,8 +287,23 @@ export default function AuthPage() {
 
   return (
     <>
-      <div className="absolute right-6 top-6 z-50 md:left-6 md:right-auto">
+      <div className="fixed right-4 top-6 z-50 md:left-4 md:right-auto">
         <LanguageSwitcher />
+      </div>
+      <div className="fixed left-4 top-6 z-40 md:left-auto md:right-[calc(50%+30px)]">
+        <a
+          href={aboutPlatformUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-3 rounded-sm text-[20px] font-normal leading-none text-[#1f2430]"
+        >
+          <img
+            src="/apple-touch-icon.png"
+            alt="Gridix"
+            className="h-10 w-10 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.22)]"
+          />
+          <span>{t("auth.aboutPlatform")}</span>
+        </a>
       </div>
       <SignInPage
         defaultMode={isSignup ? "signup" : "signin"}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import heroVideoSrc from "@/assets/gridix-intro.webm";
@@ -228,7 +228,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     signInButton = "Sign In",
     signUpButton = "Create account",
     orContinueWith = "Or continue with",
-    orViaSocials = "ИЛИ ЧЕРЕЗ СОЦСЕТИ",
+    orViaSocials = "OR VIA SOCIALS",
     googleButton = "Google",
     facebookButton = "Facebook",
     createAccountPrompt = "New to our platform?",
@@ -314,7 +314,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   return (
     <div className="flex min-h-[100dvh] w-full flex-col overflow-x-clip font-sans md:flex-row">
       {/* Left column: auth form */}
-      <section className="flex flex-1 items-start justify-center p-4 pt-[68px]">
+      <section className="flex flex-1 items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-2">
             <div className={titleBlockClassName}>
