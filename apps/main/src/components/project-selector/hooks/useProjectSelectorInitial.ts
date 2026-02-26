@@ -40,6 +40,14 @@ export const useProjectSelectorInitial = (
     () => (query.data?.apartments ?? []).map(normalizeApartmentData),
     [query.data?.apartments],
   );
+  const fieldSettings = useMemo(
+    () => (query.data?.fieldSettings as Array<Record<string, unknown>>) ?? [],
+    [query.data?.fieldSettings],
+  );
+  const customFields = useMemo(
+    () => (query.data?.customFields as Array<Record<string, unknown>>) ?? [],
+    [query.data?.customFields],
+  );
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
 
@@ -65,10 +73,8 @@ export const useProjectSelectorInitial = (
     apartmentsLoaded: !query.isLoading,
     preloadedLayoutPhotosByRooms:
       (query.data?.layoutPhotosByRooms as Record<string, LayoutPhoto[]>) ?? {},
-    fieldSettings:
-      (query.data?.fieldSettings as Array<Record<string, unknown>>) ?? [],
-    customFields:
-      (query.data?.customFields as Array<Record<string, unknown>>) ?? [],
+    fieldSettings,
+    customFields,
     customDomain: query.data?.customDomain ?? null,
   };
 };
