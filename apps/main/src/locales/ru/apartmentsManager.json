@@ -1,5 +1,6 @@
 {
   "addApartment": "Добавить квартиру",
+  "allStatuses": "Все статусы",
   "apartment": "Квартира {{number}}",
   "apartmentNumber": "Номер квартиры*",
   "apartmentType": "Тип помещения",

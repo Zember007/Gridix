@@ -1,5 +1,6 @@
 {
   "addApartment": "إضافة شقة",
+  "allStatuses": "جميع الحالات",
   "apartment": "شقة {{رقم}}",
   "apartmentNumber": "رقم الشقة*",
   "apartmentType": "نوع الفضاء",

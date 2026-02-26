@@ -1,5 +1,6 @@
 {
   "addApartment": "Add Apartment",
+  "allStatuses": "All statuses",
   "apartment": "Apartment {{number}}",
   "apartmentNumber": "Apartment Number*",
   "apartmentType": "Space type",

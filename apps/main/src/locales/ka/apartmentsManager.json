@@ -1,5 +1,6 @@
 {
   "addApartment": "ბინის დამატება",
+  "allStatuses": "ყველა სტატუსი",
   "apartment": "ბინა {{number}}",
   "apartmentNumber": "ბინის ნომერი*",
   "apartmentType": "ფართის ტიპი",

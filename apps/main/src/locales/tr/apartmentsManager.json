@@ -1,5 +1,6 @@
 {
   "addApartment": "Daire Ekle",
+  "allStatuses": "Tüm durumlar",
   "apartment": "Daire {{number}}",
   "apartmentNumber": "Daire Numarası*",
   "apartmentType": "Alan türü",

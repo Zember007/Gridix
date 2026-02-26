@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Button,
@@ -31,7 +31,6 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Search,
   Trash2,
   X,
 } from "lucide-react";
@@ -47,8 +46,12 @@ import type { Json } from "@gridix/types/database";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
-import { ADMIN_THEME, cn } from "@gridix/utils/lib";
+import { ADMIN_THEME, cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { trackUsertourEvent } from "@gridix/utils/integrations";
+import {
+  AdminApartmentFilters,
+  type ApartmentStatusFilter,
+} from "@/components/projects/AdminApartmentFilters";
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
@@ -73,6 +76,11 @@ const ProjectApartmentsManager = ({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [selectedRooms, setSelectedRooms] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] =
+    useState<ApartmentStatusFilter>("all");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [areaRange, setAreaRange] = useState<[number, number]>([0, 0]);
   const [customFieldsData, setCustomFieldsData] = useState<
     Record<string, unknown>
   >({});
@@ -138,16 +146,52 @@ const ProjectApartmentsManager = ({
     setNewApartment((prev) => ({ ...prev, type: currentType }));
   }, [currentType]);
 
+  const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
+    const prices = apartments
+      .filter((a) => a.price !== null && a.price > 0)
+      .map((a) => a.price as number);
+    const areas = apartments.filter((a) => a.area > 0).map((a) => a.area);
+    return {
+      minPrice: prices.length ? Math.min(...prices) : 0,
+      maxPrice: prices.length ? Math.max(...prices) : 0,
+      minArea: areas.length ? Math.min(...areas) : 0,
+      maxArea: areas.length ? Math.max(...areas) : 0,
+    };
+  }, [apartments]);
+
   useEffect(() => {
-    // Filter apartments based on search term, type, and floor
+    setPriceRange([minPrice, maxPrice]);
+  }, [minPrice, maxPrice]);
+
+  useEffect(() => {
+    setAreaRange([minArea, maxArea]);
+  }, [minArea, maxArea]);
+
+  const currencySymbol = getCurrencySymbolSafe(project?.currency ?? "USD");
+
+  useEffect(() => {
     const filtered = apartments.filter((apartment) => {
       const matchesType = apartment.type === currentType;
 
-      // Filter by floor if selected
       const matchesFloor =
         selectedFloor === null || apartment.floor_number === selectedFloor;
 
-      // Search by apartment number, status, area, and price
+      const matchesRooms =
+        selectedRooms === null || String(apartment.rooms) === selectedRooms;
+
+      const matchesStatus =
+        selectedStatus === "all" || apartment.status === selectedStatus;
+
+      const matchesPrice =
+        (priceRange[0] === minPrice && priceRange[1] === maxPrice) ||
+        (apartment.price !== null &&
+          apartment.price >= priceRange[0] &&
+          apartment.price <= priceRange[1]);
+
+      const matchesArea =
+        (areaRange[0] === minArea && areaRange[1] === maxArea) ||
+        (apartment.area >= areaRange[0] && apartment.area <= areaRange[1]);
+
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
         searchTerm === "" ||
@@ -157,10 +201,31 @@ const ProjectApartmentsManager = ({
         (apartment.price !== null &&
           apartment.price.toString().includes(searchTerm));
 
-      return matchesType && matchesFloor && matchesSearch;
+      return (
+        matchesType &&
+        matchesFloor &&
+        matchesRooms &&
+        matchesStatus &&
+        matchesPrice &&
+        matchesArea &&
+        matchesSearch
+      );
     });
     setFilteredApartments(filtered);
-  }, [apartments, searchTerm, currentType, selectedFloor]);
+  }, [
+    apartments,
+    searchTerm,
+    currentType,
+    selectedFloor,
+    selectedRooms,
+    selectedStatus,
+    priceRange,
+    areaRange,
+    minPrice,
+    maxPrice,
+    minArea,
+    maxArea,
+  ]);
 
   const handleSaveApartment = async (
     apartmentData: Partial<Apartment>,
@@ -392,6 +457,39 @@ const ProjectApartmentsManager = ({
       (a, b) => a - b,
     );
   }, [apartments]);
+
+  const getUniqueRooms = useCallback(() => {
+    const rooms = apartments
+      .filter((apt) => apt.type === "apartment")
+      .map((apt) => apt.rooms);
+    const unique = [...new Set(rooms.map(String))];
+    const numeric = unique
+      .filter((r) => r !== "free_layout" && !isNaN(Number(r)))
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map(String);
+    if (unique.includes("free_layout")) numeric.push("free_layout");
+    return numeric;
+  }, [apartments]);
+
+  const resetFilters = useCallback(() => {
+    setSearchTerm("");
+    setSelectedFloor(null);
+    setSelectedRooms(null);
+    setSelectedStatus("all");
+    setPriceRange([minPrice, maxPrice]);
+    setAreaRange([minArea, maxArea]);
+  }, [minPrice, maxPrice, minArea, maxArea]);
+
+  const hasActiveFilters =
+    searchTerm !== "" ||
+    selectedFloor !== null ||
+    selectedRooms !== null ||
+    selectedStatus !== "all" ||
+    priceRange[0] !== minPrice ||
+    priceRange[1] !== maxPrice ||
+    areaRange[0] !== minArea ||
+    areaRange[1] !== maxArea;
 
   const handleDeleteFloor = async (floorNumber: number) => {
     const apartmentsOnFloor = apartments.filter(
@@ -779,40 +877,31 @@ const ProjectApartmentsManager = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Search field and floor filter */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-            <Input
-              placeholder={t("apartmentsManager.searchByNameAreaPrice")}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          {projectType !== "object" && (
-            <Select
-              value={selectedFloor === null ? "all" : selectedFloor.toString()}
-              onValueChange={(value) =>
-                setSelectedFloor(value === "all" ? null : parseInt(value))
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue
-                  placeholder={t("apartmentsManager.filterByFloor")}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("project.allFloors")}</SelectItem>
-                {getUniqueFloors().map((floor) => (
-                  <SelectItem key={floor} value={floor.toString()}>
-                    {t("apartmentsManager.floor", { floor })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
+        <AdminApartmentFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedFloor={selectedFloor}
+          setSelectedFloor={setSelectedFloor}
+          selectedRooms={selectedRooms}
+          setSelectedRooms={setSelectedRooms}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          areaRange={areaRange}
+          setAreaRange={setAreaRange}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          minArea={minArea}
+          maxArea={maxArea}
+          uniqueFloors={getUniqueFloors()}
+          uniqueRooms={getUniqueRooms()}
+          projectType={projectType}
+          currentType={currentType}
+          onReset={resetFilters}
+          hasActiveFilters={hasActiveFilters}
+          currencySymbol={currencySymbol}
+        />
 
         {/* Type selector tabs */}
         {(project?.has_commercial || project?.has_parking) && (
