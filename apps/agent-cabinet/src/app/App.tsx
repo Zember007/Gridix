@@ -7,23 +7,25 @@ import {
 } from "react-router-dom";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { AgentWorkspaceProvider } from "@/contexts/WorkspaceContext";
-import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
+import { AuthProvider } from "@/features/auth-session";
+import { AgentWorkspaceProvider } from "@/features/agent-workspace";
+import { ProtectedRoute } from "@/features/auth-gate";
 import {
   AgentCabinetLayout,
   useAgentCabinetPageRouting,
-} from "@/components/layout/AgentCabinetLayout";
+} from "@/features/agent-navigation";
 
 import AuthPage from "@/pages/AuthPage";
 import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
-import { DashboardTab } from "@/pages/tabs/DashboardTab";
-import { AnalyticsTab } from "@/pages/tabs/AnalyticsTab";
-import { ContactsTab } from "@/pages/tabs/ContactsTab";
-import { CatalogTab } from "@/pages/tabs/CatalogTab";
-import { PartnerProgramTab } from "@/pages/tabs/PartnerProgramTab";
-import { AgentSettingsTab } from "@/pages/tabs/AgentSettingsTab";
+import {
+  AgentSettingsTab,
+  AnalyticsTab,
+  CatalogTab,
+  ContactsTab,
+  DashboardTab,
+  PartnerProgramTab,
+} from "@/pages/tabs";
 
 function AgentCabinetRouter() {
   const { activePage, setActivePage } = useAgentCabinetPageRouting();
