@@ -46,7 +46,7 @@ isProject: false
 
 - **Собрать матрицу фич по тарифам**: на основе ключей из `[apps/main/src/entities/subscription/model/adminPricingContent.ts](apps/main/src/entities/subscription/model/adminPricingContent.ts)` и соответствующих переводов в `[apps/main/src/locales/*/admin.json](apps/main/src/locales/en/admin.json)` выписать, какие именно возможности есть у `basic` и `pro`.
 - **Найти все места проверки подписки/ограничений**: пройтись по использованию `subscription_status`, `subscription_expires_at` и `useSubscriptionStatus` в файлах вроде `[apps/main/src/components/project-selector/ProjectApartmentSelector.tsx](apps/main/src/components/project-selector/ProjectApartmentSelector.tsx)`, `[apps/main/src/pages/DomainProjectPage.tsx](apps/main/src/pages/DomainProjectPage.tsx)`, `Partner*Section.tsx` и др., чтобы понять, какие реальные блокировки применяются при отсутствии подписки.
-- **Сопоставить фактические ограничения с текстом тарифов**: сверить, что то, что мы обещаем в плане (через `planContent.basic/pro.features.`\*), совпадает с тем, что реально включено/выключено в UI и доступе к данным при отсутствии или окончании подписки; наметить, где при внедрении Stripe нужно будет дополнить/уточнить проверки.
+- **Сопоставить фактические ограничения с текстом тарифов**: сверить, что то, что мы обещаем в плане (через `planContent.basic/pro.features.`), совпадает с тем, что реально включено/выключено в UI и доступе к данным при отсутствии или окончании подписки; наметить, где при внедрении Stripe нужно будет дополнить/уточнить проверки.
 - **Отдельно проверить расхождения статусов**: в коде есть разные трактовки `pending_payment` (где-то считается допустимым для “не истёкло”, а где-то блокирует доступ). Зафиксировать ожидаемую бизнес-логику (для владельца/для публичного домена) и привести к единому правилу.
 
 ### 2. Проверка триггеров и функций в Supabase (trial и ежедневная экспирация)
@@ -119,7 +119,7 @@ isProject: false
     - сопоставить line items (SubscriptionItems) с проектами через `stripe_subscription_items`;
     - по metadata (user_id, project_ids, plan_id, duration_months) найти или создать строки в `user_subscriptions` для каждого проекта (или обновить существующие);
     - обновить `status` → `active`, `current_period_start`, `current_period_end`:
-      - `current_period`\_\* берём из Stripe (`subscription.current_period_start/end`) как источник правды для рекуррентной модели;
+      - `current_period` берём из Stripe (`subscription.current_period_start/end`) как источник правды для рекуррентной модели;
     - обновить `projects.subscription_status` и `subscription_expires_at`;
     - записать запись в `subscription_history` с action `stripe_payment`.
   - При `invoice.payment_failed` или отмене подписки Stripe:
@@ -153,7 +153,7 @@ isProject: false
 
 ### 7. Supabase: новые таблицы для Stripe (миграции в dev, затем перенос)
 
-- `**stripe_subscription_items`\*\* — маппинг Stripe subscription/item → проект (чтобы вебхук точно знал, какой проект активировать/продлить/отключить):
+- `**stripe_subscription_items` — маппинг Stripe subscription/item → проект (чтобы вебхук точно знал, какой проект активировать/продлить/отключить):
 
 ```sql
 create table if not exists public.stripe_subscription_items (
