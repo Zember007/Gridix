@@ -161,6 +161,14 @@ const ProjectApartmentSelector = ({
   const { containerRef, scrollWidgetToTop } = useWidgetScroll(isWidget, [
     viewMode,
   ]);
+  const widgetPortalContainer = useMemo<HTMLElement | null>(() => {
+    if (!isWidget || typeof document === "undefined") return null;
+
+    const widgetHost = document.getElementById("gridix-widget-root");
+    return (
+      widgetHost?.shadowRoot?.getElementById("gridix-portal-container") ?? null
+    );
+  }, [isWidget]);
 
   // ── Filters ──
 
@@ -536,6 +544,7 @@ const ProjectApartmentSelector = ({
             apartment={ui.selectedApartment}
             projectId={project.id}
             loaderFallback={loaderBlock}
+            portalContainer={widgetPortalContainer}
           />
         </>
       )}

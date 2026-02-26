@@ -10,6 +10,7 @@ interface ApartmentDetailsSheetProps {
   apartment: Apartment | null;
   projectId: string;
   loaderFallback: ReactNode;
+  portalContainer?: HTMLElement | null;
 }
 
 export const ApartmentDetailsSheet = ({
@@ -18,6 +19,7 @@ export const ApartmentDetailsSheet = ({
   apartment,
   projectId,
   loaderFallback,
+  portalContainer,
 }: ApartmentDetailsSheetProps) => (
   <Sheet
     open={open}
@@ -29,6 +31,7 @@ export const ApartmentDetailsSheet = ({
       side="right"
       noCloseButton
       className="z-[60] w-full !max-w-full overflow-y-auto p-0"
+      portalContainer={portalContainer}
       aria-describedby={undefined}
     >
       <SheetTitle className="sr-only">
