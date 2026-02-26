@@ -76,7 +76,9 @@ export function GlobalAccountProfileSection({
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="preferred_locale">Language</Label>
+            <Label htmlFor="preferred_locale">
+              {t("adminSettings.language")}
+            </Label>
             <Select
               value={preferredLocale}
               onValueChange={(v) => setPreferredLocale(v as SupportedLocale)}
@@ -93,7 +95,7 @@ export function GlobalAccountProfileSection({
               </SelectContent>
             </Select>
             <div className="text-muted-foreground text-xs">
-              Used for emails and default UI language.
+              {t("adminSettings.languageHint")}
             </div>
           </div>
         </div>

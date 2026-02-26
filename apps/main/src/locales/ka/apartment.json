@@ -24,5 +24,18 @@
   "freeLayout": "თავისუფალი გეგმარება",
   "yes": "დიახ",
   "sendRequest": "გაგზავნა",
-  "requestSent": "განაცხადი წარმატებით გაიგზავნა! ჩვენ მალე დაგიკავშირდებით."
+  "requestSent": "განაცხადი წარმატებით გაიგზავნა! ჩვენ მალე დაგიკავშირდებით.",
+  "calculator": "კალკულატორი",
+  "downloadPDF": "ჩამოტვირთეთ PDF",
+  "fetchError": "შეცდომა ბინის დეტალების მიღებისას",
+  "generatingPDF": "PDF-ის გენერირება...",
+  "goBack": "დაბრუნდი",
+  "installmentCalculator": "განვადების კალკულატორი",
+  "invalidId": "ბინის ID არასწორია",
+  "linkCopied": "ბმული კოპირებულია",
+  "notFound": "ბინა არ მოიძებნა",
+  "notFoundDescription": "მოთხოვნილი ბინა ვერ მოიძებნა.",
+  "pdfGenerationError": "შეცდომა PDF-ის გენერირებისას",
+  "reserve": "რეზერვი",
+  "reserveTitle": "დაჯავშნე ბინა"
 }

@@ -24,5 +24,18 @@
   "freeLayout": "פריסה חופשית",
   "yes": "כֵּן",
   "sendRequest": "שלח בקשה",
-  "requestSent": "הבקשה נשלחה בהצלחה! ניצור איתך קשר בהקדם."
+  "requestSent": "הבקשה נשלחה בהצלחה! ניצור איתך קשר בהקדם.",
+  "calculator": "מַחשְׁבוֹן",
+  "downloadPDF": "הורד PDF",
+  "fetchError": "שגיאה באחזור פרטי הדירה",
+  "generatingPDF": "יוצר PDF...",
+  "goBack": "לַחֲזוֹר",
+  "installmentCalculator": "מחשבון תשלומים",
+  "invalidId": "מזהה דירה לא חוקי",
+  "linkCopied": "הקישור הועתק",
+  "notFound": "דירה לא נמצאה",
+  "notFoundDescription": "הדירה המבוקשת לא נמצאה.",
+  "pdfGenerationError": "שגיאה ביצירת PDF",
+  "reserve": "לְהַזמִין",
+  "reserveTitle": "דירת מילואים"
 }

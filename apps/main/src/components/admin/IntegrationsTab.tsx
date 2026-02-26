@@ -20,8 +20,7 @@ export const IntegrationsTab = () => {
           {t("admin.integrations")}
         </h2>
         <p className="text-muted-foreground">
-          {t("admin.integrationsDescription") ||
-            "Connect external services to your workspace."}
+          {t("admin.integrationsDescription")}
         </p>
       </div>
 
@@ -37,9 +36,7 @@ export const IntegrationsTab = () => {
             <CardTitle className="text-xl text-muted-foreground">
               Bitrix24
             </CardTitle>
-            <CardDescription>
-              {t("admin.common.comingSoon") || "Coming Soon"}
-            </CardDescription>
+            <CardDescription>{t("admin.common.comingSoon")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center py-8">
@@ -54,9 +51,7 @@ export const IntegrationsTab = () => {
             <CardTitle className="text-xl text-muted-foreground">
               Salesforce
             </CardTitle>
-            <CardDescription>
-              {t("admin.common.comingSoon") || "Coming Soon"}
-            </CardDescription>
+            <CardDescription>{t("admin.common.comingSoon")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center py-8">

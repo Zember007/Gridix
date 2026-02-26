@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@gridix/ui";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { PartnerFilter } from "./types";
 
 interface Props {
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
+  const { t, language } = useLanguage();
+
   const activeFiltersCount = useMemo(() => {
     return [
       filters.status !== "all",
@@ -45,7 +48,9 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
     <PopoverContent align="end" className="w-[380px]">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-black text-slate-900">Фильтры</div>
+          <div className="text-sm font-black text-slate-900">
+            {t("partners.filtersPanel.title")}
+          </div>
           <div className="flex items-center gap-2">
             {activeFiltersCount > 0 ? (
               <Button
@@ -54,7 +59,7 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
                 onClick={reset}
                 className="font-bold"
               >
-                Сбросить ({activeFiltersCount})
+                {t("partners.filtersPanel.reset")} ({activeFiltersCount})
               </Button>
             ) : null}
             <Button
@@ -63,7 +68,7 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
               onClick={onClose}
               className="font-bold"
             >
-              Закрыть
+              {t("partners.filtersPanel.close")}
             </Button>
           </div>
         </div>
@@ -71,7 +76,7 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <div className="text-[10px] font-bold uppercase text-slate-500">
-              Статус
+              {t("partners.filtersPanel.status")}
             </div>
             <Select
               value={filters.status}
@@ -83,21 +88,31 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Статус" />
+                <SelectValue placeholder={t("partners.filtersPanel.status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все</SelectItem>
-                <SelectItem value="pending">Новые</SelectItem>
-                <SelectItem value="needs_correction">Доработка</SelectItem>
-                <SelectItem value="active">Активные</SelectItem>
-                <SelectItem value="blocked">Блок</SelectItem>
+                <SelectItem value="all">
+                  {t("partners.filtersPanel.all")}
+                </SelectItem>
+                <SelectItem value="pending">
+                  {t("partners.status.pending")}
+                </SelectItem>
+                <SelectItem value="needs_correction">
+                  {t("partners.status.needsCorrection")}
+                </SelectItem>
+                <SelectItem value="active">
+                  {t("partners.status.approved")}
+                </SelectItem>
+                <SelectItem value="blocked">
+                  {t("partners.status.blocked")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
             <div className="text-[10px] font-bold uppercase text-slate-500">
-              Тип
+              {t("partners.filtersPanel.type")}
             </div>
             <Select
               value={filters.type}
@@ -109,12 +124,18 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Тип" />
+                <SelectValue placeholder={t("partners.filtersPanel.type")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все</SelectItem>
-                <SelectItem value="agency">Агентство</SelectItem>
-                <SelectItem value="individual">Частный</SelectItem>
+                <SelectItem value="all">
+                  {t("partners.filtersPanel.all")}
+                </SelectItem>
+                <SelectItem value="agency">
+                  {t("partners.drawer.typeAgency")}
+                </SelectItem>
+                <SelectItem value="individual">
+                  {t("partners.drawer.typePrivateBroker")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -123,7 +144,7 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <div className="text-[10px] font-bold uppercase text-slate-500">
-              Комиссия от (%)
+              {t("partners.filtersPanel.commissionFrom")}
             </div>
             <Input
               type="number"
@@ -144,7 +165,7 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
           </div>
           <div className="space-y-1.5">
             <div className="text-[10px] font-bold uppercase text-slate-500">
-              Комиссия до (%)
+              {t("partners.filtersPanel.commissionTo")}
             </div>
             <Input
               type="number"
@@ -168,10 +189,11 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <div className="text-[10px] font-bold uppercase text-slate-500">
-              Дата от
+              {t("partners.filtersPanel.dateFrom")}
             </div>
             <Input
               type="date"
+              lang={language}
               value={filters.dateFrom ?? ""}
               onChange={(e) =>
                 setFilters((prev) => ({
@@ -183,10 +205,11 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
           </div>
           <div className="space-y-1.5">
             <div className="text-[10px] font-bold uppercase text-slate-500">
-              Дата до
+              {t("partners.filtersPanel.dateTo")}
             </div>
             <Input
               type="date"
+              lang={language}
               value={filters.dateTo ?? ""}
               onChange={(e) =>
                 setFilters((prev) => ({

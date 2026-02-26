@@ -32,7 +32,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
   projects,
 }) => {
   const [filter, setFilter] = useState<"all" | "paid" | "pending">("all");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const filteredOrders = useMemo(
     () =>
@@ -52,6 +52,23 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
 
   const getProjectNames = (ids: string[]) =>
     ids.map((id) => projects.find((p) => p.id === id)?.name || id).join(", ");
+
+  const dateLocale = useMemo(() => {
+    switch (language) {
+      case "ru":
+        return "ru-RU";
+      case "tr":
+        return "tr-TR";
+      case "he":
+        return "he-IL";
+      case "ar":
+        return "ar";
+      case "ka":
+        return "ka-GE";
+      default:
+        return "en-US";
+    }
+  }, [language]);
 
   const getStatusConfig = (status: string) => {
     if (status === "paid" || status === "admin_granted") {
@@ -93,6 +110,22 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
       return <ShieldCheck size={16} className="text-purple-600" />;
     }
     return <CreditCard size={16} />;
+  };
+
+  const getPaymentMethodLabel = (method?: string | null) => {
+    if (method === "invoice" || !method) {
+      return t("admin.subscriptionPage.history.methodLabels.invoice");
+    }
+
+    if (method === "card") {
+      return t("admin.subscriptionPage.history.methodLabels.card");
+    }
+
+    if (method === "manual") {
+      return t("admin.subscriptionPage.history.methodLabels.manual");
+    }
+
+    return t("admin.subscriptionPage.history.methodLabels.unknown");
   };
 
   return (
@@ -164,7 +197,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                   <TableCell>
                     <div className="text-sm font-bold text-slate-900">
                       {order.date
-                        ? new Date(order.date).toLocaleDateString("ru-RU")
+                        ? new Date(order.date).toLocaleDateString(dateLocale)
                         : "—"}
                     </div>
                     <div className="mt-0.5 font-mono text-[10px] text-slate-400">
@@ -194,18 +227,23 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                     </div>
                     {order.durationMonths && (
                       <div className="ml-1 mt-1 text-xs text-slate-500">
-                        {order.durationMonths} мес.
+                        {order.durationMonths}{" "}
+                        {order.durationMonths === 1
+                          ? t("admin.subscriptionPage.pricing.monthsShort")
+                          : t(
+                              "admin.subscriptionPage.pricing.monthsShortPlural",
+                            )}
                       </div>
                     )}
                   </TableCell>
                   <TableCell>
                     <div
                       className="flex items-center gap-2 text-sm text-slate-600"
-                      title={order.paymentMethod || "invoice"}
+                      title={getPaymentMethodLabel(order.paymentMethod)}
                     >
                       {getMethodIcon(order.paymentMethod)}
-                      <span className="text-xs capitalize">
-                        {order.paymentMethod || "invoice"}
+                      <span className="text-xs">
+                        {getPaymentMethodLabel(order.paymentMethod)}
                       </span>
                     </div>
                   </TableCell>
@@ -248,7 +286,6 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
             <Clock size={20} className="opacity-50" />
           </div>
-          <p>Заказов не найдено</p>
           <p>{t("admin.subscriptionPage.history.empty")}</p>
         </div>
       )}

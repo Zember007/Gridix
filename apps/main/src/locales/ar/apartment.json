@@ -24,5 +24,18 @@
   "freeLayout": "تخطيط حر",
   "yes": "نعم",
   "sendRequest": "إرسال طلب",
-  "requestSent": "تم إرسال الطلب بنجاح! سنتواصل معك قريباً."
+  "requestSent": "تم إرسال الطلب بنجاح! سنتواصل معك قريباً.",
+  "calculator": "آلة حاسبة",
+  "downloadPDF": "تحميل قوات الدفاع الشعبي",
+  "fetchError": "خطأ في جلب تفاصيل الشقة",
+  "generatingPDF": "جارٍ إنشاء ملف PDF...",
+  "goBack": "عُد",
+  "installmentCalculator": "حاسبة القسط",
+  "invalidId": "معرف الشقة غير صالح",
+  "linkCopied": "تم نسخ الرابط",
+  "notFound": "لم يتم العثور على الشقة",
+  "notFoundDescription": "لا يمكن العثور على الشقة المطلوبة.",
+  "pdfGenerationError": "حدث خطأ أثناء إنشاء ملف PDF",
+  "reserve": "احتياطي",
+  "reserveTitle": "شقة احتياطية"
 }

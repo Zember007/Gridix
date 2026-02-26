@@ -38,5 +38,6 @@
   "typeParking": "وقوف السيارات",
   "updateSuccess": "تم تحديث الشقة",
   "syncError": "لا يوجد شقق بنفس المساحة وعدد الغرف للمزامنة",
-  "noSearchResults": "لا يوجد نتائج"
+  "noSearchResults": "لا يوجد نتائج",
+  "filterByFloor": "تصفية حسب الطابق"
 }

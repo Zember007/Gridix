@@ -65,5 +65,8 @@
   "total": "Total",
   "type": "Type",
   "viewApartments": "View {{count}} options",
+  "viewDetails": "View details",
+  "openMenu": "Open menu",
+  "closeMenu": "Close menu",
   "plan_floor": "Floor {{floor}} plan"
 }

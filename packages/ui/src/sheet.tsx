@@ -57,29 +57,42 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps & {
     noCloseButton?: boolean;
+    portalContainer?: HTMLElement | null;
   }
->(({ side = "right", className, children, ...props }, ref) => {
-  const portalContainer = useWidgetPortalContainer();
+>(
+  (
+    {
+      side = "right",
+      className,
+      children,
+      portalContainer: portalContainerProp,
+      ...props
+    },
+    ref,
+  ) => {
+    const widgetPortalContainer = useWidgetPortalContainer();
+    const portalContainer = portalContainerProp ?? widgetPortalContainer;
 
-  return (
-    <SheetPortal container={portalContainer ?? undefined}>
-      <SheetOverlay />
-      <SheetPrimitive.Content
-        ref={ref}
-        className={cn(sheetVariants({ side }), className)}
-        {...props}
-      >
-        {children}
-        {props.noCloseButton ? null : (
-          <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-5 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-            <ArrowRight className="h-4 w-4 text-black" />
-            <span className="sr-only">Close</span>
-          </SheetPrimitive.Close>
-        )}
-      </SheetPrimitive.Content>
-    </SheetPortal>
-  );
-});
+    return (
+      <SheetPortal container={portalContainer ?? undefined}>
+        <SheetOverlay />
+        <SheetPrimitive.Content
+          ref={ref}
+          className={cn(sheetVariants({ side }), className)}
+          {...props}
+        >
+          {children}
+          {props.noCloseButton ? null : (
+            <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-5 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
+              <ArrowRight className="h-4 w-4 text-black" />
+              <span className="sr-only">Close</span>
+            </SheetPrimitive.Close>
+          )}
+        </SheetPrimitive.Content>
+      </SheetPortal>
+    );
+  },
+);
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({

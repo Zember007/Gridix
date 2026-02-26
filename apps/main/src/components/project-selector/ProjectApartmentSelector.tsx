@@ -41,7 +41,6 @@ import { ApartmentDetailsSheet } from "./sections/ApartmentDetailsSheet";
 import { ProjectErrorBoundary } from "./sections/ProjectErrorBoundary";
 
 // Lazy load components at module level (outside component)
-const ApartmentDetailsPage = lazy(() => import("@/pages/ApartmentDetailsPage"));
 const InteractiveProjectsMap = lazy(
   () => import("@/components/visualization/InteractiveProjectsMap"),
 );
@@ -75,6 +74,7 @@ const ProjectApartmentSelector = ({
     preloadedLayoutPhotosByRooms,
     fieldSettings: rawFieldSettings,
     customFields: rawCustomFields,
+    customDomain,
   } = useProjectSelectorInitial(projectId);
 
   const { fields: fieldSettings } = useFields(project?.id || null, {
@@ -161,6 +161,14 @@ const ProjectApartmentSelector = ({
   const { containerRef, scrollWidgetToTop } = useWidgetScroll(isWidget, [
     viewMode,
   ]);
+  const widgetPortalContainer = useMemo<HTMLElement | null>(() => {
+    if (!isWidget || typeof document === "undefined") return null;
+
+    const widgetHost = document.getElementById("gridix-widget-root");
+    return (
+      widgetHost?.shadowRoot?.getElementById("gridix-portal-container") ?? null
+    );
+  }, [isWidget]);
 
   // ── Filters ──
 
@@ -243,39 +251,47 @@ const ProjectApartmentSelector = ({
   // ── Handlers ──
 
   const openApartmentDetails = async (apartment: Apartment) => {
-    /*  if (isWidget) {
-             scrollWidgetToTop();
-             ui.openApartmentModal(apartment);
-             return;
-         } */
+    if (isWidget) {
+      scrollWidgetToTop();
+    }
 
     ui.openApartmentDetails(apartment);
 
-    try {
-      const projectPath = project?.slug
-        ? project.slug
-        : `id/${project?.id || projectId}`;
-      const base = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+    if (!isWidget) {
+      try {
+        const projectPath = project?.slug
+          ? project.slug
+          : `id/${project?.id || projectId}`;
+        const path = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
 
-      const currentUrl = new URL(window.location.href);
-      const newUrl = new URL(base, window.location.origin);
-      currentUrl.searchParams.forEach((value, key) => {
-        newUrl.searchParams.set(key, value);
-      });
+        const baseOrigin = customDomain
+          ? `https://${customDomain}`
+          : window.location.origin;
 
-      window.history.pushState(
-        { apartmentId: apartment.id },
-        "",
-        newUrl.toString(),
-      );
-    } catch (e) {
-      console.error("Error updating URL", e);
+        const currentUrl = new URL(window.location.href);
+        const newUrl = new URL(path, baseOrigin);
+        currentUrl.searchParams.forEach((value, key) => {
+          newUrl.searchParams.set(key, value);
+        });
+
+        window.history.pushState(
+          { apartmentId: apartment.id },
+          "",
+          newUrl.toString(),
+        );
+      } catch (e) {
+        console.error("Error updating URL", e);
+      }
     }
   };
 
   const handleCloseApartmentDetails = useCallback(() => {
-    window.history.back();
-  }, []);
+    if (isWidget) {
+      closeApartmentDetailsAction();
+    } else {
+      window.history.back();
+    }
+  }, [isWidget, closeApartmentDetailsAction]);
 
   const openFloorPreview = (floorNumber: number) => {
     setSelectedFloorForPlan(floorNumber);
@@ -339,20 +355,6 @@ const ProjectApartmentSelector = ({
       <Spinner size="md" color={themeColor} />
     </div>
   );
-
-  // If widget mode and apartment is selected, show apartment details
-  if (isWidget && ui.isApartmentModalOpen && ui.selectedApartment) {
-    return (
-      <Suspense fallback={loaderBlock}>
-        <ApartmentDetailsPage
-          onClose={ui.closeApartmentModal}
-          useId={true}
-          apartmentIdProp={ui.selectedApartment.id}
-          projectIdProp={projectId}
-        />
-      </Suspense>
-    );
-  }
 
   return (
     <div
@@ -542,6 +544,8 @@ const ProjectApartmentSelector = ({
             apartment={ui.selectedApartment}
             projectId={project.id}
             loaderFallback={loaderBlock}
+            portalContainer={widgetPortalContainer}
+            isWidget={isWidget}
           />
         </>
       )}

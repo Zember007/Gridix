@@ -22,7 +22,7 @@ import {
 } from "@gridix/ui";
 
 export const PartnerAccountSection: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     loading,
     error,
@@ -185,6 +185,7 @@ export const PartnerAccountSection: React.FC = () => {
               />
               <Input
                 type="date"
+                lang={language}
                 value={startDate}
                 max={endDate}
                 onChange={(e) => setStartDate(e.target.value)}
@@ -200,6 +201,7 @@ export const PartnerAccountSection: React.FC = () => {
               />
               <Input
                 type="date"
+                lang={language}
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}

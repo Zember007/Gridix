@@ -347,7 +347,11 @@ export const ListView = ({
                                 )}
                               </div>
                               <div className="space-y-1 text-xs text-gray-600">
-                                {areaVisible && <div>{apartment.area} м² </div>}
+                                {areaVisible && (
+                                  <div>
+                                    {apartment.area} {t("apartment.sqm")}{" "}
+                                  </div>
+                                )}
                                 <div className="text-sm font-bold text-gray-900">
                                   {apartment.price && priceVisible
                                     ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}`
@@ -571,7 +575,7 @@ export const ListView = ({
                                         {t("project.area")}
                                       </span>
                                       <div className="text-[20px] font-light leading-[24px] text-black transition-colors duration-200 hover:text-gray-700">
-                                        {apartment.area} м²
+                                        {apartment.area} {t("apartment.sqm")}
                                       </div>
                                     </div>
                                   )}
@@ -596,7 +600,7 @@ export const ListView = ({
                                               : `${apartment.rooms} ${t("apartment.rooms")}`;
                                           break;
                                         case "area":
-                                          value = `${apartment.area} м²`;
+                                          value = `${apartment.area} ${t("apartment.sqm")}`;
                                           break;
                                         case "price":
                                           value = apartment.price;
@@ -781,7 +785,7 @@ export const ListView = ({
                             )}
                             {areaVisible && (
                               <div className="text-xs text-gray-600">
-                                {apartment.area} м²
+                                {apartment.area} {t("apartment.sqm")}
                               </div>
                             )}
                             <div className="text-xs font-semibold text-gray-900">
@@ -869,7 +873,7 @@ export const ListView = ({
                                   )}
                                   <div className="text-xs text-gray-600">
                                     {apartment.area && areaVisible
-                                      ? `${apartment.area} м²`
+                                      ? `${apartment.area} ${t("apartment.sqm")}`
                                       : ""}
                                   </div>
                                   <div className="text-xs font-semibold text-gray-900">

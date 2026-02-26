@@ -42,18 +42,13 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
 
   const handleUpdate = async () => {
     if (!value || isNaN(parseFloat(value))) {
-      toast.error(
-        t("projectEditor.priceUpdateInvalidValue") ||
-          "Please enter a valid value",
-      );
+      toast.error(t("projectEditor.priceUpdateInvalidValue"));
       return;
     }
 
     const numValue = parseFloat(value);
     if (numValue < 0) {
-      toast.error(
-        t("projectEditor.priceUpdateNegativeValue") || "Value must be positive",
-      );
+      toast.error(t("projectEditor.priceUpdateNegativeValue"));
       return;
     }
 
@@ -73,15 +68,11 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
 
       if (error) throw error;
 
-      toast.success(
-        t("projectEditor.priceUpdateSuccess") || "Prices updated successfully",
-      );
+      toast.success(t("projectEditor.priceUpdateSuccess"));
       setValue("");
     } catch (error) {
       console.error("Error updating prices:", error);
-      toast.error(
-        t("projectEditor.priceUpdateError") || "Failed to update prices",
-      );
+      toast.error(t("projectEditor.priceUpdateError"));
     } finally {
       setLoading(false);
     }
@@ -92,19 +83,16 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
-          {t("projectEditor.priceManagement") || "Price Management"}
+          {t("projectEditor.priceManagement")}
         </CardTitle>
         <CardDescription>
-          {t("projectEditor.priceManagementDesc") ||
-            "Mass update prices for all apartments in this project."}
+          {t("projectEditor.priceManagementDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
           <div>
-            <Label className="mb-2 block">
-              {t("projectEditor.operation") || "Operation"}
-            </Label>
+            <Label className="mb-2 block">{t("projectEditor.operation")}</Label>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -113,7 +101,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
                 className={`flex-1 ${operation === "increase" ? "bg-green-600 hover:bg-green-700" : ""}`}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
-                {t("projectEditor.increase") || "Increase"}
+                {t("projectEditor.increase")}
               </Button>
               <Button
                 type="button"
@@ -122,15 +110,13 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
                 className={`flex-1 ${operation === "decrease" ? "bg-red-600 hover:bg-red-700" : ""}`}
               >
                 <TrendingDown className="mr-2 h-4 w-4" />
-                {t("projectEditor.decrease") || "Decrease"}
+                {t("projectEditor.decrease")}
               </Button>
             </div>
           </div>
 
           <div className="min-w-[180px] flex-1">
-            <Label className="mb-2 block">
-              {t("projectEditor.type") || "Type"}
-            </Label>
+            <Label className="mb-2 block">{t("projectEditor.type")}</Label>
             <Select
               value={type}
               onValueChange={(v: "percentage" | "fixed") => setType(v)}
@@ -142,13 +128,13 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
                 <SelectItem value="percentage">
                   <div className="flex items-center">
                     <Percent className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {t("projectEditor.percentage") || "Percentage (%)"}
+                    {t("projectEditor.percentage")}
                   </div>
                 </SelectItem>
                 <SelectItem value="fixed">
                   <div className="flex items-center">
                     <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {t("projectEditor.fixedAmount") || "Fixed Amount"}
+                    {t("projectEditor.fixedAmount")}
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -157,7 +143,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
 
           <div className="min-w-[180px] flex-1">
             <Label htmlFor="price-value" className="mb-2 block">
-              {t("projectEditor.value") || "Value"}
+              {t("projectEditor.value")}
               {type === "percentage" ? " (%)" : ""}
             </Label>
             <div className="relative">
@@ -187,9 +173,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
               disabled={loading || !value}
               className="w-full"
             >
-              {loading
-                ? t("projectEditor.updating") || "Updating..."
-                : t("projectEditor.apply") || "Apply"}
+              {loading ? t("projectEditor.updating") : t("projectEditor.apply")}
             </Button>
           </div>
         </div>
@@ -202,19 +186,18 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
                 operation === "increase"
                   ? "projectEditor.increaseWarning"
                   : "projectEditor.decreaseWarning";
-              const warningText = t(warningKey) || "";
+              const warningText = t(warningKey);
               const typeText =
                 type === "percentage"
-                  ? t("projectEditor.percentage") || "%"
-                  : t("projectEditor.fixedAmount") || "units";
+                  ? t("projectEditor.percentage")
+                  : t("projectEditor.fixedAmount");
               const displayValue = value || "...";
 
               return warningText
                 .replace("{value}", displayValue)
                 .replace("{type}", typeText);
             })()}{" "}
-            {t("projectEditor.irreversibleWarning") ||
-              "This action affects all units immediately."}
+            {t("projectEditor.irreversibleWarning")}
           </p>
         </div>
       </CardContent>

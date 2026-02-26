@@ -78,10 +78,14 @@ const ProfileFooterMenu = ({
     }
 
     try {
-      await supabase
+      const { error } = await supabase
         .from("user_profiles")
         .update({ preferred_locale: nextLanguage })
         .eq("id", userId);
+
+      if (error) {
+        throw error;
+      }
     } catch (e) {
       console.error("Failed to persist preferred locale", e);
     } finally {

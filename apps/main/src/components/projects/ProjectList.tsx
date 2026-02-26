@@ -521,6 +521,7 @@ const ProjectList = ({
           <div className="space-y-3">
             <input
               type="date"
+              lang={language}
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
               className="w-full rounded border p-2 text-sm"
