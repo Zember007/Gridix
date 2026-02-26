@@ -628,49 +628,52 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {/* Right column: hero video (async) / image fallback + testimonials */}
       {heroImageSrc && (
         <section className="relative hidden flex-1 p-4 md:block">
-          {/* Fallback/initial background */}
-          <div
-            className="animate-delay-300 absolute inset-4 animate-slide-right rounded-3xl bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroImageSrc})` }}
-          >
-            <video
-              ref={videoRef}
-              src={heroVideoSrc}
-              className={`inset-4 h-full rounded-3xl object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
-              loop
-              muted
-              playsInline
-              disablePictureInPicture
-              onCanPlay={() => setVideoReady(true)}
-              aria-hidden
-            />
-          </div>
-          {/* Video loads async and fades in when ready */}
-
-          {testimonials.length > 0 && testimonials[0] && (
-            <div className="absolute bottom-8 left-1/2 flex w-full -translate-x-1/2 justify-center gap-4 px-8">
-              <TestimonialCard
-                testimonial={testimonials[0]}
-                delay="animate-delay-1000"
+          <div className="fixed bottom-4 left-[calc(50%+8px)] right-4 top-4">
+            {/* Fallback/initial background */}
+            <div
+              className="animate-delay-300 relative h-full w-full animate-slide-right rounded-3xl bg-cover bg-center"
+              style={{ backgroundImage: `url(${heroImageSrc})` }}
+            >
+              <video
+                ref={videoRef}
+                src={heroVideoSrc}
+                className={`absolute inset-0 h-full w-full rounded-3xl object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
+                loop
+                muted
+                playsInline
+                disablePictureInPicture
+                onCanPlay={() => setVideoReady(true)}
+                aria-hidden
               />
-              {testimonials[1] && (
-                <div className="hidden xl:flex">
-                  <TestimonialCard
-                    testimonial={testimonials[1]}
-                    delay="animate-delay-1200"
-                  />
-                </div>
-              )}
-              {testimonials[2] && (
-                <div className="hidden 2xl:flex">
-                  <TestimonialCard
-                    testimonial={testimonials[2]}
-                    delay="animate-delay-1400"
-                  />
-                </div>
-              )}
             </div>
-          )}
+
+            {/* Video loads async and fades in when ready */}
+
+            {testimonials.length > 0 && testimonials[0] && (
+              <div className="absolute bottom-8 left-1/2 flex w-full -translate-x-1/2 justify-center gap-4 px-8">
+                <TestimonialCard
+                  testimonial={testimonials[0]}
+                  delay="animate-delay-1000"
+                />
+                {testimonials[1] && (
+                  <div className="hidden xl:flex">
+                    <TestimonialCard
+                      testimonial={testimonials[1]}
+                      delay="animate-delay-1200"
+                    />
+                  </div>
+                )}
+                {testimonials[2] && (
+                  <div className="hidden 2xl:flex">
+                    <TestimonialCard
+                      testimonial={testimonials[2]}
+                      delay="animate-delay-1400"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </section>
       )}
     </div>

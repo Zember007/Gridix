@@ -302,7 +302,9 @@ export default function AuthPage() {
             alt="Gridix"
             className="h-10 w-10 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.22)]"
           />
-          <span>{t("auth.aboutPlatform")}</span>
+          <span className="duration-200 hover:underline">
+            {t("auth.aboutPlatform")}
+          </span>
         </a>
       </div>
       <SignInPage
