@@ -159,6 +159,25 @@ export const incrementProjectView = async (
   }
 };
 
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+export const fetchDeveloperProjectsForAccess = async (
+  developerId: string,
+): Promise<ProjectSummary[]> => {
+  const { data, error } = await supabase
+    .from("projects")
+    .select("id, name, description")
+    .eq("user_id", developerId)
+    .order("name");
+
+  if (error) throw error;
+  return (data || []) as ProjectSummary[];
+};
+
 export const fetchProjectByDomain = async (host: string) => {
   const { data, error } = await supabase
     .from("project_domains")
