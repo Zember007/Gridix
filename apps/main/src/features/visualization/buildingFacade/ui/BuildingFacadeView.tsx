@@ -59,6 +59,10 @@ const BuildingFacadeView = ({
     offset: { x: number; y: number };
     size: { width: number; height: number };
   } | null>(null);
+  const [naturalSize, setNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const outerRef = useRef<HTMLDivElement>(null);
   // This ref MUST point to the "image area" only (not including the bottom carousel),
   // because popup positioning and svg overlay are relative to this container.
@@ -132,6 +136,32 @@ const BuildingFacadeView = ({
 
     return buildingFloors;
   }, [buildingFloors, apartments, project.project_type, _showOnlyAvailable]);
+
+  const svgViewBox = useMemo(() => {
+    if (
+      !imageRect ||
+      !naturalSize ||
+      naturalSize.width === 0 ||
+      naturalSize.height === 0 ||
+      imageRect.size.width === 0 ||
+      imageRect.size.height === 0
+    ) {
+      return "0 0 100 100";
+    }
+
+    const naturalAspect = naturalSize.width / naturalSize.height;
+    const elementAspect = imageRect.size.width / imageRect.size.height;
+
+    if (naturalAspect > elementAspect) {
+      const visibleW = (elementAspect / naturalAspect) * 100;
+      const cropLeft = (100 - visibleW) / 2;
+      return `${cropLeft} 0 ${visibleW} 100`;
+    } else {
+      const visibleH = (naturalAspect / elementAspect) * 100;
+      const cropTop = (100 - visibleH) / 2;
+      return `0 ${cropTop} 100 ${visibleH}`;
+    }
+  }, [imageRect, naturalSize]);
 
   const computeMobileDockPosition = useCallback(
     (size: { width: number; height: number }) =>
@@ -254,6 +284,18 @@ const BuildingFacadeView = ({
         Math.abs(prev.size.height - nextRect.size.height) <= 0.5;
       return same ? prev : nextRect;
     });
+
+    if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
+      setNaturalSize((prev) => {
+        if (
+          prev &&
+          prev.width === imageEl.naturalWidth &&
+          prev.height === imageEl.naturalHeight
+        )
+          return prev;
+        return { width: imageEl.naturalWidth, height: imageEl.naturalHeight };
+      });
+    }
   }, []);
 
   useLayoutEffect(() => {
@@ -300,6 +342,7 @@ const BuildingFacadeView = ({
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
     setImageRect(null);
+    setNaturalSize(null);
     setShowPopup(false);
     setPopupAnchor(null);
     setPopupPosition(null);
@@ -718,7 +761,7 @@ const BuildingFacadeView = ({
     <>
       <div
         ref={outerRef}
-        className={`relative flex w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
+        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
         style={{
           minHeight: isExpanded ? 600 : "auto",
           height: isExpanded
@@ -736,12 +779,12 @@ const BuildingFacadeView = ({
         {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
         <div
           ref={containerRef}
-          className="relative flex w-full flex-1 items-center justify-center overflow-hidden"
+          className="relative flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
           style={{ touchAction: isTouchZooming ? "none" : "manipulation" }}
         >
-          {/* Размытый фон для заполнения пустых областей */}
+          {/* Blurred background – visible on sm+ (≥640px); hidden on small phones */}
           {facadeImageUrl && (
-            <>
+            <div className="hidden sm:contents">
               <img
                 src={facadeImageUrl}
                 alt="Building"
@@ -754,11 +797,11 @@ const BuildingFacadeView = ({
                 })}
               />
               <div className="absolute inset-0 bg-black/20" />
-            </>
+            </div>
           )}
 
           <div
-            className="relative h-full w-full"
+            className={isMobile ? "absolute inset-0" : "relative h-full w-full"}
             style={{
               transform: isTouchZooming ? `scale(2)` : "scale(1)",
               transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
@@ -769,14 +812,16 @@ const BuildingFacadeView = ({
               ref={imgRef}
               src={facadeImageUrl}
               alt={project.name}
-              className={`mx-auto block h-full w-auto transition-all duration-500`}
+              className="mx-auto block h-full w-auto transition-all duration-500"
               draggable={false}
               onLoad={measureImageRect}
             />
             {visibleFloors.length > 0 && imageRect && (
               <svg
-                className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
+                className="absolute z-20"
                 style={{
+                  left: imageRect.offset.x,
+                  top: imageRect.offset.y,
                   width: imageRect.size.width,
                   height: imageRect.size.height,
                 }}
