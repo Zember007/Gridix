@@ -109,7 +109,7 @@ function getBaseState(): FiltersState {
     priceRangeCurrency: DEFAULT_CURRENCY,
     areaRange: [0, 0],
     searchQuery: "",
-    showOnlyAvailable: true,
+    showOnlyAvailable: false,
     selectedType: "all",
     selectedCurrency: DEFAULT_CURRENCY,
   };
