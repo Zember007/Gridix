@@ -486,13 +486,13 @@ const ProjectList = ({
           },
         });
         if (error) throw error;
-        toast.success("Обновление добавлено");
+        toast.success(t("projectList.construction.addSuccess"));
         setNewTitle("");
         setNewDesc("");
         await loadDrawerProject(project.id);
       } catch (e) {
         console.error("Failed to add construction update", e);
-        toast.error("Не удалось добавить обновление");
+        toast.error(t("projectList.construction.addError"));
       }
     };
 
@@ -506,11 +506,11 @@ const ProjectList = ({
           },
         });
         if (error) throw error;
-        toast.success("Удалено");
+        toast.success(t("projectList.construction.deleteSuccess"));
         await loadDrawerProject(project.id);
       } catch (e) {
         console.error("Failed to delete construction update", e);
-        toast.error("Не удалось удалить");
+        toast.error(t("projectList.construction.deleteError"));
       }
     };
 
@@ -520,7 +520,7 @@ const ProjectList = ({
       <div className="p-6">
         <div className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-500">
-            Добавить новость
+            {t("projectList.construction.addNews")}
           </h4>
           <div className="space-y-3">
             <input
@@ -534,13 +534,13 @@ const ProjectList = ({
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Заголовок"
+              placeholder={t("projectList.construction.titlePlaceholder")}
               className="w-full rounded border p-2 text-sm"
             />
             <textarea
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
-              placeholder="Описание…"
+              placeholder={t("projectList.construction.descriptionPlaceholder")}
               className="h-20 w-full resize-none rounded border p-2 text-sm"
             />
             <button
@@ -548,7 +548,7 @@ const ProjectList = ({
               onClick={addUpdate}
               className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-slate-800"
             >
-              <Plus size={16} /> Опубликовать
+              <Plus size={16} /> {t("projectList.construction.publish")}
             </button>
           </div>
         </div>
@@ -556,7 +556,7 @@ const ProjectList = ({
         <div className="relative space-y-8 border-l border-slate-200 pl-4">
           {updates.length === 0 && (
             <div className="pl-4 text-sm italic text-slate-400">
-              Нет обновлений
+              {t("projectList.construction.noUpdates")}
             </div>
           )}
           {updates.map((u) => (
@@ -578,7 +578,7 @@ const ProjectList = ({
                   type="button"
                   onClick={() => deleteUpdate(u.id)}
                   className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                  title="Удалить"
+                  title={t("projectList.construction.delete")}
                 >
                   <X size={16} />
                 </button>
@@ -642,11 +642,11 @@ const ProjectList = ({
           );
           if (addErr) throw addErr;
         }
-        toast.success("Материалы загружены");
+        toast.success(t("projectList.media.uploadSuccess"));
         await loadDrawerProject(project.id);
       } catch (e) {
         console.error("Failed to upload media", e);
-        toast.error("Не удалось загрузить материалы");
+        toast.error(t("projectList.media.uploadError"));
       } finally {
         setUploading(null);
       }
@@ -661,10 +661,13 @@ const ProjectList = ({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
-              <ImageIcon size={16} /> Рендеры ({renders.length})
+              <ImageIcon size={16} /> {t("projectList.media.renders")} (
+              {renders.length})
             </h4>
             <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
-              {uploading === "render" ? "Загрузка…" : "Добавить"}
+              {uploading === "render"
+                ? t("projectList.media.uploading")
+                : t("projectList.media.add")}
               <input
                 type="file"
                 className="hidden"
@@ -683,7 +686,7 @@ const ProjectList = ({
               >
                 <img
                   src={url}
-                  alt={`Render ${i}`}
+                  alt={`${t("projectList.media.renders")} ${i + 1}`}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 />
               </div>
@@ -694,10 +697,13 @@ const ProjectList = ({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
-              <PlayCircle size={16} /> Видео ({videos.length})
+              <PlayCircle size={16} /> {t("projectList.media.videos")} (
+              {videos.length})
             </h4>
             <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
-              {uploading === "video" ? "Загрузка…" : "Добавить"}
+              {uploading === "video"
+                ? t("projectList.media.uploading")
+                : t("projectList.media.add")}
               <input
                 type="file"
                 className="hidden"
@@ -746,10 +752,13 @@ const ProjectList = ({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
-              <FileText size={16} /> Презентации ({docs.length})
+              <FileText size={16} /> {t("projectList.media.presentations")} (
+              {docs.length})
             </h4>
             <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
-              {uploading === "presentation" ? "Загрузка…" : "Добавить"}
+              {uploading === "presentation"
+                ? t("projectList.media.uploading")
+                : t("projectList.media.add")}
               <input
                 type="file"
                 className="hidden"
@@ -832,14 +841,18 @@ const ProjectList = ({
           renderPartnersTab={(p) => <DeveloperPartnersTab project={p} />}
           renderMediaTab={(p) =>
             drawerLoading ? (
-              <div className="p-8 text-center text-slate-400">Загрузка…</div>
+              <div className="p-8 text-center text-slate-400">
+                {t("projectList.media.loading")}
+              </div>
             ) : (
               <DeveloperMediaTab project={p} />
             )
           }
           renderConstructionTab={(p) =>
             drawerLoading ? (
-              <div className="p-8 text-center text-slate-400">Загрузка…</div>
+              <div className="p-8 text-center text-slate-400">
+                {t("projectList.media.loading")}
+              </div>
             ) : (
               <DeveloperConstructionTab project={p} />
             )

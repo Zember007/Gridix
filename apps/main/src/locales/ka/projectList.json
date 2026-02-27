@@ -37,5 +37,27 @@
   "timeoutError": "პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა",
   "updated": "განახლებულია",
   "viewProject": "პროექტის ნახვა",
-  "widgetCodeCopied": "ვიჯეტის კოდი კოპირებულია"
+  "widgetCodeCopied": "ვიჯეტის კოდი კოპირებულია",
+  "media": {
+    "renders": "რენდერებს",
+    "videos": "ვიდეოები",
+    "presentations": "პრეზენტაციები",
+    "add": "დამატება",
+    "uploading": "იტვირთება...",
+    "loading": "იტვირთება...",
+    "uploadSuccess": "მასალები ატვირთულია",
+    "uploadError": "მასალების ატვირთვა ვერ მოხერხდა"
+  },
+  "construction": {
+    "addNews": "განახლების დამატება",
+    "titlePlaceholder": "სათაური",
+    "descriptionPlaceholder": "აღწერა...",
+    "publish": "გამოქვეყნება",
+    "noUpdates": "განახლებები არ არის",
+    "delete": "წაშლა",
+    "addSuccess": "განახლება დამატებულია",
+    "addError": "განახლების დამატება ვერ მოხერხდა",
+    "deleteSuccess": "წაშლილია",
+    "deleteError": "წაშლა ვერ მოხერხდა"
+  }
 }
