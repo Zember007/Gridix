@@ -287,170 +287,191 @@ export default function AuthPage() {
 
   return (
     <>
-      <div className="fixed right-4 top-6 z-50 md:left-4 md:right-auto">
+      <div className="fixed left-1/2 top-3 z-50 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-xl border border-white/40 bg-white/70 px-3 py-2 shadow-[0_0_18px_rgba(15,23,42,0.14)] backdrop-blur-md md:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <LanguageSwitcher />
+          <a
+            href={aboutPlatformUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="group inline-flex items-center justify-center gap-1 rounded-sm text-sm font-normal leading-none text-[#1f2430]"
+          >
+            <img
+              src="/apple-touch-icon.png"
+              alt="Gridix"
+              className="h-8 w-8 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.22)]"
+            />
+            <span className="whitespace-nowrap duration-200 group-hover:underline">
+              {t("auth.aboutPlatform")}
+            </span>
+          </a>
+        </div>
+      </div>
+      <div className="fixed left-4 top-6 z-50 hidden md:block">
         <LanguageSwitcher />
       </div>
-      <div className="fixed top-6 z-40 [inset-inline-start:1rem] md:[inset-inline-end:calc(50vw+30px)] md:[inset-inline-start:auto]">
+      <div className="fixed top-6 z-40 hidden rounded-xl border border-white/40 bg-white/70 px-2 py-0.5 shadow-[0_0_18px_rgba(15,23,42,0.14)] backdrop-blur-md md:right-auto md:block md:[inset-inline-end:calc(50vw+22px)] md:[inset-inline-start:auto]">
         <a
           href={aboutPlatformUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center justify-center gap-3 rounded-sm text-[20px] font-normal leading-none text-[#1f2430]"
+          className="group inline-flex items-center justify-center gap-1 rounded-sm text-sm font-normal leading-none text-[#1f2430]"
         >
           <img
             src="/apple-touch-icon.png"
             alt="Gridix"
-            className="h-10 w-10 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.22)]"
+            className="h-6 w-6 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.22)]"
           />
-          <span className="duration-200 hover:underline">
+          <span className="duration-200 group-hover:underline">
             {t("auth.aboutPlatform")}
           </span>
         </a>
       </div>
-      <SignInPage
-        defaultMode={isSignup ? "signup" : "signin"}
-        onModeChange={(nextMode) =>
-          navigate(`/auth/${nextMode}${location.search}`)
-        }
-        heroImageSrc={SIGNIN_HERO_IMAGE}
-        banner={
-          <>
-            {refCode && partnerInfo && (
-              <Alert className="animate-delay-220 animate-element">
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {t("auth.partnerInvitation")}{" "}
-                  {partnerInfo?.user_profiles?.full_name}
-                </AlertDescription>
-              </Alert>
-            )}
-            {checkingPartner && (
-              <div className="animate-delay-220 flex animate-element items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t("auth.checkingPartner")}
-              </div>
-            )}
-          </>
-        }
-        accountType={accountType}
-        onAccountTypeChange={setAccountType}
-        loading={authLoading}
-        labels={{
-          signInTab: t("auth.signIn"),
-          signUpTab: t("auth.signUp"),
-          signInTitle: t("auth.signInTitle"),
-          signUpTitle: t("auth.signUpTitle"),
-          signInDescription: t("auth.signInDescription"),
-          emailLabel: t("auth.email"),
-          emailPlaceholder: t("auth.emailPlaceholder"),
-          passwordLabel: t("auth.password"),
-          passwordPlaceholder: t("auth.passwordPlaceholder"),
-          fullNameLabel: t("auth.fullName"),
-          fullNamePlaceholder: t("auth.fullNamePlaceholder"),
-          companyNameLabel: t("auth.companyName"),
-          companyNamePlaceholder: t("auth.companyNamePlaceholder"),
-          phoneLabel: t("auth.phone"),
-          phonePlaceholder: t("auth.phonePlaceholder"),
-          accountTypeLabel: t("auth.selectAccountType"),
-          accountTypeDeveloper: t("auth.developer"),
-          accountTypePartner: t("auth.partner"),
-          privacyOfferAgreement: (
+      <div className="pt-16 md:pt-20 lg:pt-8">
+        <SignInPage
+          defaultMode={isSignup ? "signup" : "signin"}
+          onModeChange={(nextMode) =>
+            navigate(`/auth/${nextMode}${location.search}`)
+          }
+          heroImageSrc={SIGNIN_HERO_IMAGE}
+          banner={
             <>
-              {t("auth.privacyOfferAgreementPrefix")}{" "}
-              <a
-                href={privacyPolicyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[var(--admin-primary)] underline underline-offset-2 transition-colors"
-              >
-                {t("auth.privacyPolicyLabel")}
-              </a>{" "}
-              {t("auth.privacyOfferAgreementAnd")}{" "}
-              <a
-                href={offerAgreementUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[var(--admin-primary)] underline underline-offset-2 transition-colors"
-              >
-                {t("auth.offerAgreementLabel")}
-              </a>
-              .
+              {refCode && partnerInfo && (
+                <Alert className="animate-delay-220 animate-element">
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {t("auth.partnerInvitation")}{" "}
+                    {partnerInfo?.user_profiles?.full_name}
+                  </AlertDescription>
+                </Alert>
+              )}
+              {checkingPartner && (
+                <div className="animate-delay-220 flex animate-element items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("auth.checkingPartner")}
+                </div>
+              )}
             </>
-          ),
-          marketingEmailsConsent: t("auth.marketingEmailsConsent"),
-          rememberMe: t("auth.keepMeSignedIn"),
-          resetPassword: t("auth.resetPasswordLink"),
-          signInButton: t("auth.signInButton"),
-          signUpButton: t("auth.signUpButton"),
-          orContinueWith: t("auth.orContinueWith"),
-          orViaSocials: t("auth.orViaSocials"),
-          createAccountPrompt: t("auth.createAccountPrompt"),
-          createAccountLink: t("auth.createAccountLink"),
-          alreadyHaveAccountPrompt: t("auth.alreadyHaveAccountPrompt"),
-          alreadyHaveAccountLink: t("auth.alreadyHaveAccountLink"),
-        }}
-        onResetPassword={() => setResetModalOpen(true)}
-        onSubmit={async (payload) => {
-          setAuthLoading(true);
-          try {
-            if (payload.mode === "signin") {
-              const { error } = await supabase.auth.signInWithPassword({
+          }
+          accountType={accountType}
+          onAccountTypeChange={setAccountType}
+          loading={authLoading}
+          labels={{
+            signInTab: t("auth.signIn"),
+            signUpTab: t("auth.signUp"),
+            signInTitle: t("auth.signInTitle"),
+            signUpTitle: t("auth.signUpTitle"),
+            signInDescription: t("auth.signInDescription"),
+            emailLabel: t("auth.email"),
+            emailPlaceholder: t("auth.emailPlaceholder"),
+            passwordLabel: t("auth.password"),
+            passwordPlaceholder: t("auth.passwordPlaceholder"),
+            fullNameLabel: t("auth.fullName"),
+            fullNamePlaceholder: t("auth.fullNamePlaceholder"),
+            companyNameLabel: t("auth.companyName"),
+            companyNamePlaceholder: t("auth.companyNamePlaceholder"),
+            phoneLabel: t("auth.phone"),
+            phonePlaceholder: t("auth.phonePlaceholder"),
+            accountTypeLabel: t("auth.selectAccountType"),
+            accountTypeDeveloper: t("auth.developer"),
+            accountTypePartner: t("auth.partner"),
+            privacyOfferAgreement: (
+              <>
+                {t("auth.privacyOfferAgreementPrefix")}{" "}
+                <a
+                  href={privacyPolicyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[var(--admin-primary)] underline underline-offset-2 transition-colors"
+                >
+                  {t("auth.privacyPolicyLabel")}
+                </a>{" "}
+                {t("auth.privacyOfferAgreementAnd")}{" "}
+                <a
+                  href={offerAgreementUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[var(--admin-primary)] underline underline-offset-2 transition-colors"
+                >
+                  {t("auth.offerAgreementLabel")}
+                </a>
+                .
+              </>
+            ),
+            marketingEmailsConsent: t("auth.marketingEmailsConsent"),
+            rememberMe: t("auth.keepMeSignedIn"),
+            resetPassword: t("auth.resetPasswordLink"),
+            signInButton: t("auth.signInButton"),
+            signUpButton: t("auth.signUpButton"),
+            orContinueWith: t("auth.orContinueWith"),
+            orViaSocials: t("auth.orViaSocials"),
+            createAccountPrompt: t("auth.createAccountPrompt"),
+            createAccountLink: t("auth.createAccountLink"),
+            alreadyHaveAccountPrompt: t("auth.alreadyHaveAccountPrompt"),
+            alreadyHaveAccountLink: t("auth.alreadyHaveAccountLink"),
+          }}
+          onResetPassword={() => setResetModalOpen(true)}
+          onSubmit={async (payload) => {
+            setAuthLoading(true);
+            try {
+              if (payload.mode === "signin") {
+                const { error } = await supabase.auth.signInWithPassword({
+                  email: payload.email,
+                  password: payload.password,
+                });
+                if (error) throw error;
+                toast.success(t("auth.welcome"));
+                const currentSession =
+                  (await refetchSession()).data?.session ?? null;
+                await redirectByAccountType({
+                  session: currentSession,
+                  redirectToUrl: redirectToUrl ?? null,
+                  lang,
+                });
+                return;
+              }
+
+              // signup
+              const { data: authData, error } = await supabase.auth.signUp({
                 email: payload.email,
                 password: payload.password,
+                options: {
+                  data: {
+                    full_name: payload.fullName,
+                    company_name: payload.companyName,
+                    phone: payload.phone,
+                    account_type: payload.accountType,
+                    partner_id: partnerInfo?.id || null,
+                    marketing_emails_consent:
+                      payload.marketingEmailsConsent ?? false,
+                    preferred_locale: language,
+                  },
+                },
               });
               if (error) throw error;
-              toast.success(t("auth.welcome"));
-              const currentSession =
-                (await refetchSession()).data?.session ?? null;
-              await redirectByAccountType({
-                session: currentSession,
-                redirectToUrl: redirectToUrl ?? null,
-                lang,
-              });
-              return;
+
+              if (authData.user) {
+                await linkPartnerToClient({
+                  authUserId: authData.user.id,
+                  partnerId: partnerInfo?.id ?? null,
+                  inviteCode,
+                  email: payload.email,
+                });
+              }
+
+              toast.success(t("auth.checkEmail"));
+            } catch (err: unknown) {
+              const message =
+                err instanceof Error ? err.message : t("auth.errorOccurred");
+              console.error("Auth error:", err);
+              toast.error(message);
+            } finally {
+              setAuthLoading(false);
             }
-
-            // signup
-            const { data: authData, error } = await supabase.auth.signUp({
-              email: payload.email,
-              password: payload.password,
-              options: {
-                data: {
-                  full_name: payload.fullName,
-                  company_name: payload.companyName,
-                  phone: payload.phone,
-                  account_type: payload.accountType,
-                  partner_id: partnerInfo?.id || null,
-                  marketing_emails_consent:
-                    payload.marketingEmailsConsent ?? false,
-                  preferred_locale: language,
-                },
-              },
-            });
-            if (error) throw error;
-
-            if (authData.user) {
-              await linkPartnerToClient({
-                authUserId: authData.user.id,
-                partnerId: partnerInfo?.id ?? null,
-                inviteCode,
-                email: payload.email,
-              });
-            }
-
-            toast.success(t("auth.checkEmail"));
-          } catch (err: unknown) {
-            const message =
-              err instanceof Error ? err.message : t("auth.errorOccurred");
-            console.error("Auth error:", err);
-            toast.error(message);
-          } finally {
-            setAuthLoading(false);
-          }
-        }}
-        /* TODO(auth-oauth): Re-enable this handler when Google OAuth flow is wired from SignInPage.
+          }}
+          /* TODO(auth-oauth): Re-enable this handler when Google OAuth flow is wired from SignInPage.
            Keep this block in sync with CallbackPage pending keys/redirect behavior. */
-        /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
+          /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
           try {
             localStorage.setItem(LS_PENDING_ACCOUNT_TYPE, selectedAccountType);
             if (refCode) localStorage.setItem(LS_PENDING_REF, refCode);
@@ -470,7 +491,8 @@ export default function AuthPage() {
             },
           });
         }} */
-      />
+        />
+      </div>
 
       <Dialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
         <DialogContent>

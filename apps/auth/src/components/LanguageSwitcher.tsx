@@ -26,15 +26,13 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-card-background)] px-3 py-2 text-sm font-medium text-[var(--admin-text-primary)] shadow-[var(--admin-card-shadow)] transition-colors hover:bg-[var(--admin-background-hover)]"
+        className="flex w-[96px] items-center gap-2 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-card-background)] px-3 py-2 text-xs font-medium text-[var(--admin-text-primary)] shadow-[var(--admin-card-shadow)] transition-colors hover:bg-[var(--admin-background-hover)]"
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label="Switch language"
       >
         <span>{current?.flag ?? language}</span>
-        <span className="max-w-[100px] truncate">
-          {current?.name ?? language}
-        </span>
+        <span className="truncate uppercase">{language}</span>
         <ChevronDown
           className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
         />
