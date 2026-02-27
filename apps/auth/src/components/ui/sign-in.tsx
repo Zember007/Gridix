@@ -538,7 +538,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </GlassInputWrapper>
               </div>
 
-              {mode === "signup" && oauthBlock}
+              {/*  {mode === "signup" && oauthBlock} */}
 
               {mode === "signup" ? (
                 <div className="animate-delay-500 flex animate-element flex-col gap-3 text-sm">
