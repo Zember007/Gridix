@@ -37,7 +37,7 @@ export default function ResetPasswordForm({
         toast.error(t("auth.invalidRecoverySession"));
         setTimeout(() => {
           const lang = getLanguageFromPath(window.location.pathname) || "en";
-          window.location.href = addLanguageToPath("/auth", lang);
+          window.location.href = addLanguageToPath("/auth/signin", lang);
         }, 1500);
       }
     };
