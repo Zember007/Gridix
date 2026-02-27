@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Button,
@@ -41,6 +41,10 @@ import { LeadsStats } from "@/components/admin/LeadsNotification";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
+
+const ProjectUnitsChessEditorTab = lazy(
+  () => import("@/components/projects/ProjectUnitsChessEditorTab"),
+);
 
 interface ProjectListProps {
   onCreateNew?: () => void;
@@ -808,6 +812,23 @@ const ProjectList = ({
           onClose={handleCloseDrawer}
           onOpenPublicPage={handleOpenPublicPage}
           onNavigateToEditor={handleNavigateToEditor}
+          renderUnitsTab={(p) =>
+            drawerLoading ? (
+              <div className="p-8 text-center text-slate-400">
+                {t("common.common.loading")}
+              </div>
+            ) : (
+              <Suspense
+                fallback={
+                  <div className="p-8 text-center text-slate-400">
+                    {t("common.common.loading")}
+                  </div>
+                }
+              >
+                <ProjectUnitsChessEditorTab projectId={p.id} />
+              </Suspense>
+            )
+          }
           renderPartnersTab={(p) => <DeveloperPartnersTab project={p} />}
           renderMediaTab={(p) =>
             drawerLoading ? (
