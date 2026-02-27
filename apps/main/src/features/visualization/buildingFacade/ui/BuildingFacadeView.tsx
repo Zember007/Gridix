@@ -11,6 +11,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
   type CarouselApi,
 } from "@gridix/ui";
 import { useIsMobile } from "@gridix/ui";
@@ -971,35 +973,28 @@ const BuildingFacadeView = ({
           </button>
         )} */}
         {isMobile && isExpanded && visibleFloors.length > 0 && (
-          <div
-            className={`flex w-full flex-row items-center justify-center border-l-0 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 shadow-inner`}
-          >
-            <div className={`flex w-full flex-row items-center gap-4`}>
-              {/* Floor Carousel */}
-              <div
-                className={`flex min-h-0 flex-1 items-center justify-center`}
-              >
-                <div className={`relative w-full max-w-[100vw]`}>
+          <div className="flex h-20 w-full flex-row items-center justify-center p-4">
+            <div className="flex w-full flex-row items-center gap-4">
+              <div className="flex min-h-0 flex-1 items-center justify-center py-2">
+                <div className="relative w-full max-w-[60vw]">
                   <Carousel
                     className="h-full w-full"
-                    orientation={isMobile ? "horizontal" : "vertical"}
+                    orientation="horizontal"
                     opts={{
                       align: "center",
                       loop: visibleFloors.length > 3,
                     }}
                     setApi={setCarouselApi}
                   >
-                    <div
-                      className={`flex h-full w-full flex-col justify-center border-2 border-white bg-white shadow-xl backdrop-blur-sm`}
-                    >
-                      <CarouselContent>
-                        {visibleFloors.map((floor, index) => (
+                    <div className="flex w-full flex-col justify-center">
+                      <CarouselContent className="max-h-[600px]">
+                        {visibleFloors.map((floor) => (
                           <CarouselItem
-                            key={index}
-                            className={`flex basis-1/5 items-center justify-center`}
+                            key={floor.floor_number}
+                            className="flex basis-1/5 items-center justify-center"
                           >
                             <button
-                              className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold ${
+                              className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold transition-colors ${
                                 selectedFloor === floor.floor_number
                                   ? "text-white"
                                   : "text-gray-700 hover:bg-gray-100"
@@ -1019,6 +1014,13 @@ const BuildingFacadeView = ({
                         ))}
                       </CarouselContent>
                     </div>
+
+                    {visibleFloors.length > 3 && (
+                      <>
+                        <CarouselPrevious className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                        <CarouselNext className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                      </>
+                    )}
                   </Carousel>
                 </div>
               </div>
