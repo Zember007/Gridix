@@ -306,24 +306,38 @@ const BuildingFacadeView = ({
   }, [measureImageRect, isExpanded, isMobile, facadeImageUrl]);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    let frame: number | null = null;
-    const observer = new ResizeObserver(() => {
-      if (frame) cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        measureImageRect();
-      });
-    });
-    observer.observe(el);
+    const containerEl = containerRef.current;
+    const imageEl = imgRef.current;
+    const wrapperEl = outerRef.current;
+    if (!containerEl) return;
 
-    // Fallback for viewport changes on some browsers.
-    window.addEventListener("resize", measureImageRect);
+    let frame: number | null = null;
+    const queueMeasure = () => {
+      if (frame) cancelAnimationFrame(frame);
+      // Two RAF ticks help when layout changes are animated (e.g. side panel open/close).
+      frame = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          measureImageRect();
+        });
+      });
+    };
+
+    const observer = new ResizeObserver(queueMeasure);
+    observer.observe(containerEl);
+    if (imageEl) observer.observe(imageEl);
+    if (wrapperEl) observer.observe(wrapperEl);
+
+    // Fallback for viewport-driven reflow on iOS and orientation changes.
+    window.addEventListener("resize", queueMeasure);
+    window.addEventListener("orientationchange", queueMeasure);
+    window.visualViewport?.addEventListener("resize", queueMeasure);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener("resize", measureImageRect);
+      window.removeEventListener("resize", queueMeasure);
+      window.removeEventListener("orientationchange", queueMeasure);
+      window.visualViewport?.removeEventListener("resize", queueMeasure);
     };
   }, [measureImageRect]);
 
@@ -765,7 +779,7 @@ const BuildingFacadeView = ({
         ref={outerRef}
         className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
         style={{
-          minHeight: isExpanded ? 600 : "auto",
+          minHeight: isExpanded ? (isMobile ? "auto" : 600) : "auto",
           height: isExpanded
             ? isMobile
               ? "auto"
@@ -781,7 +795,7 @@ const BuildingFacadeView = ({
         {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
         <div
           ref={containerRef}
-          className="relative flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
+          className={`relative flex min-h-0 w-full items-center justify-center overflow-hidden ${isMobile && isExpanded ? "" : "flex-1"}`}
           style={{ touchAction: isTouchZooming ? "none" : "manipulation" }}
         >
           {/* Blurred background – visible on sm+ (≥640px); hidden on small phones */}
@@ -803,7 +817,7 @@ const BuildingFacadeView = ({
           )}
 
           <div
-            className={isMobile ? "absolute inset-0" : "relative h-full w-full"}
+            className="relative h-full w-full"
             style={{
               transform: isTouchZooming ? `scale(2)` : "scale(1)",
               transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
@@ -814,7 +828,11 @@ const BuildingFacadeView = ({
               ref={imgRef}
               src={facadeImageUrl}
               alt={project.name}
-              className="mx-auto block h-full w-auto transition-all duration-500"
+              className={
+                isMobile
+                  ? "mx-auto block h-auto w-auto max-w-full transition-all duration-500"
+                  : "mx-auto block h-full w-auto transition-all duration-500"
+              }
               draggable={false}
               onLoad={measureImageRect}
             />
