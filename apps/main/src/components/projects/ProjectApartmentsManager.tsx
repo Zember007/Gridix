@@ -865,7 +865,7 @@ const ProjectApartmentsManager = ({
               {t("apartmentsManager.description")}
             </CardDescription>
           </div>
-          <div className="flex w-full gap-2 sm:w-auto">
+          <div className="flex w-full flex-col gap-2 sm:w-auto lg:flex-row lg:items-center">
             <Button
               variant="outline"
               className="w-full"

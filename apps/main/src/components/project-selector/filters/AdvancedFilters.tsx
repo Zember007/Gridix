@@ -245,7 +245,7 @@ export const AdvancedFilters = ({
   };
 
   return (
-    <div className="relative grid grid-cols-1 gap-4 p-4 pb-0">
+    <div className="relative grid min-w-[320px] grid-cols-1 gap-4 p-4 pb-0">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-semibold text-gray-900">
           {t("project.filters")}

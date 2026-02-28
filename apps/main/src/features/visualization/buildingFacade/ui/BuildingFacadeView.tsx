@@ -139,6 +139,14 @@ const BuildingFacadeView = ({
     return buildingFloors;
   }, [buildingFloors, apartments, project.project_type, _showOnlyAvailable]);
 
+  const floorsWithPolygon = useMemo(
+    () =>
+      visibleFloors.filter(
+        (floor) => floor.polygon && floor.polygon.length >= 3,
+      ),
+    [visibleFloors],
+  );
+
   const svgViewBox = useMemo(() => {
     if (
       !imageRect ||
@@ -171,10 +179,10 @@ const BuildingFacadeView = ({
         containerEl: containerRef.current,
         isExpanded: isExpanded ?? false,
         imageRect,
-        visibleFloors,
+        visibleFloors: floorsWithPolygon,
         size,
       }),
-    [imageRect, isExpanded, visibleFloors],
+    [floorsWithPolygon, imageRect, isExpanded],
   );
 
   const computePopupPositionForPolygon = useCallback(
@@ -203,17 +211,19 @@ const BuildingFacadeView = ({
       if (!containerRef.current) return;
 
       // Находим полигон для данного этажа
-      const floor = buildingFloors.find((f) => f.floor_number === floorNumber);
+      const floor = floorsWithPolygon.find(
+        (f) => f.floor_number === floorNumber,
+      );
       if (!floor || !floor.polygon || floor.polygon.length === 0) return;
 
       // Set hovered floor for visual effects
       setHoveredFloor(floorNumber);
+      setSelectedFloor(floorNumber);
 
       // Show popup if tooltip is enabled in settings
       if (facadeSettings?.display?.showTooltip) {
         const polygonBounds = getPolygonBoundsPct(floor.polygon);
         setPopupAnchor({ floorNumber, polygonBounds });
-        setSelectedFloor(floorNumber);
         setShowPopup(true);
 
         // Mobile: фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
@@ -242,13 +252,17 @@ const BuildingFacadeView = ({
           sizeForInitial,
         );
         if (nextPos) setPopupPosition(nextPos);
+      } else {
+        setShowPopup(false);
+        setPopupAnchor(null);
+        setPopupPosition(null);
       }
     },
     [
-      buildingFloors,
       computeMobileDockPosition,
       computePopupPositionForPolygon,
       facadeSettings?.display?.showTooltip,
+      floorsWithPolygon,
       isExpanded,
       isMobile,
       mobilePopupDockPosition,
@@ -342,18 +356,48 @@ const BuildingFacadeView = ({
   }, [measureImageRect]);
 
   useEffect(() => {
-    if (visibleFloors.length > 0) {
-      if (
-        isExpanded &&
-        isMobile &&
-        imageRect &&
-        imageRect.size.width > 0 &&
-        imageRect.size.height > 0
-      ) {
-        handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
+    if (
+      !isExpanded ||
+      !imageRect ||
+      imageRect.size.width === 0 ||
+      imageRect.size.height === 0
+    ) {
+      return;
+    }
+
+    if (floorsWithPolygon.length === 0) {
+      setHoveredFloor(null);
+      setShowPopup(false);
+      setPopupAnchor(null);
+      setPopupPosition(null);
+      setSelectedFloor(null);
+      return;
+    }
+
+    const selectedExists = floorsWithPolygon.some(
+      (floor) => floor.floor_number === selectedFloor,
+    );
+
+    if (!selectedExists) {
+      const firstFloor = floorsWithPolygon[0]!.floor_number;
+      if (isMobile) {
+        handleFloorHover(firstFloor);
+      } else {
+        setSelectedFloor(firstFloor);
+        setHoveredFloor(null);
+        setShowPopup(false);
+        setPopupAnchor(null);
+        setPopupPosition(null);
       }
     }
-  }, [handleFloorHover, imageRect, isExpanded, isMobile, visibleFloors]);
+  }, [
+    floorsWithPolygon,
+    handleFloorHover,
+    imageRect,
+    isExpanded,
+    isMobile,
+    selectedFloor,
+  ]);
 
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
@@ -607,10 +651,11 @@ const BuildingFacadeView = ({
   const handleFloorLeave = () => {
     if (!isExpanded) return;
     setHoveredFloor(null);
-    setShowPopup(false);
-    setPopupAnchor(null);
-    setPopupPosition(null);
-    setSelectedFloor(null);
+    if (!isMobile) {
+      setShowPopup(false);
+      setPopupAnchor(null);
+      setPopupPosition(null);
+    }
   };
 
   const handleSVGFloorClick = (floorNumber: number) => {
@@ -634,7 +679,7 @@ const BuildingFacadeView = ({
     if (
       !isMobile ||
       !isExpanded ||
-      visibleFloors.length === 0 ||
+      floorsWithPolygon.length === 0 ||
       !containerRef.current
     ) {
       return;
@@ -652,23 +697,13 @@ const BuildingFacadeView = ({
     const containerWidth = containerEl.clientWidth;
     const containerHeight = containerEl.clientHeight;
 
-    // Берём только этажи с валидными полигонами
-    const floorsWithPolygons = visibleFloors.filter(
-      (f) => f.polygon && f.polygon.length >= 3,
-    );
-
-    // Если полигонов нет, просто ставим переключатель внизу по центру
-    if (floorsWithPolygons.length === 0) {
-      return;
-    }
-
     // Границы всех видимых полигонов в процентах SVG (0–100)
     let minX = 100;
     let maxX = 0;
     let minY = 100;
     let maxY = 0;
 
-    floorsWithPolygons.forEach((floor) => {
+    floorsWithPolygon.forEach((floor) => {
       floor.polygon.forEach((p) => {
         if (p.x < minX) minX = p.x;
         if (p.x > maxX) maxX = p.x;
@@ -746,20 +781,20 @@ const BuildingFacadeView = ({
       return !noOverlap;
     };
     void intersectsPolygons;
-  }, [isMobile, isExpanded, visibleFloors, imageRect]);
+  }, [floorsWithPolygon, imageRect, isExpanded, isMobile]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
   useEffect(() => {
     if (!carouselApi) return;
 
-    const index = visibleFloors.findIndex(
+    const index = floorsWithPolygon.findIndex(
       (f) => f.floor_number === selectedFloor,
     );
     if (index >= 0) {
       carouselApi.scrollTo(index, true);
     }
-  }, [carouselApi, selectedFloor, visibleFloors]);
+  }, [carouselApi, floorsWithPolygon, selectedFloor]);
 
   if (loading) {
     return (
@@ -836,7 +871,7 @@ const BuildingFacadeView = ({
               draggable={false}
               onLoad={measureImageRect}
             />
-            {visibleFloors.length > 0 && imageRect && (
+            {floorsWithPolygon.length > 0 && imageRect && (
               <svg
                 className="absolute z-20"
                 style={{
@@ -849,14 +884,13 @@ const BuildingFacadeView = ({
                 preserveAspectRatio="none"
               >
                 <rect x="0" y="0" width="100" height="100" fill="none" />
-                {visibleFloors.map((floor) => {
-                  if (!floor.polygon || floor.polygon.length < 3) return null;
+                {floorsWithPolygon.map((floor) => {
                   const points = floor.polygon
                     .map((point) => `${point.x},${point.y}`)
                     .join(" ");
                   const baseColor = getFloorFillColor(floor);
                   const isHovered = hoveredFloor === floor.floor_number;
-                  const isActive = hoveredFloor === floor.floor_number;
+                  const isActive = selectedFloor === floor.floor_number;
                   return (
                     <g key={floor.id}>
                       <polygon
@@ -990,7 +1024,7 @@ const BuildingFacadeView = ({
             <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
           </button>
         )} */}
-        {isMobile && isExpanded && visibleFloors.length > 0 && (
+        {isMobile && isExpanded && floorsWithPolygon.length > 0 && (
           <div className="flex h-20 w-full flex-row items-center justify-center p-4">
             <div className="flex w-full flex-row items-center gap-4">
               <div className="flex min-h-0 flex-1 items-center justify-center py-2">
@@ -1000,13 +1034,13 @@ const BuildingFacadeView = ({
                     orientation="horizontal"
                     opts={{
                       align: "center",
-                      loop: visibleFloors.length > 3,
+                      loop: floorsWithPolygon.length > 3,
                     }}
                     setApi={setCarouselApi}
                   >
                     <div className="flex w-full flex-col justify-center">
                       <CarouselContent className="max-h-[600px]">
-                        {visibleFloors.map((floor) => (
+                        {floorsWithPolygon.map((floor) => (
                           <CarouselItem
                             key={floor.floor_number}
                             className="flex basis-1/5 items-center justify-center"
@@ -1033,7 +1067,7 @@ const BuildingFacadeView = ({
                       </CarouselContent>
                     </div>
 
-                    {visibleFloors.length > 3 && (
+                    {floorsWithPolygon.length > 3 && (
                       <>
                         <CarouselPrevious className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
                         <CarouselNext className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
