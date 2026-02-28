@@ -17,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@gridix/ui";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SuperAdminSidebarProps {
   activeTab: string;
@@ -25,37 +26,37 @@ interface SuperAdminSidebarProps {
 
 const menuItems = [
   {
-    title: "Пользователи",
+    titleKey: "admin.superadmin.sidebar.users",
     icon: Users,
     value: "users",
   },
   {
-    title: "Подписки",
+    titleKey: "admin.superadmin.sidebar.subscriptions",
     icon: CreditCard,
     value: "subscriptions",
   },
   {
-    title: "Проекты",
+    titleKey: "admin.superadmin.sidebar.projects",
     icon: FolderKanban,
     value: "projects",
   },
   {
-    title: "Статистика",
+    titleKey: "admin.superadmin.sidebar.stats",
     icon: BarChart3,
     value: "stats",
   },
   {
-    title: "Партнёры",
+    titleKey: "admin.superadmin.sidebar.partners",
     icon: Handshake,
     value: "partners",
   },
   {
-    title: "Выплаты",
+    titleKey: "admin.superadmin.sidebar.partnerPayouts",
     icon: DollarSign,
     value: "partner-payouts",
   },
   {
-    title: "Настройки",
+    titleKey: "admin.superadmin.sidebar.settings",
     icon: Settings,
     value: "settings",
   },
@@ -65,11 +66,15 @@ export function SuperAdminSidebar({
   activeTab,
   onTabChange,
 }: SuperAdminSidebarProps) {
+  const { t } = useLanguage();
+
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Суперадмин</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            {t("admin.superadmin.sidebar.group")}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -79,7 +84,7 @@ export function SuperAdminSidebar({
                     isActive={activeTab === item.value}
                   >
                     <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <span>{t(item.titleKey)}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

@@ -39,5 +39,6 @@
   "typeParking": "חֲנָיָה",
   "updateSuccess": "דירה מעודכנת",
   "syncError": "אין דירות עם אותו שטח ומספר חדרים לסנכרון",
-  "noSearchResults": "לא נמצאו תוצאות"
+  "noSearchResults": "לא נמצאו תוצאות",
+  "filterByFloor": "סנן לפי קומה"
 }

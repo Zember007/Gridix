@@ -154,8 +154,16 @@ const FloorPlanEditor = ({
   const { t } = useLanguage();
 
   useEffect(() => {
-    const pid = project?.id || projectId;
-    if (editorData?.data) {
+    if (editorData) {
+      if (editorData.loading) {
+        return;
+      }
+      if (!editorData.data) {
+        setImageUrl("");
+        setApartments([]);
+        setShapes([]);
+        return;
+      }
       const floorPlan = editorData.data.floorPlans.find(
         (p) => p.floor_number === floorNumber,
       );
@@ -236,7 +244,7 @@ const FloorPlanEditor = ({
       }
     } catch (error) {
       console.error("Error loading floor plan:", error);
-      toast.error(t("floorPlan.loadFloorPlanError"));
+      toast.error(t("floorPlan.loading.error"));
     }
   };
 
@@ -277,7 +285,7 @@ const FloorPlanEditor = ({
       setShapes(apartmentShapes);
     } catch (error) {
       console.error("Error loading apartments:", error);
-      toast.error(t("floorPlan.loadApartmentsError"));
+      toast.error(t("floorPlan.apartments.loading.error"));
     }
   };
 

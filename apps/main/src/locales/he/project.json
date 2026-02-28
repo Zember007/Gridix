@@ -66,5 +66,8 @@
   "total": "סַך הַכֹּל",
   "type": "סוּג",
   "viewApartments": "הצג {{count}} אפשרויות",
+  "viewDetails": "צפה בפרטים",
+  "openMenu": "פתח תפריט",
+  "closeMenu": "סגור תפריט",
   "plan_floor": "תוכנית קומה {{קומה}}"
 }

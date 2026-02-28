@@ -66,5 +66,8 @@
   "total": "الإجمالي",
   "type": "النوع",
   "viewApartments": "عرض {{count}} خيارات",
+  "viewDetails": "عرض التفاصيل",
+  "openMenu": "فتح القائمة",
+  "closeMenu": "إغلاق القائمة",
   "plan_floor": "مخطط الطابق {{الطابق}}."
 }

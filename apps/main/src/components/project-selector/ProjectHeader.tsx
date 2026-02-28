@@ -71,12 +71,7 @@ export const ProjectHeader = ({
   return (
     <div ref={filtersRef} className="sticky top-0 z-40 bg-white">
       <div className="container mx-auto flex flex-col py-2 md:px-6 md:py-3">
-        <div
-          className={cn(
-            "flex items-center justify-between gap-4",
-            isWidget && "justify-end",
-          )}
-        >
+        <div className={cn("flex items-center justify-between gap-4")}>
           {!isWidget && (
             <h1
               className="min-w-0 truncate whitespace-nowrap font-bold text-gray-900"
@@ -104,12 +99,8 @@ export const ProjectHeader = ({
             </div>
           )}
           {isWidget && !isMobile && (
-            <div className="flex flex-1 justify-around">
+            <div className="custom-scrollbar flex max-w-full overflow-x-auto overflow-y-hidden">
               <ViewModeButtons
-                className={
-                  "flex-1 flex-wrap justify-around gap-1 max-lg:grid max-lg:grid-cols-3 lg:border-b-2 lg:border-gray-200 max-lg:[&>*]:border-b-2 max-lg:[&>*]:border-gray-200"
-                }
-                isWidget={isWidget}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
@@ -202,7 +193,7 @@ export const ProjectHeader = ({
         </div>
 
         {!isMobile && !isWidget && (
-          <div className="custom-scrollbar flex max-w-full overflow-x-auto pt-4">
+          <div className="custom-scrollbar flex max-w-full overflow-x-auto overflow-y-hidden pt-4">
             <ViewModeButtons
               viewMode={viewMode}
               setViewMode={setViewMode}

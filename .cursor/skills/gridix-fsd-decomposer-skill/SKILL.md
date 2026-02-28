@@ -187,47 +187,55 @@ You MUST NOT change code in this phase.
 Output exactly:
 
 1. **Target & Scope**
-   - What file/folder was requested
-   - What you inspected (key related files)
+
+- What file/folder was requested
+- What you inspected (key related files)
 
 2. **Decomposition Map**
-   - List extracted parts and their classification: Feature / Entity / Shared UI
-   - Short rationale per part
+
+- List extracted parts and their classification: Feature / Entity / Shared UI
+- Short rationale per part
 
 3. **Proposed File Operations**
-   - New files to create (full paths)
-   - Files to move/rename (from → to)
-   - New/updated `index.ts` barrels
-   - Imports to update (high-level)
+
+- New files to create (full paths)
+- Files to move/rename (from → to)
+- New/updated `index.ts` barrels
+- Imports to update (high-level)
 
 4. **EXACT APPLY FILE LIST (REQUIRED)**
-   - A definitive list of files that will be modified/created/moved during APPLY.
-   - This list is the **only** allowed scope in APPLY.
-   - Group by:
-     - Modify
-     - Create
-     - Move/Rename
-     - Delete (optional; only if safe and requested)
+
+- A definitive list of files that will be modified/created/moved during APPLY.
+- This list is the **only** allowed scope in APPLY.
+- Group by:
+  - Modify
+  - Create
+  - Move/Rename
+  - Delete (optional; only if safe and requested)
 
 5. **Risk Assessment**
-   - Potential regressions (hooks deps, query keys, i18n, styles)
-   - Any boundary risks (supabase wrapper, layer violations)
+
+- Potential regressions (hooks deps, query keys, i18n, styles)
+- Any boundary risks (supabase wrapper, layer violations)
 
 6. **Verification Steps**
-   - Manual steps (what screens/actions to click)
-   - CI gates expected: lint / typecheck / build
+
+- Manual steps (what screens/actions to click)
+- CI gates expected: lint / typecheck / build
 
 7. **Commit Plan**
-   - 3–8 commits (not too granular), each message: “what + why”
+
+- 3–8 commits (not too granular), each message: “what + why”
 
 8. **PR Draft**
-   - Title format: `[main] <Imperative summary>`
-   - PR description sections:
-     - Зачем
-     - Что сделано
-     - Как проверить
-     - Риски
-     - Скриншоты/видео (если UI)
+
+- Title format: `[main] <Imperative summary>`
+- PR description sections:
+  - Зачем
+  - Что сделано
+  - Как проверить
+  - Риски
+  - Скриншоты/видео (если UI)
 
 Finally ask:
 

@@ -9,5 +9,6 @@
   "title": "Real Estate Projects",
   "userNotFound": "User not found",
   "userNotFoundDesc": "The specified user does not exist or has no public projects.",
-  "viewApartments": "View apartments"
+  "viewApartments": "View apartments",
+  "filters": "Filters"
 }

@@ -223,8 +223,7 @@ export const Bitrix24ProjectRow = ({
             <DialogHeader>
               <DialogTitle>{project.name}</DialogTitle>
               <DialogDescription>
-                {t("admin.bitrix24.configureProjectDesc") ||
-                  "Select the Bitrix24 funnel for this project."}
+                {t("admin.bitrix24.configureProjectDesc")}
               </DialogDescription>
             </DialogHeader>
 

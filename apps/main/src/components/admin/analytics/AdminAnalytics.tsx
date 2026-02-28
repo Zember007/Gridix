@@ -22,7 +22,7 @@ import {
 } from "@/entities/analytics";
 
 export const AdminAnalytics = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const { userRole } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
@@ -62,7 +62,7 @@ export const AdminAnalytics = () => {
     const msg =
       queryError instanceof Error
         ? queryError.message
-        : t("admin.analytics.loading") || "Error loading analytics";
+        : t("admin.analytics.loading");
 
     return (
       <div className="space-y-6">

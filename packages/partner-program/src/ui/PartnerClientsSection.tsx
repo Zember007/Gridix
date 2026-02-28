@@ -25,6 +25,44 @@ import {
   SelectValue,
 } from "@gridix/ui";
 
+type PartnerLevelKey = "bronze" | "silver" | "gold";
+
+function normalizePartnerLevelKey(
+  value?: string | null,
+): PartnerLevelKey | null {
+  const normalized = String(value || "")
+    .toLowerCase()
+    .trim();
+
+  if (!normalized) return null;
+  if (normalized.includes("bronze")) return "bronze";
+  if (normalized.includes("silver")) return "silver";
+  if (normalized.includes("gold")) return "gold";
+  return null;
+}
+
+function getPartnerLevelLabel(
+  t: (key: string) => string,
+  inputLevel?: string | null,
+  inputLevelKey?: string | null,
+  fallback?: string,
+): string {
+  const levelKey =
+    normalizePartnerLevelKey(inputLevelKey) ??
+    normalizePartnerLevelKey(inputLevel);
+
+  if (levelKey === "gold") {
+    return t("partners.levelGold");
+  }
+  if (levelKey === "silver") {
+    return t("partners.levelSilver");
+  }
+  if (levelKey === "bronze") {
+    return t("partners.levelBronze");
+  }
+  return fallback ?? inputLevel ?? t("partners.levelBronze");
+}
+
 export const PartnerClientsSection: React.FC = () => {
   const { clients, loading, error } = usePartnerClients();
   const { stats } = usePartnerStats();
@@ -470,8 +508,32 @@ export const PartnerClientsSection: React.FC = () => {
         const nextLevelTarget =
           stats?.next_level_required_active_clients ?? null;
         const clientsToNextLevel = stats?.clients_to_next_level ?? null;
-        const partnerLevelTitle = stats?.partner_level ?? "Bronze Partner";
-        const nextLevelName = stats?.next_level_name ?? null;
+        const currentLevelKey =
+          normalizePartnerLevelKey(stats?.partner_level_key) ??
+          normalizePartnerLevelKey(stats?.partner_level);
+        const partnerLevelTitle = getPartnerLevelLabel(
+          t,
+          stats?.partner_level,
+          currentLevelKey,
+          t("partners.levelBronze"),
+        );
+        const nextLevelKey =
+          normalizePartnerLevelKey(stats?.next_level_name) ??
+          (currentLevelKey === "bronze"
+            ? "silver"
+            : currentLevelKey === "silver"
+              ? "gold"
+              : null);
+        const nextLevelName = nextLevelKey
+          ? getPartnerLevelLabel(t, null, nextLevelKey)
+          : stats?.next_level_name
+            ? getPartnerLevelLabel(
+                t,
+                stats.next_level_name,
+                null,
+                stats.next_level_name,
+              )
+            : null;
         const managedCommission = stats?.commission_percentage_managed ?? null;
         const levelProgress =
           nextLevelTarget && nextLevelTarget > 0

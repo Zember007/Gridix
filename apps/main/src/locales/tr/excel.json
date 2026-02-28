@@ -68,6 +68,36 @@
       "selectColumnPlaceholder": "-- Sütun seç --"
     }
   },
+  "sync": {
+    "button": "Excel senkronizasyonu",
+    "dialog": {
+      "title": "Daireleri Excel ile senkronize et",
+      "description": "Mevcut daire verilerini bir Excel dosyası yükleyerek güncelleyin. Daireler numaraya göre eşleştirilir."
+    },
+    "import": {
+      "title": "Verileri içe aktar",
+      "description": "Daire verileri içeren bir dosya yükleyin veya bir e-tablo bağlantısı sağlayın",
+      "matchBy": "Eşleştirme:",
+      "matchByDesc": "Daireler numaraya göre güncellenir. Yeni daire oluşturulmaz."
+    },
+    "columns": {
+      "title": "Excel sütunlarını eşle",
+      "description": "Güncellenecek sütunları seçin. Daire numarası zorunlu, diğer alanlar isteğe bağlıdır."
+    },
+    "preview": {
+      "description": "Güncellenecek veriler ({{count}} kayıt)"
+    },
+    "errors": {
+      "fillRequired": "Daire numarası sütununu ve en az bir güncellenecek alan seçin",
+      "syncFailed": "Veri senkronizasyonunda hata"
+    },
+    "result": {
+      "success": "Senkronizasyon tamamlandı: {{updated}} daire güncellendi",
+      "withNotFound": "{{total}} daireden {{updated}} güncellendi. Bulunamadı: {{notFound}}"
+    },
+    "syncing": "Senkronize ediliyor...",
+    "syncButton": "Senkronize et"
+  },
   "url": {
     "autoConvert": "Bağlantı, veri içe aktarımı için otomatik olarak dönüştürülecek",
     "check": "Kontrol etmek",

@@ -1,0 +1,332 @@
+import { supabase } from "@gridix/utils/api";
+import type { Tables } from "@gridix/types/database";
+import type {
+  LayoutPhoto,
+  ProjectFacade,
+} from "@/components/project-selector/types";
+import type { FacadeSettings } from "@/features/visualization/buildingFacade/model/types";
+
+const FUNCTION_NAME = "project-selector";
+
+// ── Result types ──
+
+export interface SelectorInitialResult {
+  project: Tables<"projects">;
+  apartments: Array<Record<string, unknown>>;
+  layoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  fieldSettings: Tables<"project_field_settings">[];
+  customFields: Tables<"project_custom_fields">[];
+  customDomain: string | null;
+}
+
+export interface SelectorFacadeResult {
+  facades: ProjectFacade[];
+  floorsByFacadeId: Record<
+    string,
+    Array<{
+      id: string;
+      floor_number: number;
+      polygon: Array<{ x: number; y: number }>;
+      color: string | null;
+    }>
+  >;
+  facadeSettings: FacadeSettings;
+}
+
+export interface SelectorFloorPolygonsResult {
+  polygonsByFloor: Record<number, Array<{ id: string; polygon: unknown }>>;
+}
+
+export interface SelectorFloorPlanResult {
+  floorPlan: { id: string; image_url: string | null } | null;
+  floorSettings: {
+    colors?: { available: string; reserved: string; sold: string };
+    opacity?: { normal: number; hover: number };
+    display?: {
+      showNumbers?: boolean;
+      showTooltip?: boolean;
+      showArea?: boolean;
+      showPrice?: boolean;
+    };
+    hoverEffects?: {
+      glow?: boolean;
+      colorChange?: boolean;
+      opacityChange?: boolean;
+      scale?: boolean;
+    };
+  };
+}
+
+// ── Helpers ──
+
+function unwrap<T>(data: T | null | undefined, error: unknown): T {
+  if (error) throw error;
+  if (
+    data &&
+    typeof data === "object" &&
+    "error" in data &&
+    (data as Record<string, unknown>).error
+  ) {
+    throw new Error((data as Record<string, unknown>).error as string);
+  }
+  return data as T;
+}
+
+// ── API functions ──
+
+export async function loadSelectorInitial(
+  projectId: string,
+): Promise<SelectorInitialResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "load-initial", projectId },
+  });
+
+  const result = unwrap(data, error);
+  if (!result.project) throw new Error("Project not found");
+
+  return {
+    project: result.project,
+    apartments: result.apartments ?? [],
+    layoutPhotosByRooms: result.layoutPhotosByRooms ?? {},
+    fieldSettings: result.fieldSettings ?? [],
+    customFields: result.customFields ?? [],
+    customDomain: result.customDomain ?? null,
+  };
+}
+
+export async function loadSelectorFacade(
+  projectId: string,
+): Promise<SelectorFacadeResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "load-facade", projectId },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    facades: result.facades ?? [],
+    floorsByFacadeId: result.floorsByFacadeId ?? {},
+    facadeSettings: result.facadeSettings ?? null,
+  };
+}
+
+export async function loadSelectorFloorPolygons(
+  projectId: string,
+  floors: number[],
+): Promise<SelectorFloorPolygonsResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "load-floor-polygons", projectId, floors },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    polygonsByFloor: result.polygonsByFloor ?? {},
+  };
+}
+
+export async function loadSelectorFloorPlan(
+  projectId: string,
+  floorNumber: number,
+): Promise<SelectorFloorPlanResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "load-floor-plan", projectId, floorNumber },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    floorPlan: result.floorPlan ?? null,
+    floorSettings: result.floorSettings ?? {},
+  };
+}
+
+export async function loadSelectorApartmentPhotos(
+  apartmentIds: string[],
+): Promise<Record<string, string | null>> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "load-apartment-photos", apartmentIds },
+  });
+
+  const result = unwrap(data, error);
+
+  return result.coverByApartmentId ?? {};
+}
+
+// ── Floors-light ──
+
+export interface SelectorFloorsLightResult {
+  floors: { id: string; floor_number: number }[];
+}
+
+export async function loadSelectorFloorsLight(
+  projectId: string,
+): Promise<SelectorFloorsLightResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "load-floors-light", projectId },
+  });
+
+  const result = unwrap(data, error);
+
+  return { floors: result.floors ?? [] };
+}
+
+// ── Apartment media ──
+
+export interface ApartmentMediaResult {
+  apartmentPhotos: {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+  }[];
+  layoutPhotos: {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+  }[];
+}
+
+export async function loadApartmentMedia(
+  projectId: string,
+  apartmentId: string,
+  layoutType: string,
+): Promise<ApartmentMediaResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "load-apartment-media",
+      projectId,
+      apartmentId,
+      layoutType,
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    apartmentPhotos: result.apartmentPhotos ?? [],
+    layoutPhotos: result.layoutPhotos ?? [],
+  };
+}
+
+// ── Recommended apartments ──
+
+export interface RecommendedApartmentsResult {
+  recommended: Array<Record<string, unknown>>;
+  thumbnails: Record<string, string | null>;
+}
+
+export async function loadRecommendedApartments(
+  projectId: string,
+  apartmentId: string,
+  rooms: string | number,
+  limit = 4,
+): Promise<RecommendedApartmentsResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "load-recommended-apartments",
+      projectId,
+      apartmentId,
+      rooms,
+      limit,
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    recommended: result.recommended ?? [],
+    thumbnails: result.thumbnails ?? {},
+  };
+}
+
+// ── Apartment details (single call for the whole page) ──
+
+export interface ApartmentDetailsResult {
+  project: Tables<"projects"> | null;
+  apartment: Record<string, unknown> | null;
+  fieldSettings: Tables<"project_field_settings">[];
+  customFields: Tables<"project_custom_fields">[];
+  apartmentPhotos: {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+  }[];
+  layoutPhotos: {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+  }[];
+  recommended: Array<Record<string, unknown>>;
+  thumbnails: Record<string, string | null>;
+}
+
+export async function loadApartmentDetails(
+  projectId: string,
+  apartmentIdentifier: string,
+  useId = false,
+): Promise<ApartmentDetailsResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "load-apartment-details",
+      projectId,
+      apartmentIdentifier,
+      useId,
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    project: result.project ?? null,
+    apartment: result.apartment ?? null,
+    fieldSettings: result.fieldSettings ?? [],
+    customFields: result.customFields ?? [],
+    apartmentPhotos: result.apartmentPhotos ?? [],
+    layoutPhotos: result.layoutPhotos ?? [],
+    recommended: result.recommended ?? [],
+    thumbnails: result.thumbnails ?? {},
+  };
+}
+
+// ── Excel apartment sync ──
+
+export interface ApartmentSyncUpdate {
+  apartment_number: string;
+  floor_number?: number;
+  rooms?: string | number;
+  area?: number;
+  price?: number | null;
+  status?: "available" | "sold" | "reserved";
+  custom_fields?: Record<string, unknown>;
+}
+
+export interface SyncApartmentsResult {
+  updatedCount: number;
+  notFound: string[];
+  total: number;
+}
+
+export async function syncApartmentsFromExcel(
+  projectId: string,
+  updates: ApartmentSyncUpdate[],
+): Promise<SyncApartmentsResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "sync-apartments-from-excel",
+      projectId,
+      updates,
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    updatedCount: result.updatedCount ?? 0,
+    notFound: result.notFound ?? [],
+    total: result.total ?? 0,
+  };
+}

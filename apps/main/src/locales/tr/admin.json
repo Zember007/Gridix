@@ -89,7 +89,7 @@
         "description": "Otomatik olarak bir proje oluşturmak için daire verilerini içeren bir Excel dosyası yükleyin",
         "processing": "İşleme...",
         "template": "Şablonu indir",
-        "demo": "Demoyu indirin",
+        "demo": "Demo indir",
         "title": "Excel'den içe aktar",
         "uploadButton": "Excel dosyasını yükle",
         "uploadTab": "Dosya yükle",
@@ -158,7 +158,8 @@
     "notConnected": "Bağlı değil",
     "connectInAdmin": "Yönetici Paneline bağlanın",
     "connectInAdminDescription": "Öncelikle Yönetici Panelinde AmoCRM'yi bağlamanız gerekir.",
-    "goToAdmin": "Yönetici Paneline gidin"
+    "goToAdmin": "Yönetici Paneline gidin",
+    "confirm": "Onaylamak"
   },
   "bitrix24": {
     "description": "CRM, görevler ve proje yönetimi tek bir yerde.",
@@ -186,6 +187,7 @@
     "notConnected": "Bağlı değil",
     "connectInAdmin": "Yönetici Paneline bağlanın",
     "connectInAdminDescription": "Öncelikle Bitrix24'ü Yönetici Paneline bağlamanız gerekir.",
+    "marketplaceHint": "Bağlanmak için portalınızdaki Bitrix24 Marketplace'ten Gridix uygulamasını yükleyin.",
     "attached": "Bağlı",
     "attachError": "Bağlantı başarısız oldu",
     "detached": "Bağlantı kesildi",
@@ -240,7 +242,46 @@
       "monthsShort": "ay",
       "monthsShortPlural": "aylar",
       "savings": "tasarruf",
-      "choosePlan": "{{name}}'yi seçin"
+      "choosePlan": "{{name}}'yi seçin",
+      "planContent": {
+        "basic": {
+          "description": "Sınırlı işlevselliğe sahip küçük projeler için temel tarife planı",
+          "features": {
+            "1": "Proje yönetimi",
+            "2": "Etkileşimli katalog - 500 lote kadar",
+            "3": "Etkileşimli satranç tahtası",
+            "4": "GRIDIX referansıyla marka renk şemanıza göre özelleştirme",
+            "5": "Talep analitiği",
+            "6": "Dinamik fiyatlandırma",
+            "7": "Yerleşik CRM modülü",
+            "8": "Web siteniz için satranç tahtası widget'ı",
+            "9": "Taksit / ipotek yönetimi",
+            "10": "PDF sunumları",
+            "11": "Para birimi seçimi",
+            "12": "Dil seçimi",
+            "13": "Özel alanlar",
+            "14": "Rol ve yetki yönetimi"
+          }
+        },
+        "pro": {
+          "description": "CRM entegrasyonları ve White Label desteği sunan profesyonel plan",
+          "features": {
+            "1": "Basic planındaki her şey +",
+            "2": "Etkileşimli katalog - sınırsız lot",
+            "3": "AmoCRM / Bitrix24 ve diğerleriyle entegrasyonlar",
+            "4": "Toplu değişiklikler",
+            "5": "GRIDIX referansı olmadan White Label",
+            "6": "Özel alan adı (örn. sales.company.com)",
+            "7": "Gelişmiş CRM modülü",
+            "8": "Gelişmiş analitik",
+            "9": "Acenta ağı modülü / partner paneli",
+            "10": "İpotek hesaplayıcı (yakında)",
+            "11": "Çevrimiçi rezervasyon (yakında)",
+            "12": "Emlak portallarına veri dışa aktarma modülü (yakında)",
+            "13": "Öncelikli destek"
+          }
+        }
+      }
     },
     "history": {
       "title": "Sipariş geçmişi",
@@ -262,6 +303,12 @@
         "paid": "Paralı",
         "pending": "Devam etmekte",
         "cancelled": "İptal edildi"
+      },
+      "methodLabels": {
+        "invoice": "Fatura",
+        "card": "Banka kartı",
+        "manual": "Manuel",
+        "unknown": "Bilinmiyor"
       },
       "unknownProject": "Belirtilmedi",
       "projectsCount": "{{count}} proje",
@@ -330,6 +377,344 @@
     "toasts": {
       "invoiceRequestedSingle": "Fatura başarıyla talep edildi. Sipariş geçmişinden indirebilirsiniz.",
       "invoiceRequestedMultiple": "{{count}} proje için faturalar istendi"
+    },
+    "error": "Abonelikler yüklenirken hata oluştu"
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "Süper yönetici",
+      "users": "Kullanıcılar",
+      "subscriptions": "Abonelikler",
+      "projects": "Projeler",
+      "stats": "Analitik",
+      "partners": "Ortaklar",
+      "partnerPayouts": "Ödemeler",
+      "settings": "Ayarlar"
+    },
+    "projectsManagement": {
+      "title": "Proje Yönetimi",
+      "loading": "Yükleniyor...",
+      "emptyValue": "—",
+      "confirmDelete": "Bu projeyi silmek istediğinizden emin misiniz?",
+      "toast": {
+        "errorTitle": "Hata",
+        "successTitle": "Başarı",
+        "loadProjectsError": "Projeler yüklenemedi",
+        "projectPublished": "Proje yayınlandı",
+        "projectHidden": "Proje gizlendi",
+        "updateVisibilityError": "Proje görünürlüğü değiştirilemedi",
+        "projectAddedToFeatured": "Proje öne çıkanlara eklendi",
+        "projectRemovedFromFeatured": "Proje öne çıkanlardan kaldırıldı",
+        "updateStatusError": "Proje durumu değiştirilemedi",
+        "projectDeleted": "Proje silindi",
+        "deleteProjectError": "Proje silinemedi"
+      },
+      "table": {
+        "name": "İsim",
+        "owner": "Mal sahibi",
+        "views": "Görünümler",
+        "status": "Durum",
+        "createdAt": "Oluşturulma Tarihi",
+        "actions": "Eylemler"
+      },
+      "badges": {
+        "public": "Halk",
+        "featured": "Öne Çıkanlar"
+      },
+      "actions": {
+        "hide": "Saklamak",
+        "publishShort": "Bar.",
+        "feature": "Feat."
+      }
+    },
+    "partnersManagement": {
+      "title": "İş Ortakları Yönetimi",
+      "description": "İş ortağı programını ve iş ortağı durumlarını yönetin",
+      "toast": {
+        "errorTitle": "Hata",
+        "successTitle": "Başarı",
+        "loadPartnersError": "İş ortakları listesi yüklenemedi",
+        "partnerSuspended": "İş ortağı askıya alındı",
+        "partnerActivated": "İş ortağı etkinleştirildi",
+        "updatePartnerStatusError": "İş ortağı durumu güncellenemedi"
+      },
+      "stats": {
+        "totalPartners": "Toplam ortaklar",
+        "activeCount": "{{count}} aktif",
+        "totalEarnings": "Toplam kazanç",
+        "earnedByPartners": "Ortaklar tarafından kazanılan",
+        "paidOut": "Ödendi",
+        "withdrawnByPartners": "Ortaklar tarafından geri çekildi",
+        "suspended": "Askıya alınmış",
+        "inactivePartners": "Etkin olmayan ortaklar"
+      },
+      "filters": {
+        "title": "Filtreler",
+        "search": "Aramak",
+        "searchPlaceholder": "Ada, e-postaya veya koda göre arayın...",
+        "status": "Durum",
+        "allStatuses": "Tüm durumlar"
+      },
+      "table": {
+        "title": "Ortaklar",
+        "count": "{{filtered}} / {{total}} iş ortağı",
+        "partner": "Ortak",
+        "code": "Kod",
+        "status": "Durum",
+        "earned": "Kazanılan",
+        "withdrawn": "Geri çekildi",
+        "registeredAt": "Kayıt tarihi",
+        "actions": "Eylemler"
+      },
+      "status": {
+        "active": "Aktif",
+        "suspended": "Askıya alınmış",
+        "inactive": "Etkin değil"
+      },
+      "actions": {
+        "suspend": "Askıya almak",
+        "activate": "Etkinleştir"
+      },
+      "dialog": {
+        "suspendTitle": "İş ortağını askıya al",
+        "activateTitle": "İş ortağını etkinleştir",
+        "suspendDescription": "Bu iş ortağını askıya almak istediğinizden emin misiniz? Yeni komisyon alamayacaklar.",
+        "activateDescription": "Bu ortağı etkinleştirmek istediğinizden emin misiniz? Tekrar komisyon alacaklar.",
+        "codeLabel": "Kod",
+        "processing": "İşleme..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "Ödeme Yönetimi",
+      "description": "İş ortağı ödeme isteklerini inceleyin ve işleyin",
+      "toast": {
+        "loadPayoutsError": "Ödeme listesi yüklenemedi",
+        "payoutApproved": "Ödeme onaylandı",
+        "payoutRejected": "Ödeme reddedildi",
+        "payoutMarkedAsPaid": "Ödeme ödendi olarak işaretlendi",
+        "updatePayoutStatusError": "Ödeme durumu güncellenemedi"
+      },
+      "status": {
+        "pending": "İnceleme bekleniyor",
+        "approved": "Onaylı",
+        "paid": "Paralı",
+        "rejected": "Reddedilmiş",
+        "unknown": "Bilinmiyor"
+      },
+      "stats": {
+        "pendingReview": "İnceleme bekleniyor",
+        "pendingAmount": "Ödeme için ${{amount}}",
+        "waitingPayment": "Ödeme bekleniyor",
+        "completedPayouts": "Tamamlanan ödemeler",
+        "rejectedRequests": "Reddedilen istekler"
+      },
+      "filters": {
+        "title": "Filtreler",
+        "search": "Aramak",
+        "searchPlaceholder": "İş ortağına göre ara...",
+        "status": "Durum",
+        "allStatuses": "Tüm durumlar"
+      },
+      "table": {
+        "title": "Ödeme Talepleri",
+        "count": "{{filtered}} / {{total}} istek",
+        "partner": "Ortak",
+        "amount": "Miktar",
+        "status": "Durum",
+        "paymentMethod": "Ödeme yöntemi",
+        "contactInfo": "İletişim bilgileri",
+        "requestedAt": "Talep tarihi",
+        "actions": "Eylemler"
+      },
+      "emptyPaymentMethod": "Belirtilmedi",
+      "emptyContactInfo": "Belirtilmedi",
+      "actions": {
+        "approve": "Onaylamak",
+        "reject": "Reddetmek",
+        "markPaid": "Ödendi olarak işaretle"
+      },
+      "dialog": {
+        "approveTitle": "Ödemeyi onayla",
+        "rejectTitle": "Ödemeyi reddet",
+        "markPaidTitle": "Ödendi olarak işaretle",
+        "approveDescription": "Bu ödemeyi onaylamak istediğinizden emin misiniz?",
+        "rejectDescription": "Bu ödemeyi reddetmek istediğinizden emin misiniz?",
+        "markPaidDescription": "Bu ödemenin tamamlandığından emin misiniz?",
+        "codeLabel": "Kod",
+        "amountLabel": "Miktar",
+        "methodLabel": "Yöntem",
+        "contactInfoLabel": "İletişim bilgileri:",
+        "noteLabel": "Not (isteğe bağlı)",
+        "notePlaceholder": "Bu eylem için bir not ekleyin...",
+        "processing": "İşleme..."
+      }
+    },
+    "usersManagement": {
+      "title": "Kullanıcı Yönetimi",
+      "loading": "Yükleniyor...",
+      "creating": "Oluşturuluyor...",
+      "searchPlaceholder": "E-postaya, isme veya şirkete göre arayın...",
+      "toast": {
+        "errorTitle": "Hata",
+        "successTitle": "Başarı",
+        "loadUsersError": "Kullanıcılar yüklenemedi",
+        "userBanned": "Kullanıcı yasaklandı",
+        "banUserError": "Kullanıcı yasaklanamadı",
+        "userUnbanned": "Kullanıcının yasağı kaldırıldı",
+        "unbanUserError": "Kullanıcının yasağı kaldırılamadı",
+        "emailPasswordRequired": "E-posta ve şifre gerekli",
+        "userCreated": "Kullanıcı oluşturuldu",
+        "createUserError": "Kullanıcı oluşturulamadı",
+        "impersonateUserError": "Bu kullanıcı olarak oturum açılamadı"
+      },
+      "actions": {
+        "addUser": "Kullanıcı ekle",
+        "createUser": "Kullanıcı oluştur",
+        "ban": "Yasak",
+        "unban": "Yasağı kaldır",
+        "loginAs": "Oturum aç"
+      },
+      "dialogs": {
+        "createTitle": "Yeni kullanıcı ekle",
+        "banTitle": "Kullanıcıyı yasakla",
+        "banTarget": "Yasaklamak üzeresiniz:"
+      },
+      "fields": {
+        "password": "Şifre",
+        "fullName": "Ad Soyad",
+        "company": "Şirket",
+        "phone": "Telefon",
+        "banReason": "Yasaklama nedeni"
+      },
+      "placeholders": {
+        "fullName": "John Smith",
+        "company": "ACME LLC",
+        "banReason": "Nedenini belirtin..."
+      },
+      "table": {
+        "name": "İsim",
+        "company": "Şirket",
+        "status": "Durum",
+        "registeredAt": "Kayıt tarihi",
+        "actions": "Eylemler"
+      },
+      "status": {
+        "active": "Aktif",
+        "banned": "Yasaklandı"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "Abonelik Yönetimi",
+      "loading": "Yükleniyor...",
+      "pendingCount": "{{count}} fatura isteği işlenmeyi bekliyor",
+      "planOption": "{{name}} - ${{price}}/ay",
+      "toast": {
+        "errorTitle": "Hata",
+        "successTitle": "Başarı",
+        "loadSubscriptionsError": "Abonelikler yüklenemedi",
+        "fillRequiredFields": "Gerekli tüm alanları doldurun",
+        "subscriptionCreated": "Abonelik oluşturuldu",
+        "createSubscriptionError": "Abonelik oluşturulamadı",
+        "invoiceGenerated": "PDF faturası oluşturuldu ve gönderildi",
+        "generateInvoiceError": "Fatura oluşturulamadı",
+        "paymentConfirmed": "Ödeme onaylandı, abonelik etkinleştirildi",
+        "activateSubscriptionError": "Abonelik etkinleştirilemedi",
+        "subscriptionCancelled": "Abonelik iptal edildi",
+        "cancelSubscriptionError": "Abonelik iptal edilemedi",
+        "subscriptionUpdated": "Abonelik güncellendi",
+        "updateSubscriptionError": "Abonelik güncellenemedi"
+      },
+      "actions": {
+        "create": "Abonelik oluştur",
+        "saveChanges": "Değişiklikleri kaydet",
+        "editTitle": "Aboneliği düzenle",
+        "edit": "Düzenlemek",
+        "cancel": "İptal etmek"
+      },
+      "dialogs": {
+        "createTitle": "Yeni abonelik oluştur",
+        "editTitle": "Aboneliği düzenle",
+        "labels": {
+          "user": "Kullanıcı",
+          "project": "Proje",
+          "currentPlan": "Mevcut plan",
+          "currentStatus": "Mevcut durum",
+          "endsAt": "Bitiş tarihi"
+        }
+      },
+      "fields": {
+        "userEmail": "Kullanıcı e-postası",
+        "project": "Proje",
+        "plan": "Planı",
+        "durationMonths": "Süre (ay)",
+        "invoiceNumber": "Fatura numarası",
+        "invoiceUrl": "Fatura URL'si",
+        "tariffPlan": "Tarife (plan)",
+        "status": "Durum",
+        "infiniteSubscription": "Sonsuz abonelik (2099'a kadar)",
+        "customEndDate": "Veya bitiş tarihini manuel olarak ayarlayın"
+      },
+      "placeholders": {
+        "selectProject": "Proje seçin",
+        "selectPlan": "Planı seç"
+      },
+      "hints": {
+        "endDateAuto": "Bitiş tarihi, geçerli başlangıç ​​tarihinden itibaren otomatik olarak hesaplanacak",
+        "customDateOverrides": "Tarih verilirse süre hesaplaması yerine kullanılacaktır",
+        "applyWarning": "Değişiklikler hemen uygulanır. Durumu ve bitiş tarihini değiştirirken dikkatli olun."
+      },
+      "status": {
+        "active": "Aktif",
+        "trial": "Duruşma",
+        "trialing": "deneme",
+        "pendingPayment": "Ödeme bekleniyor",
+        "expired": "Günü geçmiş",
+        "cancelled": "İptal edildi",
+        "trialExpired": "Deneme süresi doldu"
+      },
+      "pendingRequests": {
+        "title": "Fatura talepleri",
+        "table": {
+          "user": "Kullanıcı",
+          "project": "Proje",
+          "plan": "Planı",
+          "amount": "Miktar",
+          "requestedAt": "Talep tarihi:",
+          "actions": "Eylemler"
+        },
+        "actions": {
+          "generatePdf": "PDF oluştur",
+          "view": "Görüş",
+          "viewPdf": "PDF'yi görüntüle",
+          "download": "İndirmek",
+          "confirmPayment": "Ödemeyi onayla",
+          "confirmAndActivate": "Ödemeyi onaylayın ve etkinleştirin"
+        },
+        "dialog": {
+          "title": "Ödemeyi onayla",
+          "invoiceLabel": "Fatura",
+          "warning": "Abonelik aktivasyonunu onaylamadan önce ödemenin alındığından emin olun.",
+          "labels": {
+            "project": "Proje",
+            "user": "Kullanıcı",
+            "plan": "Planı",
+            "amount": "Miktar",
+            "invoiceNumber": "Fatura numarası"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "Tüm abonelikler",
+        "table": {
+          "user": "Kullanıcı",
+          "project": "Proje",
+          "plan": "Planı",
+          "status": "Durum",
+          "endDate": "Bitiş tarihi",
+          "invoice": "Fatura",
+          "actions": "Eylemler"
+        }
+      }
     }
   }
 }

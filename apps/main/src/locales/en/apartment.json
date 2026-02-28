@@ -24,5 +24,18 @@
   "freeLayout": "Free layout",
   "yes": "Yes",
   "sendRequest": "Send request",
-  "requestSent": "Request sent successfully! We will contact you soon."
+  "requestSent": "Request sent successfully! We will contact you soon.",
+  "calculator": "Calculator",
+  "downloadPDF": "Download PDF",
+  "fetchError": "Error fetching apartment details",
+  "generatingPDF": "Generating PDF...",
+  "goBack": "Go back",
+  "installmentCalculator": "Installment calculator",
+  "invalidId": "Invalid apartment ID",
+  "linkCopied": "Link copied",
+  "notFound": "Apartment not found",
+  "notFoundDescription": "The requested apartment could not be found.",
+  "pdfGenerationError": "Error generating PDF",
+  "reserve": "Reserve",
+  "reserveTitle": "Reserve apartment"
 }

@@ -138,7 +138,7 @@ const CustomFieldsManager = ({
       onFieldsChangeRef.current?.(formattedFields);
     } catch (error) {
       console.error("Error loading custom fields:", error);
-      toast.error(tRef.current("customFields.loadError"));
+      toast.error(tRef.current("customFields.loadingError"));
     } finally {
       setLoading(false);
     }

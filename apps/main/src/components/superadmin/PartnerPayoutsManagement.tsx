@@ -44,6 +44,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerPayout } from "@gridix/partner-program";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PayoutWithPartner extends PartnerPayout {
   contact_info?: string;
@@ -59,6 +60,7 @@ interface PayoutWithPartner extends PartnerPayout {
 }
 
 export function PartnerPayoutsManagement() {
+  const { t, language } = useLanguage();
   const [payouts, setPayouts] = useState<PayoutWithPartner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,7 +109,7 @@ export function PartnerPayoutsManagement() {
       setPayouts((data as PayoutWithPartner[]) || []);
     } catch (error) {
       console.error("Error fetching payouts:", error);
-      toast.error("Не удалось загрузить список выплат");
+      toast.error(t("admin.superadmin.partnerPayouts.toast.loadPayoutsError"));
     } finally {
       setLoading(false);
     }
@@ -183,7 +185,11 @@ export function PartnerPayoutsManagement() {
       }
 
       toast.success(
-        `Выплата ${action === "approve" ? "одобрена" : action === "reject" ? "отклонена" : "отмечена как выплаченная"}`,
+        action === "approve"
+          ? t("admin.superadmin.partnerPayouts.toast.payoutApproved")
+          : action === "reject"
+            ? t("admin.superadmin.partnerPayouts.toast.payoutRejected")
+            : t("admin.superadmin.partnerPayouts.toast.payoutMarkedAsPaid"),
       );
 
       // Обновляем список
@@ -196,7 +202,7 @@ export function PartnerPayoutsManagement() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Не удалось обновить статус выплаты",
+          : t("admin.superadmin.partnerPayouts.toast.updatePayoutStatusError"),
       );
     } finally {
       setIsProcessing(false);
@@ -230,15 +236,15 @@ export function PartnerPayoutsManagement() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "pending":
-        return "Ожидает рассмотрения";
+        return t("admin.superadmin.partnerPayouts.status.pending");
       case "approved":
-        return "Одобрено";
+        return t("admin.superadmin.partnerPayouts.status.approved");
       case "paid":
-        return "Выплачено";
+        return t("admin.superadmin.partnerPayouts.status.paid");
       case "rejected":
-        return "Отклонено";
+        return t("admin.superadmin.partnerPayouts.status.rejected");
       default:
-        return "Неизвестно";
+        return t("admin.superadmin.partnerPayouts.status.unknown");
     }
   };
 
@@ -300,9 +306,11 @@ export function PartnerPayoutsManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Управление выплатами</h2>
+          <h2 className="text-2xl font-bold">
+            {t("admin.superadmin.partnerPayouts.title")}
+          </h2>
           <p className="text-muted-foreground">
-            Рассматривайте и обрабатывайте запросы на выплату от партнёров
+            {t("admin.superadmin.partnerPayouts.description")}
           </p>
         </div>
       </div>
@@ -312,47 +320,59 @@ export function PartnerPayoutsManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Ожидают рассмотрения
+              {t("admin.superadmin.partnerPayouts.stats.pendingReview")}
             </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalPending}</div>
             <p className="text-xs text-muted-foreground">
-              ${totalPendingAmount.toFixed(2)} к выплате
+              {t("admin.superadmin.partnerPayouts.stats.pendingAmount", {
+                amount: totalPendingAmount.toFixed(2),
+              })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Одобрено</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("admin.superadmin.partnerPayouts.status.approved")}
+            </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {payouts.filter((p) => p.status === "approved").length}
             </div>
-            <p className="text-xs text-muted-foreground">Ожидают выплаты</p>
+            <p className="text-xs text-muted-foreground">
+              {t("admin.superadmin.partnerPayouts.stats.waitingPayment")}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Выплачено</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("admin.superadmin.partnerPayouts.status.paid")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {payouts.filter((p) => p.status === "paid").length}
             </div>
-            <p className="text-xs text-muted-foreground">Завершённых выплат</p>
+            <p className="text-xs text-muted-foreground">
+              {t("admin.superadmin.partnerPayouts.stats.completedPayouts")}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Отклонено</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("admin.superadmin.partnerPayouts.status.rejected")}
+            </CardTitle>
             <XCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -360,7 +380,7 @@ export function PartnerPayoutsManagement() {
               {payouts.filter((p) => p.status === "rejected").length}
             </div>
             <p className="text-xs text-muted-foreground">
-              Отклонённых запросов
+              {t("admin.superadmin.partnerPayouts.stats.rejectedRequests")}
             </p>
           </CardContent>
         </Card>
@@ -371,18 +391,22 @@ export function PartnerPayoutsManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Фильтры
+            {t("admin.superadmin.partnerPayouts.filters.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="search">Поиск</Label>
+              <Label htmlFor="search">
+                {t("admin.superadmin.partnerPayouts.filters.search")}
+              </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Поиск по партнёру..."
+                  placeholder={t(
+                    "admin.superadmin.partnerPayouts.filters.searchPlaceholder",
+                  )}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -391,7 +415,9 @@ export function PartnerPayoutsManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Статус</Label>
+              <Label htmlFor="status">
+                {t("admin.superadmin.partnerPayouts.filters.status")}
+              </Label>
               <Select
                 value={statusFilter}
                 onValueChange={(
@@ -402,11 +428,21 @@ export function PartnerPayoutsManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все статусы</SelectItem>
-                  <SelectItem value="pending">Ожидают рассмотрения</SelectItem>
-                  <SelectItem value="approved">Одобрено</SelectItem>
-                  <SelectItem value="paid">Выплачено</SelectItem>
-                  <SelectItem value="rejected">Отклонено</SelectItem>
+                  <SelectItem value="all">
+                    {t("admin.superadmin.partnerPayouts.filters.allStatuses")}
+                  </SelectItem>
+                  <SelectItem value="pending">
+                    {t("admin.superadmin.partnerPayouts.status.pending")}
+                  </SelectItem>
+                  <SelectItem value="approved">
+                    {t("admin.superadmin.partnerPayouts.status.approved")}
+                  </SelectItem>
+                  <SelectItem value="paid">
+                    {t("admin.superadmin.partnerPayouts.status.paid")}
+                  </SelectItem>
+                  <SelectItem value="rejected">
+                    {t("admin.superadmin.partnerPayouts.status.rejected")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -417,22 +453,41 @@ export function PartnerPayoutsManagement() {
       {/* Таблица выплат */}
       <Card>
         <CardHeader>
-          <CardTitle>Запросы на выплату</CardTitle>
+          <CardTitle>
+            {t("admin.superadmin.partnerPayouts.table.title")}
+          </CardTitle>
           <CardDescription>
-            {filteredPayouts.length} из {payouts.length} запросов
+            {t("admin.superadmin.partnerPayouts.table.count", {
+              filtered: filteredPayouts.length,
+              total: payouts.length,
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Партнёр</TableHead>
-                <TableHead>Сумма</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Способ выплаты</TableHead>
-                <TableHead>Контактная информация</TableHead>
-                <TableHead>Дата запроса</TableHead>
-                <TableHead>Действия</TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.partner")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.amount")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.status")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.paymentMethod")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.contactInfo")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.requestedAt")}
+                </TableHead>
+                <TableHead>
+                  {t("admin.superadmin.partnerPayouts.table.actions")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -464,7 +519,10 @@ export function PartnerPayoutsManagement() {
                       </div>
                     </Badge>
                   </TableCell>
-                  <TableCell>{payout.payment_method || "Не указан"}</TableCell>
+                  <TableCell>
+                    {payout.payment_method ||
+                      t("admin.superadmin.partnerPayouts.emptyPaymentMethod")}
+                  </TableCell>
                   <TableCell>
                     <div className="max-w-xs">
                       {payout.contact_info ? (
@@ -473,19 +531,24 @@ export function PartnerPayoutsManagement() {
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">
-                          Не указана
+                          {t(
+                            "admin.superadmin.partnerPayouts.emptyContactInfo",
+                          )}
                         </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(payout.requested_at).toLocaleDateString("ru-RU", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(payout.requested_at).toLocaleDateString(
+                      language === "ru" ? "ru-RU" : "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -497,7 +560,9 @@ export function PartnerPayoutsManagement() {
                             onClick={() => openActionDialog(payout, "approve")}
                           >
                             <CheckCircle className="mr-1 h-4 w-4" />
-                            Одобрить
+                            {t(
+                              "admin.superadmin.partnerPayouts.actions.approve",
+                            )}
                           </Button>
                           <Button
                             size="sm"
@@ -505,7 +570,9 @@ export function PartnerPayoutsManagement() {
                             onClick={() => openActionDialog(payout, "reject")}
                           >
                             <XCircle className="mr-1 h-4 w-4" />
-                            Отклонить
+                            {t(
+                              "admin.superadmin.partnerPayouts.actions.reject",
+                            )}
                           </Button>
                         </>
                       )}
@@ -516,7 +583,9 @@ export function PartnerPayoutsManagement() {
                           onClick={() => openActionDialog(payout, "mark_paid")}
                         >
                           <DollarSign className="mr-1 h-4 w-4" />
-                          Отметить выплаченным
+                          {t(
+                            "admin.superadmin.partnerPayouts.actions.markPaid",
+                          )}
                         </Button>
                       )}
                     </div>
@@ -534,17 +603,21 @@ export function PartnerPayoutsManagement() {
           <DialogHeader>
             <DialogTitle>
               {action === "approve"
-                ? "Одобрить выплату"
+                ? t("admin.superadmin.partnerPayouts.dialog.approveTitle")
                 : action === "reject"
-                  ? "Отклонить выплату"
-                  : "Отметить как выплаченную"}
+                  ? t("admin.superadmin.partnerPayouts.dialog.rejectTitle")
+                  : t("admin.superadmin.partnerPayouts.dialog.markPaidTitle")}
             </DialogTitle>
             <DialogDescription>
               {action === "approve"
-                ? "Вы уверены, что хотите одобрить эту выплату?"
+                ? t("admin.superadmin.partnerPayouts.dialog.approveDescription")
                 : action === "reject"
-                  ? "Вы уверены, что хотите отклонить эту выплату?"
-                  : "Вы уверены, что выплата была произведена?"}
+                  ? t(
+                      "admin.superadmin.partnerPayouts.dialog.rejectDescription",
+                    )
+                  : t(
+                      "admin.superadmin.partnerPayouts.dialog.markPaidDescription",
+                    )}
             </DialogDescription>
           </DialogHeader>
           {selectedPayout && (
@@ -557,20 +630,25 @@ export function PartnerPayoutsManagement() {
                   {selectedPayout.partner_profiles.user_profiles.email}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Код: {selectedPayout.partner_profiles.partner_code}
+                  {t("admin.superadmin.partnerPayouts.dialog.codeLabel")}:{" "}
+                  {selectedPayout.partner_profiles.partner_code}
                 </p>
                 <p className="text-lg font-bold">
-                  Сумма: ${selectedPayout.amount.toFixed(2)}
+                  {t("admin.superadmin.partnerPayouts.dialog.amountLabel")}: $
+                  {selectedPayout.amount.toFixed(2)}
                 </p>
                 {selectedPayout.payment_method && (
                   <p className="text-sm">
-                    Способ: {selectedPayout.payment_method}
+                    {t("admin.superadmin.partnerPayouts.dialog.methodLabel")}:{" "}
+                    {selectedPayout.payment_method}
                   </p>
                 )}
                 {selectedPayout.contact_info && (
                   <div className="mt-2 rounded border-l-4 border-blue-400 bg-blue-50 p-2">
                     <p className="text-sm font-medium text-blue-800">
-                      Контактная информация:
+                      {t(
+                        "admin.superadmin.partnerPayouts.dialog.contactInfoLabel",
+                      )}
                     </p>
                     <p className="break-words text-sm text-blue-700">
                       {selectedPayout.contact_info}
@@ -580,10 +658,14 @@ export function PartnerPayoutsManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Примечание (необязательно)</Label>
+                <Label htmlFor="notes">
+                  {t("admin.superadmin.partnerPayouts.dialog.noteLabel")}
+                </Label>
                 <Textarea
                   id="notes"
-                  placeholder="Добавьте примечание к действию..."
+                  placeholder={t(
+                    "admin.superadmin.partnerPayouts.dialog.notePlaceholder",
+                  )}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -594,7 +676,7 @@ export function PartnerPayoutsManagement() {
                   variant="outline"
                   onClick={() => setIsActionDialogOpen(false)}
                 >
-                  Отмена
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant={action === "reject" ? "destructive" : "default"}
@@ -605,12 +687,12 @@ export function PartnerPayoutsManagement() {
                   disabled={isProcessing}
                 >
                   {isProcessing
-                    ? "Обработка..."
+                    ? t("admin.superadmin.partnerPayouts.dialog.processing")
                     : action === "approve"
-                      ? "Одобрить"
+                      ? t("admin.superadmin.partnerPayouts.actions.approve")
                       : action === "reject"
-                        ? "Отклонить"
-                        : "Отметить выплаченным"}
+                        ? t("admin.superadmin.partnerPayouts.actions.reject")
+                        : t("admin.superadmin.partnerPayouts.actions.markPaid")}
                 </Button>
               </div>
             </div>

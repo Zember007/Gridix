@@ -112,13 +112,10 @@ export const VideoModalPlayer: React.FC<VideoModalPlayerProps> = ({
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <span className="inline-flex items-center gap-1.5">
                 <ListVideo size={14} />
-                {t("partners.videoPlayerChaptersTitle") || "Таймкоды"}
+                {t("partners.videoPlayerChaptersTitle")}
               </span>
               <span className="text-slate-300/70">•</span>
-              <span>
-                {t("partners.videoPlayerChaptersHint") ||
-                  "кликните по пункту — плеер перемотается"}
-              </span>
+              <span>{t("partners.videoPlayerChaptersHint")}</span>
             </div>
 
             <button
@@ -128,8 +125,8 @@ export const VideoModalPlayer: React.FC<VideoModalPlayerProps> = ({
             >
               {isPlaying ? <Pause size={16} /> : <Play size={16} />}
               {isPlaying
-                ? t("partners.videoPlayerPause") || "Пауза"
-                : t("partners.videoPlayerPlay") || "Играть"}
+                ? t("partners.videoPlayerPause")
+                : t("partners.videoPlayerPlay")}
             </button>
           </div>
 
@@ -185,8 +182,7 @@ export const VideoModalPlayer: React.FC<VideoModalPlayerProps> = ({
             </div>
           ) : (
             <div className="mt-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-              {t("partners.videoPlayerNoChapters") ||
-                "Таймкоды пока не добавлены. Их можно задать в массиве chapters для каждого видео."}
+              {t("partners.videoPlayerNoChapters")}
             </div>
           )}
         </div>

@@ -39,5 +39,6 @@
   "typeParking": "Otopark",
   "updateSuccess": "Daire güncellendi",
   "syncError": "Senkronize edilecek aynı alana ve oda sayısına sahip daire yok",
-  "noSearchResults": "Sonuç bulunamadı"
+  "noSearchResults": "Sonuç bulunamadı",
+  "filterByFloor": "Zemine göre filtrele"
 }

@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { AlertTriangle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubscriptionAlertProps {
   isSubscriptionInactive: boolean;
@@ -13,6 +14,8 @@ export const SubscriptionAlert = ({
   isOwner,
   language,
 }: SubscriptionAlertProps) => {
+  const { t } = useLanguage();
+
   if (!isSubscriptionInactive) return null;
 
   return (
@@ -20,21 +23,13 @@ export const SubscriptionAlert = ({
       <AlertTriangle className="h-4 w-4 text-yellow-600" />
       <AlertTitle className="text-yellow-800 dark:text-yellow-200">
         {isOwner
-          ? language === "ru"
-            ? "Подписка на проект истекла"
-            : "Project Subscription Expired"
-          : language === "ru"
-            ? "Этот проект временно недоступен"
-            : "This project is temporarily unavailable"}
+          ? t("subscription.projectAccessAlert.ownerTitle")
+          : t("subscription.projectAccessAlert.guestTitle")}
       </AlertTitle>
       <AlertDescription className="text-yellow-700 dark:text-yellow-300">
         {isOwner
-          ? language === "ru"
-            ? 'Для продолжения работы с проектом необходимо продлить подписку. Перейдите в раздел "Подписка" в админ-панели.'
-            : 'To continue working with this project, please renew your subscription. Go to the "Subscription" section in the admin panel.'
-          : language === "ru"
-            ? "Владелец проекта приостановил доступ к проекту. Пожалуйста, свяжитесь с ним для получения дополнительной информации."
-            : "The project owner has suspended access to this project. Please contact them for more information."}
+          ? t("subscription.projectAccessAlert.ownerDescription")
+          : t("subscription.projectAccessAlert.guestDescription")}
       </AlertDescription>
       {isOwner && (
         <Button
@@ -45,7 +40,7 @@ export const SubscriptionAlert = ({
             (window.location.href = `/${language}/admin#subscription`)
           }
         >
-          {language === "ru" ? "Перейти к подпискам" : "Go to Subscriptions"}
+          {t("subscription.projectAccessAlert.cta")}
         </Button>
       )}
     </Alert>

@@ -81,7 +81,7 @@ export default function RootPage() {
 
   if (action === "to-auth") {
     const nextLang = lang || "en";
-    return <Navigate replace to={`/${nextLang}/auth`} />;
+    return <Navigate replace to={`/${nextLang}/auth/signin`} />;
   }
 
   return (

@@ -66,5 +66,8 @@
   "total": "Toplam",
   "type": "Tip",
   "viewApartments": "{{count}} seçeneği görüntüle",
+  "viewDetails": "Detayları görüntüle",
+  "openMenu": "Menüyü aç",
+  "closeMenu": "Menüyü kapat",
   "plan_floor": "Kat {{kat}} planı"
 }

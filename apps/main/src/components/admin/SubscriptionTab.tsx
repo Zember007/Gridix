@@ -51,7 +51,7 @@ export default function SubscriptionTab() {
       <div className="flex flex-col items-center justify-center py-12">
         <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
         <h3 className="mb-2 text-lg font-semibold">
-          {t("admin.subscriptionPage.error") || "Error loading subscriptions"}
+          {t("admin.subscriptionPage.error")}
         </h3>
         <p className="mb-4 text-center text-muted-foreground">{error}</p>
         <Button onClick={refreshProjectSubscriptions} variant="outline">

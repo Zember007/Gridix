@@ -9,5 +9,6 @@
   "title": "Gayrimenkul Projeleri",
   "userNotFound": "Kullanıcı bulunamadı",
   "userNotFoundDesc": "Belirtilen kullanıcı mevcut değil veya genel projesi yok.",
-  "viewApartments": "Daireleri görüntüle"
+  "viewApartments": "Daireleri görüntüle",
+  "filters": "Filtreler"
 }

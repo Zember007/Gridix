@@ -158,7 +158,8 @@
     "notConnected": "Not connected",
     "connectInAdmin": "Connect in Admin Panel",
     "connectInAdminDescription": "You need to connect AmoCRM in the Admin Panel first.",
-    "goToAdmin": "Go to Admin Panel"
+    "goToAdmin": "Go to Admin Panel",
+    "confirm": "Confirm"
   },
   "bitrix24": {
     "description": "CRM, tasks, and project management in one place.",
@@ -186,6 +187,7 @@
     "notConnected": "Not connected",
     "connectInAdmin": "Connect in Admin Panel",
     "connectInAdminDescription": "You need to connect Bitrix24 in the Admin Panel first.",
+    "marketplaceHint": "To connect, install the Gridix app from the Bitrix24 Marketplace in your portal.",
     "attached": "Connected",
     "attachError": "Failed to connect",
     "detached": "Disconnected",
@@ -227,9 +229,9 @@
       "12": "12 months"
     },
     "hints": {
-      "36": "🔥 Super saving! 50% discount for the whole period.",
+      "6": "💰 Good savings when paying for 6 months.",
       "12": "👍 Great choice! The most popular plan.",
-      "6": "💰 Good savings when paying for 6 months."
+      "36": "🔥 Super saving! 50% discount for the whole period."
     },
     "pricing": {
       "availablePlansTitle": "Available plans",
@@ -240,7 +242,46 @@
       "monthsShort": "month",
       "monthsShortPlural": "months",
       "savings": "savings",
-      "choosePlan": "Choose {{name}}"
+      "choosePlan": "Choose {{name}}",
+      "planContent": {
+        "basic": {
+          "description": "Basic plan for small projects with limited functionality",
+          "features": {
+            "1": "Project management",
+            "2": "Interactive catalog - up to 500 lots",
+            "3": "Interactive chessboard",
+            "4": "Branding with your color scheme and GRIDIX mention",
+            "5": "Demand analytics",
+            "6": "Dynamic pricing",
+            "7": "Built-in CRM module",
+            "8": "Chessboard widget for your website",
+            "9": "Installment / mortgage management",
+            "10": "PDF presentations",
+            "11": "Currency selection",
+            "12": "Language selection",
+            "13": "Custom fields",
+            "14": "Roles and permissions management"
+          }
+        },
+        "pro": {
+          "description": "Professional plan with CRM integrations and White Label support",
+          "features": {
+            "1": "Everything included in Basic +",
+            "2": "Interactive catalog - unlimited lots",
+            "3": "Integrations with AmoCRM / Bitrix24 and others",
+            "4": "Bulk updates",
+            "5": "White Label without GRIDIX mention",
+            "6": "Custom domain (e.g. sales.company.com)",
+            "7": "Extended CRM module",
+            "8": "Advanced analytics",
+            "9": "Agency network module / partner account",
+            "10": "Mortgage calculator (coming soon)",
+            "11": "Online booking (coming soon)",
+            "12": "Data export module to real estate portals (coming soon)",
+            "13": "Priority support"
+          }
+        }
+      }
     },
     "history": {
       "title": "Order history",
@@ -262,6 +303,12 @@
         "paid": "Paid",
         "pending": "In progress",
         "cancelled": "Cancelled"
+      },
+      "methodLabels": {
+        "invoice": "Invoice",
+        "card": "Bank card",
+        "manual": "Manual",
+        "unknown": "Unknown"
       },
       "unknownProject": "Not specified",
       "projectsCount": "{{count}} project(s)",
@@ -330,6 +377,344 @@
     "toasts": {
       "invoiceRequestedSingle": "Invoice requested successfully. You can download it in the order history.",
       "invoiceRequestedMultiple": "Invoices requested for {{count}} projects"
+    },
+    "error": "Error loading subscriptions"
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "Superadmin",
+      "users": "Users",
+      "subscriptions": "Subscriptions",
+      "projects": "Projects",
+      "stats": "Analytics",
+      "partners": "Partners",
+      "partnerPayouts": "Payouts",
+      "settings": "Settings"
+    },
+    "projectsManagement": {
+      "title": "Projects Management",
+      "loading": "Loading...",
+      "emptyValue": "—",
+      "confirmDelete": "Are you sure you want to delete this project?",
+      "toast": {
+        "errorTitle": "Error",
+        "successTitle": "Success",
+        "loadProjectsError": "Failed to load projects",
+        "projectPublished": "Project published",
+        "projectHidden": "Project hidden",
+        "updateVisibilityError": "Failed to change project visibility",
+        "projectAddedToFeatured": "Project added to featured",
+        "projectRemovedFromFeatured": "Project removed from featured",
+        "updateStatusError": "Failed to change project status",
+        "projectDeleted": "Project deleted",
+        "deleteProjectError": "Failed to delete project"
+      },
+      "table": {
+        "name": "Name",
+        "owner": "Owner",
+        "views": "Views",
+        "status": "Status",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "badges": {
+        "public": "Public",
+        "featured": "Featured"
+      },
+      "actions": {
+        "hide": "Hide",
+        "publishShort": "Pub.",
+        "feature": "Feat."
+      }
+    },
+    "partnersManagement": {
+      "title": "Partners Management",
+      "description": "Manage partner program and partner statuses",
+      "toast": {
+        "errorTitle": "Error",
+        "successTitle": "Success",
+        "loadPartnersError": "Failed to load partners list",
+        "partnerSuspended": "Partner suspended",
+        "partnerActivated": "Partner activated",
+        "updatePartnerStatusError": "Failed to update partner status"
+      },
+      "stats": {
+        "totalPartners": "Total partners",
+        "activeCount": "{{count}} active",
+        "totalEarnings": "Total earnings",
+        "earnedByPartners": "Earned by partners",
+        "paidOut": "Paid out",
+        "withdrawnByPartners": "Withdrawn by partners",
+        "suspended": "Suspended",
+        "inactivePartners": "Inactive partners"
+      },
+      "filters": {
+        "title": "Filters",
+        "search": "Search",
+        "searchPlaceholder": "Search by name, email or code...",
+        "status": "Status",
+        "allStatuses": "All statuses"
+      },
+      "table": {
+        "title": "Partners",
+        "count": "{{filtered}} of {{total}} partners",
+        "partner": "Partner",
+        "code": "Code",
+        "status": "Status",
+        "earned": "Earned",
+        "withdrawn": "Withdrawn",
+        "registeredAt": "Registration date",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "inactive": "Inactive"
+      },
+      "actions": {
+        "suspend": "Suspend",
+        "activate": "Activate"
+      },
+      "dialog": {
+        "suspendTitle": "Suspend partner",
+        "activateTitle": "Activate partner",
+        "suspendDescription": "Are you sure you want to suspend this partner? They will not receive new commissions.",
+        "activateDescription": "Are you sure you want to activate this partner? They will receive commissions again.",
+        "codeLabel": "Code",
+        "processing": "Processing..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "Payouts Management",
+      "description": "Review and process partner payout requests",
+      "toast": {
+        "loadPayoutsError": "Failed to load payouts list",
+        "payoutApproved": "Payout approved",
+        "payoutRejected": "Payout rejected",
+        "payoutMarkedAsPaid": "Payout marked as paid",
+        "updatePayoutStatusError": "Failed to update payout status"
+      },
+      "status": {
+        "pending": "Pending review",
+        "approved": "Approved",
+        "paid": "Paid",
+        "rejected": "Rejected",
+        "unknown": "Unknown"
+      },
+      "stats": {
+        "pendingReview": "Pending review",
+        "pendingAmount": "${{amount}} to payout",
+        "waitingPayment": "Waiting for payment",
+        "completedPayouts": "Completed payouts",
+        "rejectedRequests": "Rejected requests"
+      },
+      "filters": {
+        "title": "Filters",
+        "search": "Search",
+        "searchPlaceholder": "Search by partner...",
+        "status": "Status",
+        "allStatuses": "All statuses"
+      },
+      "table": {
+        "title": "Payout Requests",
+        "count": "{{filtered}} of {{total}} requests",
+        "partner": "Partner",
+        "amount": "Amount",
+        "status": "Status",
+        "paymentMethod": "Payment method",
+        "contactInfo": "Contact information",
+        "requestedAt": "Request date",
+        "actions": "Actions"
+      },
+      "emptyPaymentMethod": "Not specified",
+      "emptyContactInfo": "Not specified",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "markPaid": "Mark as paid"
+      },
+      "dialog": {
+        "approveTitle": "Approve payout",
+        "rejectTitle": "Reject payout",
+        "markPaidTitle": "Mark as paid",
+        "approveDescription": "Are you sure you want to approve this payout?",
+        "rejectDescription": "Are you sure you want to reject this payout?",
+        "markPaidDescription": "Are you sure this payout was completed?",
+        "codeLabel": "Code",
+        "amountLabel": "Amount",
+        "methodLabel": "Method",
+        "contactInfoLabel": "Contact information:",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "Add a note for this action...",
+        "processing": "Processing..."
+      }
+    },
+    "usersManagement": {
+      "title": "Users Management",
+      "loading": "Loading...",
+      "creating": "Creating...",
+      "searchPlaceholder": "Search by email, name or company...",
+      "toast": {
+        "errorTitle": "Error",
+        "successTitle": "Success",
+        "loadUsersError": "Failed to load users",
+        "userBanned": "User banned",
+        "banUserError": "Failed to ban user",
+        "userUnbanned": "User unbanned",
+        "unbanUserError": "Failed to unban user",
+        "emailPasswordRequired": "Email and password are required",
+        "userCreated": "User created",
+        "createUserError": "Failed to create user",
+        "impersonateUserError": "Failed to sign in as this user"
+      },
+      "actions": {
+        "addUser": "Add user",
+        "createUser": "Create user",
+        "ban": "Ban",
+        "unban": "Unban",
+        "loginAs": "Sign in"
+      },
+      "dialogs": {
+        "createTitle": "Add new user",
+        "banTitle": "Ban user",
+        "banTarget": "You are about to ban:"
+      },
+      "fields": {
+        "password": "Password",
+        "fullName": "Full name",
+        "company": "Company",
+        "phone": "Phone",
+        "banReason": "Ban reason"
+      },
+      "placeholders": {
+        "fullName": "John Smith",
+        "company": "ACME LLC",
+        "banReason": "Specify the reason..."
+      },
+      "table": {
+        "name": "Name",
+        "company": "Company",
+        "status": "Status",
+        "registeredAt": "Registration date",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "banned": "Banned"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "Subscriptions Management",
+      "loading": "Loading...",
+      "pendingCount": "{{count}} invoice request(s) are waiting for processing",
+      "planOption": "{{name}} - ${{price}}/month",
+      "toast": {
+        "errorTitle": "Error",
+        "successTitle": "Success",
+        "loadSubscriptionsError": "Failed to load subscriptions",
+        "fillRequiredFields": "Fill in all required fields",
+        "subscriptionCreated": "Subscription created",
+        "createSubscriptionError": "Failed to create subscription",
+        "invoiceGenerated": "PDF invoice generated and sent",
+        "generateInvoiceError": "Failed to generate invoice",
+        "paymentConfirmed": "Payment confirmed, subscription activated",
+        "activateSubscriptionError": "Failed to activate subscription",
+        "subscriptionCancelled": "Subscription cancelled",
+        "cancelSubscriptionError": "Failed to cancel subscription",
+        "subscriptionUpdated": "Subscription updated",
+        "updateSubscriptionError": "Failed to update subscription"
+      },
+      "actions": {
+        "create": "Create subscription",
+        "saveChanges": "Save changes",
+        "editTitle": "Edit subscription",
+        "edit": "Edit",
+        "cancel": "Cancel"
+      },
+      "dialogs": {
+        "createTitle": "Create new subscription",
+        "editTitle": "Edit subscription",
+        "labels": {
+          "user": "User",
+          "project": "Project",
+          "currentPlan": "Current plan",
+          "currentStatus": "Current status",
+          "endsAt": "Ends at"
+        }
+      },
+      "fields": {
+        "userEmail": "User email",
+        "project": "Project",
+        "plan": "Plan",
+        "durationMonths": "Duration (months)",
+        "invoiceNumber": "Invoice number",
+        "invoiceUrl": "Invoice URL",
+        "tariffPlan": "Tariff (plan)",
+        "status": "Status",
+        "infiniteSubscription": "Infinite subscription (until 2099)",
+        "customEndDate": "Or set end date manually"
+      },
+      "placeholders": {
+        "selectProject": "Select project",
+        "selectPlan": "Select plan"
+      },
+      "hints": {
+        "endDateAuto": "End date will be calculated automatically from current start date",
+        "customDateOverrides": "If date is provided, it will be used instead of duration calculation",
+        "applyWarning": "Changes apply immediately. Be careful when changing status and end date."
+      },
+      "status": {
+        "active": "Active",
+        "trial": "Trial",
+        "trialing": "Trialing",
+        "pendingPayment": "Pending payment",
+        "expired": "Expired",
+        "cancelled": "Cancelled",
+        "trialExpired": "Trial expired"
+      },
+      "pendingRequests": {
+        "title": "Invoice requests",
+        "table": {
+          "user": "User",
+          "project": "Project",
+          "plan": "Plan",
+          "amount": "Amount",
+          "requestedAt": "Requested at",
+          "actions": "Actions"
+        },
+        "actions": {
+          "generatePdf": "Generate PDF",
+          "view": "View",
+          "viewPdf": "View PDF",
+          "download": "Download",
+          "confirmPayment": "Confirm payment",
+          "confirmAndActivate": "Confirm payment and activate"
+        },
+        "dialog": {
+          "title": "Confirm payment",
+          "invoiceLabel": "Invoice",
+          "warning": "Make sure payment has been received before confirming subscription activation.",
+          "labels": {
+            "project": "Project",
+            "user": "User",
+            "plan": "Plan",
+            "amount": "Amount",
+            "invoiceNumber": "Invoice number"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "All subscriptions",
+        "table": {
+          "user": "User",
+          "project": "Project",
+          "plan": "Plan",
+          "status": "Status",
+          "endDate": "End date",
+          "invoice": "Invoice",
+          "actions": "Actions"
+        }
+      }
     }
   }
 }

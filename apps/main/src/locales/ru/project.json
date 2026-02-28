@@ -66,5 +66,8 @@
   "total": "Всего",
   "type": "Тип",
   "viewApartments": "Смотреть {{count}} вариантов",
+  "viewDetails": "Посмотреть детали",
+  "openMenu": "Открыть меню",
+  "closeMenu": "Закрыть меню",
   "plan_floor": "План {{floor}} этажа"
 }

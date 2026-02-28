@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Button,
   Card,
@@ -18,7 +25,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@gridix/ui";
-import { Copy, Home, Image as ImageIcon, Layout, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Home,
+  Image as ImageIcon,
+  Layout,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import {
@@ -52,8 +67,17 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<string>("");
   const [photos, setPhotos] = useState<ApartmentPhoto[]>([]);
+  const [photoCountsByApartment, setPhotoCountsByApartment] = useState<
+    Record<string, number>
+  >({});
+  const [isCoverageExpanded, setIsCoverageExpanded] = useState(false);
+  const [coverageFilter, setCoverageFilter] = useState<
+    "all" | "with" | "without"
+  >("all");
   const [uploading, setUploading] = useState(false);
+  const [isDragOverUpload, setIsDragOverUpload] = useState(false);
   const [loading, setLoading] = useState(true);
+  const photoUploadInputRef = useRef<HTMLInputElement | null>(null);
   const { user } = useAuth();
   const { t } = useLanguage();
   const editorData = useProjectEditorDataContext();
@@ -79,13 +103,22 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   }, [projectId]);
 
   useEffect(() => {
-    if (editorData?.data?.apartments != null) {
+    if (editorData) {
+      if (editorData.loading) {
+        setLoading(true);
+        return;
+      }
+      if (editorData?.data?.apartments == null) {
+        setApartments([]);
+        setLoading(false);
+        return;
+      }
       setApartments(editorData.data.apartments.map(normalizeApartmentData));
       setLoading(false);
       return;
     }
     loadApartments();
-  }, [projectId, editorData?.data?.apartments, loadApartments]);
+  }, [editorData, editorData?.data?.apartments, loadApartments]);
 
   const loadPhotos = useCallback(async () => {
     if (!selectedApartment) return;
@@ -110,44 +143,226 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     }
   }, [selectedApartment, loadPhotos]);
 
-  const handlePhotoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = event.target.files;
-    if (!files || !selectedApartment) return;
-    if (!user) {
-      toast.error(t("photosManager.authRequired"));
+  useEffect(() => {
+    if (photoUploadInputRef.current) {
+      photoUploadInputRef.current.value = "";
+    }
+  }, [selectedApartment]);
+
+  const loadPhotoCoverage = useCallback(async () => {
+    const apartmentIds = apartments.map((apartment) => apartment.id);
+    if (apartmentIds.length === 0) {
+      setPhotoCountsByApartment({});
       return;
     }
-    setUploading(true);
+
     try {
-      const uploadPromises = Array.from(files).map(async (file_get, index) => {
-        const blob = await compressToWebP(file_get);
-        const file = new File([blob], `photo-${index}.webp`, {
-          type: "image/webp",
-        });
-        await uploadApartmentPhoto(
-          selectedApartment,
-          photos.length + index,
-          file,
-        );
-      });
-      await Promise.all(uploadPromises);
-      toast.success(t("photosManager.uploadSuccess"));
-      loadPhotos();
+      const { data, error } = await supabase
+        .from("apartment_photos")
+        .select("apartment_id")
+        .in("apartment_id", apartmentIds);
+
+      if (error) throw error;
+
+      const defaultCounts = apartmentIds.reduce<Record<string, number>>(
+        (acc, apartmentId) => {
+          acc[apartmentId] = 0;
+          return acc;
+        },
+        {},
+      );
+
+      const counts = (data || []).reduce<Record<string, number>>(
+        (acc, photo) => {
+          acc[photo.apartment_id] = (acc[photo.apartment_id] || 0) + 1;
+          return acc;
+        },
+        defaultCounts,
+      );
+
+      setPhotoCountsByApartment(counts);
     } catch (error) {
-      console.error("Error uploading photos:", error);
-      toast.error(t("photosManager.uploadError"));
-    } finally {
-      setUploading(false);
+      console.error("Error loading apartment photo coverage:", error);
     }
+  }, [apartments]);
+
+  useEffect(() => {
+    loadPhotoCoverage();
+  }, [loadPhotoCoverage]);
+
+  const uploadFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0 || !selectedApartment) return;
+      if (!user) {
+        toast.error(t("photosManager.authRequired"));
+        return;
+      }
+      setUploading(true);
+      try {
+        const uploadPromises = files.map(async (file_get, index) => {
+          const blob = await compressToWebP(file_get);
+          const file = new File([blob], `photo-${index}.webp`, {
+            type: "image/webp",
+          });
+          await uploadApartmentPhoto(
+            selectedApartment,
+            photos.length + index,
+            file,
+          );
+        });
+        await Promise.all(uploadPromises);
+        toast.success(t("photosManager.uploadSuccess"));
+        loadPhotos();
+        loadPhotoCoverage();
+      } catch (error) {
+        console.error("Error uploading photos:", error);
+        toast.error(t("photosManager.uploadError"));
+      } finally {
+        setUploading(false);
+        if (photoUploadInputRef.current) {
+          photoUploadInputRef.current.value = "";
+        }
+      }
+    },
+    [loadPhotoCoverage, loadPhotos, photos.length, selectedApartment, t, user],
+  );
+
+  const handlePhotoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+    await uploadFiles(Array.from(files));
   };
+
+  const isFileEntry = (entry: FileSystemEntry): entry is FileSystemFileEntry =>
+    entry.isFile;
+
+  const isDirectoryEntry = (
+    entry: FileSystemEntry,
+  ): entry is FileSystemDirectoryEntry => entry.isDirectory;
+
+  const readAllDirectoryEntries = useCallback(
+    async (reader: FileSystemDirectoryReader) => {
+      const result: FileSystemEntry[] = [];
+      let shouldContinue = true;
+
+      while (shouldContinue) {
+        const batch = await new Promise<FileSystemEntry[]>(
+          (resolve, reject) => {
+            reader.readEntries(resolve, reject);
+          },
+        );
+
+        if (batch.length === 0) {
+          shouldContinue = false;
+          continue;
+        }
+        result.push(...batch);
+      }
+
+      return result;
+    },
+    [],
+  );
+
+  const extractFilesFromEntry = useCallback(
+    async (entry: FileSystemEntry): Promise<File[]> => {
+      if (isFileEntry(entry)) {
+        const file = await new Promise<File>((resolve, reject) => {
+          entry.file(resolve, reject);
+        });
+        return [file];
+      }
+
+      if (!isDirectoryEntry(entry)) {
+        return [];
+      }
+
+      const reader = entry.createReader();
+      const entries = await readAllDirectoryEntries(reader);
+      const nestedFiles = await Promise.all(
+        entries.map((nestedEntry) => extractFilesFromEntry(nestedEntry)),
+      );
+      return nestedFiles.flat();
+    },
+    [readAllDirectoryEntries],
+  );
+
+  const handleUploadDrop = useCallback(
+    async (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      setIsDragOverUpload(false);
+      if (!selectedApartment) return;
+
+      const transferItems = Array.from(event.dataTransfer.items ?? []);
+      const transferFiles = Array.from(event.dataTransfer.files ?? []);
+
+      const uploadableFiles = transferFiles.filter((file) =>
+        file.type.startsWith("image/"),
+      );
+
+      if (transferItems.length > 0) {
+        const entryFilesNested = await Promise.all(
+          transferItems.map(async (item) => {
+            const entry = item.webkitGetAsEntry();
+
+            if (entry) {
+              return extractFilesFromEntry(entry);
+            }
+
+            const fallbackFile = item.getAsFile();
+            return fallbackFile ? [fallbackFile] : [];
+          }),
+        );
+
+        uploadableFiles.push(
+          ...entryFilesNested
+            .flat()
+            .filter((file) => file.type.startsWith("image/")),
+        );
+      }
+
+      const uniqueFiles = Array.from(
+        new Map(
+          uploadableFiles.map((file) => [
+            `${file.name}-${file.size}-${file.lastModified}`,
+            file,
+          ]),
+        ).values(),
+      );
+
+      if (uniqueFiles.length === 0) {
+        toast.error(t("photosManager.uploadError"));
+        return;
+      }
+
+      await uploadFiles(uniqueFiles);
+    },
+    [extractFilesFromEntry, selectedApartment, t, uploadFiles],
+  );
+
+  const handleUploadDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      if (!selectedApartment || uploading) return;
+      setIsDragOverUpload(true);
+    },
+    [selectedApartment, uploading],
+  );
+
+  const handleUploadDragLeave = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      setIsDragOverUpload(false);
+    },
+    [],
+  );
 
   const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
     try {
       await deleteApartmentPhoto(photoId, imageUrl);
       toast.success(t("photosManager.deleteSuccess"));
       loadPhotos();
+      loadPhotoCoverage();
     } catch (error) {
       console.error("Error deleting photo:", error);
       toast.error(t("photosManager.deleteError"));
@@ -216,6 +431,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
           count: similarApartments.length,
         }),
       );
+      loadPhotoCoverage();
     } catch (error) {
       console.error("Error duplicating photos:", error);
       toast.error(t("photosManager.duplicateError"));
@@ -231,6 +447,23 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       </Card>
     );
   }
+
+  const apartmentsWithPhotos = apartments.filter(
+    (apartment) => (photoCountsByApartment[apartment.id] || 0) > 0,
+  );
+  const apartmentsWithoutPhotos = apartments.filter(
+    (apartment) => (photoCountsByApartment[apartment.id] || 0) === 0,
+  );
+  const orderedApartments = [
+    ...apartmentsWithoutPhotos,
+    ...apartmentsWithPhotos,
+  ];
+  const filteredApartments =
+    coverageFilter === "with"
+      ? apartmentsWithPhotos
+      : coverageFilter === "without"
+        ? apartmentsWithoutPhotos
+        : orderedApartments;
 
   return (
     <div className="space-y-6">
@@ -283,21 +516,177 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                 </Select>
               </div>
 
+              <div className="space-y-3 rounded-lg border p-4">
+                <button
+                  type="button"
+                  className="flex w-full items-start justify-between rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/40"
+                  onClick={() => setIsCoverageExpanded((prev) => !prev)}
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      {t("photosManager.coverageTitle")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("photosManager.coverageDescription")}
+                    </p>
+                  </div>
+                  {isCoverageExpanded ? (
+                    <ChevronUp className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+
+                {isCoverageExpanded && (
+                  <>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <Button
+                        type="button"
+                        aria-pressed={coverageFilter === "all"}
+                        variant="outline"
+                        className={`h-auto justify-start rounded-lg p-3 text-left transition-all ${
+                          coverageFilter === "all"
+                            ? "border-primary/40 bg-primary/10 shadow-sm"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => setCoverageFilter("all")}
+                      >
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            {t("photosManager.totalApartments")}
+                          </p>
+                          <p className="text-xl font-semibold">
+                            {apartments.length}
+                          </p>
+                        </div>
+                      </Button>
+                      <Button
+                        type="button"
+                        aria-pressed={coverageFilter === "with"}
+                        variant="outline"
+                        className={`h-auto justify-start rounded-md p-3 text-left ${
+                          coverageFilter === "with"
+                            ? "border-green-500/40 bg-green-500/15 shadow-sm"
+                            : "border-green-500/20 bg-green-500/5 hover:bg-green-500/10"
+                        }`}
+                        onClick={() => setCoverageFilter("with")}
+                      >
+                        <div>
+                          <p className="text-xs text-green-700 dark:text-green-400">
+                            {t("photosManager.withPhotos")}
+                          </p>
+                          <p className="text-xl font-semibold">
+                            {apartmentsWithPhotos.length}
+                          </p>
+                        </div>
+                      </Button>
+                      <Button
+                        type="button"
+                        aria-pressed={coverageFilter === "without"}
+                        variant="outline"
+                        className={`h-auto justify-start rounded-md p-3 text-left ${
+                          coverageFilter === "without"
+                            ? "border-amber-500/40 bg-amber-500/20 shadow-sm"
+                            : "border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/15"
+                        }`}
+                        onClick={() => setCoverageFilter("without")}
+                      >
+                        <div>
+                          <p className="text-xs text-amber-700 dark:text-amber-400">
+                            {t("photosManager.withoutPhotos")}
+                          </p>
+                          <p className="text-xl font-semibold">
+                            {apartmentsWithoutPhotos.length}
+                          </p>
+                        </div>
+                      </Button>
+                    </div>
+
+                    {apartments.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          {t("photosManager.missingFirstHint")}
+                        </p>
+                        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                          {filteredApartments.map((apartment) => {
+                            const photoCount =
+                              photoCountsByApartment[apartment.id] || 0;
+                            const hasNoPhotos = photoCount === 0;
+
+                            return (
+                              <Button
+                                key={apartment.id}
+                                type="button"
+                                variant="outline"
+                                className={`w-full justify-between text-left ${
+                                  selectedApartment === apartment.id
+                                    ? "border-primary/40 bg-primary/10 shadow-sm"
+                                    : hasNoPhotos
+                                      ? "border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10"
+                                      : "hover:bg-muted/40"
+                                }`}
+                                onClick={() =>
+                                  setSelectedApartment(apartment.id)
+                                }
+                              >
+                                <span>
+                                  {t("photosManager.apartmentOption", {
+                                    number: apartment.apartment_number,
+                                    floor: apartment.floor_number,
+                                  })}
+                                </span>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-xs ${
+                                    hasNoPhotos
+                                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                      : "bg-green-500/15 text-green-700 dark:text-green-300"
+                                  }`}
+                                >
+                                  {hasNoPhotos
+                                    ? t("photosManager.noIndividualPhotosShort")
+                                    : t("photosManager.photoCountShort", {
+                                        count: photoCount,
+                                      })}
+                                </span>
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
               {selectedApartment && (
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="photo-upload">
                       {t("photosManager.uploadPhotos")}
                     </Label>
-                    <Input
-                      id="photo-upload"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoUpload}
-                      disabled={uploading}
-                      className="mt-1"
-                    />
+                    <div
+                      onDrop={handleUploadDrop}
+                      onDragOver={handleUploadDragOver}
+                      onDragLeave={handleUploadDragLeave}
+                      className={`mt-1 space-y-2 rounded-lg border-2 border-dashed p-3 transition-colors ${
+                        isDragOverUpload
+                          ? "border-primary bg-primary/5"
+                          : "border-muted-foreground/30"
+                      } ${uploading ? "pointer-events-none opacity-60" : ""}`}
+                    >
+                      <Input
+                        ref={photoUploadInputRef}
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handlePhotoUpload}
+                        disabled={uploading}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Drag & drop files or folder with photos
+                      </p>
+                    </div>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {t("photosManager.uploadMultiple")}
                     </p>

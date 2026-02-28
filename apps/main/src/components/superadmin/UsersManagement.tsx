@@ -31,6 +31,7 @@ import {
 import { Label } from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserProfile {
   id: string;
@@ -49,6 +50,7 @@ interface BannedUser {
 }
 
 export function UsersManagement() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [bannedUsers, setBannedUsers] = useState<BannedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,8 +85,8 @@ export function UsersManagement() {
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить пользователей",
+        title: t("admin.superadmin.usersManagement.toast.errorTitle"),
+        description: t("admin.superadmin.usersManagement.toast.loadUsersError"),
         variant: "destructive",
       });
     } finally {
@@ -123,8 +125,8 @@ export function UsersManagement() {
       if (error) throw error;
 
       toast({
-        title: "Успешно",
-        description: "Пользователь заблокирован",
+        title: t("admin.superadmin.usersManagement.toast.successTitle"),
+        description: t("admin.superadmin.usersManagement.toast.userBanned"),
       });
 
       setBanReason("");
@@ -134,8 +136,8 @@ export function UsersManagement() {
     } catch (error) {
       console.error("Error banning user:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось заблокировать пользователя",
+        title: t("admin.superadmin.usersManagement.toast.errorTitle"),
+        description: t("admin.superadmin.usersManagement.toast.banUserError"),
         variant: "destructive",
       });
     }
@@ -171,16 +173,16 @@ export function UsersManagement() {
       }
 
       toast({
-        title: "Успешно",
-        description: "Пользователь разблокирован",
+        title: t("admin.superadmin.usersManagement.toast.successTitle"),
+        description: t("admin.superadmin.usersManagement.toast.userUnbanned"),
       });
 
       fetchBannedUsers();
     } catch (error) {
       console.error("Error unbanning user:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось разблокировать пользователя",
+        title: t("admin.superadmin.usersManagement.toast.errorTitle"),
+        description: t("admin.superadmin.usersManagement.toast.unbanUserError"),
         variant: "destructive",
       });
     }
@@ -189,8 +191,10 @@ export function UsersManagement() {
   const handleCreateUser = async () => {
     if (!newUserEmail || !newUserPassword) {
       toast({
-        title: "Ошибка",
-        description: "Email и пароль обязательны",
+        title: t("admin.superadmin.usersManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.usersManagement.toast.emailPasswordRequired",
+        ),
         variant: "destructive",
       });
       return;
@@ -231,8 +235,8 @@ export function UsersManagement() {
       }
 
       toast({
-        title: "Успешно",
-        description: "Пользователь создан",
+        title: t("admin.superadmin.usersManagement.toast.successTitle"),
+        description: t("admin.superadmin.usersManagement.toast.userCreated"),
       });
 
       // Reset form
@@ -249,9 +253,9 @@ export function UsersManagement() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Не удалось создать пользователя";
+          : t("admin.superadmin.usersManagement.toast.createUserError");
       toast({
-        title: "Ошибка",
+        title: t("admin.superadmin.usersManagement.toast.errorTitle"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -298,9 +302,9 @@ export function UsersManagement() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Не удалось войти под пользователем";
+          : t("admin.superadmin.usersManagement.toast.impersonateUserError");
       toast({
-        title: "Ошибка",
+        title: t("admin.superadmin.usersManagement.toast.errorTitle"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -319,23 +323,29 @@ export function UsersManagement() {
   );
 
   if (loading) {
-    return <div className="p-6">Загрузка...</div>;
+    return (
+      <div className="p-6">{t("admin.superadmin.usersManagement.loading")}</div>
+    );
   }
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Управление пользователями</h2>
+        <h2 className="text-3xl font-bold">
+          {t("admin.superadmin.usersManagement.title")}
+        </h2>
         <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="mr-2 h-4 w-4" />
-              Добавить пользователя
+              {t("admin.superadmin.usersManagement.actions.addUser")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Добавить нового пользователя</DialogTitle>
+              <DialogTitle>
+                {t("admin.superadmin.usersManagement.dialogs.createTitle")}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -348,7 +358,9 @@ export function UsersManagement() {
                 />
               </div>
               <div>
-                <Label>Пароль *</Label>
+                <Label>
+                  {t("admin.superadmin.usersManagement.fields.password")} *
+                </Label>
                 <Input
                   type="password"
                   placeholder="••••••••"
@@ -357,23 +369,33 @@ export function UsersManagement() {
                 />
               </div>
               <div>
-                <Label>Полное имя</Label>
+                <Label>
+                  {t("admin.superadmin.usersManagement.fields.fullName")}
+                </Label>
                 <Input
-                  placeholder="Иван Иванов"
+                  placeholder={t(
+                    "admin.superadmin.usersManagement.placeholders.fullName",
+                  )}
                   value={newUserFullName}
                   onChange={(e) => setNewUserFullName(e.target.value)}
                 />
               </div>
               <div>
-                <Label>Компания</Label>
+                <Label>
+                  {t("admin.superadmin.usersManagement.fields.company")}
+                </Label>
                 <Input
-                  placeholder="ООО Компания"
+                  placeholder={t(
+                    "admin.superadmin.usersManagement.placeholders.company",
+                  )}
                   value={newUserCompany}
                   onChange={(e) => setNewUserCompany(e.target.value)}
                 />
               </div>
               <div>
-                <Label>Телефон</Label>
+                <Label>
+                  {t("admin.superadmin.usersManagement.fields.phone")}
+                </Label>
                 <Input
                   placeholder="+7 (999) 123-45-67"
                   value={newUserPhone}
@@ -385,7 +407,9 @@ export function UsersManagement() {
                 onClick={handleCreateUser}
                 disabled={isCreating}
               >
-                {isCreating ? "Создание..." : "Создать пользователя"}
+                {isCreating
+                  ? t("admin.superadmin.usersManagement.creating")
+                  : t("admin.superadmin.usersManagement.actions.createUser")}
               </Button>
             </div>
           </DialogContent>
@@ -396,7 +420,9 @@ export function UsersManagement() {
         <div className="mb-4 flex items-center space-x-2">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по email, имени или компании..."
+            placeholder={t(
+              "admin.superadmin.usersManagement.searchPlaceholder",
+            )}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-sm"
@@ -407,11 +433,21 @@ export function UsersManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>Email</TableHead>
-              <TableHead>Имя</TableHead>
-              <TableHead>Компания</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead>Дата регистрации</TableHead>
-              <TableHead>Действия</TableHead>
+              <TableHead>
+                {t("admin.superadmin.usersManagement.table.name")}
+              </TableHead>
+              <TableHead>
+                {t("admin.superadmin.usersManagement.table.company")}
+              </TableHead>
+              <TableHead>
+                {t("admin.superadmin.usersManagement.table.status")}
+              </TableHead>
+              <TableHead>
+                {t("admin.superadmin.usersManagement.table.registeredAt")}
+              </TableHead>
+              <TableHead>
+                {t("admin.superadmin.usersManagement.table.actions")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -429,7 +465,7 @@ export function UsersManagement() {
                         className="flex w-fit items-center gap-1"
                       >
                         <Ban className="h-3 w-3" />
-                        Заблокирован
+                        {t("admin.superadmin.usersManagement.status.banned")}
                       </Badge>
                     ) : (
                       <Badge
@@ -437,7 +473,7 @@ export function UsersManagement() {
                         className="flex w-fit items-center gap-1"
                       >
                         <ShieldCheck className="h-3 w-3" />
-                        Активен
+                        {t("admin.superadmin.usersManagement.status.active")}
                       </Badge>
                     )}
                   </TableCell>
@@ -453,7 +489,7 @@ export function UsersManagement() {
                           onClick={() => handleUnbanUser(user.id)}
                         >
                           <Shield className="mr-1 h-4 w-4" />
-                          Разблокировать
+                          {t("admin.superadmin.usersManagement.actions.unban")}
                         </Button>
                       ) : (
                         <Dialog
@@ -476,24 +512,36 @@ export function UsersManagement() {
                               }}
                             >
                               <Ban className="mr-1 h-4 w-4" />
-                              Бан
+                              {t(
+                                "admin.superadmin.usersManagement.actions.ban",
+                              )}
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
                               <DialogTitle>
-                                Заблокировать пользователя
+                                {t(
+                                  "admin.superadmin.usersManagement.dialogs.banTitle",
+                                )}
                               </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4">
                               <div>
                                 <p className="mb-2 text-sm text-muted-foreground">
-                                  Вы собираетесь заблокировать:{" "}
+                                  {t(
+                                    "admin.superadmin.usersManagement.dialogs.banTarget",
+                                  )}{" "}
                                   <strong>{user.email}</strong>
                                 </p>
-                                <Label>Причина блокировки</Label>
+                                <Label>
+                                  {t(
+                                    "admin.superadmin.usersManagement.fields.banReason",
+                                  )}
+                                </Label>
                                 <Textarea
-                                  placeholder="Укажите причину..."
+                                  placeholder={t(
+                                    "admin.superadmin.usersManagement.placeholders.banReason",
+                                  )}
                                   value={banReason}
                                   onChange={(e) => setBanReason(e.target.value)}
                                 />
@@ -502,7 +550,9 @@ export function UsersManagement() {
                                 onClick={handleBanUser}
                                 className="w-full"
                               >
-                                Заблокировать
+                                {t(
+                                  "admin.superadmin.usersManagement.actions.ban",
+                                )}
                               </Button>
                             </div>
                           </DialogContent>
@@ -514,7 +564,7 @@ export function UsersManagement() {
                         onClick={() => handleImpersonateUser(user.id)}
                       >
                         <LogIn className="mr-1 h-4 w-4" />
-                        Войти
+                        {t("admin.superadmin.usersManagement.actions.loginAs")}
                       </Button>
                     </div>
                   </TableCell>

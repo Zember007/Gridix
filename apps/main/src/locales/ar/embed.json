@@ -9,5 +9,6 @@
   "title": "مشاريع العقارات",
   "userNotFound": "المستخدم غير موجود",
   "userNotFoundDesc": "المستخدم المحدد غير موجود أو ليس لديه مشاريع عامة.",
-  "viewApartments": "عرض الشقق"
+  "viewApartments": "عرض الشقق",
+  "filters": "المرشحات"
 }

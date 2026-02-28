@@ -29,7 +29,7 @@ export function ApartmentPdfButton({
 
   return (
     <Button type="button" onClick={handleClick} disabled={isRunning}>
-      {isRunning ? "PDF..." : label}
+      {isRunning ? `${label}...` : label}
     </Button>
   );
 }

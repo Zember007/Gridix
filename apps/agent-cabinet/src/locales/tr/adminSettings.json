@@ -139,5 +139,7 @@
   "resetButton": "Ayarları sıfırla",
   "telegramNeedsStart": "Telegram bağlı değil",
   "telegramNeedsStartDesc": "Size mesaj gönderebilmesi için lütfen {{bot}} ile sohbet başlatın.",
-  "telegramVerifyError": "Telegram doğrulanamadı"
+  "telegramVerifyError": "Telegram doğrulanamadı",
+  "language": "Dil",
+  "languageHint": "E-postalar ve varsay?lan aray?z dili i?in kullan?l?r."
 }

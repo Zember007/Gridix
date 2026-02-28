@@ -88,5 +88,7 @@
       "partnershipUnavailable": "Partnership not available",
       "openPage": "Open page"
     }
-  }
+  },
+  "yes": "Yes",
+  "no": "No"
 }

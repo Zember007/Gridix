@@ -50,7 +50,7 @@ const getAdminNavItems = (
             icon: <Briefcase size={20} />,
             badge:
               crmUnreadCount > 0 ? <UnreadBadge variant="dot" /> : undefined,
-            label: t("admin.crm") || "CRM",
+            label: t("admin.crm"),
             children: [
               {
                 id: "leads",
@@ -64,12 +64,12 @@ const getAdminNavItems = (
               {
                 id: "contacts",
                 icon: <UserIcon size={18} />,
-                label: t("admin.contacts") || "Контакты",
+                label: t("admin.contacts"),
               },
               {
                 id: "agent_network",
                 icon: <Handshake size={18} />,
-                label: t("admin.agent_network") || "Агентская сеть",
+                label: t("admin.agent_network"),
               },
             ],
           },
