@@ -69,14 +69,16 @@ export function useBuildingDataLoader({
     });
   }, [facadeConfigured, project?.id, projectId]);
 
-  const fetchBuildingDataSnapshot =
-    useCallback(async (): Promise<BuildingDataSnapshot> => {
+  const fetchBuildingDataSnapshot = useCallback(
+    async (
+      preferredFacadeId?: string | null,
+    ): Promise<BuildingDataSnapshot> => {
       const pid = project?.id || projectId;
       const projectFloors = project?.floors || 1;
 
       const loadedFacades = await api.fetchFacades(pid);
 
-      let nextSelectedFacadeId = selectedFacadeId;
+      let nextSelectedFacadeId = preferredFacadeId ?? selectedFacadeId;
       if (!nextSelectedFacadeId) {
         nextSelectedFacadeId = loadedFacades[0]?.id ?? null;
       } else if (!loadedFacades.some((f) => f.id === nextSelectedFacadeId)) {
@@ -127,7 +129,8 @@ export function useBuildingDataLoader({
         apartmentNumbers: apartmentNumbersSnapshot,
         facadeDisplaySettings: nextFacadeDisplaySettings,
       };
-    }, [
+    },
+    [
       currentImageUrl,
       isObjectProject,
       project?.building_image_url,
@@ -135,7 +138,8 @@ export function useBuildingDataLoader({
       project?.id,
       projectId,
       selectedFacadeId,
-    ]);
+    ],
+  );
 
   const applyBuildingDataSnapshot = useCallback(
     (snapshot: BuildingDataSnapshot) => {
@@ -151,15 +155,18 @@ export function useBuildingDataLoader({
     [],
   );
 
-  const loadBuildingData = useCallback(async () => {
-    try {
-      const snapshot = await fetchBuildingDataSnapshot();
-      applyBuildingDataSnapshot(snapshot);
-      initialBuildingDataCache.set(projectId, snapshot);
-    } catch (error) {
-      console.error("Error loading building data:", error);
-    }
-  }, [applyBuildingDataSnapshot, fetchBuildingDataSnapshot, projectId]);
+  const loadBuildingData = useCallback(
+    async (preferredFacadeId?: string | null) => {
+      try {
+        const snapshot = await fetchBuildingDataSnapshot(preferredFacadeId);
+        applyBuildingDataSnapshot(snapshot);
+        initialBuildingDataCache.set(projectId, snapshot);
+      } catch (error) {
+        console.error("Error loading building data:", error);
+      }
+    },
+    [applyBuildingDataSnapshot, fetchBuildingDataSnapshot, projectId],
+  );
 
   // Initial data loading with cache / dedup
   React.useEffect(() => {

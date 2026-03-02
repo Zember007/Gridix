@@ -59,7 +59,9 @@ const BuildingImageEditor = ({
                         ? "border-primary bg-white"
                         : "bg-muted/30 hover:bg-muted/50"
                     }`}
-                    onClick={() => selectFacade(f.id, f.image_url ?? null)}
+                    onClick={() => {
+                      void selectFacade(f.id, f.image_url ?? null);
+                    }}
                     disabled={floor.isEditing}
                     title={f.name}
                   >

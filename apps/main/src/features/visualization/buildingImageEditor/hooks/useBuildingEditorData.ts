@@ -38,13 +38,14 @@ export function useBuildingEditorData({
   });
 
   const selectFacade = useCallback(
-    (facadeId: string, imageUrl: string | null) => {
+    async (facadeId: string, imageUrl: string | null) => {
       if (floor.isEditing) return;
       loader.setSelectedFacadeId(facadeId);
       loader.setBuildingImage(imageUrl);
       loader.setBuildingFloors([]);
       loader.setShapes([]);
       floor.resetEditing();
+      await loader.loadBuildingData(facadeId);
     },
     [floor, loader],
   );
