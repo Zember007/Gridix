@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import type { Shape } from "@/components/visualization/polygon-editor/GeometryShapes";
 import type { PolygonAnnotatorRef } from "@/components/visualization/polygon-editor/PolygonAnnotator";
@@ -33,13 +33,17 @@ export function useFloorPolygonEditor({
   const [isEditing, setIsEditing] = useState(false);
   const [editingFloorId, setEditingFloorId] = useState<string | null>(null);
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
+  const autoSaveTimerRef = useRef<number | null>(null);
+  const lastSavedPointsRef = useRef<string>("");
+  const editingFloorIdRef = useRef<string | null>(null);
+  const isCreatingNewFloorRef = useRef(false);
 
   const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
 
   const {
     currentShape,
     setCurrentShape,
-    handleCurrentShapeUpdate,
+    handleCurrentShapeUpdate: handleCurrentShapeUpdateBase,
     handleUndo,
     handleRedo,
     resetStacks,
@@ -61,6 +65,8 @@ export function useFloorPolygonEditor({
   const startEditingFloor = (floorId: string) => {
     const floor = buildingFloors.find((f) => f.id === floorId);
     if (floor) {
+      editingFloorIdRef.current = floorId;
+      isCreatingNewFloorRef.current = false;
       setEditingFloorId(floorId);
       setSelectedFloor(floor.floor_number);
       setIsEditing(true);
@@ -74,20 +80,97 @@ export function useFloorPolygonEditor({
         color: floor.color || "#3b82f6",
         isSelected: true,
       };
+      lastSavedPointsRef.current = JSON.stringify(editingShape.points);
       setCurrentShape(editingShape);
     }
   };
 
   const startCreatingNewFloor = () => {
+    editingFloorIdRef.current = null;
+    isCreatingNewFloorRef.current = true;
     setIsCreatingNewFloor(true);
     setIsEditing(true);
     setEditingFloorId(null);
     resetStacks();
-    // Do NOT set a placeholder currentShape with a non-existent annotation ID.
-    // Let the annotator create a real annotation via drawing; then createAnnotation
-    // event will populate currentShape with the correct id + points.
+    lastSavedPointsRef.current = "";
     setCurrentShape(null);
   };
+
+  const clearAutoSaveTimer = useCallback(() => {
+    if (autoSaveTimerRef.current !== null) {
+      window.clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+  }, []);
+
+  const persistExistingPolygon = useCallback(
+    async (
+      floorId: string,
+      points: { x: number; y: number }[],
+      color: string,
+    ) => {
+      const pointsSignature = JSON.stringify(points);
+      if (pointsSignature === lastSavedPointsRef.current) return;
+
+      await api.updateFloorPolygon(floorId, points, color);
+      lastSavedPointsRef.current = pointsSignature;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current !== null) {
+        window.clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleAutoSave = useCallback(
+    (shape: Shape) => {
+      const floorId = editingFloorIdRef.current;
+      if (!floorId || isCreatingNewFloorRef.current) return;
+
+      const pointsSignature = JSON.stringify(shape.points);
+      if (pointsSignature === lastSavedPointsRef.current) return;
+
+      clearAutoSaveTimer();
+      autoSaveTimerRef.current = window.setTimeout(() => {
+        void persistExistingPolygon(
+          floorId,
+          shape.points as { x: number; y: number }[],
+          shape.color,
+        ).catch((error) => {
+          console.error("Error auto-saving polygon:", error);
+        });
+      }, 400);
+    },
+    [clearAutoSaveTimer, persistExistingPolygon],
+  );
+
+  const handleCurrentShapeUpdate = useCallback(
+    (shape: Shape | null) => {
+      handleCurrentShapeUpdateBase(shape);
+      if (shape && editingFloorIdRef.current) {
+        scheduleAutoSave(shape);
+      }
+    },
+    [handleCurrentShapeUpdateBase, scheduleAutoSave],
+  );
+
+  // Backup: also watch currentShape via useEffect for cases where
+  // the callback wrapper doesn't fire (e.g. undo/redo).
+  useEffect(() => {
+    if (!isEditing || isCreatingNewFloor || !editingFloorId || !currentShape)
+      return;
+    scheduleAutoSave(currentShape);
+  }, [
+    currentShape,
+    editingFloorId,
+    isCreatingNewFloor,
+    isEditing,
+    scheduleAutoSave,
+  ]);
 
   const handlePolygonSave = async () => {
     if (!currentShape) return;
@@ -122,7 +205,8 @@ export function useFloorPolygonEditor({
           t("buildingImage.polygon.createSuccess", { floor: selectedFloor }),
         );
       } else if (editingFloorId) {
-        await api.updateFloorPolygon(
+        clearAutoSaveTimer();
+        await persistExistingPolygon(
           editingFloorId,
           shapeToSave.points as { x: number; y: number }[],
           shapeToSave.color,
@@ -133,13 +217,16 @@ export function useFloorPolygonEditor({
         );
       }
 
-      await loadBuildingData();
-
+      editingFloorIdRef.current = null;
+      isCreatingNewFloorRef.current = false;
       setEditingFloorId(null);
       setIsCreatingNewFloor(false);
       setCurrentShape(null);
       setIsEditing(false);
       resetStacks();
+      clearAutoSaveTimer();
+
+      await loadBuildingData();
     } catch (error) {
       console.error("Error saving polygon:", error);
       toast.error(
@@ -151,6 +238,9 @@ export function useFloorPolygonEditor({
   };
 
   const handlePolygonCancel = () => {
+    clearAutoSaveTimer();
+    editingFloorIdRef.current = null;
+    isCreatingNewFloorRef.current = false;
     setIsEditing(false);
     setEditingFloorId(null);
     setIsCreatingNewFloor(false);
@@ -171,6 +261,9 @@ export function useFloorPolygonEditor({
   };
 
   const resetEditing = () => {
+    clearAutoSaveTimer();
+    editingFloorIdRef.current = null;
+    isCreatingNewFloorRef.current = false;
     setCurrentShape(null);
     setIsEditing(false);
     setEditingFloorId(null);

@@ -498,14 +498,9 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             );
 
             if (updatedAnnotation) {
-              // Конвертируем аннотацию в Shape с актуальными координатами
               const shape = await annotationToShape(
                 updatedAnnotation as Annotation,
               );
-
-              // Восстанавливаем выделение
-              annotator.setSelected(currentShapeId);
-
               return shape;
             }
 
@@ -880,6 +875,39 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         clear();
       };
     }, [getEffectiveImageSize, labelsById, mode, shapes, showLabels, viewer]);
+
+    // Force Annotorious to commit in-progress handle edits on every pointerup.
+    // Annotorious only fires `updateAnnotation` when the annotation is deselected,
+    // so we briefly deselect and reselect to flush pending geometry changes.
+    useEffect(() => {
+      if (mode === "view" || !drawingEnabled || !annotator) return;
+
+      const hostEl = viewerHostRef.current;
+      if (!hostEl) return;
+
+      const handlePointerUp = () => {
+        const id = prevCurrentShapeIdRef.current;
+        if (!id) return;
+
+        setTimeout(() => {
+          try {
+            annotator.setSelected();
+          } catch {
+            // ignore
+          }
+          setTimeout(() => {
+            try {
+              annotator.setSelected(id);
+            } catch {
+              // ignore
+            }
+          }, 60);
+        }, 80);
+      };
+
+      hostEl.addEventListener("pointerup", handlePointerUp);
+      return () => hostEl.removeEventListener("pointerup", handlePointerUp);
+    }, [annotator, drawingEnabled, mode]);
 
     return (
       <div ref={viewerHostRef} className="flex h-full w-full flex-col gap-2">
