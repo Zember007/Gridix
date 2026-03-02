@@ -84,6 +84,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     const annotator = useAnnotator();
     const viewer = useViewer();
     const hovered = useHover<Annotation>();
+    const viewerHostRef = useRef<HTMLDivElement | null>(null);
 
     const prevShapesRef = useRef<Shape[]>([]);
     const prevCurrentShapeIdRef = useRef<string | null>(null);
@@ -135,6 +136,64 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
       return () => {
         viewer.removeHandler?.("open", updateFromViewer);
+      };
+    }, [viewer]);
+
+    useEffect(() => {
+      if (!viewer) return;
+      const hostEl = viewerHostRef.current;
+      if (!hostEl) return;
+
+      let frameId: number | null = null;
+      let timeoutId: number | null = null;
+
+      const forceViewerResize = () => {
+        try {
+          viewer.forceResize?.();
+          viewer.viewport?.applyConstraints?.();
+        } catch {
+          // ignore intermittent OpenSeadragon resize errors
+        }
+      };
+
+      const queueViewerResize = () => {
+        if (frameId !== null) {
+          cancelAnimationFrame(frameId);
+        }
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+        }
+
+        // Two RAF ticks reduce drift during parent width transitions.
+        frameId = requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            forceViewerResize();
+          });
+        });
+
+        // Re-run once after transition settles (sidebar open/close animation).
+        timeoutId = window.setTimeout(forceViewerResize, 320);
+      };
+
+      const observer = new ResizeObserver(queueViewerResize);
+      observer.observe(hostEl);
+      if (hostEl.parentElement) {
+        observer.observe(hostEl.parentElement);
+      }
+
+      window.addEventListener("resize", queueViewerResize);
+      window.addEventListener("orientationchange", queueViewerResize);
+
+      return () => {
+        if (frameId !== null) {
+          cancelAnimationFrame(frameId);
+        }
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+        }
+        observer.disconnect();
+        window.removeEventListener("resize", queueViewerResize);
+        window.removeEventListener("orientationchange", queueViewerResize);
       };
     }, [viewer]);
 
@@ -823,7 +882,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     }, [getEffectiveImageSize, labelsById, mode, shapes, showLabels, viewer]);
 
     return (
-      <div className="flex h-full w-full flex-col gap-2">
+      <div ref={viewerHostRef} className="flex h-full w-full flex-col gap-2">
         {/* Область аннотирования */}
         <div className="flex-1 overflow-hidden rounded-lg border">
           <OpenSeadragonAnnotator
