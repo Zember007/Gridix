@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { useLanguage } from "@gridix/utils/react";
@@ -41,6 +41,7 @@ export function useBuildingDataLoader({
       colors: { building: "#3b82f6" },
       opacity: { normal: 0.4, hover: 0.7 },
     });
+  const initializedProjectIdRef = useRef<string | null>(null);
 
   const { user } = useAuth();
   const { project } = useProjectInEditorScope(projectId);
@@ -162,36 +163,44 @@ export function useBuildingDataLoader({
 
   // Initial data loading with cache / dedup
   React.useEffect(() => {
-    if (projectId && project) {
-      const cached = initialBuildingDataCache.get(projectId);
-      if (cached) {
-        applyBuildingDataSnapshot(cached);
-        return;
-      }
+    if (!projectId || !project) return;
+    if (initializedProjectIdRef.current === projectId) return;
+    initializedProjectIdRef.current = projectId;
 
-      const inFlight = initialBuildingDataInFlight.get(projectId);
-      if (inFlight) {
-        void inFlight.then((snapshot) => {
-          applyBuildingDataSnapshot(snapshot);
-        });
-        return;
-      }
+    const cached = initialBuildingDataCache.get(projectId);
+    if (cached) {
+      applyBuildingDataSnapshot(cached);
+      return;
+    }
 
-      const request = fetchBuildingDataSnapshot();
-      initialBuildingDataInFlight.set(projectId, request);
-
-      void request
+    const inFlight = initialBuildingDataInFlight.get(projectId);
+    if (inFlight) {
+      void inFlight
         .then((snapshot) => {
-          initialBuildingDataCache.set(projectId, snapshot);
           applyBuildingDataSnapshot(snapshot);
         })
         .catch((error) => {
+          initializedProjectIdRef.current = null;
           console.error("Error loading building data:", error);
-        })
-        .finally(() => {
-          initialBuildingDataInFlight.delete(projectId);
         });
+      return;
     }
+
+    const request = fetchBuildingDataSnapshot();
+    initialBuildingDataInFlight.set(projectId, request);
+
+    void request
+      .then((snapshot) => {
+        initialBuildingDataCache.set(projectId, snapshot);
+        applyBuildingDataSnapshot(snapshot);
+      })
+      .catch((error) => {
+        initializedProjectIdRef.current = null;
+        console.error("Error loading building data:", error);
+      })
+      .finally(() => {
+        initialBuildingDataInFlight.delete(projectId);
+      });
   }, [
     applyBuildingDataSnapshot,
     fetchBuildingDataSnapshot,
