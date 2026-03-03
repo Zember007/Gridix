@@ -1,33 +1,13 @@
-﻿import type { Contact } from "../model/types";
+﻿import type { Contact, LeadRow } from "../model/types";
+import { contactKeyFromLead } from "./contact-key-from-lead";
 
-interface LeadRow {
-  email?: unknown;
-  phone?: unknown;
-  id?: unknown;
-  name?: unknown;
-  created_at?: unknown;
-  projects?: { name?: unknown };
-}
-
-export function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "U";
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
-}
-
-export function contactKeyFromLead(lead: LeadRow): string {
-  const email =
-    typeof lead.email === "string" ? lead.email.trim().toLowerCase() : "";
-  if (email) return `email:${email}`;
-  const phone = typeof lead.phone === "string" ? lead.phone.trim() : "";
-  if (phone) return `phone:${phone}`;
-  const id = typeof lead.id === "string" ? lead.id : "";
-  return id ? `lead:${id}` : crypto.randomUUID();
-}
-
+/**
+ * Aggregates raw lead rows into unique contacts grouped by contact key.
+ * Keeps counters, latest lead date and unique project names per contact.
+ */
 export function aggregateContacts(leads: LeadRow[]): Contact[] {
   const map = new Map<string, Contact>();
+
   for (const row of leads) {
     const key = contactKeyFromLead(row);
     const prev = map.get(key);
@@ -59,8 +39,9 @@ export function aggregateContacts(leads: LeadRow[]): Contact[] {
     if (createdAt && (!prev.lastLeadAt || createdAt > prev.lastLeadAt)) {
       prev.lastLeadAt = createdAt;
     }
-    if (projName && !prev.projects.includes(projName))
+    if (projName && !prev.projects.includes(projName)) {
       prev.projects.push(projName);
+    }
   }
 
   return Array.from(map.values()).sort((a, b) =>

@@ -33,19 +33,35 @@ export function AgentContactsTabContent() {
     (key: string, vars?: unknown) => String(t(key, vars as never)),
     [t],
   );
+  const subtitle = selected
+    ? t("common.contacts.subtitleWithWorkspace", {
+        count: filtered.length,
+        workspace: selected.label,
+      })
+    : t("common.contacts.subtitle", { count: filtered.length });
+
+  let content;
+  if (!activeWorkspaceId) {
+    content = <EmptyState message={t("common.workspace.pickInSidebar")} />;
+  } else if (contactsQuery.isLoading) {
+    content = <LoadingState message={t("common.common.loading")} />;
+  } else if (filtered.length === 0) {
+    content = <EmptyState message={t("common.contacts.notFound")} />;
+  } else {
+    content = (
+      <ContactsList
+        contacts={filtered}
+        t={t}
+        onOpen={(key) => setOpenContactKey(key)}
+      />
+    );
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <ModuleHeader
         title={t("common.contacts.title")}
-        subtitle={
-          selected
-            ? t("common.contacts.subtitleWithWorkspace", {
-                count: filtered.length,
-                workspace: selected.label,
-              })
-            : t("common.contacts.subtitle", { count: filtered.length })
-        }
+        subtitle={subtitle}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder={t("common.contacts.searchPlaceholder")}
@@ -58,21 +74,7 @@ export function AgentContactsTabContent() {
         }
       >
         <div className="custom-scrollbar relative flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-          <div className="mx-auto max-w-[1600px] pb-20">
-            {!activeWorkspaceId ? (
-              <EmptyState message={t("common.workspace.pickInSidebar")} />
-            ) : contactsQuery.isLoading ? (
-              <LoadingState message={t("common.common.loading")} />
-            ) : filtered.length === 0 ? (
-              <EmptyState message={t("common.contacts.notFound")} />
-            ) : (
-              <ContactsList
-                contacts={filtered}
-                t={t}
-                onOpen={(key) => setOpenContactKey(key)}
-              />
-            )}
-          </div>
+          <div className="mx-auto max-w-[1600px] pb-20">{content}</div>
         </div>
 
         <ContactDetailsSheet contact={openedContact} t={translate} />
