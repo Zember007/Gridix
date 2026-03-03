@@ -1,22 +1,12 @@
 ﻿import type { DashboardActivityItem, DashboardMetrics } from "../model/types";
 
-export function mapDashboardMetrics(
-  data: Record<string, unknown> | undefined,
-): DashboardMetrics {
-  return {
-    leads: Number((data?.leads as Record<string, unknown>)?.count ?? 0),
-    contacts: Number((data?.contacts as Record<string, unknown>)?.count ?? 0),
-    paid: Number((data?.payouts as Record<string, unknown>)?.paid ?? 0),
-    pending: Number((data?.payouts as Record<string, unknown>)?.pending ?? 0),
-    projects: Number((data?.projects as Record<string, unknown>)?.count ?? 0),
-  };
-}
-
-export function buildRevenueData(paid: number): number[] {
-  const base = paid || 1000;
-  return [base * 0.3, base * 0.5, base * 0.4, base * 0.7, base * 0.6, base];
-}
-
+/**
+ * Builds localized activity feed items from dashboard metrics.
+ *
+ * @param metrics Normalized dashboard metrics.
+ * @param t Translation function.
+ * @returns Activity feed items for dashboard timeline.
+ */
 export function buildActivities(
   metrics: DashboardMetrics,
   t: (key: string, vars?: unknown) => string,

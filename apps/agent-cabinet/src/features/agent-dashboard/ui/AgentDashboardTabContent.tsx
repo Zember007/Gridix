@@ -24,18 +24,21 @@ export function AgentDashboardTabContent() {
 
   const dashboardQuery = useAgentDashboardQuery(activeWorkspaceId);
 
-  const metrics = useMemo(
-    () => mapDashboardMetrics(dashboardQuery.data),
-    [dashboardQuery.data],
-  );
-  const revenueData = useMemo(
-    () => buildRevenueData(metrics.paid),
-    [metrics.paid],
-  );
   const translate = useCallback(
     (key: string, vars?: unknown) => String(t(key, vars as never)),
     [t],
   );
+
+  const metrics = useMemo(
+    () => mapDashboardMetrics(dashboardQuery.data),
+    [dashboardQuery.data],
+  );
+
+  const revenueData = useMemo(
+    () => buildRevenueData(metrics.paid),
+    [metrics.paid],
+  );
+
   const activities = useMemo(
     () => buildActivities(metrics, translate),
     [metrics, translate],
