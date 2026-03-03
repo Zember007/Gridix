@@ -1,27 +1,15 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import { fetchCurrentSession } from "@gridix/utils";
+import { AuthContext, type AuthContextValue } from "@/shared/lib/auth";
 
-type AuthContextValue = {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signInWithOtp: (email: string) => Promise<void>;
-  signOut: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+interface Props {
+  children: ReactNode;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Props) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

@@ -9,7 +9,7 @@ import {
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils";
 import { useWorkspace } from "@gridix/utils/react";
 import { toast } from "sonner";
-import { useAuth } from "@/features/auth-session";
+import { useAuth } from "@/shared/lib/auth";
 import { saveUserProfile } from "./mutations";
 import {
   useAgentContractSettings,

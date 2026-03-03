@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { SimplifiedSidebar, useIsMobile } from "@gridix/ui";
+import { useAuth } from "@/shared/lib/auth";
 import { useLanguage } from "@/shared/lib/language";
-import { useAuth } from "@/features/auth-session";
 import { getAgentSidebarNavItems } from "../lib/nav-items";
 import type { AgentCabinetPage } from "../model/page-routing";
 
@@ -17,7 +17,7 @@ export function AgentCabinetLayout({
   activePage,
   onChangePage,
 }: Props) {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -44,9 +44,7 @@ export function AgentCabinetLayout({
         showSupportButton
         {...(user?.id ? { userId: user.id } : {})}
         onSignOut={() => {
-          void signOut().then(() => {
-            window.location.href = `/${language}/auth`;
-          });
+          void signOut();
         }}
       />
 

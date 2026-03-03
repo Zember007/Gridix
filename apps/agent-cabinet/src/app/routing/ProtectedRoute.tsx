@@ -6,7 +6,7 @@ import {
   addLanguageToPath,
   removeLanguageFromPath,
 } from "@gridix/utils/lib";
-import { useAuth } from "@/features/auth-session";
+import { useAuth } from "@/shared/lib/auth";
 import { useLanguage } from "@/shared/lib/language";
 import { supabase } from "@gridix/utils/api";
 import { hasAuthTokensInHash, hasUserPassword } from "@gridix/utils";

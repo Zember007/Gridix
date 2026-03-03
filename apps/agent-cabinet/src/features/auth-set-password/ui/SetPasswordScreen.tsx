@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import { addLanguageToPath } from "@gridix/utils/lib";
-import { useAuth } from "@/features/auth-session";
+import { useAuth } from "@/shared/lib/auth";
 import { useLanguage } from "@/shared/lib/language";
 
 export function SetPasswordScreen() {

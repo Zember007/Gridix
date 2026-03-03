@@ -5,6 +5,7 @@ import { TooltipProvider, Toaster } from "@gridix/ui";
 import { Toaster as GridixToaster } from "@gridix/utils/lib";
 import { createAppQueryClient } from "@gridix/utils/api";
 import i18n from "@/shared/lib/i18n";
+import { AuthProvider } from "./AuthProvider";
 
 const queryClient = createAppQueryClient();
 
@@ -12,11 +13,13 @@ export function BaseProviders({ children }: { children: ReactNode }) {
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <GridixToaster />
-          {children}
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <GridixToaster />
+            {children}
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </I18nextProvider>
   );

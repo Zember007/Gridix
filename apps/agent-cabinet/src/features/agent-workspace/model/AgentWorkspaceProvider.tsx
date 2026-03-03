@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { supabase } from "@gridix/utils/api";
 import { WorkspaceProvider, type WorkspaceOption } from "@gridix/utils/react";
-import { useAuth } from "@/features/auth-session";
+import { useAuth } from "@/shared/lib/auth";
 
 const LEGACY_ACTIVE_APPLICATION_KEY = "agent_cabinet:active_application_id";
 

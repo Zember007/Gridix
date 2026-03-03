@@ -12,12 +12,10 @@ import {
   AgentCabinetLayout,
   type AgentCabinetPage,
   useAgentCabinetPageRouting,
-} from "@/app/navigation";
-import { AuthProvider } from "@/features/auth-session";
+} from "@/app/layout";
+import { ProtectedRoute } from "@/app/routing";
 import { AgentWorkspaceProvider } from "@/features/agent-workspace";
-import { ProtectedRoute } from "@/features/auth-gate";
 
-import AuthPage from "@/pages/AuthPage";
 import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
 import {
@@ -62,56 +60,52 @@ export default function App() {
     <BaseProviders>
       <BrowserRouter>
         <LanguageWrapper>
-          <AuthProvider>
-            <Routes>
-              <Route path="/:lang/auth" element={<AuthPage />} />
+          <Routes>
+            <Route
+              path="/:lang/"
+              element={
+                <ProtectedRoute>
+                  <AgentWorkspaceProvider>
+                    <AgentCabinetRouter />
+                  </AgentWorkspaceProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/:lang/application"
+              element={
+                <ProtectedRoute>
+                  <LegacyRedirect page="dashboard" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/:lang/set-password"
+              element={
+                <ProtectedRoute>
+                  <SetPasswordPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/:lang/projects"
+              element={
+                <ProtectedRoute>
+                  <LegacyRedirect page="catalog" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/:lang/contacts"
+              element={
+                <ProtectedRoute>
+                  <LegacyRedirect page="contacts" />
+                </ProtectedRoute>
+              }
+            />
 
-              <Route
-                path="/:lang/"
-                element={
-                  <ProtectedRoute>
-                    <AgentWorkspaceProvider>
-                      <AgentCabinetRouter />
-                    </AgentWorkspaceProvider>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/:lang/application"
-                element={
-                  <ProtectedRoute>
-                    <LegacyRedirect page="dashboard" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/:lang/set-password"
-                element={
-                  <ProtectedRoute>
-                    <SetPasswordPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/:lang/projects"
-                element={
-                  <ProtectedRoute>
-                    <LegacyRedirect page="catalog" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/:lang/contacts"
-                element={
-                  <ProtectedRoute>
-                    <LegacyRedirect page="contacts" />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </LanguageWrapper>
       </BrowserRouter>
     </BaseProviders>
