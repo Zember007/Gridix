@@ -254,7 +254,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   }, [description, mode, signInDescription, signUpDescription]);
   const titleBlockClassName =
     mode === "signin"
-      ? "animate-delay-100 animate-element relative flex w-[90%] flex-col gap-1.5 pt-5 pr-3 mb-3 before:absolute before:left-[-36px] before:right-[0] before:top-0 before:h-[2px] before:bg-slate-200 after:absolute after:bottom-[-14px] after:right-0 after:top-0 after:w-[2px] after:bg-slate-200"
+      ? "animate-delay-100 animate-element relative flex w-[90%] flex-col gap-1.5 pt-5 pr-3 mb-3 "
       : "";
   const titleClassName =
     mode === "signin"
