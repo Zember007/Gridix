@@ -1,0 +1,16 @@
+---
+description: FSD layering, import boundaries, naming for apps/main
+globs: apps/main/src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# FSD Architecture (apps/main)
+
+- Composition in `pages/*`; orchestration in `features/*`; domain in `entities/*`; generic in `shared/*`.
+- `components/*` is legacy; prefer FSD layers for new logic.
+- No new layers (e.g. `widgets`) unless explicitly requested.
+- Outside `src/app`, do not import `@/app/*`.
+- `entities/*` must not import from `components/*` or `pages/*`.
+- Use barrel `index.ts` for public slice APIs.
+- Components: PascalCase. Utils: kebab-case. Hooks: camelCase (`useXxx`).
+- Styling: Tailwind CSS, mobile-first approach.

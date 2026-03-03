@@ -581,6 +581,17 @@ export default function AgentApplicationPage() {
     finalSignatureDataUrl && finalSignatureDataUrl.startsWith("data:image/")
   );
   const contractsValid = selectedTemplates.length > 0 && acceptedAgreements;
+  const baseInputClass =
+    "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-200";
+  const stepItems: Array<{
+    key: Extract<Step, "details" | "signature" | "contracts">;
+    index: number;
+  }> = [
+    { key: "details", index: 1 },
+    { key: "signature", index: 2 },
+    { key: "contracts", index: 3 },
+  ];
+  const currentStepIndex = stepItems.findIndex((item) => item.key === step);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1113,738 +1124,833 @@ export default function AgentApplicationPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-5xl"
-      >
-        <Card className="border-slate-200 bg-white shadow-xl">
-          <CardHeader className="border-b border-slate-100">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-2xl font-black text-slate-900">
-                  {t("agentApplication.title")}
-                </CardTitle>
-                <CardDescription>
-                  {t("agentApplication.description")}
-                </CardDescription>
-              </div>
-              <div className="text-xs font-bold uppercase text-slate-400">
-                {step === "details" && t("agentApplication.stepQuestionnaire")}
-                {step === "signature" && t("agentApplication.stepSignature")}
-                {step === "contracts" && t("agentApplication.stepContracts")}
-              </div>
-            </div>
-
-            {/* Stepper */}
-            <div className="mt-5 flex items-center gap-2">
-              {[
-                { key: "details", label: "1" },
-                { key: "signature", label: "2" },
-                { key: "contracts", label: "3" },
-              ].map((s, idx) => {
-                const active = step === (s.key as Step);
-                const done =
-                  (step === "signature" && s.key === "details") ||
-                  (step === "contracts" &&
-                    (s.key === "details" || s.key === "signature"));
-                return (
-                  <div key={s.key} className="flex items-center gap-2">
+    <div className="min-h-screen bg-[#F3F5F9]">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
+        <aside className="hidden w-72 border-r border-slate-200/60 bg-transparent px-10 py-12 lg:flex lg:flex-col">
+          <div className="mt-10 space-y-10">
+            {stepItems.map((item, idx) => {
+              const active = step === item.key;
+              const done = idx < currentStepIndex;
+              return (
+                <div key={item.key} className="relative">
+                  <div className="flex items-start gap-3">
                     <div
                       className={[
-                        "flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold",
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
                         active
-                          ? "bg-black text-white"
+                          ? "border-slate-900 bg-slate-900 text-white"
                           : done
-                            ? "bg-black text-white"
-                            : "bg-slate-100 text-slate-500",
+                            ? "border-slate-400 bg-slate-400 text-white"
+                            : "border-slate-300 bg-white text-slate-500",
                       ].join(" ")}
                     >
-                      {s.label}
+                      {item.index}
                     </div>
-                    {idx < 2 && (
-                      <div
-                        className={[
-                          "h-1 w-10 rounded",
-                          done ? "bg-black" : "bg-slate-200",
-                        ].join(" ")}
-                      />
-                    )}
+                    <div
+                      className={[
+                        "pt-1 text-base",
+                        active
+                          ? "font-semibold text-slate-900"
+                          : "text-slate-500",
+                      ].join(" ")}
+                    >
+                      {item.key === "details" &&
+                        t("agentApplication.stepQuestionnaire")}
+                      {item.key === "signature" &&
+                        t("agentApplication.stepSignature")}
+                      {item.key === "contracts" &&
+                        t("agentApplication.stepContracts")}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </CardHeader>
+                  {idx < stepItems.length - 1 && (
+                    <div className="absolute left-[15px] top-9 h-12 w-px bg-slate-300/80" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
 
-          <CardContent className="p-0">
-            <form onSubmit={handleSubmit}>
-              {/* Body */}
-              <div className="p-6 md:p-10">
-                {step === "details" && (
-                  <div className="mx-auto max-w-2xl space-y-6">
-                    {!developerId && (
-                      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        {t("agentApplication.invalidLinkDescription")}
-                      </div>
-                    )}
+        <div className="flex flex-1 items-center justify-center p-4 md:p-6 lg:p-10">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-4xl"
+          >
+            <Card className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+              <CardHeader className="border-b border-slate-100 px-6 py-7 md:px-8">
+                <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                  {t("agentApplication.title")}
+                </CardTitle>
+                <CardDescription className="mt-1 text-sm text-slate-500">
+                  {t("agentApplication.description")}
+                </CardDescription>
 
-                    <div className="space-y-4">
-                      {/* Email is always first */}
-                      <div>
-                        <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                          {t("agentApplication.email")}
-                        </label>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setPasswordVerified(false);
-                            setPassword("");
-                            setAuthUserExists(null);
-                            setEmailBlocked(false);
-                            setFormData({ ...formData, email: v });
-                            // Lightweight "oninput" check with debounce below is also active,
-                            // but we keep immediate check for autofill/paste scenarios.
-                          }}
-                          onBlur={(e) =>
-                            void checkExistingUserByEmail(e.target.value)
-                          }
-                          onInput={(e) =>
-                            scheduleEmailCheck(
-                              (e.target as HTMLInputElement).value,
-                            )
-                          }
-                          placeholder={t("agentApplication.emailPlaceholder")}
-                          className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                        />
-                        {emailCheckLoading && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            {t("agentApplication.checkingEmail")}
-                          </p>
-                        )}
-                        {emailBlocked && (
-                          <p className="mt-1 text-xs font-semibold text-red-600">
-                            {t("agentApplication.emailBlockedForAgent")}
-                          </p>
-                        )}
-                        {authUserExists === true && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            {t("agentApplication.userExistsEnterPassword")}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Existing user: hide all fields, show only password */}
-                      {authUserExists === true ? (
-                        <div>
-                          <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                            {t("agentApplication.password")}
-                          </label>
-                          <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => {
-                              setPasswordVerified(false);
-                              setPassword(e.target.value);
-                            }}
-                            placeholder={t(
-                              "agentApplication.passwordPlaceholder",
-                            )}
-                            className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                          />
-                          {passwordVerified && (
-                            <div className="mt-1 text-xs font-semibold text-green-700">
-                              {t("agentApplication.passwordVerified")}
+                <div className="mt-5 lg:hidden">
+                  <div className="flex items-start">
+                    {stepItems.map((item, idx) => {
+                      const active = step === item.key;
+                      const done = idx < currentStepIndex;
+                      return (
+                        <div
+                          key={item.key}
+                          className="flex min-w-0 flex-1 items-start"
+                        >
+                          <div className="flex flex-col items-center text-center">
+                            <div
+                              className={[
+                                "flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                                active
+                                  ? "bg-slate-900 text-white"
+                                  : done
+                                    ? "bg-slate-600 text-white"
+                                    : "border border-slate-300 bg-white text-slate-500",
+                              ].join(" ")}
+                            >
+                              {done ? (
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={2.5}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                item.index
+                              )}
+                            </div>
+                            <div
+                              className={[
+                                "mt-2 hidden max-w-[120px] text-xs leading-tight sm:block",
+                                active
+                                  ? "font-bold text-slate-900"
+                                  : "font-medium text-slate-500",
+                              ].join(" ")}
+                            >
+                              {item.key === "details" &&
+                                t("agentApplication.stepQuestionnaire")}
+                              {item.key === "signature" &&
+                                t("agentApplication.stepSignature")}
+                              {item.key === "contracts" &&
+                                t("agentApplication.stepContracts")}
+                            </div>
+                          </div>
+                          {idx < stepItems.length - 1 && (
+                            <div className="flex flex-1 items-center px-3 pt-[18px]">
+                              <div
+                                className={[
+                                  "h-0.5 w-full rounded-full",
+                                  done ? "bg-slate-900" : "bg-slate-200",
+                                ].join(" ")}
+                              />
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <>
-                          {/* Person type toggle */}
-                          <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-white p-1">
-                            <button
-                              type="button"
-                              onClick={() => setPersonType("company")}
-                              className={`flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-all ${
-                                personType === "company"
-                                  ? "bg-slate-900 text-white shadow-md"
-                                  : "text-slate-500 hover:bg-slate-50"
-                              }`}
-                            >
-                              <Building2 size={16} />{" "}
-                              {t("agentApplication.companyType")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPersonType("individual")}
-                              className={`flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-all ${
-                                personType === "individual"
-                                  ? "bg-slate-900 text-white shadow-md"
-                                  : "text-slate-500 hover:bg-slate-50"
-                              }`}
-                            >
-                              <User size={16} />{" "}
-                              {t("agentApplication.individualType")}
-                            </button>
-                          </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardHeader>
 
-                          {/* Partner-like fields */}
+              <CardContent className="p-0">
+                <form onSubmit={handleSubmit}>
+                  {/* Body */}
+                  <div className="p-6 md:p-8 lg:p-10">
+                    {step === "details" && (
+                      <div className="mx-auto max-w-2xl space-y-6">
+                        {!developerId && (
+                          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            {t("agentApplication.invalidLinkDescription")}
+                          </div>
+                        )}
+
+                        <div className="space-y-4">
+                          {/* Email is always first */}
                           <div>
                             <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                              {personType === "company"
-                                ? t("agentApplication.companyName")
-                                : t("agentApplication.fullName")}
+                              {t("agentApplication.email")}
                             </label>
                             <input
-                              type="text"
-                              value={displayName}
+                              type="email"
+                              value={formData.email}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  ...(personType === "company"
-                                    ? { company_name: v }
-                                    : { full_name: v }),
-                                });
+                                setPasswordVerified(false);
+                                setPassword("");
+                                setAuthUserExists(null);
+                                setEmailBlocked(false);
+                                setFormData({ ...formData, email: v });
+                                // Lightweight "oninput" check with debounce below is also active,
+                                // but we keep immediate check for autofill/paste scenarios.
                               }}
-                              className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                              <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                                {t("agentApplication.taxId")}
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.tax_id}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    tax_id: e.target.value,
-                                  })
-                                }
-                                className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                                {t("agentApplication.phone")}
-                              </label>
-                              <input
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    phone: e.target.value,
-                                  })
-                                }
-                                className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                              {t("agentApplication.legalAddress")}
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.legal_address}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  legal_address: e.target.value,
-                                })
+                              onBlur={(e) =>
+                                void checkExistingUserByEmail(e.target.value)
                               }
-                              className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
+                              onInput={(e) =>
+                                scheduleEmailCheck(
+                                  (e.target as HTMLInputElement).value,
+                                )
+                              }
+                              placeholder={t(
+                                "agentApplication.emailPlaceholder",
+                              )}
+                              className={baseInputClass}
                             />
+                            {emailCheckLoading && (
+                              <p className="mt-1 text-xs text-slate-500">
+                                {t("agentApplication.checkingEmail")}
+                              </p>
+                            )}
+                            {emailBlocked && (
+                              <p className="mt-1 text-xs font-semibold text-red-600">
+                                {t("agentApplication.emailBlockedForAgent")}
+                              </p>
+                            )}
+                            {authUserExists === true && (
+                              <p className="mt-1 text-xs text-slate-500">
+                                {t("agentApplication.userExistsEnterPassword")}
+                              </p>
+                            )}
                           </div>
 
-                          {/* Contract party details (optional, for filling agreement blanks) */}
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          {/* Existing user: hide all fields, show only password */}
+                          {authUserExists === true ? (
                             <div>
                               <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                                {t("agentApplication.companyTypeOptional")}
+                                {t("agentApplication.password")}
                               </label>
                               <input
-                                type="text"
-                                value={formData.agent_company_type}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    agent_company_type: e.target.value,
-                                  })
-                                }
+                                type="password"
+                                value={password}
+                                onChange={(e) => {
+                                  setPasswordVerified(false);
+                                  setPassword(e.target.value);
+                                }}
                                 placeholder={t(
-                                  "agentApplication.companyTypePlaceholder",
+                                  "agentApplication.passwordPlaceholder",
                                 )}
-                                className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
+                                className={baseInputClass}
                               />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                                {t("agentApplication.registeredOfficeOptional")}
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.agent_registered_office}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    agent_registered_office: e.target.value,
-                                  })
-                                }
-                                placeholder={t(
-                                  "agentApplication.registeredOfficePlaceholder",
-                                )}
-                                className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                              <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                                {t(
-                                  "agentApplication.representedByNameOptional",
-                                )}
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.agent_representative_name}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    agent_representative_name: e.target.value,
-                                  })
-                                }
-                                placeholder={t(
-                                  "agentApplication.representedByNamePlaceholder",
-                                )}
-                                className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                                {t(
-                                  "agentApplication.representedByTitleOptional",
-                                )}
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.agent_representative_title}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    agent_representative_title: e.target.value,
-                                  })
-                                }
-                                placeholder={t(
-                                  "agentApplication.representedByTitlePlaceholder",
-                                )}
-                                className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
-                            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                              <CreditCard size={16} className="text-blue-500" />
-                              {t("agentApplication.bankDetailsOptional")}
-                            </h3>
-
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                  {t("agentApplication.bankName")}
-                                </Label>
-                                <Input
-                                  value={formData.bank_name}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      bank_name: e.target.value,
-                                    })
-                                  }
-                                  placeholder={t(
-                                    "agentApplication.bankNamePlaceholder",
-                                  )}
-                                  className="rounded-xl border-slate-200 bg-white"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                  {t("agentApplication.ibanLabel")}
-                                </Label>
-                                <Input
-                                  value={formData.iban}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      iban: e.target.value,
-                                    })
-                                  }
-                                  placeholder={t(
-                                    "agentApplication.ibanPlaceholder",
-                                  )}
-                                  className="rounded-xl border-slate-200 bg-white"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                  {t("agentApplication.billingCurrency")}
-                                </Label>
-                                <Select
-                                  value={formData.billing_currency}
-                                  onValueChange={(val) =>
-                                    setFormData({
-                                      ...formData,
-                                      billing_currency: val,
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger className="rounded-xl border-slate-200 bg-white">
-                                    <SelectValue
-                                      placeholder={t(
-                                        "agentApplication.billingCurrencyPlaceholder",
-                                      )}
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="USD">USD</SelectItem>
-                                    <SelectItem value="EUR">EUR</SelectItem>
-                                    <SelectItem value="TRY">TRY</SelectItem>
-                                    <SelectItem value="GEL">GEL</SelectItem>
-                                    <SelectItem value="AED">AED</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
-                                <div className="space-y-0.5">
-                                  <Label className="text-sm font-bold text-slate-900">
-                                    {t("agentApplication.isVatPayer")}
-                                  </Label>
+                              {passwordVerified && (
+                                <div className="mt-1 text-xs font-semibold text-green-700">
+                                  {t("agentApplication.passwordVerified")}
                                 </div>
-                                <Switch
-                                  checked={formData.is_vat_payer}
-                                  onCheckedChange={(checked) =>
+                              )}
+                            </div>
+                          ) : (
+                            <>
+                              {/* Person type toggle */}
+                              <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-white p-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setPersonType("company")}
+                                  className={`flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-all ${
+                                    personType === "company"
+                                      ? "bg-slate-900 text-white shadow-md"
+                                      : "text-slate-500 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <Building2 size={16} />{" "}
+                                  {t("agentApplication.companyType")}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setPersonType("individual")}
+                                  className={`flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-all ${
+                                    personType === "individual"
+                                      ? "bg-slate-900 text-white shadow-md"
+                                      : "text-slate-500 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <User size={16} />{" "}
+                                  {t("agentApplication.individualType")}
+                                </button>
+                              </div>
+
+                              {/* Partner-like fields */}
+                              <div>
+                                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                  {personType === "company"
+                                    ? t("agentApplication.companyName")
+                                    : t("agentApplication.fullName")}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={displayName}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
                                     setFormData({
                                       ...formData,
-                                      is_vat_payer: checked,
-                                    })
-                                  }
+                                      ...(personType === "company"
+                                        ? { company_name: v }
+                                        : { full_name: v }),
+                                    });
+                                  }}
+                                  className={baseInputClass}
                                 />
                               </div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
 
-                {step === "signature" && (
-                  <div className="mx-auto max-w-2xl space-y-6">
-                    <div className="flex gap-3">
-                      <Button
-                        type="button"
-                        variant={
-                          signatureMethod === "draw" ? "default" : "outline"
-                        }
-                        onClick={() => setSignatureMethod("draw")}
-                      >
-                        {t("agentApplication.draw")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={
-                          signatureMethod === "upload" ? "default" : "outline"
-                        }
-                        onClick={() => setSignatureMethod("upload")}
-                      >
-                        {t("agentApplication.upload")}
-                      </Button>
-                    </div>
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                    {t("agentApplication.taxId")}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={formData.tax_id}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        tax_id: e.target.value,
+                                      })
+                                    }
+                                    className={baseInputClass}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                    {t("agentApplication.phone")}
+                                  </label>
+                                  <input
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        phone: e.target.value,
+                                      })
+                                    }
+                                    className={baseInputClass}
+                                  />
+                                </div>
+                              </div>
 
-                    {signatureMethod === "draw" ? (
-                      <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-                        <canvas
-                          ref={canvasRef}
-                          width={900}
-                          height={360}
-                          className="h-64 w-full cursor-crosshair touch-none"
-                          onMouseDown={startDrawing}
-                          onMouseMove={draw}
-                          onMouseUp={stopDrawing}
-                          onMouseLeave={stopDrawing}
-                          onTouchStart={startDrawing}
-                          onTouchMove={draw}
-                          onTouchEnd={stopDrawing}
-                        />
-                        <div className="pointer-events-none absolute left-4 top-4 text-xs font-bold uppercase text-slate-300">
-                          {t("agentApplication.signatureArea")}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="absolute right-4 top-4"
-                          onClick={clearCanvas}
-                        >
-                          {t("agentApplication.clear")}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6">
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              void onUploadSignature(
-                                e.target.files?.[0] ?? null,
-                              )
-                            }
-                          />
-                          {uploadedSignatureDataUrl && (
-                            <div className="mt-4">
-                              <img
-                                src={uploadedSignatureDataUrl}
-                                alt="signature"
-                                className="mx-auto h-28 object-contain mix-blend-multiply"
-                              />
-                            </div>
+                              <div>
+                                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                  {t("agentApplication.legalAddress")}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={formData.legal_address}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      legal_address: e.target.value,
+                                    })
+                                  }
+                                  className={baseInputClass}
+                                />
+                              </div>
+
+                              {/* Contract party details (optional, for filling agreement blanks) */}
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                    {t("agentApplication.companyTypeOptional")}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={formData.agent_company_type}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        agent_company_type: e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      "agentApplication.companyTypePlaceholder",
+                                    )}
+                                    className={baseInputClass}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                    {t(
+                                      "agentApplication.registeredOfficeOptional",
+                                    )}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={formData.agent_registered_office}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        agent_registered_office: e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      "agentApplication.registeredOfficePlaceholder",
+                                    )}
+                                    className={baseInputClass}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                    {t(
+                                      "agentApplication.representedByNameOptional",
+                                    )}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={formData.agent_representative_name}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        agent_representative_name:
+                                          e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      "agentApplication.representedByNamePlaceholder",
+                                    )}
+                                    className={baseInputClass}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                                    {t(
+                                      "agentApplication.representedByTitleOptional",
+                                    )}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={formData.agent_representative_title}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        agent_representative_title:
+                                          e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      "agentApplication.representedByTitlePlaceholder",
+                                    )}
+                                    className={baseInputClass}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
+                                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                                  <CreditCard
+                                    size={16}
+                                    className="text-blue-500"
+                                  />
+                                  {t("agentApplication.bankDetailsOptional")}
+                                </h3>
+
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                      {t("agentApplication.bankName")}
+                                    </Label>
+                                    <Input
+                                      value={formData.bank_name}
+                                      onChange={(e) =>
+                                        setFormData({
+                                          ...formData,
+                                          bank_name: e.target.value,
+                                        })
+                                      }
+                                      placeholder={t(
+                                        "agentApplication.bankNamePlaceholder",
+                                      )}
+                                      className="h-11 rounded-xl border-slate-200 bg-white"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                      {t("agentApplication.ibanLabel")}
+                                    </Label>
+                                    <Input
+                                      value={formData.iban}
+                                      onChange={(e) =>
+                                        setFormData({
+                                          ...formData,
+                                          iban: e.target.value,
+                                        })
+                                      }
+                                      placeholder={t(
+                                        "agentApplication.ibanPlaceholder",
+                                      )}
+                                      className="h-11 rounded-xl border-slate-200 bg-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                      {t("agentApplication.billingCurrency")}
+                                    </Label>
+                                    <Select
+                                      value={formData.billing_currency}
+                                      onValueChange={(val) =>
+                                        setFormData({
+                                          ...formData,
+                                          billing_currency: val,
+                                        })
+                                      }
+                                    >
+                                      <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                                        <SelectValue
+                                          placeholder={t(
+                                            "agentApplication.billingCurrencyPlaceholder",
+                                          )}
+                                        />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="USD">USD</SelectItem>
+                                        <SelectItem value="EUR">EUR</SelectItem>
+                                        <SelectItem value="TRY">TRY</SelectItem>
+                                        <SelectItem value="GEL">GEL</SelectItem>
+                                        <SelectItem value="AED">AED</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
+                                    <div className="space-y-0.5">
+                                      <Label className="text-sm font-bold text-slate-900">
+                                        {t("agentApplication.isVatPayer")}
+                                      </Label>
+                                    </div>
+                                    <Switch
+                                      checked={formData.is_vat_payer}
+                                      onCheckedChange={(checked) =>
+                                        setFormData({
+                                          ...formData,
+                                          is_vat_payer: checked,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
 
-                {step === "contracts" && (
-                  <div className="space-y-6">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <div className="text-lg font-black text-slate-900">
-                          {t("agentApplication.contractsTitle")}
+                    {step === "signature" && (
+                      <div className="mx-auto max-w-2xl space-y-6">
+                        <div className="flex gap-3">
+                          <Button
+                            type="button"
+                            variant={
+                              signatureMethod === "draw" ? "default" : "outline"
+                            }
+                            onClick={() => setSignatureMethod("draw")}
+                          >
+                            {t("agentApplication.draw")}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={
+                              signatureMethod === "upload"
+                                ? "default"
+                                : "outline"
+                            }
+                            onClick={() => setSignatureMethod("upload")}
+                          >
+                            {t("agentApplication.upload")}
+                          </Button>
                         </div>
-                        <div className="text-sm text-slate-500">
-                          {t("agentApplication.contractsMultiLanguageHint")}
-                        </div>
-                      </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        {availableLangs.length === 0 ? (
-                          <div className="text-sm text-slate-500">
-                            {templatesLoading
-                              ? t("agentApplication.loadingContracts")
-                              : t("agentApplication.noContractsFound")}
+                        {signatureMethod === "draw" ? (
+                          <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+                            <canvas
+                              ref={canvasRef}
+                              width={900}
+                              height={360}
+                              className="h-64 w-full cursor-crosshair touch-none"
+                              onMouseDown={startDrawing}
+                              onMouseMove={draw}
+                              onMouseUp={stopDrawing}
+                              onMouseLeave={stopDrawing}
+                              onTouchStart={startDrawing}
+                              onTouchMove={draw}
+                              onTouchEnd={stopDrawing}
+                            />
+                            <div className="pointer-events-none absolute left-4 top-4 text-xs font-bold uppercase text-slate-300">
+                              {t("agentApplication.signatureArea")}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="absolute right-4 top-4"
+                              onClick={clearCanvas}
+                            >
+                              {t("agentApplication.clear")}
+                            </Button>
                           </div>
                         ) : (
-                          availableLangs.map((l) => {
-                            const active = selectedLangs.includes(l);
-                            return (
-                              <button
-                                key={l}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedLangs((prev) => {
-                                    if (prev.includes(l))
-                                      return prev.filter((x) => x !== l);
-                                    return [...prev, l];
-                                  });
-                                }}
-                                className={[
-                                  "rounded-xl border px-3 py-2 text-sm font-extrabold transition",
-                                  active
-                                    ? "border-slate-900 bg-slate-900 text-white"
-                                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
-                                ].join(" ")}
-                              >
-                                {l}
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Template selector per language (if multiple templates exist) */}
-                    {selectedLangs.length > 0 && (
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {selectedLangs.map((l) => {
-                          const options = templates.filter(
-                            (t) => String(t.lang) === l,
-                          );
-                          if (options.length <= 1) return null;
-                          return (
-                            <div
-                              key={l}
-                              className="rounded-xl border border-slate-200 bg-white p-4"
-                            >
-                              <div className="mb-2 text-xs font-bold uppercase text-slate-500">
-                                {t("agentApplication.templateLabel", {
-                                  lang: l,
-                                })}
-                              </div>
-                              <select
-                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none"
-                                value={selectedTemplateByLang[l] ?? ""}
+                          <div className="space-y-3">
+                            <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6">
+                              <Input
+                                type="file"
+                                accept="image/*"
                                 onChange={(e) =>
-                                  setSelectedTemplateByLang((prev) => ({
-                                    ...prev,
-                                    [l]: e.target.value,
-                                  }))
+                                  void onUploadSignature(
+                                    e.target.files?.[0] ?? null,
+                                  )
                                 }
-                              >
-                                {options.map((t) => (
-                                  <option
-                                    key={t.storage_path}
-                                    value={t.storage_path}
-                                  >
-                                    {t.name}
-                                  </option>
-                                ))}
-                              </select>
+                              />
+                              {uploadedSignatureDataUrl && (
+                                <div className="mt-4">
+                                  <img
+                                    src={uploadedSignatureDataUrl}
+                                    alt="signature"
+                                    className="mx-auto h-28 object-contain mix-blend-multiply"
+                                  />
+                                </div>
+                              )}
                             </div>
-                          );
-                        })}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* A4 previews row */}
-                    <div className="overflow-x-auto rounded-2xl bg-slate-200 p-4 md:p-8">
-                      <div className="flex items-start gap-6">
-                        {selectedTemplates.map((t) => (
-                          <ContractPreview
-                            key={t.storage_path}
-                            template={t}
-                            renderedHtml={
-                              t.content_html
-                                ? renderHtmlTemplate(
-                                    t.content_html,
-                                    contractPayload,
-                                  )
-                                : null
-                            }
-                            label={`${t.lang ?? "—"} · ${t.name}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    {step === "contracts" && (
+                      <div className="space-y-6">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <div className="text-lg font-black text-slate-900">
+                              {t("agentApplication.contractsTitle")}
+                            </div>
+                            <div className="text-sm text-slate-500">
+                              {t("agentApplication.contractsMultiLanguageHint")}
+                            </div>
+                          </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <label className="flex cursor-pointer items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={acceptedAgreements}
-                          onChange={(e) =>
-                            setAcceptedAgreements(e.target.checked)
-                          }
-                          className="mt-1 h-5 w-5"
-                        />
-                        <div className="text-sm text-slate-700">
-                          {t("agentApplication.confirmAgreementsRead")}{" "}
+                          <div className="flex flex-wrap gap-2">
+                            {availableLangs.length === 0 ? (
+                              <div className="text-sm text-slate-500">
+                                {templatesLoading
+                                  ? t("agentApplication.loadingContracts")
+                                  : t("agentApplication.noContractsFound")}
+                              </div>
+                            ) : (
+                              availableLangs.map((l) => {
+                                const active = selectedLangs.includes(l);
+                                return (
+                                  <button
+                                    key={l}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedLangs((prev) => {
+                                        if (prev.includes(l))
+                                          return prev.filter((x) => x !== l);
+                                        return [...prev, l];
+                                      });
+                                    }}
+                                    className={[
+                                      "rounded-xl border px-3 py-2 text-sm font-extrabold transition",
+                                      active
+                                        ? "border-slate-900 bg-slate-900 text-white"
+                                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                                    ].join(" ")}
+                                  >
+                                    {l}
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
                         </div>
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between border-t border-slate-100 bg-white p-5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    if (step === "details") return;
-                    if (step === "signature") return setStep("details");
-                    if (step === "contracts") return setStep("signature");
-                  }}
-                >
-                  {t("agentApplication.backButton")}
-                </Button>
-
-                {step !== "contracts" ? (
-                  <Button
-                    type="button"
-                    disabled={
-                      loading ||
-                      authLoading ||
-                      emailCheckLoading ||
-                      (step === "details" && (!developerId || !detailsValid)) ||
-                      (step === "signature" && !signatureValid)
-                    }
-                    onClick={() => {
-                      if (step === "details") {
-                        if (!developerId) return;
-                        if (!detailsValid) {
-                          toast.error(
-                            t("agentApplication.fillRequiredFieldsShort"),
-                          );
-                          return;
-                        }
-                        if (emailCheckLoading) {
-                          toast.error(t("agentApplication.waitEmailCheck"));
-                          return;
-                        }
-                        if (emailBlocked) {
-                          toast.error(t("agentApplication.emailCannotUse"));
-                          return;
-                        }
-                        // If user typed email but never blurred, enforce check before continuing.
-                        if (authUserExists === null) {
-                          void checkExistingUserByEmail(formData.email);
-                          toast.error(t("agentApplication.confirmEmailFirst"));
-                          return;
-                        }
-                        if (authUserExists === true) {
-                          void (async () => {
-                            const result = await verifyExistingUserPassword();
-                            if (result.valid) {
-                              // If agent already has a signature, skip the signature step
-                              setStep(
-                                result.hasSignature ? "contracts" : "signature",
+                        {/* Template selector per language (if multiple templates exist) */}
+                        {selectedLangs.length > 0 && (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            {selectedLangs.map((l) => {
+                              const options = templates.filter(
+                                (t) => String(t.lang) === l,
                               );
+                              if (options.length <= 1) return null;
+                              return (
+                                <div
+                                  key={l}
+                                  className="rounded-xl border border-slate-200 bg-white p-4"
+                                >
+                                  <div className="mb-2 text-xs font-bold uppercase text-slate-500">
+                                    {t("agentApplication.templateLabel", {
+                                      lang: l,
+                                    })}
+                                  </div>
+                                  <select
+                                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none"
+                                    value={selectedTemplateByLang[l] ?? ""}
+                                    onChange={(e) =>
+                                      setSelectedTemplateByLang((prev) => ({
+                                        ...prev,
+                                        [l]: e.target.value,
+                                      }))
+                                    }
+                                  >
+                                    {options.map((t) => (
+                                      <option
+                                        key={t.storage_path}
+                                        value={t.storage_path}
+                                      >
+                                        {t.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* A4 previews row */}
+                        <div className="overflow-x-auto rounded-2xl bg-slate-200 p-4 md:p-8">
+                          <div className="flex items-start gap-6">
+                            {selectedTemplates.map((t) => (
+                              <ContractPreview
+                                key={t.storage_path}
+                                template={t}
+                                renderedHtml={
+                                  t.content_html
+                                    ? renderHtmlTemplate(
+                                        t.content_html,
+                                        contractPayload,
+                                      )
+                                    : null
+                                }
+                                label={`${t.lang ?? "—"} · ${t.name}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-white p-4">
+                          <label className="flex cursor-pointer items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={acceptedAgreements}
+                              onChange={(e) =>
+                                setAcceptedAgreements(e.target.checked)
+                              }
+                              className="mt-1 h-5 w-5"
+                            />
+                            <div className="text-sm text-slate-700">
+                              {t("agentApplication.confirmAgreementsRead")}{" "}
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between border-t border-slate-100 bg-white p-5">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-slate-500 hover:text-slate-700"
+                      onClick={() => {
+                        if (step === "details") return;
+                        if (step === "signature") return setStep("details");
+                        if (step === "contracts") return setStep("signature");
+                      }}
+                    >
+                      {t("agentApplication.backButton")}
+                    </Button>
+
+                    {step !== "contracts" ? (
+                      <Button
+                        type="button"
+                        className="h-10 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800"
+                        disabled={
+                          loading ||
+                          authLoading ||
+                          emailCheckLoading ||
+                          (step === "details" &&
+                            (!developerId || !detailsValid)) ||
+                          (step === "signature" && !signatureValid)
+                        }
+                        onClick={() => {
+                          if (step === "details") {
+                            if (!developerId) return;
+                            if (!detailsValid) {
+                              toast.error(
+                                t("agentApplication.fillRequiredFieldsShort"),
+                              );
+                              return;
                             }
-                          })();
-                          return;
-                        }
-                        setStep("signature");
-                      } else if (step === "signature") {
-                        if (!signatureValid) {
-                          toast.error(t("agentApplication.signatureRequired"));
-                          return;
-                        }
-                        setStep("contracts");
-                      }
-                    }}
-                  >
-                    {t("agentApplication.nextButton")}
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    disabled={loading || authLoading || !contractsValid}
-                  >
-                    {loading
-                      ? t("agentApplication.sending")
-                      : t("agentApplication.signAndSubmit")}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </motion.div>
+                            if (emailCheckLoading) {
+                              toast.error(t("agentApplication.waitEmailCheck"));
+                              return;
+                            }
+                            if (emailBlocked) {
+                              toast.error(t("agentApplication.emailCannotUse"));
+                              return;
+                            }
+                            // If user typed email but never blurred, enforce check before continuing.
+                            if (authUserExists === null) {
+                              void checkExistingUserByEmail(formData.email);
+                              toast.error(
+                                t("agentApplication.confirmEmailFirst"),
+                              );
+                              return;
+                            }
+                            if (authUserExists === true) {
+                              void (async () => {
+                                const result =
+                                  await verifyExistingUserPassword();
+                                if (result.valid) {
+                                  // If agent already has a signature, skip the signature step
+                                  setStep(
+                                    result.hasSignature
+                                      ? "contracts"
+                                      : "signature",
+                                  );
+                                }
+                              })();
+                              return;
+                            }
+                            setStep("signature");
+                          } else if (step === "signature") {
+                            if (!signatureValid) {
+                              toast.error(
+                                t("agentApplication.signatureRequired"),
+                              );
+                              return;
+                            }
+                            setStep("contracts");
+                          }
+                        }}
+                      >
+                        {t("agentApplication.nextButton")}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        className="h-10 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800"
+                        disabled={loading || authLoading || !contractsValid}
+                      >
+                        {loading
+                          ? t("agentApplication.sending")
+                          : t("agentApplication.signAndSubmit")}
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
