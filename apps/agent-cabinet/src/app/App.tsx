@@ -5,15 +5,17 @@ import {
   Routes,
   useParams,
 } from "react-router-dom";
+import type { ReactNode } from "react";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
+import {
+  AgentCabinetLayout,
+  type AgentCabinetPage,
+  useAgentCabinetPageRouting,
+} from "@/app/navigation";
 import { AuthProvider } from "@/features/auth-session";
 import { AgentWorkspaceProvider } from "@/features/agent-workspace";
 import { ProtectedRoute } from "@/features/auth-gate";
-import {
-  AgentCabinetLayout,
-  useAgentCabinetPageRouting,
-} from "@/features/agent-navigation";
 
 import AuthPage from "@/pages/AuthPage";
 import SetPasswordPage from "@/pages/SetPasswordPage";
@@ -29,27 +31,18 @@ import {
 
 function AgentCabinetRouter() {
   const { activePage, setActivePage } = useAgentCabinetPageRouting();
-
-  const content = (() => {
-    switch (activePage) {
-      case "dashboard":
-        return <DashboardTab />;
-      case "analytics":
-        return <AnalyticsTab />;
-      case "contacts":
-        return <ContactsTab />;
-      case "catalog":
-        return <CatalogTab />;
-      case "partnerProgram":
-        return <PartnerProgramTab />;
-      case "settings":
-        return <AgentSettingsTab />;
-    }
-  })();
+  const pageContent: Record<AgentCabinetPage, ReactNode> = {
+    dashboard: <DashboardTab />,
+    analytics: <AnalyticsTab />,
+    contacts: <ContactsTab />,
+    catalog: <CatalogTab />,
+    partnerProgram: <PartnerProgramTab />,
+    settings: <AgentSettingsTab />,
+  };
 
   return (
     <AgentCabinetLayout activePage={activePage} onChangePage={setActivePage}>
-      {content}
+      {pageContent[activePage]}
     </AgentCabinetLayout>
   );
 }
