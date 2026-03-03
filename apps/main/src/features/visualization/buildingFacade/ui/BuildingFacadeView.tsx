@@ -448,14 +448,20 @@ const BuildingFacadeView = ({
     if (!containerEl) return;
 
     let frame: number | null = null;
+    let settleTimer: number | null = null;
+
     const queueMeasure = () => {
       if (frame) cancelAnimationFrame(frame);
-      // Two RAF ticks help when layout changes are animated (e.g. side panel open/close).
+      if (settleTimer) clearTimeout(settleTimer);
+
       frame = requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           measureImageRect();
         });
       });
+
+      // Re-measure after CSS transitions settle (side panel is 300ms).
+      settleTimer = window.setTimeout(measureImageRect, 350);
     };
 
     const observer = new ResizeObserver(queueMeasure);
@@ -463,13 +469,13 @@ const BuildingFacadeView = ({
     if (imageEl) observer.observe(imageEl);
     if (wrapperEl) observer.observe(wrapperEl);
 
-    // Fallback for viewport-driven reflow on iOS and orientation changes.
     window.addEventListener("resize", queueMeasure);
     window.addEventListener("orientationchange", queueMeasure);
     window.visualViewport?.addEventListener("resize", queueMeasure);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
+      if (settleTimer) clearTimeout(settleTimer);
       observer.disconnect();
       window.removeEventListener("resize", queueMeasure);
       window.removeEventListener("orientationchange", queueMeasure);
@@ -981,81 +987,84 @@ const BuildingFacadeView = ({
               touchAction: isTouchZooming ? "none" : "manipulation",
             }}
           >
-            <img
-              ref={imgRef}
-              src={facadeImageUrl}
-              alt={project.name}
+            <div
               className={
                 isMobile
-                  ? "mx-auto block h-auto w-auto max-w-full"
-                  : "mx-auto block h-full w-auto"
+                  ? "relative mx-auto w-fit max-w-full"
+                  : "relative mx-auto h-full w-fit"
               }
-              draggable={false}
-              onLoad={measureImageRect}
-            />
-            {floorsWithPolygon.length > 0 && imageRect && (
-              <svg
-                className="absolute z-20"
-                style={{
-                  left: imageRect.offset.x,
-                  top: imageRect.offset.y,
-                  width: imageRect.size.width,
-                  height: imageRect.size.height,
-                }}
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                <rect x="0" y="0" width="100" height="100" fill="none" />
-                {floorsWithPolygon.map((floor) => {
-                  const points = floor.polygon
-                    .map((point) => `${point.x},${point.y}`)
-                    .join(" ");
-                  const baseColor = getFloorFillColor(floor);
-                  const isHovered = hoveredFloor === floor.floor_number;
-                  const isActive = selectedFloor === floor.floor_number;
-                  return (
-                    <g key={floor.id}>
-                      <polygon
-                        points={points}
-                        fill={baseColor}
-                        fillOpacity={
-                          isHovered || isActive
-                            ? (facadeSettings?.opacity.hover ?? 0.7)
-                            : (facadeSettings?.opacity.normal ?? 0.4)
-                        }
-                        className="cursor-pointer transition-all duration-200"
-                        data-floor={floor.floor_number}
-                        onClick={() => handleSVGFloorClick(floor.floor_number)}
-                        onMouseEnter={() => {
-                          if (isExpanded) {
-                            handleSVGFloorHover(floor.floor_number);
+            >
+              <img
+                ref={imgRef}
+                src={facadeImageUrl}
+                alt={project.name}
+                className={
+                  isMobile
+                    ? "block h-auto w-auto max-w-full"
+                    : "block h-full w-auto"
+                }
+                draggable={false}
+                onLoad={measureImageRect}
+              />
+              {floorsWithPolygon.length > 0 && (
+                <svg
+                  className="pointer-events-none absolute inset-0 z-20 h-full w-full"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                >
+                  {floorsWithPolygon.map((floor) => {
+                    const points = floor.polygon
+                      .map((point) => `${point.x},${point.y}`)
+                      .join(" ");
+                    const baseColor = getFloorFillColor(floor);
+                    const isHovered = hoveredFloor === floor.floor_number;
+                    const isActive = selectedFloor === floor.floor_number;
+                    return (
+                      <g key={floor.id}>
+                        <polygon
+                          points={points}
+                          fill={baseColor}
+                          fillOpacity={
+                            isHovered || isActive
+                              ? (facadeSettings?.opacity.hover ?? 0.7)
+                              : (facadeSettings?.opacity.normal ?? 0.4)
                           }
-                        }}
-                        onMouseLeave={() => {
-                          if (isExpanded) {
-                            setHoveredFloor(null);
-                            handleFloorLeave();
+                          className="cursor-pointer transition-all duration-200"
+                          data-floor={floor.floor_number}
+                          onClick={() =>
+                            handleSVGFloorClick(floor.floor_number)
                           }
-                        }}
-                        style={{
-                          pointerEvents: "auto",
-                          touchAction: "none",
-                          filter:
-                            isHovered && facadeSettings?.hoverEffects?.glow
-                              ? "drop-shadow(0 0 8px rgba(0,0,0,0.4))"
-                              : undefined,
-                          transform:
-                            isHovered && facadeSettings?.hoverEffects?.scale
-                              ? "scale(1.02)"
-                              : "scale(1)",
-                          transformOrigin: "center",
-                        }}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-            )}
+                          onMouseEnter={() => {
+                            if (isExpanded) {
+                              handleSVGFloorHover(floor.floor_number);
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            if (isExpanded) {
+                              setHoveredFloor(null);
+                              handleFloorLeave();
+                            }
+                          }}
+                          style={{
+                            pointerEvents: "auto",
+                            touchAction: "none",
+                            filter:
+                              isHovered && facadeSettings?.hoverEffects?.glow
+                                ? "drop-shadow(0 0 8px rgba(0,0,0,0.4))"
+                                : undefined,
+                            transform:
+                              isHovered && facadeSettings?.hoverEffects?.scale
+                                ? "scale(1.02)"
+                                : "scale(1)",
+                            transformOrigin: "center",
+                          }}
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+              )}
+            </div>
           </div>
 
           {showFacadeNav && (
