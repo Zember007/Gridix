@@ -1,0 +1,11 @@
+---
+description: Supabase import and typing boundary
+globs: apps/{main,auth,agent-cabinet}/src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Supabase Boundary
+
+- Import client only via `@/shared/api/supabase` or `@gridix/utils/api`.
+- Use generated DB types from `@gridix/types/database`.
+- Keep TanStack Query keys explicit and namespaced (e.g. `["projects", id, "editor"]`).
