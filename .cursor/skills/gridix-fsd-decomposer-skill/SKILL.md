@@ -16,6 +16,18 @@ while respecting Gridix boundaries, CI gates, and team workflow.
 
 This skill is intended for team-wide use.
 
+## OUTPUT LANGUAGE
+
+All output to the user MUST be in **Russian**. This applies to:
+
+- NO-OP assessment
+- Full plan (all 8 sections)
+- ADJUST responses
+- APPLY progress and completion summary
+- Error / stop messages
+
+File paths, code, and technical terms (e.g., FSD layer names, tool names) stay in English.
+
 ---
 
 # 🔒 HARD RULES (NON-NEGOTIABLE)
@@ -258,13 +270,13 @@ Before building a plan, evaluate the target file against these criteria:
 
 **If NO-OP applies, output:**
 
-> **Assessment: No decomposition needed.**
+> **Оценка: декомпозиция не требуется.**
 >
-> - File: `<path>`
-> - Current layer: `<layer>` (correct)
-> - Responsibility: `<single responsibility description>`
-> - Lines: `<N>`
-> - Reason: `<why decomposition would not improve the structure>`
+> - Файл: `<path>`
+> - Текущий слой: `<layer>` (корректный)
+> - Ответственность: `<краткое описание единственной ответственности>`
+> - Строк: `<N>`
+> - Причина: `<почему декомпозиция не улучшит структуру>`
 
 Do NOT produce a full plan. Do NOT invent changes.
 
@@ -418,6 +430,19 @@ After all subagents complete, verify the result yourself: spot-check key files a
 - Any move/rename MUST include updating all importers listed in the plan.
 - If during APPLY a new importer is discovered that was not listed, STOP and request plan delta approval.
 - If APPLY fails mid-way, report exactly which files were successfully modified and which were not. Do not silently skip failures.
+
+### APPLY COMPLETION SUMMARY (REQUIRED)
+
+After all changes are applied, output a summary in Russian:
+
+> **Итог APPLY:**
+>
+> - Создано: `<N>` файлов
+> - Изменено: `<N>` файлов
+> - Перемещено/переименовано: `<N>` файлов
+> - Удалено: `<N>` файлов
+> - Что сделано: `<2-4 предложения: что было, что стало, ключевые решения>`
+> - Следующий шаг: `<что пользователю нужно проверить или сделать>`
 
 ### PLAN DEVIATION POLICY
 
