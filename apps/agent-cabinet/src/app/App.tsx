@@ -7,8 +7,8 @@ import {
 } from "react-router-dom";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
+import { AgentWorkspaceProvider } from "@/app/providers/AgentWorkspaceProvider";
 import { AgentCabinetRouter, ProtectedRoute } from "@/app/routing";
-import { AgentWorkspaceProvider } from "@/features/agent-workspace";
 
 import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
