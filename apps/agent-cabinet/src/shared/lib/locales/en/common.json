@@ -1,0 +1,305 @@
+{
+  "app": {
+    "title": "Agent Cabinet"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "application": "Application",
+    "projects": "Catalog",
+    "contacts": "Contacts",
+    "leads": "Leads",
+    "payouts": "Payouts",
+    "analytics": "Analytics",
+    "partnerProgram": "Partner Program",
+    "settings": "Settings"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "empty": "—"
+  },
+  "auth": {
+    "email": "Email",
+    "sendLink": "Send magic link",
+    "signOut": "Sign out",
+    "checkEmailTitle": "Check your email",
+    "magicLinkSent": "Magic link has been sent.",
+    "processingLogin": "Processing login…",
+    "setPasswordTitle": "Set password",
+    "setPasswordDescription": "Your password is not set yet. Please create a password to continue.",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "savePassword": "Save password",
+    "passwordUpdated": "Password updated"
+  },
+  "errors": {
+    "emailRequired": "Email is required.",
+    "failedToSendLink": "Failed to send link.",
+    "passwordMinLength": "Password must be at least 8 characters.",
+    "passwordsDontMatch": "Passwords do not match.",
+    "failedToUpdatePassword": "Failed to update password."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "goHome": "Go home"
+  },
+  "workspace": {
+    "noActiveTitle": "No active workspace",
+    "pickInSidebar": "Pick a workspace in the sidebar."
+  },
+  "moduleHeader": {
+    "searchPlaceholder": "Search…",
+    "financeTitle": "Finance",
+    "balanceLabel": "Your balance",
+    "create": "Create"
+  },
+  "dashboard": {
+    "title": "My dashboard",
+    "subtitleWorkspace": "Workspace: {{workspace}}",
+    "subtitleNoWorkspace": "Pick a workspace",
+    "metrics": {
+      "leads": "Leads",
+      "contactsSubtext": "Contacts: {{count}}",
+      "commissionPaid": "Commission paid",
+      "commissionPending": "Commission pending",
+      "projectsSubtext": "Projects: {{count}}",
+      "catalog": "Catalog",
+      "availableProjects": "Available projects"
+    },
+    "blocks": {
+      "dynamicsTitle": "Dynamics",
+      "inProgress": "In progress",
+      "pulseTitle": "Pulse",
+      "latestEvents": "Latest events",
+      "pulseLeads": "Leads: {{count}}",
+      "pulsePayouts": "Payouts:"
+    },
+    "chart": {
+      "title": "Revenue dynamics",
+      "subtitle": "Commission income over 6 months"
+    },
+    "activity": {
+      "title": "Activity feed",
+      "empty": "No recent activity",
+      "system": "System",
+      "newLead": "new lead",
+      "leadsLabel": "leads",
+      "commissionPaid": "commission paid",
+      "pendingPayout": "pending payout",
+      "recent": "recently",
+      "thisMonth": "this month",
+      "inPipeline": "in pipeline"
+    }
+  },
+  "catalog": {
+    "title": "Catalog",
+    "subtitle": "Unified new builds catalog",
+    "subtitleWithWorkspace": "Unified new builds catalog • {{workspace}}",
+    "searchPlaceholder": "Search by project name…",
+    "filtersPlaceholder": "Filters will be ported 1:1 from `gridix-visual` (location/prices/statuses).",
+    "noProjects": "No public projects for the selected workspace yet.",
+    "open": "Open",
+    "details": "Details",
+    "share": "Share",
+    "clientLinkPrompt": "Client link"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "Overview",
+      "units": "Units",
+      "construction": "Construction",
+      "media": "Media",
+      "partners": "Partners",
+      "settings": "Settings"
+    },
+    "commission": {
+      "title": "Your commission",
+      "active": "Active",
+      "requiresContract": "Requires contract",
+      "condition": "Payment condition",
+      "signOffer": "Sign the offer with the developer to lock clients and receive commission."
+    },
+    "stats": {
+      "roi": "ROI",
+      "completion": "Completion",
+      "priceFrom": "Price from",
+      "units": "Units"
+    },
+    "about": {
+      "title": "About project",
+      "description": "Modern residential complex in a prestigious area. Ideal for living and investment."
+    },
+    "quickAccess": "Quick access",
+    "media": {
+      "title": "Project media bank",
+      "downloadAll": "Download all (ZIP)",
+      "renders": "Renders",
+      "videos": "Videos",
+      "presentations": "Presentations",
+      "noMaterials": "No materials",
+      "restricted": "Access restricted",
+      "signToAccess": "Sign the contract with the developer to access the media bank.",
+      "connect": "Connect"
+    },
+    "construction": {
+      "title": "Construction progress",
+      "noUpdates": "No updates"
+    },
+    "units": {
+      "legend": {
+        "available": "Available",
+        "booked": "Booked",
+        "sold": "Sold"
+      },
+      "empty": "No units",
+      "downloadPdf": "Download PDF"
+    },
+    "actions": {
+      "lock": "Lock client",
+      "favorite": "Add to collection",
+      "share": "Share",
+      "becomePartner": "Become a partner",
+      "pendingConfirmation": "Pending confirmation",
+      "partnershipUnavailable": "Partnership not available",
+      "openPage": "Open page"
+    }
+  },
+  "contacts": {
+    "title": "Contacts",
+    "subtitle": "{{count}} contacts",
+    "subtitleWithWorkspace": "{{count}} contacts • {{workspace}}",
+    "searchPlaceholder": "Search and filter",
+    "notFound": "No contacts found.",
+    "columns": {
+      "contact": "Contact"
+    },
+    "drawer": {
+      "leadsAndLast": "Leads: {{count}} • Last: {{last}}",
+      "contactsSection": "Contacts",
+      "projectsSection": "Projects",
+      "notSelected": "No contact selected."
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Key performance overview",
+    "subtitleWithWorkspace": "Key metrics overview • {{workspace}}",
+    "export": "Export",
+    "views": {
+      "sales": "Sales",
+      "finance": "Finance",
+      "crm": "CRM"
+    },
+    "period": {
+      "last7": "Last 7 days",
+      "last30": "Last 30 days",
+      "quarter": "This quarter",
+      "year": "This year"
+    },
+    "loadError": "Failed to load analytics.",
+    "sales": {
+      "totalLeads": "Total leads",
+      "funnelByStage": "Funnel (by stage)",
+      "noStageData": "No stage data.",
+      "sources": "Sources",
+      "noSourceData": "No source data."
+    },
+    "crm": {
+      "totalLeads": "Total leads",
+      "inFunnel": "In funnel",
+      "conversion": "Conversion",
+      "sources": "Sources",
+      "funnelTitle": "Sales funnel",
+      "sourceBreakdown": "Lead sources"
+    },
+    "finance": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "payoutsCount": "Payouts",
+      "registry": "Payout registry",
+      "registryTitle": "Commission registry",
+      "registryDescription": "Track commission payment statuses from developers. Data updates automatically on deal status change.",
+      "noPayouts": "No payouts.",
+      "pipeline": "Pipeline",
+      "inProgress": "In progress",
+      "dealsInWork": "deals in work",
+      "received": "Received",
+      "success": "Success",
+      "successDeals": "Successful deals",
+      "total": "Total",
+      "allTime": "All time",
+      "export": "Export",
+      "colAmount": "Amount",
+      "colProject": "Project",
+      "colDate": "Date",
+      "colStatus": "Status",
+      "statusPaid": "Paid",
+      "statusPending": "Pending"
+    }
+  },
+  "agent": {
+    "selectDeveloper": "Developer ID (from invite link)",
+    "application": {
+      "title": "Apply to developer",
+      "fullName": "Full name",
+      "phone": "Phone",
+      "bankDetails": "Bank details",
+      "agreements": "Agreements",
+      "signature": "Signature",
+      "drawSignature": "Draw",
+      "uploadSignature": "Upload",
+      "replaceSignature": "Replace Signature",
+      "clear": "Clear",
+      "sign": "Sign agreement",
+      "submit": "Submit application",
+      "currentSignaturePrompt": "This is your current signature used for contracts.",
+      "uploadHint": "Upload a high-quality image of your signature (PNG or JPG).",
+      "signaturePreviewAlt": "Signature preview",
+      "missingSignature": "Missing signature",
+      "signatureUpdated": "Signature updated",
+      "signatureUpdateError": "Failed to update signature"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account, notifications and contract details",
+    "contractTitle": "Contract details",
+    "contractDesc": "Information from your agent agreement",
+    "fullName": "Full name",
+    "companyName": "Company name",
+    "type": "Type",
+    "taxId": "Tax ID",
+    "legalAddress": "Legal address",
+    "phone": "Phone",
+    "bankDetails": "Bank details",
+    "agentCompanyType": "Company type",
+    "agentRegisteredOffice": "Registered office",
+    "agentRepresentativeName": "Representative name",
+    "agentRepresentativeTitle": "Representative title",
+    "status": "Status",
+    "agreementSignedAt": "Agreement signed",
+    "commissionRate": "Commission rate",
+    "savingProfile": "Saving…",
+    "profileSaved": "Profile saved",
+    "profileSaveError": "Failed to save profile",
+    "notificationsSaved": "Notification preferences saved",
+    "notificationsSaveError": "Failed to save notification preferences",
+    "saveAll": "Save all",
+    "loadError": "Failed to load contract data",
+    "signedContractsTitle": "Signed contracts",
+    "signedContractsDesc": "Download the contracts generated during signing.",
+    "refreshContracts": "Refresh list",
+    "signedContractsLoadError": "Failed to load contracts. Please try again.",
+    "noSignedContracts": "No contracts yet",
+    "noSignedContractsDesc": "Sign your first contract to see it here.",
+    "contractLabel": "Contract",
+    "pdfLabel": "PDF"
+  }
+}

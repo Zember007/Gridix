@@ -1,0 +1,305 @@
+{
+  "app": {
+    "title": "خزانة الوكيل"
+  },
+  "nav": {
+    "dashboard": "لوحة القيادة",
+    "application": "طلب",
+    "projects": "كتالوج",
+    "contacts": "اتصالات",
+    "leads": "يؤدي",
+    "payouts": "الدفعات",
+    "analytics": "التحليلات",
+    "partnerProgram": "برنامج الشريك",
+    "settings": "الإعدادات"
+  },
+  "common": {
+    "loading": "تحميل...",
+    "save": "يحفظ",
+    "cancel": "يلغي",
+    "continue": "يكمل",
+    "empty": "—"
+  },
+  "auth": {
+    "email": "بريد إلكتروني",
+    "sendLink": "أرسل الرابط السحري",
+    "signOut": "تسجيل الخروج",
+    "checkEmailTitle": "تحقق من بريدك الإلكتروني",
+    "magicLinkSent": "تم إرسال الرابط السحري.",
+    "processingLogin": "جارٍ معالجة تسجيل الدخول…",
+    "setPasswordTitle": "تعيين كلمة المرور",
+    "setPasswordDescription": "لم يتم تعيين كلمة المرور الخاصة بك بعد. الرجاء إنشاء كلمة مرور للمتابعة.",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "savePassword": "حفظ كلمة المرور",
+    "passwordUpdated": "تم تحديث كلمة المرور"
+  },
+  "errors": {
+    "emailRequired": "البريد الإلكتروني مطلوب.",
+    "failedToSendLink": "فشل في إرسال الرابط.",
+    "passwordMinLength": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+    "passwordsDontMatch": "كلمات المرور غير متطابقة.",
+    "failedToUpdatePassword": "فشل تحديث كلمة المرور."
+  },
+  "notFound": {
+    "title": "لم يتم العثور على الصفحة",
+    "goHome": "اذهب إلى المنزل"
+  },
+  "workspace": {
+    "noActiveTitle": "لا توجد مساحة عمل نشطة",
+    "pickInSidebar": "اختر مساحة عمل في الشريط الجانبي."
+  },
+  "moduleHeader": {
+    "searchPlaceholder": "يبحث…",
+    "financeTitle": "تمويل",
+    "balanceLabel": "رصيدك",
+    "create": "يخلق"
+  },
+  "dashboard": {
+    "title": "لوحة القيادة الخاصة بي",
+    "subtitleWorkspace": "مساحة العمل: {{workspace}}",
+    "subtitleNoWorkspace": "اختر مساحة عمل",
+    "metrics": {
+      "leads": "يؤدي",
+      "contactsSubtext": "جهات الاتصال: {{عدد}}",
+      "commissionPaid": "العمولة مدفوعة",
+      "commissionPending": "اللجنة معلقة",
+      "projectsSubtext": "المشاريع: {{عدد}}",
+      "catalog": "كتالوج",
+      "availableProjects": "المشاريع المتاحة"
+    },
+    "blocks": {
+      "dynamicsTitle": "ديناميات",
+      "inProgress": "في تَقَدم",
+      "pulseTitle": "نبض",
+      "latestEvents": "آخر الأحداث",
+      "pulseLeads": "العملاء المتوقعون: {{عدد}}",
+      "pulsePayouts": "الدفعات:"
+    },
+    "chart": {
+      "title": "ديناميات الإيرادات",
+      "subtitle": "دخل العمولة على مدى 6 أشهر"
+    },
+    "activity": {
+      "title": "خلاصة النشاط",
+      "empty": "لا يوجد نشاط حديث",
+      "system": "نظام",
+      "newLead": "الرصاص الجديد",
+      "leadsLabel": "يؤدي",
+      "commissionPaid": "العمولة المدفوعة",
+      "pendingPayout": "في انتظار الدفع",
+      "recent": "حديثاً",
+      "thisMonth": "هذا الشهر",
+      "inPipeline": "في خط الأنابيب"
+    }
+  },
+  "catalog": {
+    "title": "كتالوج",
+    "subtitle": "كتالوج البناء الجديد الموحد",
+    "subtitleWithWorkspace": "كتالوج الإصدارات الجديدة الموحدة • {{مساحة العمل}}",
+    "searchPlaceholder": "البحث باسم المشروع...",
+    "filtersPlaceholder": "سيتم نقل المرشحات بنسبة 1:1 من `gridix-visual` (الموقع/الأسعار/الحالات).",
+    "noProjects": "لا توجد مشاريع عامة لمساحة العمل المحددة حتى الآن.",
+    "open": "يفتح",
+    "details": "تفاصيل",
+    "share": "يشارك",
+    "clientLinkPrompt": "رابط العميل"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "ملخص",
+      "units": "الوحدات",
+      "construction": "بناء",
+      "media": "وسائط",
+      "partners": "الشركاء",
+      "settings": "إعدادات"
+    },
+    "commission": {
+      "title": "عمولتك",
+      "active": "نشيط",
+      "requiresContract": "يتطلب العقد",
+      "condition": "شرط الدفع",
+      "signOffer": "قم بتوقيع العرض مع المطور لقفل العملاء والحصول على العمولة."
+    },
+    "stats": {
+      "roi": "عائد الاستثمار",
+      "completion": "انتهاء",
+      "priceFrom": "السعر من",
+      "units": "الوحدات"
+    },
+    "about": {
+      "title": "حول المشروع",
+      "description": "مجمع سكني حديث في منطقة مرموقة. مثالية للعيش والاستثمار."
+    },
+    "quickAccess": "الوصول السريع",
+    "media": {
+      "title": "مشروع البنك الإعلامي",
+      "downloadAll": "تنزيل الكل (ZIP)",
+      "renders": "يجعل",
+      "videos": "فيديوهات",
+      "presentations": "العروض التقديمية",
+      "noMaterials": "لا توجد مواد",
+      "restricted": "الوصول مقيد",
+      "signToAccess": "قم بتوقيع العقد مع المطور للوصول إلى بنك الإعلام.",
+      "connect": "يتصل"
+    },
+    "construction": {
+      "title": "تقدم البناء",
+      "noUpdates": "لا توجد تحديثات"
+    },
+    "units": {
+      "legend": {
+        "available": "متاح",
+        "booked": "حجزت",
+        "sold": "مُباع"
+      },
+      "empty": "لا وحدات",
+      "downloadPdf": "تحميل قوات الدفاع الشعبي"
+    },
+    "actions": {
+      "lock": "قفل العميل",
+      "favorite": "أضف إلى المجموعة",
+      "share": "يشارك",
+      "becomePartner": "كن شريكا",
+      "pendingConfirmation": "في انتظار التأكيد",
+      "partnershipUnavailable": "الشراكة غير متوفرة",
+      "openPage": "افتح الصفحة"
+    }
+  },
+  "contacts": {
+    "title": "اتصالات",
+    "subtitle": "{{عدد}} جهات الاتصال",
+    "subtitleWithWorkspace": "{{عدد}} جهات الاتصال • {{مساحة عمل}}",
+    "searchPlaceholder": "البحث والتصفية",
+    "notFound": "لم يتم العثور على جهات اتصال.",
+    "columns": {
+      "contact": "اتصال"
+    },
+    "drawer": {
+      "leadsAndLast": "العملاء المتوقعون: {{count}} • الأخير: {{last}}",
+      "contactsSection": "اتصالات",
+      "projectsSection": "المشاريع",
+      "notSelected": "لم يتم تحديد جهة اتصال."
+    }
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "subtitle": "نظرة عامة على الأداء الرئيسي",
+    "subtitleWithWorkspace": "نظرة عامة على المقاييس الرئيسية • {{workspace}}",
+    "export": "يصدّر",
+    "views": {
+      "sales": "مبيعات",
+      "finance": "تمويل",
+      "crm": "إدارة علاقات العملاء"
+    },
+    "period": {
+      "last7": "آخر 7 أيام",
+      "last30": "آخر 30 يومًا",
+      "quarter": "هذا الربع",
+      "year": "هذا العام"
+    },
+    "loadError": "فشل تحميل التحليلات.",
+    "sales": {
+      "totalLeads": "إجمالي العملاء المتوقعين",
+      "funnelByStage": "القمع (حسب المرحلة)",
+      "noStageData": "لا توجد بيانات المرحلة.",
+      "sources": "مصادر",
+      "noSourceData": "لا توجد بيانات المصدر."
+    },
+    "crm": {
+      "totalLeads": "إجمالي العملاء المتوقعين",
+      "inFunnel": "في القمع",
+      "conversion": "تحويل",
+      "sources": "مصادر",
+      "funnelTitle": "قمع المبيعات",
+      "sourceBreakdown": "مصادر الرصاص"
+    },
+    "finance": {
+      "paid": "مدفوع",
+      "pending": "قيد الانتظار",
+      "payoutsCount": "الدفعات",
+      "registry": "سجل الدفع",
+      "registryTitle": "سجل اللجنة",
+      "registryDescription": "تتبع حالات دفع العمولة من المطورين. يتم تحديث البيانات تلقائيًا عند تغيير حالة الصفقة.",
+      "noPayouts": "لا دفعات.",
+      "pipeline": "خط أنابيب",
+      "inProgress": "في تَقَدم",
+      "dealsInWork": "الصفقات في العمل",
+      "received": "تلقى",
+      "success": "نجاح",
+      "successDeals": "صفقات ناجحة",
+      "total": "المجموع",
+      "allTime": "كل الوقت",
+      "export": "يصدّر",
+      "colAmount": "كمية",
+      "colProject": "مشروع",
+      "colDate": "تاريخ",
+      "colStatus": "حالة",
+      "statusPaid": "مدفوع",
+      "statusPending": "قيد الانتظار"
+    }
+  },
+  "agent": {
+    "selectDeveloper": "معرف المطور (من رابط الدعوة)",
+    "application": {
+      "title": "تنطبق على المطور",
+      "fullName": "الاسم الكامل",
+      "phone": "هاتف",
+      "bankDetails": "تفاصيل البنك",
+      "agreements": "الاتفاقيات",
+      "signature": "إمضاء",
+      "drawSignature": "يرسم",
+      "uploadSignature": "رفع",
+      "replaceSignature": "استبدال التوقيع",
+      "clear": "واضح",
+      "sign": "توقيع الاتفاقية",
+      "submit": "تقديم الطلب",
+      "currentSignaturePrompt": "هذا هو توقيعك الحالي المستخدم في العقود.",
+      "uploadHint": "قم بتحميل صورة عالية الجودة لتوقيعك (PNG أو JPG).",
+      "signaturePreviewAlt": "معاينة التوقيع",
+      "missingSignature": "التوقيع مفقود",
+      "signatureUpdated": "تم تحديث التوقيع",
+      "signatureUpdateError": "فشل تحديث التوقيع"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "approved": "موافقة",
+      "rejected": "مرفوض"
+    }
+  },
+  "settings": {
+    "title": "إعدادات",
+    "subtitle": "إدارة حسابك والإخطارات وتفاصيل العقد",
+    "contractTitle": "تفاصيل العقد",
+    "contractDesc": "معلومات من اتفاقية الوكيل الخاص بك",
+    "fullName": "الاسم الكامل",
+    "companyName": "اسم الشركة",
+    "type": "يكتب",
+    "taxId": "معرف الضريبة",
+    "legalAddress": "العنوان القانوني",
+    "phone": "هاتف",
+    "bankDetails": "تفاصيل البنك",
+    "agentCompanyType": "نوع الشركة",
+    "agentRegisteredOffice": "مكتب مسجل",
+    "agentRepresentativeName": "اسم الممثل",
+    "agentRepresentativeTitle": "عنوان تمثيلي",
+    "status": "حالة",
+    "agreementSignedAt": "تم توقيع الاتفاقية",
+    "commissionRate": "معدل العمولة",
+    "savingProfile": "توفير…",
+    "profileSaved": "تم حفظ الملف الشخصي",
+    "profileSaveError": "فشل حفظ الملف الشخصي",
+    "notificationsSaved": "تم حفظ تفضيلات الإشعارات",
+    "notificationsSaveError": "فشل في حفظ تفضيلات الإخطار",
+    "saveAll": "احفظ الكل",
+    "loadError": "فشل في تحميل بيانات العقد",
+    "signedContractsTitle": "العقود الموقعة",
+    "signedContractsDesc": "قم بتنزيل العقود التي تم إنشاؤها أثناء التوقيع.",
+    "refreshContracts": "تحديث القائمة",
+    "signedContractsLoadError": "فشل تحميل العقود. حاول مرة أخرى.",
+    "noSignedContracts": "لا توجد عقود بعد",
+    "noSignedContractsDesc": "وقّع أول عقد لك لعرضه هنا.",
+    "contractLabel": "عقد",
+    "pdfLabel": "PDF"
+  }
+}

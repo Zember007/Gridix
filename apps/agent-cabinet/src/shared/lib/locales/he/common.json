@@ -1,0 +1,305 @@
+{
+  "app": {
+    "title": "קבינט סוכנים"
+  },
+  "nav": {
+    "dashboard": "לוּחַ מַחווָנִים",
+    "application": "בַּקָשָׁה",
+    "projects": "קָטָלוֹג",
+    "contacts": "אנשי קשר",
+    "leads": "לידים",
+    "payouts": "תשלומים",
+    "analytics": "אנליטיקס",
+    "partnerProgram": "תוכנית שותפים",
+    "settings": "הגדרות"
+  },
+  "common": {
+    "loading": "טְעִינָה...",
+    "save": "לְהַצִיל",
+    "cancel": "לְבַטֵל",
+    "continue": "לְהַמשִׁיך",
+    "empty": "—"
+  },
+  "auth": {
+    "email": "אֶלֶקטרוֹנִי",
+    "sendLink": "שלח קישור קסם",
+    "signOut": "צא",
+    "checkEmailTitle": "בדוק את האימייל שלך",
+    "magicLinkSent": "קישור קסם נשלח.",
+    "processingLogin": "מעבד התחברות...",
+    "setPasswordTitle": "הגדר סיסמה",
+    "setPasswordDescription": "הסיסמה שלך עדיין לא מוגדרת. אנא צור סיסמה כדי להמשיך.",
+    "password": "סִיסמָה",
+    "confirmPassword": "אשר את הסיסמה",
+    "savePassword": "שמור סיסמה",
+    "passwordUpdated": "הסיסמה עודכנה"
+  },
+  "errors": {
+    "emailRequired": "יש צורך באימייל.",
+    "failedToSendLink": "שליחת הקישור נכשלה.",
+    "passwordMinLength": "הסיסמה חייבת להיות באורך 8 תווים לפחות.",
+    "passwordsDontMatch": "הסיסמאות אינן תואמות.",
+    "failedToUpdatePassword": "עדכון הסיסמה נכשל."
+  },
+  "notFound": {
+    "title": "הדף לא נמצא",
+    "goHome": "לך הביתה"
+  },
+  "workspace": {
+    "noActiveTitle": "אין סביבת עבודה פעילה",
+    "pickInSidebar": "בחר סביבת עבודה בסרגל הצד."
+  },
+  "moduleHeader": {
+    "searchPlaceholder": "לְחַפֵּשׂ…",
+    "financeTitle": "לְמַמֵן",
+    "balanceLabel": "האיזון שלך",
+    "create": "לִיצוֹר"
+  },
+  "dashboard": {
+    "title": "לוח המחוונים שלי",
+    "subtitleWorkspace": "סביבת עבודה: {{workspace}}",
+    "subtitleNoWorkspace": "בחר סביבת עבודה",
+    "metrics": {
+      "leads": "לידים",
+      "contactsSubtext": "אנשי קשר: {{count}}",
+      "commissionPaid": "עמלה ששולמה",
+      "commissionPending": "עמלה בהמתנה",
+      "projectsSubtext": "פרויקטים: {{count}}",
+      "catalog": "קָטָלוֹג",
+      "availableProjects": "פרויקטים זמינים"
+    },
+    "blocks": {
+      "dynamicsTitle": "דִינָמִיקָה",
+      "inProgress": "בתהליך",
+      "pulseTitle": "דוֹפֶק",
+      "latestEvents": "אירועים אחרונים",
+      "pulseLeads": "לידים: {{count}}",
+      "pulsePayouts": "תשלומים:"
+    },
+    "chart": {
+      "title": "דינמיקה של הכנסות",
+      "subtitle": "הכנסה מעמלה על פני 6 חודשים"
+    },
+    "activity": {
+      "title": "הזנת פעילות",
+      "empty": "אין פעילות אחרונה",
+      "system": "מַעֲרֶכֶת",
+      "newLead": "מוביל חדש",
+      "leadsLabel": "מוביל",
+      "commissionPaid": "עמלה ששולמה",
+      "pendingPayout": "ממתין לתשלום",
+      "recent": "לָאַחֲרוֹנָה",
+      "thisMonth": "החודש הזה",
+      "inPipeline": "בצנרת"
+    }
+  },
+  "catalog": {
+    "title": "קָטָלוֹג",
+    "subtitle": "קטלוג בנייה מאוחדת",
+    "subtitleWithWorkspace": "קטלוג בנייה מאוחדת • {{סביבת עבודה}}",
+    "searchPlaceholder": "חפש לפי שם הפרויקט...",
+    "filtersPlaceholder": "מסננים יועברו 1:1 מ-'gridix-visual' (מיקום/מחירים/סטטוסים).",
+    "noProjects": "אין עדיין פרויקטים ציבוריים עבור סביבת העבודה שנבחרה.",
+    "open": "לִפְתוֹחַ",
+    "details": "פרטים",
+    "share": "לַחֲלוֹק",
+    "clientLinkPrompt": "קישור ללקוח"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "סקירה כללית",
+      "units": "יחידות",
+      "construction": "בְּנִיָה",
+      "media": "כְּלֵי תִקְשׁוֹרֶת",
+      "partners": "שותפים",
+      "settings": "הגדרות"
+    },
+    "commission": {
+      "title": "העמלה שלך",
+      "active": "פָּעִיל",
+      "requiresContract": "דורש חוזה",
+      "condition": "תנאי תשלום",
+      "signOffer": "חתמו על ההצעה עם היזם כדי לנעול לקוחות ולקבל עמלה."
+    },
+    "stats": {
+      "roi": "החזר ROI",
+      "completion": "סִיוּם",
+      "priceFrom": "מחיר מ",
+      "units": "יחידות"
+    },
+    "about": {
+      "title": "לגבי הפרויקט",
+      "description": "מתחם מגורים מודרני באזור יוקרתי. אידיאלי למגורים ולהשקעה."
+    },
+    "quickAccess": "גישה מהירה",
+    "media": {
+      "title": "בנק מדיה לפרויקטים",
+      "downloadAll": "הורד הכל (ZIP)",
+      "renders": "מעבד",
+      "videos": "סרטונים",
+      "presentations": "מצגות",
+      "noMaterials": "אין חומרים",
+      "restricted": "הגישה מוגבלת",
+      "signToAccess": "חתום על החוזה עם היזם כדי לגשת לבנק המדיה.",
+      "connect": "לְחַבֵּר"
+    },
+    "construction": {
+      "title": "התקדמות הבנייה",
+      "noUpdates": "אין עדכונים"
+    },
+    "units": {
+      "legend": {
+        "available": "זָמִין",
+        "booked": "הוזמן",
+        "sold": "נמכר"
+      },
+      "empty": "אין יחידות",
+      "downloadPdf": "הורד PDF"
+    },
+    "actions": {
+      "lock": "נעל לקוח",
+      "favorite": "הוסף לאוסף",
+      "share": "לַחֲלוֹק",
+      "becomePartner": "הפוך לשותף",
+      "pendingConfirmation": "ממתין לאישור",
+      "partnershipUnavailable": "שותפות לא זמינה",
+      "openPage": "פתח עמוד"
+    }
+  },
+  "contacts": {
+    "title": "אנשי קשר",
+    "subtitle": "{{count}} אנשי קשר",
+    "subtitleWithWorkspace": "{{count}} אנשי קשר • {{סביבת עבודה}}",
+    "searchPlaceholder": "חפש וסנן",
+    "notFound": "לא נמצאו אנשי קשר.",
+    "columns": {
+      "contact": "מַגָע"
+    },
+    "drawer": {
+      "leadsAndLast": "הפניות: {{count}} • אחרונות: {{last}}",
+      "contactsSection": "אנשי קשר",
+      "projectsSection": "פרויקטים",
+      "notSelected": "לא נבחר איש קשר."
+    }
+  },
+  "analytics": {
+    "title": "אנליטיקס",
+    "subtitle": "סקירת ביצועים מפתח",
+    "subtitleWithWorkspace": "סקירה כללית של מדדי מפתח • {{סביבת עבודה}}",
+    "export": "יְצוּא",
+    "views": {
+      "sales": "מכירות",
+      "finance": "לְמַמֵן",
+      "crm": "CRM"
+    },
+    "period": {
+      "last7": "7 ימים אחרונים",
+      "last30": "30 הימים האחרונים",
+      "quarter": "הרבעון הזה",
+      "year": "השנה"
+    },
+    "loadError": "טעינת הניתוח נכשלה.",
+    "sales": {
+      "totalLeads": "סך כל הפניות",
+      "funnelByStage": "משפך (לפי שלב)",
+      "noStageData": "אין נתוני שלב.",
+      "sources": "מקורות",
+      "noSourceData": "אין נתוני מקור."
+    },
+    "crm": {
+      "totalLeads": "סך כל הפניות",
+      "inFunnel": "במשפך",
+      "conversion": "הֲמָרָה",
+      "sources": "מקורות",
+      "funnelTitle": "משפך מכירות",
+      "sourceBreakdown": "מקורות מובילים"
+    },
+    "finance": {
+      "paid": "בתשלום",
+      "pending": "תָלוּי וְעוֹמֵד",
+      "payoutsCount": "תשלומים",
+      "registry": "רישום תשלומים",
+      "registryTitle": "מרשם הנציבות",
+      "registryDescription": "עקוב אחר סטטוסי תשלום עמלות ממפתחים. הנתונים מתעדכנים אוטומטית בשינוי סטטוס העסקה.",
+      "noPayouts": "אין תשלומים.",
+      "pipeline": "צינור",
+      "inProgress": "בתהליך",
+      "dealsInWork": "עסקאות בעבודה",
+      "received": "התקבל",
+      "success": "הַצלָחָה",
+      "successDeals": "עסקאות מוצלחות",
+      "total": "סַך הַכֹּל",
+      "allTime": "כל הזמן",
+      "export": "יְצוּא",
+      "colAmount": "סְכוּם",
+      "colProject": "פּרוֹיֶקט",
+      "colDate": "תַאֲרִיך",
+      "colStatus": "סטָטוּס",
+      "statusPaid": "בתשלום",
+      "statusPending": "תָלוּי וְעוֹמֵד"
+    }
+  },
+  "agent": {
+    "selectDeveloper": "מזהה מפתח (מקישור הזמנה)",
+    "application": {
+      "title": "הגשת בקשה למפתח",
+      "fullName": "שם מלא",
+      "phone": "טֵלֵפוֹן",
+      "bankDetails": "פרטי הבנק",
+      "agreements": "הסכמים",
+      "signature": "חֲתִימָה",
+      "drawSignature": "לִמְשׁוֹך",
+      "uploadSignature": "העלה",
+      "replaceSignature": "החלף חתימה",
+      "clear": "בָּרוּר",
+      "sign": "חתמו על הסכם",
+      "submit": "הגש בקשה",
+      "currentSignaturePrompt": "זוהי החתימה הנוכחית שלך המשמשת עבור חוזים.",
+      "uploadHint": "העלה תמונה באיכות גבוהה של החתימה שלך (PNG או JPG).",
+      "signaturePreviewAlt": "תצוגה מקדימה של החתימה",
+      "missingSignature": "חסרה חתימה",
+      "signatureUpdated": "החתימה עודכנה",
+      "signatureUpdateError": "עדכון החתימה נכשל"
+    },
+    "status": {
+      "pending": "תָלוּי וְעוֹמֵד",
+      "approved": "מְאוּשָׁר",
+      "rejected": "נִדחֶה"
+    }
+  },
+  "settings": {
+    "title": "הגדרות",
+    "subtitle": "נהל את החשבון, ההודעות ופרטי החוזה שלך",
+    "contractTitle": "פרטי החוזה",
+    "contractDesc": "מידע מהסכם הסוכן שלך",
+    "fullName": "שם מלא",
+    "companyName": "שם החברה",
+    "type": "סוּג",
+    "taxId": "מזהה מס",
+    "legalAddress": "כתובת חוקית",
+    "phone": "טֵלֵפוֹן",
+    "bankDetails": "פרטי הבנק",
+    "agentCompanyType": "סוג חברה",
+    "agentRegisteredOffice": "משרד רשום",
+    "agentRepresentativeName": "שם נציג",
+    "agentRepresentativeTitle": "תואר מייצג",
+    "status": "סטָטוּס",
+    "agreementSignedAt": "הסכם נחתם",
+    "commissionRate": "שיעור עמלה",
+    "savingProfile": "חִסָכוֹן…",
+    "profileSaved": "הפרופיל נשמר",
+    "profileSaveError": "שמירת הפרופיל נכשלה",
+    "notificationsSaved": "העדפות ההתראות נשמרו",
+    "notificationsSaveError": "שמירת העדפות ההתראות נכשלה",
+    "saveAll": "שמור הכל",
+    "loadError": "טעינת נתוני החוזה נכשלה",
+    "signedContractsTitle": "חוזים חתומים",
+    "signedContractsDesc": "הורד את החוזים שנוצרו במהלך החתימה.",
+    "refreshContracts": "רענן רשימה",
+    "signedContractsLoadError": "טעינת החוזים נכשלה. נסה שוב.",
+    "noSignedContracts": "עדיין אין חוזים",
+    "noSignedContractsDesc": "חתום על החוזה הראשון שלך כדי לראות אותו כאן.",
+    "contractLabel": "חוזה",
+    "pdfLabel": "PDF"
+  }
+}
