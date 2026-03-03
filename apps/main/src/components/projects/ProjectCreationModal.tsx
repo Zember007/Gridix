@@ -366,15 +366,10 @@ const ProjectCreationModal = ({
                       variant="outline"
                       className="project_import_demo_usertour h-auto w-full justify-center whitespace-normal py-2 text-center"
                     >
-                      <a
-                        href="/Demo_chess_import.csv"
-                        download
-                        className="flex items-center justify-center gap-2 whitespace-normal break-words text-center"
-                      >
-                        <Download className="h-4 w-4 shrink-0" />
-                        <span className="whitespace-normal break-words">
-                          {t("admin.project.create.import.demo")}
-                        </span>
+                      <a href="/Demo_chess_import.csv" download>
+                        <Download className="mr-2 h-4 w-4" />
+                        {t("admin.project.create.import.demo") ||
+                          "Скачать демо"}
                       </a>
                     </Button>
                   </div>

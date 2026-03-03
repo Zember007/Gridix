@@ -3,6 +3,7 @@ import ProjectWidgetPage from "@/pages/ProjectWidgetPage";
 import EmbedProjectsPage from "@/pages/EmbedProjectsPage";
 import BitrixInstallPage from "@/pages/bitrix/BitrixInstallPage";
 import BitrixPage from "@/pages/bitrix/BitrixPage";
+import NotFound from "@/pages/NotFound";
 
 export function EmbedRoutes() {
   return (
@@ -16,6 +17,7 @@ export function EmbedRoutes() {
       />
       <Route path="connect/bitrix24" element={<BitrixInstallPage />} />
       <Route path="bitrix" element={<BitrixPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

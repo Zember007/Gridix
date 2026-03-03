@@ -1,9 +1,21 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
+import { DEFAULT_LANGUAGE } from "@gridix/utils";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
 import AuthPage from "@/pages/AuthPage";
 import CallbackPage from "@/pages/CallbackPage";
 import RootPage from "@/pages/RootPage";
+
+function LangFallbackRoute() {
+  const { lang } = useParams<{ lang?: string }>();
+  return <Navigate replace to={`/${lang ?? DEFAULT_LANGUAGE}/auth/signin`} />;
+}
 
 export default function App() {
   return (
@@ -15,11 +27,16 @@ export default function App() {
             {/* After LanguageWrapper adds /:lang prefix, land here */}
             <Route path="/:lang" element={<RootPage />} />
             <Route path="/:lang/" element={<RootPage />} />
-            <Route path="/:lang/auth" element={<AuthPage />} />
             <Route path="/:lang/auth/signin" element={<AuthPage />} />
             <Route path="/:lang/auth/signup" element={<AuthPage />} />
             <Route path="/:lang/auth/callback" element={<CallbackPage />} />
-            <Route path="*" element={<Navigate replace to="/auth" />} />
+            <Route path="/:lang/*" element={<LangFallbackRoute />} />
+            <Route
+              path="*"
+              element={
+                <Navigate replace to={`/${DEFAULT_LANGUAGE}/auth/signin`} />
+              }
+            />
           </Routes>
         </LanguageWrapper>
       </BrowserRouter>

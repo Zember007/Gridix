@@ -185,7 +185,7 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
     try {
       const lang = getLanguageFromPath(window.location.pathname) || "en";
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/${lang}/auth?mode=recovery`,
+        redirectTo: `${window.location.origin}/${lang}/auth/signin?mode=recovery`,
       });
       if (error) throw error;
       toast.success(t("auth.resetEmailSent"));

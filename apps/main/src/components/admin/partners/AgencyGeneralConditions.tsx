@@ -565,7 +565,7 @@ export const AgencyGeneralConditions: React.FC = () => {
   const [settings, setSettings] = useState({
     defaultCommission: 4,
     leadLockDays: 30,
-    payoutTerms: t("partners.generalConditions.defaultPayoutTerms"),
+    payoutTerms: t("partners.generalConditions.placeholderPayoutTerms"),
     productsDescription: "",
     territory: "",
     exclusivity: "non-exclusive" as "exclusive" | "non-exclusive",

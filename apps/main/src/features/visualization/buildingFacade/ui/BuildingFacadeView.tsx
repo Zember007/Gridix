@@ -11,6 +11,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
   type CarouselApi,
 } from "@gridix/ui";
 import { useIsMobile } from "@gridix/ui";
@@ -32,6 +34,128 @@ import {
 import InteractionHint from "@/components/visualization/InteractionHint";
 
 const COLLAPSED_HEIGHT = 280;
+
+const MobileFloorInfoBar = ({
+  selectedFloor,
+  project,
+  apartments,
+  facadeSettings,
+  visibleFields,
+  selectedCurrency,
+  themeColor,
+  onFloorClick,
+  getFloorStats,
+}: {
+  selectedFloor: number;
+  project: BuildingFacadeViewProps["project"];
+  apartments: BuildingFacadeViewProps["apartments"];
+  facadeSettings: BuildingFacadeViewProps["facadeSettings"];
+  visibleFields: BuildingFacadeViewProps["visibleFields"];
+  selectedCurrency?: string;
+  themeColor: string;
+  onFloorClick: (floorNumber: number) => void;
+  getFloorStats: (floorNumber: number) => {
+    total: number;
+    available: number;
+    sold: number;
+    reserved: number;
+  };
+}) => {
+  const { t } = useLanguage();
+
+  if (project.project_type === "object") {
+    const apartment = apartments.find(
+      (apt) => apt.apartment_number === selectedFloor.toString(),
+    );
+    if (!apartment) return null;
+
+    const showArea =
+      visibleFields.find((f) => f.field_name === "area")?.is_visible ?? false;
+    const showPrice =
+      visibleFields.find((f) => f.field_name === "price")?.is_visible ?? false;
+    const showStatus =
+      visibleFields.find((f) => f.field_name === "status")?.is_visible ?? false;
+
+    return (
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 border-t border-gray-100 bg-white px-4 py-2.5 text-left active:bg-gray-50"
+        onClick={() => onFloorClick(selectedFloor)}
+      >
+        <div className="flex items-center gap-3 overflow-hidden">
+          {facadeSettings?.display?.showNumbers && (
+            <span className="shrink-0 text-xs font-semibold uppercase text-gray-500">
+              №{apartment.apartment_number}
+            </span>
+          )}
+          {showStatus && (
+            <span
+              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase text-white"
+              style={{
+                backgroundColor:
+                  apartment.status === "available"
+                    ? "#22c55e"
+                    : apartment.status === "reserved"
+                      ? "#f59e0b"
+                      : "#ef4444",
+              }}
+            >
+              {t(`project.${apartment.status}`)}
+            </span>
+          )}
+          {showArea && apartment.area && (
+            <span className="truncate text-xs text-gray-600">
+              {apartment.area} m²
+            </span>
+          )}
+          {showPrice && apartment.price && (
+            <span className="truncate text-xs font-medium text-gray-900">
+              {Number(apartment.price).toLocaleString()}{" "}
+              {selectedCurrency || project.currency || ""}
+            </span>
+          )}
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+      </button>
+    );
+  }
+
+  const stats = getFloorStats(selectedFloor);
+
+  return (
+    <button
+      type="button"
+      className="flex w-full items-center justify-between gap-3 border-t border-gray-100 bg-white px-4 py-2.5 text-left active:bg-gray-50"
+      onClick={() => onFloorClick(selectedFloor)}
+    >
+      <div className="flex items-center gap-3">
+        {facadeSettings?.display?.showNumbers && (
+          <span className="text-xs font-semibold uppercase text-gray-500">
+            {t("project.floor")} {selectedFloor}
+          </span>
+        )}
+        <span
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+          style={{ backgroundColor: themeColor || "#514A47" }}
+        >
+          {stats.available} {t("project.available")}
+        </span>
+        {stats.total > 0 && (
+          <span className="text-[11px] text-gray-400">
+            {stats.total} {t("project.total")}
+          </span>
+        )}
+      </div>
+      <span
+        className="flex items-center gap-1 text-xs font-medium"
+        style={{ color: themeColor }}
+      >
+        {t("customFields.show")}
+        <ChevronRight className="h-3.5 w-3.5" />
+      </span>
+    </button>
+  );
+};
 
 const BuildingFacadeView = ({
   project,
@@ -58,6 +182,10 @@ const BuildingFacadeView = ({
   const [imageRect, setImageRect] = useState<{
     offset: { x: number; y: number };
     size: { width: number; height: number };
+  } | null>(null);
+  const [naturalSize, setNaturalSize] = useState<{
+    width: number;
+    height: number;
   } | null>(null);
   const outerRef = useRef<HTMLDivElement>(null);
   // This ref MUST point to the "image area" only (not including the bottom carousel),
@@ -133,16 +261,50 @@ const BuildingFacadeView = ({
     return buildingFloors;
   }, [buildingFloors, apartments, project.project_type, _showOnlyAvailable]);
 
+  const floorsWithPolygon = useMemo(
+    () =>
+      visibleFloors.filter(
+        (floor) => floor.polygon && floor.polygon.length >= 3,
+      ),
+    [visibleFloors],
+  );
+
+  const svgViewBox = useMemo(() => {
+    if (
+      !imageRect ||
+      !naturalSize ||
+      naturalSize.width === 0 ||
+      naturalSize.height === 0 ||
+      imageRect.size.width === 0 ||
+      imageRect.size.height === 0
+    ) {
+      return "0 0 100 100";
+    }
+
+    const naturalAspect = naturalSize.width / naturalSize.height;
+    const elementAspect = imageRect.size.width / imageRect.size.height;
+
+    if (naturalAspect > elementAspect) {
+      const visibleW = (elementAspect / naturalAspect) * 100;
+      const cropLeft = (100 - visibleW) / 2;
+      return `${cropLeft} 0 ${visibleW} 100`;
+    } else {
+      const visibleH = (naturalAspect / elementAspect) * 100;
+      const cropTop = (100 - visibleH) / 2;
+      return `0 ${cropTop} 100 ${visibleH}`;
+    }
+  }, [imageRect, naturalSize]);
+
   const computeMobileDockPosition = useCallback(
     (size: { width: number; height: number }) =>
       computeMobileDockPositionUtil({
         containerEl: containerRef.current,
         isExpanded: isExpanded ?? false,
         imageRect,
-        visibleFloors,
+        visibleFloors: floorsWithPolygon,
         size,
       }),
-    [imageRect, isExpanded, visibleFloors],
+    [floorsWithPolygon, imageRect, isExpanded],
   );
 
   const computePopupPositionForPolygon = useCallback(
@@ -171,17 +333,19 @@ const BuildingFacadeView = ({
       if (!containerRef.current) return;
 
       // Находим полигон для данного этажа
-      const floor = buildingFloors.find((f) => f.floor_number === floorNumber);
+      const floor = floorsWithPolygon.find(
+        (f) => f.floor_number === floorNumber,
+      );
       if (!floor || !floor.polygon || floor.polygon.length === 0) return;
 
       // Set hovered floor for visual effects
       setHoveredFloor(floorNumber);
+      setSelectedFloor(floorNumber);
 
       // Show popup if tooltip is enabled in settings
       if (facadeSettings?.display?.showTooltip) {
         const polygonBounds = getPolygonBoundsPct(floor.polygon);
         setPopupAnchor({ floorNumber, polygonBounds });
-        setSelectedFloor(floorNumber);
         setShowPopup(true);
 
         // Mobile: фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
@@ -210,13 +374,17 @@ const BuildingFacadeView = ({
           sizeForInitial,
         );
         if (nextPos) setPopupPosition(nextPos);
+      } else {
+        setShowPopup(false);
+        setPopupAnchor(null);
+        setPopupPosition(null);
       }
     },
     [
-      buildingFloors,
       computeMobileDockPosition,
       computePopupPositionForPolygon,
       facadeSettings?.display?.showTooltip,
+      floorsWithPolygon,
       isExpanded,
       isMobile,
       mobilePopupDockPosition,
@@ -254,6 +422,18 @@ const BuildingFacadeView = ({
         Math.abs(prev.size.height - nextRect.size.height) <= 0.5;
       return same ? prev : nextRect;
     });
+
+    if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
+      setNaturalSize((prev) => {
+        if (
+          prev &&
+          prev.width === imageEl.naturalWidth &&
+          prev.height === imageEl.naturalHeight
+        )
+          return prev;
+        return { width: imageEl.naturalWidth, height: imageEl.naturalHeight };
+      });
+    }
   }, []);
 
   useLayoutEffect(() => {
@@ -262,44 +442,95 @@ const BuildingFacadeView = ({
   }, [measureImageRect, isExpanded, isMobile, facadeImageUrl]);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    let frame: number | null = null;
-    const observer = new ResizeObserver(() => {
-      if (frame) cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        measureImageRect();
-      });
-    });
-    observer.observe(el);
+    const containerEl = containerRef.current;
+    const imageEl = imgRef.current;
+    const wrapperEl = outerRef.current;
+    if (!containerEl) return;
 
-    // Fallback for viewport changes on some browsers.
-    window.addEventListener("resize", measureImageRect);
+    let frame: number | null = null;
+    let settleTimer: number | null = null;
+
+    const queueMeasure = () => {
+      if (frame) cancelAnimationFrame(frame);
+      if (settleTimer) clearTimeout(settleTimer);
+
+      frame = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          measureImageRect();
+        });
+      });
+
+      // Re-measure after CSS transitions settle (side panel is 300ms).
+      settleTimer = window.setTimeout(measureImageRect, 350);
+    };
+
+    const observer = new ResizeObserver(queueMeasure);
+    observer.observe(containerEl);
+    if (imageEl) observer.observe(imageEl);
+    if (wrapperEl) observer.observe(wrapperEl);
+
+    window.addEventListener("resize", queueMeasure);
+    window.addEventListener("orientationchange", queueMeasure);
+    window.visualViewport?.addEventListener("resize", queueMeasure);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
+      if (settleTimer) clearTimeout(settleTimer);
       observer.disconnect();
-      window.removeEventListener("resize", measureImageRect);
+      window.removeEventListener("resize", queueMeasure);
+      window.removeEventListener("orientationchange", queueMeasure);
+      window.visualViewport?.removeEventListener("resize", queueMeasure);
     };
   }, [measureImageRect]);
 
   useEffect(() => {
-    if (visibleFloors.length > 0) {
-      if (
-        isExpanded &&
-        isMobile &&
-        imageRect &&
-        imageRect.size.width > 0 &&
-        imageRect.size.height > 0
-      ) {
-        handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
+    if (
+      !isExpanded ||
+      !imageRect ||
+      imageRect.size.width === 0 ||
+      imageRect.size.height === 0
+    ) {
+      return;
+    }
+
+    if (floorsWithPolygon.length === 0) {
+      setHoveredFloor(null);
+      setShowPopup(false);
+      setPopupAnchor(null);
+      setPopupPosition(null);
+      setSelectedFloor(null);
+      return;
+    }
+
+    const selectedExists = floorsWithPolygon.some(
+      (floor) => floor.floor_number === selectedFloor,
+    );
+
+    if (!selectedExists) {
+      const firstFloor = floorsWithPolygon[0]!.floor_number;
+      if (isMobile) {
+        handleFloorHover(firstFloor);
+      } else {
+        setSelectedFloor(firstFloor);
+        setHoveredFloor(null);
+        setShowPopup(false);
+        setPopupAnchor(null);
+        setPopupPosition(null);
       }
     }
-  }, [handleFloorHover, imageRect, isExpanded, isMobile, visibleFloors]);
+  }, [
+    floorsWithPolygon,
+    handleFloorHover,
+    imageRect,
+    isExpanded,
+    isMobile,
+    selectedFloor,
+  ]);
 
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
     setImageRect(null);
+    setNaturalSize(null);
     setShowPopup(false);
     setPopupAnchor(null);
     setPopupPosition(null);
@@ -548,10 +779,11 @@ const BuildingFacadeView = ({
   const handleFloorLeave = () => {
     if (!isExpanded) return;
     setHoveredFloor(null);
-    setShowPopup(false);
-    setPopupAnchor(null);
-    setPopupPosition(null);
-    setSelectedFloor(null);
+    if (!isMobile) {
+      setShowPopup(false);
+      setPopupAnchor(null);
+      setPopupPosition(null);
+    }
   };
 
   const handleSVGFloorClick = (floorNumber: number) => {
@@ -575,7 +807,7 @@ const BuildingFacadeView = ({
     if (
       !isMobile ||
       !isExpanded ||
-      visibleFloors.length === 0 ||
+      floorsWithPolygon.length === 0 ||
       !containerRef.current
     ) {
       return;
@@ -593,23 +825,13 @@ const BuildingFacadeView = ({
     const containerWidth = containerEl.clientWidth;
     const containerHeight = containerEl.clientHeight;
 
-    // Берём только этажи с валидными полигонами
-    const floorsWithPolygons = visibleFloors.filter(
-      (f) => f.polygon && f.polygon.length >= 3,
-    );
-
-    // Если полигонов нет, просто ставим переключатель внизу по центру
-    if (floorsWithPolygons.length === 0) {
-      return;
-    }
-
     // Границы всех видимых полигонов в процентах SVG (0–100)
     let minX = 100;
     let maxX = 0;
     let minY = 100;
     let maxY = 0;
 
-    floorsWithPolygons.forEach((floor) => {
+    floorsWithPolygon.forEach((floor) => {
       floor.polygon.forEach((p) => {
         if (p.x < minX) minX = p.x;
         if (p.x > maxX) maxX = p.x;
@@ -687,20 +909,20 @@ const BuildingFacadeView = ({
       return !noOverlap;
     };
     void intersectsPolygons;
-  }, [isMobile, isExpanded, visibleFloors, imageRect]);
+  }, [floorsWithPolygon, imageRect, isExpanded, isMobile]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
   useEffect(() => {
     if (!carouselApi) return;
 
-    const index = visibleFloors.findIndex(
+    const index = floorsWithPolygon.findIndex(
       (f) => f.floor_number === selectedFloor,
     );
     if (index >= 0) {
       carouselApi.scrollTo(index, true);
     }
-  }, [carouselApi, selectedFloor, visibleFloors]);
+  }, [carouselApi, floorsWithPolygon, selectedFloor]);
 
   if (loading) {
     return (
@@ -718,9 +940,9 @@ const BuildingFacadeView = ({
     <>
       <div
         ref={outerRef}
-        className={`relative flex w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
+        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
         style={{
-          minHeight: isExpanded ? 600 : "auto",
+          minHeight: isExpanded ? (isMobile ? "auto" : 600) : "auto",
           height: isExpanded
             ? isMobile
               ? "auto"
@@ -736,12 +958,12 @@ const BuildingFacadeView = ({
         {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
         <div
           ref={containerRef}
-          className="relative flex w-full flex-1 items-center justify-center overflow-hidden"
+          className={`relative flex min-h-0 w-full items-center justify-center overflow-hidden ${isMobile && isExpanded ? "" : "flex-1"}`}
           style={{ touchAction: isTouchZooming ? "none" : "manipulation" }}
         >
-          {/* Размытый фон для заполнения пустых областей */}
+          {/* Blurred background – visible on sm+ (≥640px); hidden on small phones */}
           {facadeImageUrl && (
-            <>
+            <div className="hidden sm:contents">
               <img
                 src={facadeImageUrl}
                 alt="Building"
@@ -754,7 +976,7 @@ const BuildingFacadeView = ({
                 })}
               />
               <div className="absolute inset-0 bg-black/20" />
-            </>
+            </div>
           )}
 
           <div
@@ -765,76 +987,84 @@ const BuildingFacadeView = ({
               touchAction: isTouchZooming ? "none" : "manipulation",
             }}
           >
-            <img
-              ref={imgRef}
-              src={facadeImageUrl}
-              alt={project.name}
-              className={`mx-auto block h-full w-auto transition-all duration-500`}
-              draggable={false}
-              onLoad={measureImageRect}
-            />
-            {visibleFloors.length > 0 && imageRect && (
-              <svg
-                className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  width: imageRect.size.width,
-                  height: imageRect.size.height,
-                }}
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                <rect x="0" y="0" width="100" height="100" fill="none" />
-                {visibleFloors.map((floor) => {
-                  if (!floor.polygon || floor.polygon.length < 3) return null;
-                  const points = floor.polygon
-                    .map((point) => `${point.x},${point.y}`)
-                    .join(" ");
-                  const baseColor = getFloorFillColor(floor);
-                  const isHovered = hoveredFloor === floor.floor_number;
-                  const isActive = hoveredFloor === floor.floor_number;
-                  return (
-                    <g key={floor.id}>
-                      <polygon
-                        points={points}
-                        fill={baseColor}
-                        fillOpacity={
-                          isHovered || isActive
-                            ? (facadeSettings?.opacity.hover ?? 0.7)
-                            : (facadeSettings?.opacity.normal ?? 0.4)
-                        }
-                        className="cursor-pointer transition-all duration-200"
-                        data-floor={floor.floor_number}
-                        onClick={() => handleSVGFloorClick(floor.floor_number)}
-                        onMouseEnter={() => {
-                          if (isExpanded) {
-                            handleSVGFloorHover(floor.floor_number);
+            <div
+              className={
+                isMobile
+                  ? "relative mx-auto w-fit max-w-full"
+                  : "relative mx-auto h-full w-fit"
+              }
+            >
+              <img
+                ref={imgRef}
+                src={facadeImageUrl}
+                alt={project.name}
+                className={
+                  isMobile
+                    ? "block h-auto w-auto max-w-full"
+                    : "block h-full w-auto"
+                }
+                draggable={false}
+                onLoad={measureImageRect}
+              />
+              {floorsWithPolygon.length > 0 && (
+                <svg
+                  className="pointer-events-none absolute inset-0 z-20 h-full w-full"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                >
+                  {floorsWithPolygon.map((floor) => {
+                    const points = floor.polygon
+                      .map((point) => `${point.x},${point.y}`)
+                      .join(" ");
+                    const baseColor = getFloorFillColor(floor);
+                    const isHovered = hoveredFloor === floor.floor_number;
+                    const isActive = selectedFloor === floor.floor_number;
+                    return (
+                      <g key={floor.id}>
+                        <polygon
+                          points={points}
+                          fill={baseColor}
+                          fillOpacity={
+                            isHovered || isActive
+                              ? (facadeSettings?.opacity.hover ?? 0.7)
+                              : (facadeSettings?.opacity.normal ?? 0.4)
                           }
-                        }}
-                        onMouseLeave={() => {
-                          if (isExpanded) {
-                            setHoveredFloor(null);
-                            handleFloorLeave();
+                          className="cursor-pointer transition-all duration-200"
+                          data-floor={floor.floor_number}
+                          onClick={() =>
+                            handleSVGFloorClick(floor.floor_number)
                           }
-                        }}
-                        style={{
-                          pointerEvents: "auto",
-                          touchAction: "none",
-                          filter:
-                            isHovered && facadeSettings?.hoverEffects?.glow
-                              ? "drop-shadow(0 0 8px rgba(0,0,0,0.4))"
-                              : undefined,
-                          transform:
-                            isHovered && facadeSettings?.hoverEffects?.scale
-                              ? "scale(1.02)"
-                              : "scale(1)",
-                          transformOrigin: "center",
-                        }}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-            )}
+                          onMouseEnter={() => {
+                            if (isExpanded) {
+                              handleSVGFloorHover(floor.floor_number);
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            if (isExpanded) {
+                              setHoveredFloor(null);
+                              handleFloorLeave();
+                            }
+                          }}
+                          style={{
+                            pointerEvents: "auto",
+                            touchAction: "none",
+                            filter:
+                              isHovered && facadeSettings?.hoverEffects?.glow
+                                ? "drop-shadow(0 0 8px rgba(0,0,0,0.4))"
+                                : undefined,
+                            transform:
+                              isHovered && facadeSettings?.hoverEffects?.scale
+                                ? "scale(1.02)"
+                                : "scale(1)",
+                            transformOrigin: "center",
+                          }}
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+              )}
+            </div>
           </div>
 
           {showFacadeNav && (
@@ -908,9 +1138,12 @@ const BuildingFacadeView = ({
             </div>
           )}
 
-          {showPopup && selectedFloor !== null && popupPosition && (
-            <FloorPopup Number={selectedFloor} position={popupPosition} />
-          )}
+          {showPopup &&
+            selectedFloor !== null &&
+            popupPosition &&
+            !isMobile && (
+              <FloorPopup Number={selectedFloor} position={popupPosition} />
+            )}
           <InteractionHint storageKey="building" />
         </div>
 
@@ -925,36 +1158,43 @@ const BuildingFacadeView = ({
             <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
           </button>
         )} */}
-        {isMobile && isExpanded && visibleFloors.length > 0 && (
-          <div
-            className={`flex w-full flex-row items-center justify-center border-l-0 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 shadow-inner`}
-          >
-            <div className={`flex w-full flex-row items-center gap-4`}>
-              {/* Floor Carousel */}
-              <div
-                className={`flex min-h-0 flex-1 items-center justify-center`}
-              >
-                <div className={`relative w-full max-w-[100vw]`}>
+        {isMobile && isExpanded && selectedFloor !== null && (
+          <MobileFloorInfoBar
+            selectedFloor={selectedFloor}
+            project={project}
+            apartments={apartments}
+            facadeSettings={facadeSettings}
+            visibleFields={visibleFields}
+            selectedCurrency={selectedCurrency}
+            themeColor={themeColor}
+            onFloorClick={handleFloorClick}
+            getFloorStats={getFloorStats}
+          />
+        )}
+
+        {isMobile && isExpanded && floorsWithPolygon.length > 0 && (
+          <div className="flex h-20 w-full flex-row items-center justify-center p-4">
+            <div className="flex w-full flex-row items-center gap-4">
+              <div className="flex min-h-0 flex-1 items-center justify-center py-2">
+                <div className="relative w-full max-w-[60vw]">
                   <Carousel
                     className="h-full w-full"
-                    orientation={isMobile ? "horizontal" : "vertical"}
+                    orientation="horizontal"
                     opts={{
                       align: "center",
-                      loop: visibleFloors.length > 3,
+                      loop: floorsWithPolygon.length > 3,
                     }}
                     setApi={setCarouselApi}
                   >
-                    <div
-                      className={`flex h-full w-full flex-col justify-center border-2 border-white bg-white shadow-xl backdrop-blur-sm`}
-                    >
-                      <CarouselContent>
-                        {visibleFloors.map((floor, index) => (
+                    <div className="flex w-full flex-col justify-center">
+                      <CarouselContent className="max-h-[600px]">
+                        {floorsWithPolygon.map((floor) => (
                           <CarouselItem
-                            key={index}
-                            className={`flex basis-1/5 items-center justify-center`}
+                            key={floor.floor_number}
+                            className="flex basis-1/5 items-center justify-center"
                           >
                             <button
-                              className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold ${
+                              className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold transition-colors ${
                                 selectedFloor === floor.floor_number
                                   ? "text-white"
                                   : "text-gray-700 hover:bg-gray-100"
@@ -974,6 +1214,13 @@ const BuildingFacadeView = ({
                         ))}
                       </CarouselContent>
                     </div>
+
+                    {floorsWithPolygon.length > 3 && (
+                      <>
+                        <CarouselPrevious className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                        <CarouselNext className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                      </>
+                    )}
                   </Carousel>
                 </div>
               </div>

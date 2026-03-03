@@ -439,7 +439,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       e.preventDefault(); // предотвращаем вставку в одно поле
     }
   };
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  const resetFileInput = () => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
   const handlePdfUpload = async (file: File) => {
     if (!user || isNew) {
       toast.error(t("projectEditor.saveProjectFirst"));
@@ -657,7 +663,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <Spinner size="md" />
           </div>
         ) : (
-          <div className="project_editor_content_usertour flex-1 overflow-y-auto px-6 py-4 lg:py-6">
+          <div className="project_editor_content_usertour flex-1 overflow-y-auto py-4 lg:px-6 lg:py-6">
             {/* Show content based on activeTab without Tabs wrapper */}
 
             {(activeTab === "basic" || activeTab === "building") && (
@@ -1106,10 +1112,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                               </p>
                               <input
                                 type="file"
+                                ref={inputRef}
                                 accept=".pdf"
-                                onChange={(e) => {
+                                onChange={async (e) => {
                                   const file = e.target.files?.[0];
-                                  if (file) handlePdfUpload(file);
+                                  if (!file) return;
+                                  await handlePdfUpload(file);
+                                  resetFileInput();
                                 }}
                                 className="hidden"
                                 id="pdf-upload-desktop"

@@ -478,6 +478,7 @@
     "leadLockHint": "İş ortağı için müşteri koruma süresi.",
     "payoutTerms": "Ödeme koşulları",
     "defaultPayoutTerms": "Komisyon, müşteriden geliştiricinin hesabına fonlar ulaştıktan sonra 10 iş günü içinde ödenir. Ödeme para birimi sözleşme para birimiyle aynıdır.",
+    "placeholderPayoutTerms": "Ödeme, müşteriden geliştiricinin hesabına para yatırıldıktan sonra 10 iş günü içinde yapılır. Ödeme para birimi, sözleşme para birimine karşılık gelir.",
     "contractPlaceholders": "Sözleşme yer tutucuları",
     "contractPlaceholdersHint": "Bu değerler değişkenler aracılığıyla şablonlara eklenebilir.",
     "productsDescription": "Ürün açıklaması",

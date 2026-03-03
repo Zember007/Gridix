@@ -944,10 +944,10 @@ const AdminSettings = ({
               {t("adminSettings.notifications")}
             </TabsTrigger>
 
-            <TabsTrigger value="templates" className="flex items-center gap-2">
+            {/*      <TabsTrigger value="templates" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               {t("adminSettings.templates")}
-            </TabsTrigger>
+            </TabsTrigger> */}
 
             <TabsTrigger value="data" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
@@ -1187,9 +1187,9 @@ const AdminSettings = ({
           />
         </TabsContent>
 
-        <TabsContent value="templates">
+        {/*   <TabsContent value="templates">
           <Card>
-            <CardContent>
+            <CardContent className="pt-6">
               <AdminSettingsTemplatesTab
                 templates={messageTemplates}
                 loading={loadingMessageTemplates}
@@ -1209,7 +1209,7 @@ const AdminSettings = ({
               />
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="data">
           <Card>

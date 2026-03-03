@@ -52,6 +52,54 @@ export interface UseFieldsInitialData {
   customFields: Array<Record<string, unknown>>;
 }
 
+function areFieldSettingsEqual(a: FieldSetting[], b: FieldSetting[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; i += 1) {
+    const left = a[i];
+    const right = b[i];
+    if (!left || !right) return false;
+
+    if (
+      left.id !== right.id ||
+      left.field_name !== right.field_name ||
+      left.field_label !== right.field_label ||
+      left.field_type !== right.field_type ||
+      left.is_custom !== right.is_custom ||
+      left.is_visible !== right.is_visible ||
+      left.sort_order !== right.sort_order ||
+      left.is_required !== right.is_required
+    ) {
+      return false;
+    }
+
+    const leftOptions = left.field_options ?? [];
+    const rightOptions = right.field_options ?? [];
+    if (
+      leftOptions.length !== rightOptions.length ||
+      leftOptions.some((option, index) => option !== rightOptions[index])
+    ) {
+      return false;
+    }
+
+    const leftTranslations = left.field_label_translations ?? {};
+    const rightTranslations = right.field_label_translations ?? {};
+    const leftTranslationKeys = Object.keys(leftTranslations);
+    const rightTranslationKeys = Object.keys(rightTranslations);
+    if (leftTranslationKeys.length !== rightTranslationKeys.length) {
+      return false;
+    }
+    for (const key of leftTranslationKeys) {
+      if (leftTranslations[key] !== rightTranslations[key]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 export const useFields = (
   projectId: string | null,
   initialData?: UseFieldsInitialData | null,
@@ -213,8 +261,12 @@ export const useFields = (
       Array.isArray(initialData.fieldSettings) &&
       Array.isArray(initialData.customFields)
     ) {
-      setFields(
-        mergeFieldsFromRaw(initialData.fieldSettings, initialData.customFields),
+      const nextFields = mergeFieldsFromRaw(
+        initialData.fieldSettings,
+        initialData.customFields,
+      );
+      setFields((prevFields) =>
+        areFieldSettingsEqual(prevFields, nextFields) ? prevFields : nextFields,
       );
       setLoading(false);
       return;

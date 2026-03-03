@@ -63,11 +63,15 @@ const ApartmentDetailsPage = ({
       lang?: string;
     }>();
 
-  // Определяем идентификаторы в зависимости от типа маршрута
+  const [overrideApartmentId, setOverrideApartmentId] = useState<string | null>(
+    null,
+  );
+
   const projectIdentifier = useId ? projectIdProp : projectSlug || projectId;
-  const apartmentIdentifier = useId
-    ? apartmentIdProp
-    : apartmentNumber || apartmentId;
+  const apartmentIdentifier =
+    overrideApartmentId ||
+    (useId ? apartmentIdProp : apartmentNumber || apartmentId);
+  const effectiveUseId = overrideApartmentId ? true : useId;
 
   const { t, language } = useLanguage();
   const { incrementViewCount } = useProjectCRUD();
@@ -345,7 +349,7 @@ const ApartmentDetailsPage = ({
         const result = await loadApartmentDetails(
           projectIdentifier,
           apartmentIdentifier,
-          useId,
+          effectiveUseId,
         );
 
         if (cancelled) return;
@@ -441,7 +445,7 @@ const ApartmentDetailsPage = ({
     return () => {
       cancelled = true;
     };
-  }, [projectIdentifier, apartmentIdentifier, useId]);
+  }, [projectIdentifier, apartmentIdentifier, effectiveUseId]);
 
   // View tracking (fire-and-forget writes, kept separate)
   useEffect(() => {
@@ -655,12 +659,15 @@ const ApartmentDetailsPage = ({
     window.location.href = projectUrl;
   };
 
-  const openApartmentDetails = (apartment: Apartment) => {
-    // Используем slug если он есть, иначе ID с префиксом
+  const openApartmentDetails = (apt: Apartment) => {
+    if (onClose) {
+      setOverrideApartmentId(apt.id);
+      return;
+    }
     const projectPath = project?.slug
       ? project.slug
       : `id/${project?.id || projectIdentifier}`;
-    const url = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+    const url = `/${language}/project/${projectPath}/apartment/${apt.apartment_number}`;
     window.location.href = url;
   };
 
