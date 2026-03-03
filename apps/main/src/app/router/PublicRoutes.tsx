@@ -13,6 +13,7 @@ const InvitationHandlerPage = lazy(
 );
 const AgentProjectsPage = lazy(() => import("@/pages/AgentProjectsPage"));
 const AgentApplicationPage = lazy(() => import("@/pages/AgentApplicationPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 export function PublicRoutes() {
   return (
@@ -45,6 +46,8 @@ export function PublicRoutes() {
       {/* Agent routes */}
       <Route path="projects/agent/:agentId" element={<AgentProjectsPage />} />
       <Route path="agent/apply" element={<AgentApplicationPage />} />
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
