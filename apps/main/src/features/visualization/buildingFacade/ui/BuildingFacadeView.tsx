@@ -865,8 +865,8 @@ const BuildingFacadeView = ({
               alt={project.name}
               className={
                 isMobile
-                  ? "mx-auto block h-auto w-auto max-w-full transition-all duration-500"
-                  : "mx-auto block h-full w-auto transition-all duration-500"
+                  ? "mx-auto block h-auto w-auto max-w-full"
+                  : "mx-auto block h-full w-auto"
               }
               draggable={false}
               onLoad={measureImageRect}
