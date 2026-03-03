@@ -35,6 +35,128 @@ import InteractionHint from "@/components/visualization/InteractionHint";
 
 const COLLAPSED_HEIGHT = 280;
 
+const MobileFloorInfoBar = ({
+  selectedFloor,
+  project,
+  apartments,
+  facadeSettings,
+  visibleFields,
+  selectedCurrency,
+  themeColor,
+  onFloorClick,
+  getFloorStats,
+}: {
+  selectedFloor: number;
+  project: BuildingFacadeViewProps["project"];
+  apartments: BuildingFacadeViewProps["apartments"];
+  facadeSettings: BuildingFacadeViewProps["facadeSettings"];
+  visibleFields: BuildingFacadeViewProps["visibleFields"];
+  selectedCurrency?: string;
+  themeColor: string;
+  onFloorClick: (floorNumber: number) => void;
+  getFloorStats: (floorNumber: number) => {
+    total: number;
+    available: number;
+    sold: number;
+    reserved: number;
+  };
+}) => {
+  const { t } = useLanguage();
+
+  if (project.project_type === "object") {
+    const apartment = apartments.find(
+      (apt) => apt.apartment_number === selectedFloor.toString(),
+    );
+    if (!apartment) return null;
+
+    const showArea =
+      visibleFields.find((f) => f.field_name === "area")?.is_visible ?? false;
+    const showPrice =
+      visibleFields.find((f) => f.field_name === "price")?.is_visible ?? false;
+    const showStatus =
+      visibleFields.find((f) => f.field_name === "status")?.is_visible ?? false;
+
+    return (
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 border-t border-gray-100 bg-white px-4 py-2.5 text-left active:bg-gray-50"
+        onClick={() => onFloorClick(selectedFloor)}
+      >
+        <div className="flex items-center gap-3 overflow-hidden">
+          {facadeSettings?.display?.showNumbers && (
+            <span className="shrink-0 text-xs font-semibold uppercase text-gray-500">
+              №{apartment.apartment_number}
+            </span>
+          )}
+          {showStatus && (
+            <span
+              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase text-white"
+              style={{
+                backgroundColor:
+                  apartment.status === "available"
+                    ? "#22c55e"
+                    : apartment.status === "reserved"
+                      ? "#f59e0b"
+                      : "#ef4444",
+              }}
+            >
+              {t(`project.${apartment.status}`)}
+            </span>
+          )}
+          {showArea && apartment.area && (
+            <span className="truncate text-xs text-gray-600">
+              {apartment.area} m²
+            </span>
+          )}
+          {showPrice && apartment.price && (
+            <span className="truncate text-xs font-medium text-gray-900">
+              {Number(apartment.price).toLocaleString()}{" "}
+              {selectedCurrency || project.currency || ""}
+            </span>
+          )}
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+      </button>
+    );
+  }
+
+  const stats = getFloorStats(selectedFloor);
+
+  return (
+    <button
+      type="button"
+      className="flex w-full items-center justify-between gap-3 border-t border-gray-100 bg-white px-4 py-2.5 text-left active:bg-gray-50"
+      onClick={() => onFloorClick(selectedFloor)}
+    >
+      <div className="flex items-center gap-3">
+        {facadeSettings?.display?.showNumbers && (
+          <span className="text-xs font-semibold uppercase text-gray-500">
+            {t("project.floor")} {selectedFloor}
+          </span>
+        )}
+        <span
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+          style={{ backgroundColor: themeColor || "#514A47" }}
+        >
+          {stats.available} {t("project.available")}
+        </span>
+        {stats.total > 0 && (
+          <span className="text-[11px] text-gray-400">
+            {stats.total} {t("project.total")}
+          </span>
+        )}
+      </div>
+      <span
+        className="flex items-center gap-1 text-xs font-medium"
+        style={{ color: themeColor }}
+      >
+        {t("customFields.show")}
+        <ChevronRight className="h-3.5 w-3.5" />
+      </span>
+    </button>
+  );
+};
+
 const BuildingFacadeView = ({
   project,
   imageUrl,
@@ -1007,9 +1129,12 @@ const BuildingFacadeView = ({
             </div>
           )}
 
-          {showPopup && selectedFloor !== null && popupPosition && (
-            <FloorPopup Number={selectedFloor} position={popupPosition} />
-          )}
+          {showPopup &&
+            selectedFloor !== null &&
+            popupPosition &&
+            !isMobile && (
+              <FloorPopup Number={selectedFloor} position={popupPosition} />
+            )}
           <InteractionHint storageKey="building" />
         </div>
 
@@ -1024,6 +1149,20 @@ const BuildingFacadeView = ({
             <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
           </button>
         )} */}
+        {isMobile && isExpanded && selectedFloor !== null && (
+          <MobileFloorInfoBar
+            selectedFloor={selectedFloor}
+            project={project}
+            apartments={apartments}
+            facadeSettings={facadeSettings}
+            visibleFields={visibleFields}
+            selectedCurrency={selectedCurrency}
+            themeColor={themeColor}
+            onFloorClick={handleFloorClick}
+            getFloorStats={getFloorStats}
+          />
+        )}
+
         {isMobile && isExpanded && floorsWithPolygon.length > 0 && (
           <div className="flex h-20 w-full flex-row items-center justify-center p-4">
             <div className="flex w-full flex-row items-center gap-4">
