@@ -1,59 +1,17 @@
 import {
   BrowserRouter,
   Navigate,
+  Outlet,
   Route,
   Routes,
-  useParams,
 } from "react-router-dom";
-import type { ReactNode } from "react";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
-import {
-  AgentCabinetLayout,
-  type AgentCabinetPage,
-  useAgentCabinetPageRouting,
-} from "@/app/layout";
-import { ProtectedRoute } from "@/app/routing";
+import { AgentCabinetRouter, ProtectedRoute } from "@/app/routing";
 import { AgentWorkspaceProvider } from "@/features/agent-workspace";
 
 import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
-import {
-  AgentSettingsTab,
-  AnalyticsTab,
-  CatalogTab,
-  ContactsTab,
-  DashboardTab,
-  PartnerProgramTab,
-} from "@/pages/tabs";
-
-function AgentCabinetRouter() {
-  const { activePage, setActivePage } = useAgentCabinetPageRouting();
-  const pageContent: Record<AgentCabinetPage, ReactNode> = {
-    dashboard: <DashboardTab />,
-    analytics: <AnalyticsTab />,
-    contacts: <ContactsTab />,
-    catalog: <CatalogTab />,
-    partnerProgram: <PartnerProgramTab />,
-    settings: <AgentSettingsTab />,
-  };
-
-  return (
-    <AgentCabinetLayout activePage={activePage} onChangePage={setActivePage}>
-      {pageContent[activePage]}
-    </AgentCabinetLayout>
-  );
-}
-
-function LegacyRedirect({ page }: { page: string }) {
-  const { lang } = useParams();
-  return (
-    <Navigate
-      to={`/${lang ?? "ru"}/?page=${encodeURIComponent(page)}`}
-      replace
-    />
-  );
-}
 
 export default function App() {
   return (
@@ -62,47 +20,35 @@ export default function App() {
         <LanguageWrapper>
           <Routes>
             <Route
-              path="/:lang/"
+              path="/:lang"
               element={
                 <ProtectedRoute>
+                  <Outlet />
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                index
+                element={
                   <AgentWorkspaceProvider>
                     <AgentCabinetRouter />
                   </AgentWorkspaceProvider>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/:lang/application"
-              element={
-                <ProtectedRoute>
-                  <LegacyRedirect page="dashboard" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/:lang/set-password"
-              element={
-                <ProtectedRoute>
-                  <SetPasswordPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/:lang/projects"
-              element={
-                <ProtectedRoute>
-                  <LegacyRedirect page="catalog" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/:lang/contacts"
-              element={
-                <ProtectedRoute>
-                  <LegacyRedirect page="contacts" />
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
+              <Route
+                path="application"
+                element={<Navigate to="../?page=dashboard" replace />}
+              />
+              <Route path="set-password" element={<SetPasswordPage />} />
+              <Route
+                path="projects"
+                element={<Navigate to="../?page=catalog" replace />}
+              />
+              <Route
+                path="contacts"
+                element={<Navigate to="../?page=contacts" replace />}
+              />
+            </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>
