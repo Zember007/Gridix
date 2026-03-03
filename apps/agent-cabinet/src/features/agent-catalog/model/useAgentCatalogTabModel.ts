@@ -4,8 +4,11 @@ import { useWorkspace } from "@gridix/utils/react";
 import { useLanguage } from "@/shared/lib/language";
 import { Project, toSharedProject } from "@/entities/project";
 import { getProjectDrawer } from "../api/catalog-api";
+import { mapDrawerProject } from "../lib/map-drawer-project";
 import { createShareUrl, getMainAppUrl } from "../lib/project-share";
 import { useAgentCatalogQuery } from "./useAgentCatalogQuery";
+
+const EMPTY_PROJECTS: Project[] = [];
 
 export function useAgentCatalogTabModel() {
   const { language, t } = useLanguage();
@@ -25,23 +28,23 @@ export function useAgentCatalogTabModel() {
   );
 
   const projectsQuery = useAgentCatalogQuery(activeWorkspaceId);
+  const projects = projectsQuery.data ?? EMPTY_PROJECTS;
+  const normalizedSearch = searchQuery.trim().toLowerCase();
 
   const filtered = useMemo(() => {
-    const rows = projectsQuery.data ?? [];
-    const value = searchQuery.trim().toLowerCase();
-    if (!value) return rows;
+    if (!normalizedSearch) return projects;
 
-    return rows.filter((project) => {
+    return projects.filter((project) => {
       return (
         String(project.name ?? "")
           .toLowerCase()
-          .includes(value) ||
+          .includes(normalizedSearch) ||
         String(project.address ?? "")
           .toLowerCase()
-          .includes(value)
+          .includes(normalizedSearch)
       );
     });
-  }, [projectsQuery.data, searchQuery]);
+  }, [normalizedSearch, projects]);
 
   const shareUrlForProject = (project: Project): string | null => {
     return createShareUrl({
@@ -52,7 +55,18 @@ export function useAgentCatalogTabModel() {
     });
   };
 
+  const getProjectWithShareUrl = (sharedProjectId: string) => {
+    const project = projects.find((item) => item.id === sharedProjectId);
+    if (!project) return null;
+
+    const shareUrl = shareUrlForProject(project);
+    if (!shareUrl) return null;
+
+    return { project, shareUrl };
+  };
+
   const handleOpenProject = (project: Project) => {
+    // Open drawer immediately with list data; detailed payload is loaded in effect below.
     setSelectedProject(project);
     setDrawerProject(toSharedProject(project));
   };
@@ -63,13 +77,9 @@ export function useAgentCatalogTabModel() {
   };
 
   const handleShareProject = (sharedProject: SharedProject) => {
-    const project = (projectsQuery.data ?? []).find(
-      (item) => item.id === sharedProject.id,
-    );
-    if (!project) return;
-
-    const shareUrl = shareUrlForProject(project);
-    if (!shareUrl) return;
+    const payload = getProjectWithShareUrl(sharedProject.id);
+    if (!payload) return;
+    const { project, shareUrl } = payload;
 
     if (navigator.share) {
       void navigator.share({ title: project.name, url: shareUrl });
@@ -79,18 +89,14 @@ export function useAgentCatalogTabModel() {
   };
 
   const handleOpenPublicPage = (sharedProject: SharedProject) => {
-    const project = (projectsQuery.data ?? []).find(
-      (item) => item.id === sharedProject.id,
-    );
-    if (!project) return;
-
-    const shareUrl = shareUrlForProject(project);
-    if (!shareUrl) return;
-    window.open(shareUrl, "_blank", "noopener,noreferrer");
+    const payload = getProjectWithShareUrl(sharedProject.id);
+    if (!payload) return;
+    window.open(payload.shareUrl, "_blank", "noopener,noreferrer");
   };
 
   useEffect(() => {
     if (!activeWorkspaceId || !selectedProject) return;
+    // Protect state from out-of-order async responses when selection changes.
     let cancelled = false;
 
     void (async () => {
@@ -104,33 +110,7 @@ export function useAgentCatalogTabModel() {
           throw new Error(response?.error ?? "Failed");
         }
 
-        const api = response.project;
-        setDrawerProject({
-          id: String(api.id),
-          name: String(api.name ?? ""),
-          location: api.location ?? undefined,
-          imageUrl: api.imageUrl ?? undefined,
-          description: api.description ?? undefined,
-          floors:
-            typeof api.floors === "number"
-              ? api.floors
-              : api.floors
-                ? Number(api.floors)
-                : undefined,
-          minPrice: api.minPrice ?? undefined,
-          yield: api.yield ?? undefined,
-          stats: api.stats ?? undefined,
-          media: api.media ?? undefined,
-          constructionProgress: api.constructionProgress ?? undefined,
-          partnershipStatus: "active",
-          partnershipSettings: api.partnershipSettings ?? undefined,
-          commissionPercent:
-            api.partnershipSettings?.commissionType === "percent"
-              ? Number(api.partnershipSettings?.commissionValue ?? 5)
-              : undefined,
-          commissionCondition:
-            api.partnershipSettings?.payoutCondition ?? undefined,
-        });
+        setDrawerProject(mapDrawerProject(response.project));
       } catch (error) {
         console.error("Failed to load project drawer", error);
       }
