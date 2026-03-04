@@ -1,14 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePartner } from "./queries/usePartner";
 import { Button, useToast } from "@gridix/ui";
-import { Save, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
-import {
-  GlobalAccountProfileSection,
-  GlobalAccountSecuritySection,
-  GlobalNotificationSettingsSection,
-} from "@gridix/utils/react";
-import { useCurrentSession } from "@gridix/utils";
 import { PartnerAccountSection } from "./ui/PartnerAccountSection";
 import { PartnerInstructionsSection } from "./ui/PartnerInstructionsSection";
 import { PartnerOverviewSection } from "./ui/PartnerOverviewSection";
@@ -50,26 +44,6 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
-
-  const [authUser, setAuthUser] = useState<{
-    id: string;
-    email: string;
-  } | null>(null);
-  const { data: sessionQuery, isLoading: isSessionLoading } =
-    useCurrentSession();
-
-  useEffect(() => {
-    if (isSessionLoading) return;
-    if (sessionQuery?.user) {
-      setAuthUser({
-        id: sessionQuery.user.id,
-        email: sessionQuery.user.email ?? "",
-      });
-      return;
-    }
-
-    setAuthUser(null);
-  }, [isSessionLoading, sessionQuery?.user]);
 
   // Internal state for tabs mode; external state for sidebar mode
   const [internalTab, setInternalTab] = useState<PartnerSection>("overview");
@@ -327,13 +301,6 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
         {activeTab === "account" && (
           <div className="space-y-6">
             <PartnerAccountSection />
-            {authUser && (
-              <PartnerGlobalSettings
-                userId={authUser.id}
-                userEmail={authUser.email}
-                t={t}
-              />
-            )}
           </div>
         )}
         {activeTab === "overview" && (
@@ -350,72 +317,6 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
     </div>
   );
 };
-
-function PartnerGlobalSettings({
-  userId,
-  userEmail,
-  t,
-}: {
-  userId: string;
-  userEmail: string;
-  t: (key: string) => string;
-}) {
-  const [saving, setSaving] = useState(false);
-  const profileSaveFnRef = useRef<(() => Promise<void>) | null>(null);
-  const notificationSaveFnRef = useRef<(() => Promise<void>) | null>(null);
-
-  const onProfileReady = useCallback(
-    (api: { saveProfile: () => Promise<void> }) => {
-      profileSaveFnRef.current = api.saveProfile;
-    },
-    [],
-  );
-
-  const onNotificationReady = useCallback(
-    (api: { saveNotificationPreferences: () => Promise<void> }) => {
-      notificationSaveFnRef.current = api.saveNotificationPreferences;
-    },
-    [],
-  );
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      if (profileSaveFnRef.current) await profileSaveFnRef.current();
-      if (notificationSaveFnRef.current) await notificationSaveFnRef.current();
-    } catch (e) {
-      console.error("Failed to save:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">
-          {t("adminSettings.account") || "Account settings"}
-        </h2>
-        <Button onClick={handleSave} disabled={saving} size="sm">
-          <Save size={16} className="mr-2" />
-          {saving
-            ? t("adminSettings.saving") || "Saving..."
-            : t("adminSettings.save") || "Save"}
-        </Button>
-      </div>
-
-      <GlobalAccountProfileSection userId={userId} onReady={onProfileReady} />
-
-      <GlobalAccountSecuritySection userEmail={userEmail} />
-
-      <GlobalNotificationSettingsSection
-        userId={userId}
-        userEmail={userEmail}
-        onReady={onNotificationReady}
-      />
-    </div>
-  );
-}
 
 const TabButton: React.FC<{
   label: string;
