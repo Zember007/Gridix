@@ -34,8 +34,30 @@
     "payoutConditionPlaceholder": "E.g.: 50% after first payment…",
     "apply": "Apply"
   },
+  "media": {
+    "renders": "Renders",
+    "videos": "Videos",
+    "presentations": "Presentations",
+    "add": "Add",
+    "uploading": "Uploading...",
+    "loading": "Loading...",
+    "uploadSuccess": "Materials uploaded",
+    "uploadError": "Failed to upload materials"
+  },
   "timeoutError": "Loading projects took too long",
   "updated": "Updated",
   "viewProject": "View project",
-  "widgetCodeCopied": "Widget code copied"
+  "widgetCodeCopied": "Widget code copied",
+  "construction": {
+    "addNews": "Add update",
+    "titlePlaceholder": "Title",
+    "descriptionPlaceholder": "Description...",
+    "publish": "Publish",
+    "noUpdates": "No updates",
+    "delete": "Delete",
+    "addSuccess": "Update added",
+    "addError": "Failed to add update",
+    "deleteSuccess": "Deleted",
+    "deleteError": "Failed to delete"
+  }
 }

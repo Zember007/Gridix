@@ -37,5 +37,27 @@
   "timeoutError": "טעינת פרויקטים ארכה יותר מדי זמן",
   "updated": "מְעוּדכָּן",
   "viewProject": "צפה בפרויקט",
-  "widgetCodeCopied": "קוד הווידג'ט הועתק"
+  "widgetCodeCopied": "קוד הווידג'ט הועתק",
+  "media": {
+    "renders": "מעבד",
+    "videos": "סרטונים",
+    "presentations": "מצגות",
+    "add": "הוסף",
+    "uploading": "טוען...",
+    "loading": "טוען...",
+    "uploadSuccess": "הקבצים נטענו",
+    "uploadError": "לא ניתן לטעון את הקבצים"
+  },
+  "construction": {
+    "addNews": "הוסף עדכון",
+    "titlePlaceholder": "כותרת",
+    "descriptionPlaceholder": "תיאור...",
+    "publish": "פרסם",
+    "noUpdates": "אין עדכונים",
+    "delete": "מחק",
+    "addSuccess": "העדכון נוסף",
+    "addError": "לא ניתן להוסיף עדכון",
+    "deleteSuccess": "נמחק",
+    "deleteError": "לא ניתן למחוק"
+  }
 }

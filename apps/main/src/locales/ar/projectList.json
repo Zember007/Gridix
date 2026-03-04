@@ -37,5 +37,27 @@
   "timeoutError": "استغرق تحميل المشاريع وقتاً طويلاً",
   "updated": "تم التحديث",
   "viewProject": "عرض المشروع",
-  "widgetCodeCopied": "تم نسخ كود الودجت"
+  "widgetCodeCopied": "تم نسخ كود الودجت",
+  "media": {
+    "renders": "يجعل",
+    "videos": "فيديوهات",
+    "presentations": "العروض التقديمية",
+    "add": "إضافة",
+    "uploading": "جارٍ التحميل...",
+    "loading": "جارٍ التحميل...",
+    "uploadSuccess": "تم تحميل الملفات",
+    "uploadError": "تعذر تحميل الملفات"
+  },
+  "construction": {
+    "addNews": "إضافة تحديث",
+    "titlePlaceholder": "العنوان",
+    "descriptionPlaceholder": "الوصف...",
+    "publish": "نشر",
+    "noUpdates": "لا توجد تحديثات",
+    "delete": "حذف",
+    "addSuccess": "تمت إضافة التحديث",
+    "addError": "تعذرت إضافة التحديث",
+    "deleteSuccess": "تم الحذف",
+    "deleteError": "تعذر الحذف"
+  }
 }

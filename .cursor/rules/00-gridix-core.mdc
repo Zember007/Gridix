@@ -1,0 +1,36 @@
+---
+description: Gridix core AI policy (priority, commands, security, quality, task flow)
+alwaysApply: true
+---
+
+# Gridix Core
+
+## Task Flow
+
+1. Understand scope: which packages and FSD layers are affected.
+2. If creating/moving files in `apps/main/src`, classify per FSD rules.
+3. Implement changes scoped to the request; no unrelated refactors.
+4. Run checks proportional to change size (see Quality).
+5. Briefly report what was done and any skipped checks.
+
+## Priority
+
+1) FSD-decomposer skill → 2) `CONTRIBUTING.md` → 3) `AGENTS.md`
+
+## Commands
+
+- `pnpm` only. Use `pnpm --filter <pkg> <cmd>` or `pnpm turbo run <task>`.
+- Confirm package name from `package.json` before filtered commands.
+
+## Security
+
+- Never commit `.env`, secrets, tokens, or production credentials.
+- If exposure risk is detected, stop and ask before proceeding.
+
+## Quality (proportional to change)
+
+- Docs/comments only: skip heavy checks, state what was skipped.
+- Single-package code change: targeted `lint` + `typecheck` for that package.
+- Cross-package or risky change: `pnpm turbo run lint` + `pnpm turbo run typecheck`.
+- Build: only for substantial or build-affecting changes.
+- Tests (`@gridix/main`): only for behavior changes in `apps/main`.
