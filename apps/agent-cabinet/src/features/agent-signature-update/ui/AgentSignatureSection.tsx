@@ -39,12 +39,15 @@ export function AgentSignatureSection(props: AgentSignatureSectionProps) {
   const [uploadedSignatureDataUrl, setUploadedSignatureDataUrl] = useState<
     string | null
   >(null);
+  const [signatureCacheBust, setSignatureCacheBust] = useState(() =>
+    Date.now().toString(),
+  );
   const [saving, setSaving] = useState(false);
   const [showExisting, setShowExisting] = useState(
     !!props.existingSignaturePath,
   );
   const existingSignatureUrl = props.existingSignaturePath
-    ? resolveSignatureUrl(props.existingSignaturePath)
+    ? resolveSignatureUrl(props.existingSignaturePath, signatureCacheBust)
     : null;
 
   useEffect(() => {
@@ -56,6 +59,7 @@ export function AgentSignatureSection(props: AgentSignatureSectionProps) {
   useEffect(() => {
     if (props.existingSignaturePath) {
       setShowExisting(true);
+      setSignatureCacheBust(Date.now().toString());
     }
   }, [props.existingSignaturePath]);
 
@@ -87,6 +91,7 @@ export function AgentSignatureSection(props: AgentSignatureSectionProps) {
       });
       toast.success(props.t("common.agent.application.signatureUpdated"));
       await props.onUpdated();
+      setSignatureCacheBust(Date.now().toString());
       setShowExisting(true);
       setSignatureDataUrl(null);
       setUploadedSignatureDataUrl(null);
