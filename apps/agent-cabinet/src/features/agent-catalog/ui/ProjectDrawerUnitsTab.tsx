@@ -1,8 +1,7 @@
-﻿import type { SharedProject } from "@gridix/ui";
+import type { SharedProject } from "@gridix/ui";
 import { UnitsChessboard } from "@gridix/ui";
-import { getUnitStatusGroup } from "@/entities/project";
+import { getUnitStatusGroup, useProjectUnitsQuery } from "@/entities/project";
 import { createUnitUrl } from "../lib/project-share";
-import { useProjectUnitsQuery } from "../model/useProjectUnitsQuery";
 
 interface Props {
   project: SharedProject;

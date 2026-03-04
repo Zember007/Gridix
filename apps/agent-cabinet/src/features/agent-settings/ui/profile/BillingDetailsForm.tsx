@@ -1,6 +1,6 @@
 import { Input, Label, Switch } from "@gridix/ui";
 import { CreditCard } from "lucide-react";
-import type { UserProfileRow } from "../../model/types";
+import type { UserProfileRow } from "@/entities/agent-profile";
 
 type Props = {
   value: Partial<UserProfileRow>;

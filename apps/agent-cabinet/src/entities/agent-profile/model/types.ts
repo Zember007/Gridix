@@ -1,0 +1,22 @@
+export type UserProfileRow = {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  company_name: string | null;
+  phone: string | null;
+  preferred_locale: string;
+  person_type: string | null;
+  tax_id: string | null;
+  legal_address: string | null;
+  bank_name: string | null;
+  iban: string | null;
+  billing_currency: string | null;
+  is_vat_payer: boolean | null;
+  company_type: string | null;
+  registered_office: string | null;
+  representative_name: string | null;
+  representative_title: string | null;
+  signature_path: string | null;
+  signature_method: string | null;
+  signature_meta: unknown;
+};

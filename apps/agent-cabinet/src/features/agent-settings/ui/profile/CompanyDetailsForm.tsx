@@ -1,5 +1,5 @@
 import { Input, Label } from "@gridix/ui";
-import type { UserProfileRow } from "../../model/types";
+import type { UserProfileRow } from "@/entities/agent-profile";
 
 type Props = {
   personType: "company" | "individual";
