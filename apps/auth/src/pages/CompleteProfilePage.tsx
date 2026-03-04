@@ -11,13 +11,14 @@ import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
 import type { AccountType } from "@/components/ui/sign-in";
 import { SignInPage } from "@/components/ui/sign-in";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const SIGNIN_HERO_IMAGE =
   "https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80";
 
 export default function CompleteProfilePage() {
   const { navigate } = useLanguageNavigation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const redirectToUrl = searchParams.get("redirect_to");
 
@@ -26,7 +27,9 @@ export default function CompleteProfilePage() {
   const [accountType, setAccountType] = useState<AccountType>("developer");
   const [sessionUser, setSessionUser] = useState<any>(null);
 
-  const lang = window.location.pathname.split("/")[1] || "en";
+  const lang = language || window.location.pathname.split("/")[1] || "en";
+  const privacyPolicyUrl = `https://gridix.live/${lang}/privacy/`;
+  const offerAgreementUrl = `https://gridix.live/${lang}/offerta/`;
 
   useEffect(() => {
     let mounted = true;
@@ -76,7 +79,11 @@ export default function CompleteProfilePage() {
   if (loading) return <FullPageLoaderView />;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16 md:pt-20 lg:pt-8">
+    <div className="relative min-h-screen bg-slate-50 pt-16 md:pt-20 lg:pt-8">
+      <div className="absolute right-4 top-4 z-50 md:right-8 md:top-8">
+        <LanguageSwitcher />
+      </div>
+
       <SignInPage
         defaultMode="signup"
         heroImageSrc={SIGNIN_HERO_IMAGE}
@@ -96,7 +103,9 @@ export default function CompleteProfilePage() {
           emailLabel: t("auth.email"),
           emailPlaceholder: sessionUser?.email || t("auth.emailPlaceholder"),
           passwordLabel: t("auth.password"),
-          passwordPlaceholder: "***** (OAuth user)",
+          passwordPlaceholder: t("auth.passwordPlaceholderOAuth", {
+            defaultValue: "•••••••• (Social Login)",
+          }),
           fullNameLabel: t("auth.fullName"),
           fullNamePlaceholder:
             sessionUser?.user_metadata?.full_name ||
@@ -109,6 +118,28 @@ export default function CompleteProfilePage() {
           accountTypeDeveloper: t("auth.developer"),
           accountTypePartner: t("auth.partner"),
           signUpButton: t("auth.continueToApp", { defaultValue: "Continue" }),
+          privacyOfferAgreement: (
+            <span>
+              {t("auth.privacyOfferAgreementPrefix")}{" "}
+              <a
+                href={privacyPolicyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[var(--admin-primary)] hover:underline"
+              >
+                {t("auth.privacyPolicyLabel")}
+              </a>{" "}
+              {t("auth.privacyOfferAgreementAnd")}{" "}
+              <a
+                href={offerAgreementUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[var(--admin-primary)] hover:underline"
+              >
+                {t("auth.offerAgreementLabel")}
+              </a>
+            </span>
+          ),
         }}
         onSubmit={async (payload) => {
           setSubmitting(true);

@@ -34,30 +34,11 @@ export default function CallbackPage() {
 
         // Apply pending account type selection (Google OAuth flow)
         try {
-          const pendingAccountType = localStorage.getItem(
-            LS_PENDING_ACCOUNT_TYPE,
-          );
           const pendingRef = localStorage.getItem(LS_PENDING_REF);
           const pendingInvite = localStorage.getItem(LS_PENDING_INVITE);
 
-          if (pendingAccountType) {
-            // Ensure user_profiles has correct account_type for redirect logic
-            const { error: upsertError } = await supabase
-              .from("user_profiles")
-              .upsert(
-                {
-                  id: session.user.id,
-                  account_type: pendingAccountType,
-                } as any,
-                { onConflict: "id" },
-              );
-            if (upsertError) {
-              console.error(
-                "Failed to upsert user_profiles.account_type:",
-                upsertError,
-              );
-            }
-          }
+          // NOTE: Automatic account type assignment is disabled.
+          // The user will select their account type on the Complete Profile page.
 
           if (pendingRef) {
             const { data: partner, error: partnerError } = await supabase
