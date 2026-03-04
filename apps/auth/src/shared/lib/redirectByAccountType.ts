@@ -98,8 +98,14 @@ export async function redirectToAppByAccountType(
     }
   }
 
-  // Last-resort fallback to keep login unblocked for legacy inconsistent rows.
-  if (!accountType) accountType = "developer";
+  // No last-resort fallback here anymore; we expect the accountType to be resolved
+  // or the user to be redirected to the Complete Profile page by the caller.
+  if (!accountType) {
+    console.warn(
+      "redirectToAppByAccountType: accountType still missing, defaulting to developer for redirect",
+    );
+    accountType = "developer";
+  }
 
   const agentCabinet = getEnv(
     "VITE_AGENT_CABINET_URL",

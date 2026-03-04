@@ -17,7 +17,7 @@ const SIGNIN_HERO_IMAGE =
 
 export default function CompleteProfilePage() {
   const { navigate } = useLanguageNavigation();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const redirectToUrl = searchParams.get("redirect_to");
 
@@ -117,10 +117,10 @@ export default function CompleteProfilePage() {
                 {
                   id: sessionUser.id,
                   account_type: payload.accountType,
-                  full_name: payload.fullName,
-                  company_name: payload.companyName,
-                  phone: payload.phone,
-                },
+                  full_name: payload.fullName ?? null,
+                  company_name: payload.companyName ?? null,
+                  phone: payload.phone ?? null,
+                } as any,
                 { onConflict: "id" },
               );
             if (patchProfileError) throw patchProfileError;
