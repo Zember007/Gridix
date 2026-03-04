@@ -77,7 +77,10 @@ export default function SubscriptionTab() {
     },
   );
 
-  const handleViewInvoice = async (subscriptionId?: string) => {
+  const handleViewInvoice = async (
+    subscriptionId?: string,
+    payerType?: BillingDetails["type"],
+  ) => {
     if (!subscriptionId) return;
     try {
       const sessionData = await fetchCurrentSession();
@@ -90,7 +93,10 @@ export default function SubscriptionTab() {
       const { data, error } = await supabase.functions.invoke(
         "generate-invoice",
         {
-          body: { subscription_id: subscriptionId },
+          body: {
+            subscription_id: subscriptionId,
+            payer_type: payerType,
+          },
           headers: {
             Authorization: `Bearer ${sessionData.session.access_token}`,
           },
@@ -210,7 +216,7 @@ export default function SubscriptionTab() {
         const subscriptionId = result?.invoice?.subscription_id;
         if (subscriptionId) {
           setTimeout(() => {
-            handleViewInvoice(subscriptionId as string);
+            handleViewInvoice(subscriptionId as string, payer.type);
           }, 1000);
         }
       } else {
