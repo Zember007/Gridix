@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@gridix/utils/api";
+import { type Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
 
 interface Props {
   isOpen: boolean;
@@ -24,12 +25,14 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PartnerInviteModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const { language, t } = useLanguage();
+  const languageOptions = Object.keys(LANGUAGE_CONFIG) as Language[];
   const [copied, setCopied] = useState(false);
   const [baseUrl, setBaseUrl] = useState("");
   const [showQr, setShowQr] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
+  const [inviteLanguage, setInviteLanguage] = useState<Language>(language);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -37,8 +40,12 @@ export const PartnerInviteModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   }, []);
 
+  useEffect(() => {
+    setInviteLanguage(language);
+  }, [language, isOpen]);
+
   const developerId = user?.id;
-  const inviteLink = `${baseUrl}/${language}/agent/apply?developer_id=${developerId}`;
+  const inviteLink = `${baseUrl}/${inviteLanguage}/agent/apply?developer_id=${developerId}`;
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteLink)}`;
 
   const handleCopy = (text: string) => {
@@ -63,7 +70,7 @@ export const PartnerInviteModal: React.FC<Props> = ({ isOpen, onClose }) => {
             template_key: "partner_invite",
             to_email: trimmed,
             payload: { invite_link: inviteLink },
-            locale: language,
+            locale: inviteLanguage,
           },
         },
       );
@@ -157,9 +164,30 @@ export const PartnerInviteModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
             {/* Invite Link */}
             <div className="min-w-0 space-y-2 overflow-hidden">
-              <label className="text-xs font-bold uppercase text-slate-500">
-                {t("partners.inviteModal.registrationLinkLabel")}
-              </label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-bold uppercase text-slate-500">
+                  {t("partners.inviteModal.registrationLinkLabel")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase text-slate-400">
+                    {t("partners.inviteModal.linkLanguageLabel")}
+                  </span>
+                  <select
+                    value={inviteLanguage}
+                    onChange={(e) =>
+                      setInviteLanguage(e.target.value as Language)
+                    }
+                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 outline-none transition-colors focus:border-[var(--admin-primary)]"
+                  >
+                    {languageOptions.map((code) => (
+                      <option key={code} value={code}>
+                        {LANGUAGE_CONFIG[code].flag}{" "}
+                        {LANGUAGE_CONFIG[code].name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="flex min-w-0 gap-2">
                 <div className="min-w-0 flex-1 overflow-hidden truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-sm text-slate-600">
                   {inviteLink}

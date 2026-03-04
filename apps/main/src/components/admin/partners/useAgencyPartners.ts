@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { AgencyPartner, PartnerFilter } from "./types";
+import { AgencyPartner, PartnerFilter, PayoutItem } from "./types";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -292,14 +292,15 @@ export function useAgencyPartners() {
     }
   };
 
-  const markPaid = async (partnerId: string) => {
+  const markPaid = async (payoutIds: string[]) => {
     try {
+      if (payoutIds.length === 0) return;
+
       const nowIso = new Date().toISOString();
       const { error } = await supabase
         .from("agent_payouts")
         .update({ status: "paid", payout_date: nowIso })
-        .eq("agent_id", partnerId)
-        .eq("status", "pending");
+        .in("id", payoutIds);
 
       if (error) throw error;
 
@@ -307,6 +308,79 @@ export function useAgencyPartners() {
       fetchPartners(); // Refresh stats
     } catch (error: unknown) {
       toast.error(t("partners.agencyNotifications.payoutStatusError"));
+    }
+  };
+
+  const getPendingPayouts = async (
+    partnerId: string,
+  ): Promise<PayoutItem[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("agent_payouts")
+        .select("*")
+        .eq("agent_id", partnerId)
+        .eq("status", "pending");
+
+      if (error) throw error;
+
+      // Extract lead IDs from 'method' (format 'sale:UUID')
+      const leadIds = (data ?? [])
+        .map((p) => {
+          const m = String(p.method || "");
+          return m.startsWith("sale:") ? m.split(":")[1] : null;
+        })
+        .filter(Boolean) as string[];
+
+      // Fetch lead names if any
+      const leadNames = new Map<string, string>();
+      if (leadIds.length > 0) {
+        const { data: leadsData } = await supabase
+          .from("leads")
+          .select("id, name")
+          .in("id", leadIds);
+
+        leadsData?.forEach((l) => leadNames.set(l.id, l.name || ""));
+      }
+
+      return (
+        data?.map((p) => {
+          const methodStr = String(p.method || "");
+          const leadId = methodStr.startsWith("sale:")
+            ? methodStr.split(":")[1]
+            : null;
+          return {
+            id: p.id,
+            amount: Number(p.amount || 0),
+            date: p.payout_date || p.created_at,
+            leadName: leadId ? leadNames.get(leadId) || null : null,
+            leadId: leadId || null,
+          };
+        }) || []
+      );
+    } catch (error) {
+      console.error("Error fetching pending payouts:", error);
+      return [];
+    }
+  };
+
+  const deletePartner = async (partnerId: string) => {
+    if (isManagerMode) {
+      toast.error(t("partners.agencyNotifications.managerCannotDelete"));
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("agent_applications")
+        .delete()
+        .eq("id", partnerId);
+
+      if (error) throw error;
+
+      toast.success(t("partners.agencyNotifications.deleted"));
+      fetchPartners();
+    } catch (error: unknown) {
+      toast.error(t("partners.agencyNotifications.deleteError"));
     }
   };
 
@@ -330,6 +404,7 @@ export function useAgencyPartners() {
 
   return {
     developerId,
+    isManagerMode,
     partners: filteredPartners,
     loading,
     filters,
@@ -338,6 +413,8 @@ export function useAgencyPartners() {
     updatePartnerStatus,
     updatePartnerCommission,
     markPaid,
+    getPendingPayouts,
+    deletePartner,
     stats,
     refresh: fetchPartners,
   };

@@ -47,3 +47,11 @@ export interface PartnerFilter {
   dateFrom?: string;
   dateTo?: string;
 }
+
+export interface PayoutItem {
+  id: string;
+  amount: number;
+  date: string;
+  leadName: string | null;
+  leadId: string | null;
+}
