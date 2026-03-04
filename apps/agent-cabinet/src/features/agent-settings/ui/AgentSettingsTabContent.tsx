@@ -2,19 +2,17 @@ import {
   GlobalAccountSecuritySection,
   GlobalNotificationSettingsSection,
 } from "@gridix/utils/react";
-import { Card, CardContent, Tabs, TabsContent } from "@gridix/ui";
+import { Tabs, TabsContent } from "@gridix/ui";
 import { Save } from "lucide-react";
 import { ModuleHeader } from "@/shared/ui/ModuleHeader";
 import { useLanguage } from "@/shared/lib/language";
 import {
-  AgentContractCard,
   AgentSettingsTabs,
-  AgentSignatureSection,
-  AgentSignedContractsSection,
   AgentUserProfileSection,
   type SettingsTabValue,
   useAgentSettingsTabModel,
 } from "@/features/agent-settings";
+import { AgentSettingsDataTabPanel } from "./AgentSettingsDataTabPanel";
 
 export function AgentSettingsTabContent() {
   const { t } = useLanguage();
@@ -42,6 +40,12 @@ export function AgentSettingsTabContent() {
     userId,
   } = useAgentSettingsTabModel(translate);
 
+  const profileSignaturePath = myProfileQuery.data?.signature_path ?? null;
+  const profileSignatureMethod = myProfileQuery.data?.signature_method ?? null;
+  const saveAllLabel = saving
+    ? t("common.settings.savingProfile")
+    : t("common.settings.saveAll");
+
   return (
     <div style={themeVariables}>
       <ModuleHeader
@@ -49,9 +53,7 @@ export function AgentSettingsTabContent() {
         subtitle={t("common.settings.subtitle")}
         hideSearch
         primaryAction={{
-          label: saving
-            ? t("common.settings.savingProfile")
-            : t("common.settings.saveAll"),
+          label: saveAllLabel,
           icon: <Save size={18} />,
           onClick: () => void handleSaveAll(),
         }}
@@ -88,48 +90,21 @@ export function AgentSettingsTabContent() {
           </TabsContent>
 
           <TabsContent value="data" className="space-y-6">
-            <AgentSignatureSection
-              userId={userId}
-              existingSignaturePath={
-                myProfileQuery.data?.signature_path ?? null
-              }
-              existingMethod={myProfileQuery.data?.signature_method ?? null}
-              onUpdated={refreshProfile}
-              t={translate}
-            />
-
-            <AgentSignedContractsSection
-              applicationId={activeWorkspaceId ?? null}
-              loading={contractsQuery.isLoading}
-              error={contractsQuery.error as Error | null}
+            <AgentSettingsDataTabPanel
+              activeWorkspaceId={activeWorkspaceId}
+              contractData={contractData ?? null}
+              contractError={contractError}
+              contractLoading={contractLoading}
               contracts={contractsQuery.data ?? []}
-              onRefresh={refreshContracts}
+              contractsError={contractsQuery.error as Error | null}
+              contractsLoading={contractsQuery.isLoading}
+              profileSignatureMethod={profileSignatureMethod}
+              profileSignaturePath={profileSignaturePath}
+              refreshContracts={refreshContracts}
+              refreshProfile={refreshProfile}
               t={translate}
+              userId={userId}
             />
-
-            {activeWorkspaceId ? (
-              <AgentContractCard
-                data={contractData ?? null}
-                loading={contractLoading}
-                error={contractError}
-                t={translate}
-              />
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center text-[var(--admin-text-muted)]">
-                  <p className="text-base font-medium">
-                    {t("common.workspace.noActiveTitle")}
-                  </p>
-                  <p className="mt-1 text-sm">
-                    {t("common.workspace.pickInSidebar")}
-                  </p>
-                  <p className="mt-4 text-xs">
-                    {t("common.settings.contractTitle")}{" "}
-                    {t("common.settings.contractDesc").toLowerCase()}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
         </Tabs>
       </div>
