@@ -1,13 +1,14 @@
 import { Card, CardContent } from "@gridix/ui";
-import {
-  AgentContractCard,
-  AgentSignatureSection,
-  AgentSignedContractsSection,
-} from "@/features/agent-settings";
-import type { AgentApplicationSettings, SignedContract } from "../model/types";
-import type { SettingsTranslateFn } from "./types";
+import type {
+  AgentApplicationSettings,
+  SignedContract,
+} from "../../model/types";
+import { AgentContractCard } from "../cards/AgentContractCard";
+import { AgentSignatureSection } from "./AgentSignatureSection";
+import { AgentSignedContractsSection } from "./AgentSignedContractsSection";
+import type { SettingsTranslateFn } from "../types";
 
-interface AgentSettingsDataTabPanelProps {
+interface AgentSettingsDataSectionProps {
   activeWorkspaceId: string | null;
   contractData: AgentApplicationSettings | null;
   contractError: Error | null;
@@ -40,9 +41,7 @@ function EmptyWorkspaceContractState({ t }: { t: SettingsTranslateFn }) {
   );
 }
 
-export function AgentSettingsDataTabPanel(
-  props: AgentSettingsDataTabPanelProps,
-) {
+export function AgentSettingsDataSection(props: AgentSettingsDataSectionProps) {
   return (
     <>
       <AgentSignatureSection

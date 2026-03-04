@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@gridix/ui";
 import { Download, FileCheck, FileText } from "lucide-react";
-import type { AgentSignedContractsSectionProps } from "./types";
+import type { AgentSignedContractsSectionProps } from "../types";
 
 export function AgentSignedContractsSection(
   props: AgentSignedContractsSectionProps,

@@ -1,15 +1,15 @@
 import type {
   AgentApplicationSettings,
-  SettingsTabValue,
+  SettingsSectionValue,
   SignedContract,
   UserProfileRow,
 } from "../model/types";
 
 export type SettingsTranslateFn = (key: string) => string;
 
-export interface AgentSettingsTabsProps {
-  tab: SettingsTabValue;
-  onTabChange: (value: SettingsTabValue) => void;
+export interface AgentSettingsSectionsSwitcherProps {
+  activeSection: SettingsSectionValue;
+  onSectionChange: (value: SettingsSectionValue) => void;
   t: SettingsTranslateFn;
 }
 

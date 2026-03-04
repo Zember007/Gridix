@@ -16,11 +16,11 @@ import {
   useMySignedContracts,
   useMyUserProfile,
 } from "./queries";
-import type { SettingsTabValue, UserProfileRow } from "./types";
+import type { SettingsSectionValue, UserProfileRow } from "./types";
 
 export type SettingsTranslateFn = (key: string) => string;
 
-export interface AgentSettingsTabModel {
+export interface AgentSettingsPageModel {
   activeWorkspaceId: string | null;
   contractData: Awaited<ReturnType<typeof useAgentContractSettings>>["data"];
   contractError: Error | null;
@@ -38,20 +38,20 @@ export interface AgentSettingsTabModel {
   refreshProfile: () => Promise<void>;
   saving: boolean;
   setProfileForm: (next: Partial<UserProfileRow>) => void;
-  setTab: (next: SettingsTabValue) => void;
-  tab: SettingsTabValue;
+  setSection: (next: SettingsSectionValue) => void;
+  section: SettingsSectionValue;
   themeVariables: CSSProperties;
   userEmail: string;
   userId: string | null;
 }
 
-export function useAgentSettingsTabModel(
+export function useAgentSettingsPageModel(
   t: SettingsTranslateFn,
-): AgentSettingsTabModel {
+): AgentSettingsPageModel {
   const { user } = useAuth();
   const { activeWorkspaceId } = useWorkspace();
 
-  const [tab, setTab] = useState<SettingsTabValue>("company");
+  const [section, setSection] = useState<SettingsSectionValue>("company");
   const [saving, setSaving] = useState(false);
   const notificationSaveFnRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -133,8 +133,8 @@ export function useAgentSettingsTabModel(
     },
     saving,
     setProfileForm,
-    setTab,
-    tab,
+    setSection,
+    section,
     themeVariables,
     userEmail: user?.email ?? "",
     userId: user?.id ?? null,

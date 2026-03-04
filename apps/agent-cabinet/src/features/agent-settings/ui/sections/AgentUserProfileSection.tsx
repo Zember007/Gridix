@@ -7,13 +7,13 @@ import {
   CardTitle,
 } from "@gridix/ui";
 import { BadgeCheck, Save } from "lucide-react";
-import type { AgentUserProfileSectionProps } from "./types";
+import type { AgentUserProfileSectionProps } from "../types";
 import {
   BillingDetailsForm,
   CompanyDetailsForm,
   PersonalDetailsForm,
   PersonTypeSwitcher,
-} from "./profile";
+} from "../profile";
 
 export function AgentUserProfileSection(props: AgentUserProfileSectionProps) {
   const value = props.value;

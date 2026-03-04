@@ -8,17 +8,20 @@ import {
   TabsTrigger,
 } from "@gridix/ui";
 import { Bell, Building2, Database, User } from "lucide-react";
-import type { AgentSettingsTabsProps } from "./types";
+import type { AgentSettingsSectionsSwitcherProps } from "../types";
 
-export function AgentSettingsTabs({
-  tab,
-  onTabChange,
+export function AgentSettingsSectionsSwitcher({
+  activeSection,
+  onSectionChange,
   t,
-}: AgentSettingsTabsProps) {
+}: AgentSettingsSectionsSwitcherProps) {
   return (
     <TabsList className="h-auto w-full justify-start rounded-xl border border-[var(--admin-border)] bg-[var(--admin-background-secondary)] p-2">
       <div className="w-full sm:hidden">
-        <Select value={tab} onValueChange={(v) => onTabChange(v as typeof tab)}>
+        <Select
+          value={activeSection}
+          onValueChange={(v) => onSectionChange(v as typeof activeSection)}
+        >
           <SelectTrigger className="h-10 w-full rounded-lg border-[var(--admin-border)] bg-[var(--admin-card-background)]">
             <SelectValue placeholder={t("adminSettings.company")} />
           </SelectTrigger>

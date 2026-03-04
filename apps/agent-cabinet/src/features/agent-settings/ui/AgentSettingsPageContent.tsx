@@ -6,15 +6,15 @@ import { Tabs, TabsContent } from "@gridix/ui";
 import { Save } from "lucide-react";
 import { ModuleHeader } from "@/shared/ui/ModuleHeader";
 import { useLanguage } from "@/shared/lib/language";
+import type { SettingsSectionValue } from "../model/types";
+import { useAgentSettingsPageModel } from "../model/useAgentSettingsPageModel";
 import {
-  AgentSettingsTabs,
   AgentUserProfileSection,
-  type SettingsTabValue,
-  useAgentSettingsTabModel,
+  AgentSettingsDataSection,
+  AgentSettingsSectionsSwitcher,
 } from "@/features/agent-settings";
-import { AgentSettingsDataTabPanel } from "./AgentSettingsDataTabPanel";
 
-export function AgentSettingsTabContent() {
+export function AgentSettingsPageContent() {
   const { t } = useLanguage();
   const translate = (key: string) => String(t(key));
   const {
@@ -32,13 +32,13 @@ export function AgentSettingsTabContent() {
     refreshContracts,
     refreshProfile,
     saving,
+    section,
     setProfileForm,
-    setTab,
-    tab,
+    setSection,
     themeVariables,
     userEmail,
     userId,
-  } = useAgentSettingsTabModel(translate);
+  } = useAgentSettingsPageModel(translate);
 
   const profileSignaturePath = myProfileQuery.data?.signature_path ?? null;
   const profileSignatureMethod = myProfileQuery.data?.signature_method ?? null;
@@ -61,11 +61,15 @@ export function AgentSettingsTabContent() {
 
       <div className="p-4 md:p-6">
         <Tabs
-          value={tab}
-          onValueChange={(value) => setTab(value as SettingsTabValue)}
+          value={section}
+          onValueChange={(value) => setSection(value as SettingsSectionValue)}
           className="space-y-6"
         >
-          <AgentSettingsTabs tab={tab} onTabChange={setTab} t={translate} />
+          <AgentSettingsSectionsSwitcher
+            activeSection={section}
+            onSectionChange={setSection}
+            t={translate}
+          />
 
           <TabsContent value="company" className="space-y-6">
             <AgentUserProfileSection
@@ -90,7 +94,7 @@ export function AgentSettingsTabContent() {
           </TabsContent>
 
           <TabsContent value="data" className="space-y-6">
-            <AgentSettingsDataTabPanel
+            <AgentSettingsDataSection
               activeWorkspaceId={activeWorkspaceId}
               contractData={contractData ?? null}
               contractError={contractError}

@@ -11,9 +11,9 @@ import {
   Input,
 } from "@gridix/ui";
 import { toast } from "sonner";
-import { resolveSignatureUrl } from "../lib/signature-url";
-import { useSignatureCanvas } from "../model/useSignatureCanvas";
-import type { AgentSignatureSectionProps } from "./types";
+import { resolveSignatureUrl } from "../../lib/signature-url";
+import { useSignatureCanvas } from "../../model/useSignatureCanvas";
+import type { AgentSignatureSectionProps } from "../types";
 
 export function AgentSignatureSection(props: AgentSignatureSectionProps) {
   const {

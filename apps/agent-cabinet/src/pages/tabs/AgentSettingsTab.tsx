@@ -1,5 +1,5 @@
-import { AgentSettingsTabContent } from "@/features/agent-settings";
+import { AgentSettingsPageContent } from "@/features/agent-settings";
 
 export function AgentSettingsTab() {
-  return <AgentSettingsTabContent />;
+  return <AgentSettingsPageContent />;
 }

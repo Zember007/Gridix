@@ -47,4 +47,8 @@ export type SignedContract = {
   template_lang: string | null;
 };
 
-export type SettingsTabValue = "company" | "account" | "notifications" | "data";
+export type SettingsSectionValue =
+  | "company"
+  | "account"
+  | "notifications"
+  | "data";

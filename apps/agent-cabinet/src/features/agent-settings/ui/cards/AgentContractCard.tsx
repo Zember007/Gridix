@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@gridix/ui";
-import type { AgentContractCardProps } from "./types";
+import type { AgentContractCardProps } from "../types";
 
 export function AgentContractCard({
   data,
