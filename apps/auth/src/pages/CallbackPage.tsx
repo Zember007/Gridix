@@ -104,9 +104,37 @@ export default function CallbackPage() {
           console.warn("Pending OAuth data apply failed:", e);
         }
 
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("account_type, full_name, company_name")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        const isProfileValid =
+          profile &&
+          profile.account_type &&
+          profile.full_name &&
+          (profile.account_type !== "developer" || profile.company_name);
+
+        const lang = window.location.pathname.split("/")[1] || "en";
+
+        if (!isProfileValid) {
+          window.location.replace(
+            `/${lang}/auth/complete-profile${
+              redirectToUrl
+                ? `?redirect_to=${encodeURIComponent(redirectToUrl)}`
+                : ""
+            }#${new URLSearchParams({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token ?? "",
+            }).toString()}`,
+          );
+          return;
+        }
+
         await redirectToAppByAccountType(supabase, session, {
           redirectToUrl: redirectToUrl ?? null,
-          lang: window.location.pathname.split("/")[1] || "en",
+          lang,
         });
       } catch (e) {
         const err = e as { message?: string };

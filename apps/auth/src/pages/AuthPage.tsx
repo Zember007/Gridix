@@ -127,6 +127,26 @@ export default function AuthPage() {
       const { data } = await refetchSession();
       const session = data?.session ?? null;
       if (cancelled || !session?.user?.id) return;
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("account_type, full_name, company_name")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      const isProfileValid =
+        profile &&
+        profile.account_type &&
+        profile.full_name &&
+        (profile.account_type !== "developer" || profile.company_name);
+
+      if (!isProfileValid) {
+        navigate(
+          `/auth/complete-profile${redirectToUrl ? `?redirect_to=${encodeURIComponent(redirectToUrl)}` : ""}`,
+        );
+        return;
+      }
+
       await redirectToAppByAccountType(supabase, session, {
         redirectToUrl: redirectToUrl ?? null,
         lang: window.location.pathname.split("/")[1] || "en",

@@ -60,8 +60,33 @@ export default function RootPage() {
 
       if (session?.user?.id) {
         try {
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("account_type, full_name, company_name")
+            .eq("id", session.user.id)
+            .maybeSingle();
+
+          const isProfileValid =
+            profile &&
+            profile.account_type &&
+            profile.full_name &&
+            (profile.account_type !== "developer" || profile.company_name);
+
+          const currentLang =
+            lang || window.location.pathname.split("/")[1] || "en";
+
+          if (!isProfileValid) {
+            window.location.replace(
+              `/${currentLang}/auth/complete-profile#${new URLSearchParams({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token ?? "",
+              }).toString()}`,
+            );
+            return;
+          }
+
           await redirectToAppByAccountType(supabase, session, {
-            lang: lang || window.location.pathname.split("/")[1] || "en",
+            lang: currentLang,
           });
           setAction("redirect");
         } catch (e) {
