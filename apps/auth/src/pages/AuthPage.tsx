@@ -99,6 +99,11 @@ export default function AuthPage() {
     isLoading: checkingPartner,
     error: partnerError,
   } = usePartnerByCode(refCode);
+  const partnerDisplayName =
+    partnerInfo?.user_profiles?.full_name?.trim() ||
+    partnerInfo?.user_profiles?.email?.trim() ||
+    partnerInfo?.partner_code ||
+    null;
 
   const hashIndicatesRecovery = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -254,12 +259,14 @@ export default function AuthPage() {
           heroImageSrc={SIGNIN_HERO_IMAGE}
           banner={
             <>
-              {refCode && partnerInfo && (
+              {isSignup && refCode && partnerInfo && (
                 <Alert className="animate-delay-220 animate-element">
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {t("auth.partnerInvitation")}{" "}
-                    {partnerInfo?.user_profiles?.full_name}
+                    {t("auth.partnerInvitation")} {partnerDisplayName}
+                    {partnerInfo?.partner_code
+                      ? ` (${partnerInfo.partner_code})`
+                      : ""}
                   </AlertDescription>
                 </Alert>
               )}

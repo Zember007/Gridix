@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import {
   hasAuthTokensInHash,
@@ -14,6 +14,7 @@ import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
  * in supabaseAuthInitPromise), then redirect to the appropriate app by account_type.
  */
 export default function RootPage() {
+  const location = useLocation();
   const [action, setAction] = useState<"loading" | "redirect" | "to-auth">(
     "loading",
   );
@@ -106,7 +107,16 @@ export default function RootPage() {
 
   if (action === "to-auth") {
     const nextLang = lang || "en";
-    return <Navigate replace to={`/${nextLang}/auth/signin`} />;
+    return (
+      <Navigate
+        replace
+        to={{
+          pathname: `/${nextLang}/auth/signin`,
+          search: location.search,
+          hash: location.hash,
+        }}
+      />
+    );
   }
 
   return (

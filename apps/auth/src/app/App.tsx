@@ -3,6 +3,7 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useParams,
 } from "react-router-dom";
 import { DEFAULT_LANGUAGE } from "@gridix/utils";
@@ -15,7 +16,31 @@ import RootPage from "@/pages/RootPage";
 
 function LangFallbackRoute() {
   const { lang } = useParams<{ lang?: string }>();
-  return <Navigate replace to={`/${lang ?? DEFAULT_LANGUAGE}/auth/signin`} />;
+  const location = useLocation();
+  return (
+    <Navigate
+      replace
+      to={{
+        pathname: `/${lang ?? DEFAULT_LANGUAGE}/auth/signin`,
+        search: location.search,
+        hash: location.hash,
+      }}
+    />
+  );
+}
+
+function NotFoundRoute() {
+  const location = useLocation();
+  return (
+    <Navigate
+      replace
+      to={{
+        pathname: `/${DEFAULT_LANGUAGE}/auth/signin`,
+        search: location.search,
+        hash: location.hash,
+      }}
+    />
+  );
 }
 
 export default function App() {
@@ -36,12 +61,7 @@ export default function App() {
               element={<CompleteProfilePage />}
             />
             <Route path="/:lang/*" element={<LangFallbackRoute />} />
-            <Route
-              path="*"
-              element={
-                <Navigate replace to={`/${DEFAULT_LANGUAGE}/auth/signin`} />
-              }
-            />
+            <Route path="*" element={<NotFoundRoute />} />
           </Routes>
         </LanguageWrapper>
       </BrowserRouter>
