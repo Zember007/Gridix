@@ -11,7 +11,7 @@ import {
   Search,
   Wallet,
 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/shared/lib/language";
 
 export type ViewMode =
   | "list"

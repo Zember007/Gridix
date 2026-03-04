@@ -4,7 +4,7 @@ import { addSharedResources, DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 
 // Load all locale JSON files from ./locales/<lang>/*.json
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  "../../locales/*/*.json",
+  "./locales/*/*.json",
   { eager: true },
 );
 

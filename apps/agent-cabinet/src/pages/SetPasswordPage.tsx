@@ -13,8 +13,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import { addLanguageToPath } from "@gridix/utils/lib";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/shared/lib/auth";
+import { useLanguage } from "@/shared/lib/language";
 
 export default function SetPasswordPage() {
   const { user } = useAuth();
@@ -25,7 +25,6 @@ export default function SetPasswordPage() {
   const nextRaw = sp.get("next") || "/";
   const nextPath = useMemo(() => {
     try {
-      // next is expected to be a path without language prefix (e.g. "/projects?x=1").
       return typeof nextRaw === "string" && nextRaw.startsWith("/")
         ? nextRaw
         : "/";
@@ -57,7 +56,7 @@ export default function SetPasswordPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
           <div className="space-y-2">
@@ -67,7 +66,7 @@ export default function SetPasswordPage() {
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
 
@@ -92,15 +91,13 @@ export default function SetPasswordPage() {
                 });
                 if (authErr) throw authErr;
 
-                // Password presence is now detected via RPC check_if_user_has_password().
-                // Keep password_set_at update as a best-effort compatibility field (non-blocking).
                 try {
                   await supabase
                     .from("user_profiles")
                     .update({ password_set_at: new Date().toISOString() })
                     .eq("id", user.id);
                 } catch {
-                  // ignore (best-effort)
+                  // best-effort compatibility field
                 }
 
                 toast.success(t("common.auth.passwordUpdated"));

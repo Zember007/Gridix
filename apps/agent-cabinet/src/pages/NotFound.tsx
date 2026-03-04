@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/shared/lib/language";
 
 export default function NotFound() {
   const { language, t } = useLanguage();
