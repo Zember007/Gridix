@@ -69,8 +69,12 @@ export const ProtectedRoute = ({
             ? window.sessionStorage.getItem(cacheKey)
             : null;
 
+        const isEmailProvider = user.app_metadata?.provider === "email";
+        const mustSetPassword =
+          (isEmailProvider && !cachedHasPassword) || requiresPasswordSetup;
+
         if (cachedHasPassword !== undefined) {
-          setNeedsPasswordSet(!cachedHasPassword || requiresPasswordSetup);
+          setNeedsPasswordSet(mustSetPassword);
           setPasswordGateLoading(false);
           return;
         }
@@ -78,7 +82,9 @@ export const ProtectedRoute = ({
         if (storedHasPassword === "true" || storedHasPassword === "false") {
           const hasPassword = storedHasPassword === "true";
           passwordCheckCacheRef.current.set(user.id, hasPassword);
-          setNeedsPasswordSet(!hasPassword || requiresPasswordSetup);
+          setNeedsPasswordSet(
+            (isEmailProvider && !hasPassword) || requiresPasswordSetup,
+          );
           setPasswordGateLoading(false);
           return;
         }
@@ -91,7 +97,10 @@ export const ProtectedRoute = ({
           if (typeof window !== "undefined") {
             window.sessionStorage.setItem(cacheKey, String(hasPassword));
           }
-          setNeedsPasswordSet(!hasPassword || requiresPasswordSetup);
+          const isEmailProvider = user.app_metadata?.provider === "email";
+          setNeedsPasswordSet(
+            (isEmailProvider && !hasPassword) || requiresPasswordSetup,
+          );
         }
       } catch (e) {
         // If RPC fails, fall back to requiresPasswordSetup only.

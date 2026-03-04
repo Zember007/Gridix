@@ -135,6 +135,9 @@ export interface SignInPageProps {
     alreadyHaveAccountPrompt?: string;
     alreadyHaveAccountLink?: string;
   };
+  initialEmail?: string;
+  readOnlyEmail?: boolean;
+  hideOAuth?: boolean;
 }
 
 // --- SUB-COMPONENTS ---
@@ -185,6 +188,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   banner,
   loading = false,
   labels = {},
+  initialEmail,
+  readOnlyEmail,
+  hideOAuth,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>(defaultMode);
@@ -496,7 +502,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     name="email"
                     type="email"
                     placeholder={emailPlaceholder}
-                    className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
+                    defaultValue={initialEmail}
+                    readOnly={readOnlyEmail}
+                    className={`w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none ${readOnlyEmail ? "cursor-not-allowed opacity-60" : ""}`}
                     autoComplete="email"
                     required
                   />
@@ -538,7 +546,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </GlassInputWrapper>
               </div>
 
-              {mode === "signup" && oauthBlock}
+              {mode === "signup" && !hideOAuth && oauthBlock}
 
               {mode === "signup" ? (
                 <div className="animate-delay-500 flex animate-element flex-col gap-3 text-sm">
@@ -596,7 +604,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </button>
             </form>
 
-            {mode === "signin" && oauthBlock}
+            {mode === "signin" && !hideOAuth && oauthBlock}
 
             <p
               key={`auth-mode-link-${mode}`}

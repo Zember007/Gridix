@@ -83,6 +83,9 @@ export default function CompleteProfilePage() {
         accountType={accountType}
         onAccountTypeChange={setAccountType}
         loading={submitting}
+        initialEmail={sessionUser?.email ?? ""}
+        readOnlyEmail={!!sessionUser?.email}
+        hideOAuth={true}
         labels={{
           signUpTitle: t("auth.completeProfileTitle", {
             defaultValue: "Complete Your Profile",
