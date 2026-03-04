@@ -34,10 +34,6 @@
     "payoutConditionPlaceholder": "مثال: 50% بعد الدفعة الأولى…",
     "apply": "تطبيق"
   },
-  "timeoutError": "استغرق تحميل المشاريع وقتاً طويلاً",
-  "updated": "تم التحديث",
-  "viewProject": "عرض المشروع",
-  "widgetCodeCopied": "تم نسخ كود الودجت",
   "media": {
     "renders": "يجعل",
     "videos": "فيديوهات",
@@ -48,6 +44,10 @@
     "uploadSuccess": "تم تحميل الملفات",
     "uploadError": "تعذر تحميل الملفات"
   },
+  "timeoutError": "استغرق تحميل المشاريع وقتاً طويلاً",
+  "updated": "تم التحديث",
+  "viewProject": "عرض المشروع",
+  "widgetCodeCopied": "تم نسخ كود الودجت",
   "construction": {
     "addNews": "إضافة تحديث",
     "titlePlaceholder": "العنوان",

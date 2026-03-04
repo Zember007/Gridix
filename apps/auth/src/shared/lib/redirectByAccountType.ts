@@ -17,10 +17,19 @@ export interface RedirectByAccountTypeOptions {
   lang?: string;
 }
 
+const VALID_ACCOUNT_TYPES = new Set([
+  "developer",
+  "manager",
+  "agent",
+  "partner",
+]);
+
 /**
- * Resolves account_type from user_profiles, then redirects to main app or
- * agent cabinet with session tokens in hash. Used after magic link / OAuth
- * callback and when landing on auth app root with hash tokens.
+ * Resolves account_type from user_profiles, then redirects to the correct app
+ * with session tokens in hash.
+ *
+ * If profile data is missing, tries to self-heal from auth user metadata
+ * (expected to be populated at signUp and copied by DB trigger).
  */
 export async function redirectToAppByAccountType(
   supabase: SupabaseClient,
@@ -31,17 +40,66 @@ export async function redirectToAppByAccountType(
   const userId = session.user?.id;
   if (!userId) throw new Error("No session user");
 
+  const langFromUrl = lang ?? (window.location.pathname.split("/")[1] || "en");
+
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("account_type")
     .eq("id", userId)
     .maybeSingle();
 
-  const accountType =
-    typeof (profile as { account_type?: string } | null)?.account_type ===
-    "string"
-      ? String((profile as { account_type: string }).account_type)
-      : "developer";
+  const profileAccountType = (profile as { account_type?: string } | null)
+    ?.account_type;
+  let accountType: string | null =
+    typeof profileAccountType === "string" &&
+    VALID_ACCOUNT_TYPES.has(profileAccountType)
+      ? profileAccountType
+      : null;
+
+  // Fallback: recover account_type from auth metadata and persist into profile.
+  if (!accountType) {
+    const userMeta = (session.user.user_metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const metaAccountType =
+      typeof userMeta.account_type === "string" &&
+      VALID_ACCOUNT_TYPES.has(userMeta.account_type)
+        ? userMeta.account_type
+        : null;
+
+    if (metaAccountType) {
+      accountType = metaAccountType;
+      const { error: patchProfileError } = await supabase
+        .from("user_profiles")
+        .upsert(
+          {
+            id: userId,
+            account_type: metaAccountType,
+            ...(typeof userMeta.full_name === "string" && userMeta.full_name
+              ? { full_name: userMeta.full_name }
+              : {}),
+            ...(typeof userMeta.company_name === "string" &&
+            userMeta.company_name
+              ? { company_name: userMeta.company_name }
+              : {}),
+            ...(typeof userMeta.phone === "string" && userMeta.phone
+              ? { phone: userMeta.phone }
+              : {}),
+          },
+          { onConflict: "id" },
+        );
+      if (patchProfileError) {
+        console.error(
+          "Failed to sync account_type from metadata to user_profiles:",
+          patchProfileError,
+        );
+      }
+    }
+  }
+
+  // Last-resort fallback to keep login unblocked for legacy inconsistent rows.
+  if (!accountType) accountType = "developer";
 
   const agentCabinet = getEnv(
     "VITE_AGENT_CABINET_URL",
@@ -96,6 +154,5 @@ export async function redirectToAppByAccountType(
   } else {
     targetBase = mainApp;
   }
-  const langFromUrl = lang ?? (window.location.pathname.split("/")[1] || "en");
   window.location.replace(`${targetBase}/${langFromUrl}/#${hash}`);
 }

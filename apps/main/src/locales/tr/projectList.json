@@ -34,10 +34,6 @@
     "payoutConditionPlaceholder": "Örn: İlk ödemeden sonra %50…",
     "apply": "Uygula"
   },
-  "timeoutError": "Projelerin yüklenmesi çok uzun sürdü",
-  "updated": "Güncellendi",
-  "viewProject": "Projeyi görüntüle",
-  "widgetCodeCopied": "Widget kodu kopyalandı",
   "media": {
     "renders": "renderlar",
     "videos": "Videolar",
@@ -48,6 +44,10 @@
     "uploadSuccess": "Materyaller yüklendi",
     "uploadError": "Materyaller yüklenemedi"
   },
+  "timeoutError": "Projelerin yüklenmesi çok uzun sürdü",
+  "updated": "Güncellendi",
+  "viewProject": "Projeyi görüntüle",
+  "widgetCodeCopied": "Widget kodu kopyalandı",
   "construction": {
     "addNews": "Güncelleme ekle",
     "titlePlaceholder": "Başlık",

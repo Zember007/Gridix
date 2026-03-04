@@ -34,10 +34,6 @@
     "payoutConditionPlaceholder": "למשל: 50% לאחר התשלום הראשון…",
     "apply": "החל"
   },
-  "timeoutError": "טעינת פרויקטים ארכה יותר מדי זמן",
-  "updated": "מְעוּדכָּן",
-  "viewProject": "צפה בפרויקט",
-  "widgetCodeCopied": "קוד הווידג'ט הועתק",
   "media": {
     "renders": "מעבד",
     "videos": "סרטונים",
@@ -48,6 +44,10 @@
     "uploadSuccess": "הקבצים נטענו",
     "uploadError": "לא ניתן לטעון את הקבצים"
   },
+  "timeoutError": "טעינת פרויקטים ארכה יותר מדי זמן",
+  "updated": "מְעוּדכָּן",
+  "viewProject": "צפה בפרויקט",
+  "widgetCodeCopied": "קוד הווידג'ט הועתק",
   "construction": {
     "addNews": "הוסף עדכון",
     "titlePlaceholder": "כותרת",

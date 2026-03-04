@@ -34,10 +34,6 @@
     "payoutConditionPlaceholder": "მაგ.: 50% პირველი გადახდის შემდეგ…",
     "apply": "გამოყენება"
   },
-  "timeoutError": "პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა",
-  "updated": "განახლებულია",
-  "viewProject": "პროექტის ნახვა",
-  "widgetCodeCopied": "ვიჯეტის კოდი კოპირებულია",
   "media": {
     "renders": "რენდერებს",
     "videos": "ვიდეოები",
@@ -48,6 +44,10 @@
     "uploadSuccess": "მასალები ატვირთულია",
     "uploadError": "მასალების ატვირთვა ვერ მოხერხდა"
   },
+  "timeoutError": "პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა",
+  "updated": "განახლებულია",
+  "viewProject": "პროექტის ნახვა",
+  "widgetCodeCopied": "ვიჯეტის კოდი კოპირებულია",
   "construction": {
     "addNews": "განახლების დამატება",
     "titlePlaceholder": "სათაური",

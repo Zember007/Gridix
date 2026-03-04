@@ -27,112 +27,11 @@ import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import ResetPasswordForm from "@/components/Auth/ResetPasswordForm";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SignInPage, type AccountType } from "@/components/ui/sign-in";
+import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
 
-function safeRedirectUrl(input: string | null): string | null {
-  if (!input) return null;
-  try {
-    const u = new URL(input);
-    const allowed = new Set(
-      [
-        (import.meta as any).env?.VITE_MAIN_APP_URL,
-        (import.meta as any).env?.VITE_AGENT_CABINET_URL,
-        (import.meta as any).env?.VITE_PARTNERS_APP_URL,
-      ].filter(Boolean),
-    );
-    // allow same-origin and known app bases
-    if (u.origin === window.location.origin) return u.toString();
-    for (const base of allowed) {
-      const b = String(base);
-      if (b && u.origin === new URL(b).origin) return u.toString();
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-async function redirectByAccountType(params: {
-  session: Awaited<
-    ReturnType<typeof supabase.auth.getSession>
-  >["data"]["session"];
-  redirectToUrl?: string | null;
-  lang: string;
-}) {
-  const { session } = params;
-  if (!session?.user?.id) return;
-
-  const userId = session.user.id;
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("account_type")
-    .eq("id", userId)
-    .maybeSingle();
-  const accountType =
-    typeof (profile as any)?.account_type === "string"
-      ? String((profile as any).account_type)
-      : "developer";
-
-  const mainAppUrl =
-    (import.meta as any).env?.VITE_MAIN_APP_URL || "https://app.gridix.live";
-  const agentCabinetUrl =
-    (import.meta as any).env?.VITE_AGENT_CABINET_URL ||
-    "https://agent.gridix.live";
-  const partnersAppUrl =
-    (import.meta as any).env?.VITE_PARTNERS_APP_URL ||
-    "https://partner.gridix.live";
-
-  let targetBase: string;
-  if (accountType === "agent") {
-    targetBase = agentCabinetUrl;
-  } else if (accountType === "partner") {
-    targetBase = partnersAppUrl;
-  } else {
-    targetBase = mainAppUrl;
-  }
-
-  const safe = safeRedirectUrl(params.redirectToUrl ?? null);
-  const hash = new URLSearchParams({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-    token_type: "bearer",
-    type: "magiclink",
-  }).toString();
-
-  if (safe) {
-    const u = new URL(safe);
-    const mainOrigin = new URL(mainAppUrl).origin;
-    const agentOrigin = new URL(agentCabinetUrl).origin;
-    const partnersOrigin = new URL(partnersAppUrl).origin;
-
-    // Guard: prevent cross-account-type redirects
-    const isAgentTarget = u.origin === agentOrigin;
-    const isMainTarget = u.origin === mainOrigin;
-    const isPartnerTarget = u.origin === partnersOrigin;
-
-    const wrongTarget =
-      (isAgentTarget && accountType !== "agent") ||
-      (isMainTarget &&
-        (accountType === "agent" || accountType === "partner")) ||
-      (isPartnerTarget && accountType !== "partner");
-
-    if (!wrongTarget) {
-      const base = `${u.origin}${u.pathname}${u.search}`;
-      window.location.href = `${base}#${hash}`;
-      return;
-    }
-  }
-
-  // Default landing
-  let defaultPath: string;
-  if (accountType === "agent") {
-    defaultPath = `${targetBase}/${params.lang}/`;
-  } else if (accountType === "partner") {
-    defaultPath = `${targetBase}/${params.lang}/`;
-  } else {
-    defaultPath = `${targetBase}/${params.lang}/admin`;
-  }
-  window.location.href = `${defaultPath}#${hash}`;
-}
+const LS_PENDING_ACCOUNT_TYPE = "gridix_auth_pending_account_type";
+const LS_PENDING_REF = "gridix_auth_pending_ref";
+const LS_PENDING_INVITE = "gridix_auth_pending_invite";
 
 const SIGNIN_HERO_IMAGE =
   "https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80";
@@ -228,8 +127,7 @@ export default function AuthPage() {
       const { data } = await refetchSession();
       const session = data?.session ?? null;
       if (cancelled || !session?.user?.id) return;
-      await redirectByAccountType({
-        session,
+      await redirectToAppByAccountType(supabase, session, {
         redirectToUrl: redirectToUrl ?? null,
         lang: window.location.pathname.split("/")[1] || "en",
       });
@@ -310,7 +208,7 @@ export default function AuthPage() {
       <div className="fixed left-4 top-6 z-50 hidden md:block">
         <LanguageSwitcher />
       </div>
-      <div className="fixed top-6 z-40 hidden rounded-xl border border-white/40 bg-white/70 px-2 py-0.5 shadow-[0_0_18px_rgba(15,23,42,0.14)] backdrop-blur-md md:right-auto md:block md:[inset-inline-end:calc(50vw+22px)] md:[inset-inline-start:auto]">
+      <div className="fixed top-6 z-40 hidden rounded-xl border border-white/40 bg-white/70 px-2 py-0.5 py-1 shadow-[0_0_18px_rgba(15,23,42,0.14)] backdrop-blur-md md:right-auto md:flex md:[inset-inline-end:calc(50vw+22px)] md:[inset-inline-start:auto]">
         <a
           href={aboutPlatformUrl}
           target="_blank"
@@ -423,11 +321,12 @@ export default function AuthPage() {
                 toast.success(t("auth.welcome"));
                 const currentSession =
                   (await refetchSession()).data?.session ?? null;
-                await redirectByAccountType({
-                  session: currentSession,
-                  redirectToUrl: redirectToUrl ?? null,
-                  lang,
-                });
+                if (currentSession) {
+                  await redirectToAppByAccountType(supabase, currentSession, {
+                    redirectToUrl: redirectToUrl ?? null,
+                    lang,
+                  });
+                }
                 return;
               }
 
@@ -469,28 +368,39 @@ export default function AuthPage() {
               setAuthLoading(false);
             }
           }}
-          /* TODO(auth-oauth): Re-enable this handler when Google OAuth flow is wired from SignInPage.
-           Keep this block in sync with CallbackPage pending keys/redirect behavior. */
-          /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
-          try {
-            localStorage.setItem(LS_PENDING_ACCOUNT_TYPE, selectedAccountType);
-            if (refCode) localStorage.setItem(LS_PENDING_REF, refCode);
-            else localStorage.removeItem(LS_PENDING_REF);
-            if (inviteCode) localStorage.setItem(LS_PENDING_INVITE, inviteCode);
-            else localStorage.removeItem(LS_PENDING_INVITE);
-          } catch {
-            // ignore storage issues
-          }
+          onGoogleSignIn={({
+            mode: signInMode,
+            accountType: selectedAccountType,
+          }) => {
+            try {
+              if (signInMode === "signup") {
+                localStorage.setItem(
+                  LS_PENDING_ACCOUNT_TYPE,
+                  selectedAccountType,
+                );
+              } else {
+                localStorage.removeItem(LS_PENDING_ACCOUNT_TYPE);
+              }
+              if (refCode) localStorage.setItem(LS_PENDING_REF, refCode);
+              else localStorage.removeItem(LS_PENDING_REF);
+              if (inviteCode)
+                localStorage.setItem(LS_PENDING_INVITE, inviteCode);
+              else localStorage.removeItem(LS_PENDING_INVITE);
+            } catch {
+              // storage might be unavailable (private mode)
+            }
 
-          void supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: {
-              redirectTo: `${window.location.origin}/${lang}/auth/callback${
-                redirectToUrl ? `?redirect_to=${encodeURIComponent(redirectToUrl)}` : ""
-              }`,
-            },
-          });
-        }} */
+            void supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: `${window.location.origin}/${lang}/auth/callback${
+                  redirectToUrl
+                    ? `?redirect_to=${encodeURIComponent(redirectToUrl)}`
+                    : ""
+                }`,
+              },
+            });
+          }}
         />
       </div>
 

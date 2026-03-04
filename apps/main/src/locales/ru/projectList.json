@@ -34,10 +34,6 @@
     "payoutConditionPlaceholder": "Например: 50% после оплаты первого взноса…",
     "apply": "Применить"
   },
-  "timeoutError": "Загрузка проектов заняла слишком много времени",
-  "updated": "Обновлен",
-  "viewProject": "Посмотреть проект",
-  "widgetCodeCopied": "Код виджета скопирован",
   "media": {
     "renders": "Рендеры",
     "videos": "Видео",
@@ -48,6 +44,10 @@
     "uploadSuccess": "Материалы загружены",
     "uploadError": "Не удалось загрузить материалы"
   },
+  "timeoutError": "Загрузка проектов заняла слишком много времени",
+  "updated": "Обновлен",
+  "viewProject": "Посмотреть проект",
+  "widgetCodeCopied": "Код виджета скопирован",
   "construction": {
     "addNews": "Добавить новость",
     "titlePlaceholder": "Заголовок",

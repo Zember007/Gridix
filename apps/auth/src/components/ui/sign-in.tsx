@@ -278,7 +278,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </span>
       </div>
 
-      <div className="animate-delay-800 grid animate-element grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="animate-delay-800 grid animate-element grid-cols-1 gap-3 sm:grid-cols-1">
         <button
           type="button"
           onClick={() => {
@@ -297,7 +297,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <span>{googleButton}</span>
         </button>
 
-        <button
+        {/*   <button
           type="button"
           onClick={() => {
             // TODO: Wire up Facebook OAuth flow.
@@ -306,7 +306,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         >
           <FacebookIcon />
           <span>{facebookButton}</span>
-        </button>
+        </button> */}
       </div>
     </div>
   );
@@ -538,7 +538,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </GlassInputWrapper>
               </div>
 
-              {/*  {mode === "signup" && oauthBlock} */}
+              {mode === "signup" && oauthBlock}
 
               {mode === "signup" ? (
                 <div className="animate-delay-500 flex animate-element flex-col gap-3 text-sm">
