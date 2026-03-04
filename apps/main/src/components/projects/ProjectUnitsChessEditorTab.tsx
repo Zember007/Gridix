@@ -328,29 +328,39 @@ const ProjectUnitsChessEditorTab = ({
 
   return (
     <div className="space-y-4 p-6">
-      <div>
-        <h3 className="text-4 font-semibold text-slate-900">
-          {t("apartmentsManager.title")}
-        </h3>
-        <p className="mt-1 text-sm text-slate-500">
-          {t("apartmentsManager.description")}
-        </p>
-      </div>
+      {!editingApartment && (
+        <>
+          <div>
+            <h3 className="text-4 font-semibold text-slate-900">
+              {t("apartmentsManager.title")}
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              {t("apartmentsManager.description")}
+            </p>
+          </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => setExcelSyncDialogOpen(true)}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          {t("excel.sync.button")}
-        </Button>
-        <Button variant="outline" onClick={() => setFloorManagementOpen(true)}>
-          <Building className="mr-2 h-4 w-4" />
-          {t("floorManagement.manageFloors")}
-        </Button>
-        <Button onClick={() => setIsAddingNew(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t("apartmentsManager.addApartment")}
-        </Button>
-      </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setExcelSyncDialogOpen(true)}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              {t("excel.sync.button")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setFloorManagementOpen(true)}
+            >
+              <Building className="mr-2 h-4 w-4" />
+              {t("floorManagement.manageFloors")}
+            </Button>
+            <Button onClick={() => setIsAddingNew(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("apartmentsManager.addApartment")}
+            </Button>
+          </div>
+        </>
+      )}
 
       {isAddingNew && (
         <Card>
@@ -376,20 +386,22 @@ const ProjectUnitsChessEditorTab = ({
         </Card>
       )}
 
-      <UnitsChessboard
-        units={apartments}
-        loading={loading}
-        loadingText={t("apartmentsManager.loading")}
-        emptyText={t("apartmentsManager.noApartments")}
-        labels={{
-          available: t("common.drawer.units.legend.available"),
-          booked: t("common.drawer.units.legend.booked"),
-          sold: t("common.drawer.units.legend.sold"),
-        }}
-        selectedUnitId={editingApartment?.id ?? null}
-        onUnitClick={openEditor}
-        getUnitStatusGroup={getUnitStatusGroup}
-      />
+      {!editingApartment && (
+        <UnitsChessboard
+          units={apartments}
+          loading={loading}
+          loadingText={t("apartmentsManager.loading")}
+          emptyText={t("apartmentsManager.noApartments")}
+          labels={{
+            available: t("common.drawer.units.legend.available"),
+            booked: t("common.drawer.units.legend.booked"),
+            sold: t("common.drawer.units.legend.sold"),
+          }}
+          selectedUnitId={null}
+          onUnitClick={openEditor}
+          getUnitStatusGroup={getUnitStatusGroup}
+        />
+      )}
 
       {editingApartment && (
         <Card>

@@ -824,13 +824,13 @@ const ProjectList = ({
           renderUnitsTab={(p) =>
             drawerLoading ? (
               <div className="p-8 text-center text-slate-400">
-                {t("common.common.loading")}
+                {t("projectList.media.loading")}
               </div>
             ) : (
               <Suspense
                 fallback={
                   <div className="p-8 text-center text-slate-400">
-                    {t("common.common.loading")}
+                    {t("projectList.media.loading")}
                   </div>
                 }
               >
