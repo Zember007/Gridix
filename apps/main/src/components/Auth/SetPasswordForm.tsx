@@ -93,7 +93,7 @@ export const SetPasswordForm = ({
       } else if (onSuccess) {
         onSuccess();
       } else {
-        navigate(`/${language}/admin`);
+        navigate(`/${language}/`);
       }
     } catch (error) {
       const message =
