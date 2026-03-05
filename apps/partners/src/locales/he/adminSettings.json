@@ -62,8 +62,6 @@
   "profileInfoDesc": "הפרטים האישיים שלך",
   "fullName": "שם מלא",
   "fullNamePlaceholder": "לדוגמה: יוסי כהן",
-  "language": "שפה",
-  "languageHint": "משמש להודעות אימייל ולשפת ממשק ברירת מחדל.",
   "companyLogo": "לוגו החברה",
   "uploadLogo": "העלאת לוגו",
   "logoHint": "PNG, JPG או SVG. מומלץ להשתמש בתמונה מרובעת.",
@@ -134,5 +132,7 @@
   "resetButton": "איפוס הגדרות",
   "telegramNeedsStart": "Telegram אינו מחובר",
   "telegramNeedsStartDesc": "אנא התחל צ'אט עם {{bot}} כדי שיוכל לשלוח לך הודעות.",
-  "telegramVerifyError": "אימות Telegram נכשל"
+  "telegramVerifyError": "אימות Telegram נכשל",
+  "language": "שפה",
+  "languageHint": "משמש להודעות אימייל ולשפת ממשק ברירת מחדל."
 }

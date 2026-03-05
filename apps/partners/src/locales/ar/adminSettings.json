@@ -62,8 +62,6 @@
   "profileInfoDesc": "بياناتك الشخصية",
   "fullName": "الاسم الكامل",
   "fullNamePlaceholder": "مثال: أحمد علي",
-  "language": "اللغة",
-  "languageHint": "تُستخدم للرسائل البريدية ولغة الواجهة الافتراضية.",
   "companyLogo": "شعار الشركة",
   "uploadLogo": "رفع الشعار",
   "logoHint": "PNG أو JPG أو SVG. يُنصح بصورة مربعة.",
@@ -134,5 +132,7 @@
   "resetButton": "إعادة تعيين الإعدادات",
   "telegramNeedsStart": "Telegram غير متصل",
   "telegramNeedsStartDesc": "يرجى بدء محادثة مع {{bot}} حتى يتمكن من إرسال الرسائل لك.",
-  "telegramVerifyError": "تعذر التحقق من Telegram"
+  "telegramVerifyError": "تعذر التحقق من Telegram",
+  "language": "اللغة",
+  "languageHint": "تُستخدم للرسائل البريدية ولغة الواجهة الافتراضية."
 }

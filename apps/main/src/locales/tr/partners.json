@@ -343,7 +343,11 @@
     "approve": "İş ortağını onayla",
     "payout": "Komisyon ödemesi",
     "block": "Engellemek",
-    "unblock": "Engellemeyi kaldır"
+    "unblock": "Engellemeyi kaldır",
+    "delete": "Silmek",
+    "cancel": "İptal etmek",
+    "deleteConfirmTitle": "İş ortağı silinsin mi?",
+    "deleteConfirmDescription": "Bu, {name} iş ortağını ve onun tüm uygulama verilerini kalıcı olarak kaldıracaktır. Bu eylem geri alınamaz."
   },
   "agencyNotifications": {
     "loadError": "İş ortakları yüklenemedi",
@@ -354,7 +358,10 @@
     "rateUpdated": "Komisyon oranı güncellendi",
     "rateUpdateError": "Komisyon oranı güncellenemedi",
     "markedPaid": "Ödendi olarak işaretlendi",
-    "payoutStatusError": "Ödeme durumu güncellenemedi"
+    "payoutStatusError": "Ödeme durumu güncellenemedi",
+    "deleted": "İş ortağı başarıyla silindi",
+    "deleteError": "İş ortağı silinemedi",
+    "managerCannotDelete": "Yöneticilerin iş ortaklarını silme izni yoktur. Lütfen bir geliştiriciyle iletişime geçin."
   },
   "filters": "Filtreler",
   "filtersPanel": {
@@ -379,6 +386,7 @@
     "leadLockProtocol": "Kurşun Kilit Protokolü",
     "leadLockDescription": "Bu bağlantı aracılığıyla kaydolan ortaklar, standart acentelik sözleşmenizi (teklifinizi) otomatik olarak kabul eder. Tüm potansiyel müşterileri sistem tarafından korunacaktır.",
     "registrationLinkLabel": "Temsilci kayıt bağlantısı",
+    "linkLanguageLabel": "Dil",
     "linkHint": "Bu bağlantıyı bir acenteye veya emlak acentesi yöneticisine gönderin.",
     "emailInvite": "E-posta davetiyesi",
     "qrCode": "QR kodu",
@@ -459,7 +467,13 @@
     "amountLabel": "Ödeme tutarı",
     "amountPlaceholder": "0,00",
     "noCommissions": "İş ortağının ödeyeceği onaylanmış komisyonu yok.",
-    "confirmPayout": "Ödemeyi onayla"
+    "confirmPayout": "Ödemeyi onayla",
+    "soldObjects": "Satılan nesneler",
+    "deselectAll": "Tümünün seçimini kaldır",
+    "selectAll": "Tümünü seç",
+    "loadingPayouts": "Komisyonlar yükleniyor...",
+    "totalSelected": "Toplam seçilen:",
+    "unknownLead": "Bilinmeyen nesne"
   },
   "generalConditions": {
     "title": "Genel koşullar",
