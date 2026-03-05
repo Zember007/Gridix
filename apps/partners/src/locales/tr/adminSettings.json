@@ -62,8 +62,6 @@
   "profileInfoDesc": "Kişisel bilgileriniz",
   "fullName": "Ad Soyad",
   "fullNamePlaceholder": "John Smith",
-  "language": "Dil",
-  "languageHint": "E-postalar ve varsayılan arayüz dili için kullanılır.",
   "companyLogo": "Şirket logosu",
   "uploadLogo": "Logoyu yükle",
   "logoHint": "PNG, JPG veya SVG. Önerilen kare resim.",
@@ -134,5 +132,7 @@
   "resetButton": "Ayarları sıfırla",
   "telegramNeedsStart": "Telegram bağlı değil",
   "telegramNeedsStartDesc": "Size mesaj gönderebilmesi için lütfen {{bot}} ile sohbet başlatın.",
-  "telegramVerifyError": "Telegram doğrulanamadı"
+  "telegramVerifyError": "Telegram doğrulanamadı",
+  "language": "Dil",
+  "languageHint": "E-postalar ve varsayılan arayüz dili için kullanılır."
 }

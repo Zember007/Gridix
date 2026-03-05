@@ -40,5 +40,28 @@
   "updateSuccess": "דירה מעודכנת",
   "syncError": "אין דירות עם אותו שטח ומספר חדרים לסנכרון",
   "noSearchResults": "לא נמצאו תוצאות",
-  "filterByFloor": "סנן לפי קומה"
+  "filterByFloor": "סנן לפי קומה",
+  "syncDialog": {
+    "title": "Apartment Data Synchronization",
+    "description": "Select apartments to synchronize data",
+    "sourceApartment": "Source apartment:",
+    "apartmentNumber": "Number",
+    "floor": "Floor",
+    "rooms": "Rooms",
+    "area": "Area",
+    "priceNotSpecified": "Not specified",
+    "targetsTitle": "Apartments to synchronize ({{selected}} of {{total}}):",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "currentPrice": "Current price",
+    "syncedTitle": "Will be synchronized:",
+    "syncedPrice": "Price",
+    "syncedStatus": "Sales status",
+    "syncedCustomFields": "Custom fields",
+    "notChangedHint": "Apartment number, floor, area, and room count will remain unchanged",
+    "syncing": "Synchronizing...",
+    "syncButton": "Synchronize {{count}} apartments",
+    "success": "Data synchronized for {{count}} apartments",
+    "error": "Error synchronizing apartment data"
+  }
 }
