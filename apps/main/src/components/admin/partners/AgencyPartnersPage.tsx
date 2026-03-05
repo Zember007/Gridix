@@ -8,10 +8,21 @@ import {
   MoreHorizontal,
   Search,
   ShieldCheck,
+  Trash2,
   TrendingUp,
   Users,
 } from "lucide-react";
 import { useAgencyPartners } from "./useAgencyPartners";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@gridix/ui";
 import { PartnerInviteModal } from "./PartnerInviteModal";
 import { PartnerDrawer } from "./PartnerDrawer";
 import { PartnerPayoutModal } from "./PartnerPayoutModal";
@@ -38,14 +49,20 @@ export const AgencyPartnersPage: React.FC = () => {
     updatePartnerStatus,
     updatePartnerCommission,
     markPaid,
+    getPendingPayouts,
+    deletePartner,
     stats,
     developerId,
+    isManagerMode,
   } = useAgencyPartners();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<AgencyPartner | null>(
     null,
   );
   const [payoutTarget, setPayoutTarget] = useState<AgencyPartner | null>(null);
+  const [partnerToDelete, setPartnerToDelete] = useState<AgencyPartner | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState<"list" | "conditions">("list");
 
   const handleStatusFilterCycle = () => {
@@ -122,12 +139,46 @@ export const AgencyPartnersPage: React.FC = () => {
         isOpen={!!payoutTarget}
         onClose={() => setPayoutTarget(null)}
         partner={payoutTarget}
-        onPayout={async (_amount) => {
-          // MVP: we mark all pending payouts as paid (existing behavior)
+        onPayout={async (payoutIds) => {
           if (!payoutTarget) return;
-          await markPaid(payoutTarget.id);
+          await markPaid(payoutIds);
         }}
+        getPendingPayouts={getPendingPayouts}
       />
+
+      <AlertDialog
+        open={!!partnerToDelete}
+        onOpenChange={(open) => !open && setPartnerToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("partners.actions.deleteConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("partners.actions.deleteConfirmDescription", {
+                name: partnerToDelete?.name,
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("partners.actions.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (partnerToDelete) {
+                  await deletePartner(partnerToDelete.id);
+                  setPartnerToDelete(null);
+                }
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {t("partners.actions.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PartnerDrawer
         partner={selectedPartner}
@@ -434,6 +485,18 @@ export const AgencyPartnersPage: React.FC = () => {
                                       ? t("partners.actions.unblock")
                                       : t("partners.actions.block")}
                                   </DropdownMenuItem>
+                                  {!isManagerMode && (
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPartnerToDelete(p);
+                                      }}
+                                      className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                                    >
+                                      <Trash2 className="mr-2 size-4" />
+                                      {t("partners.actions.delete")}
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </td>

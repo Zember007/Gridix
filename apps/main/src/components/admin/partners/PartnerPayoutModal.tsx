@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { AgencyPartner } from "./types";
-import { Wallet, Building2, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { AgencyPartner, PayoutItem } from "./types";
+import { Wallet, Building2, AlertCircle, Check, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@gridix/ui";
 import { Button } from "@gridix/ui";
-import { Input } from "@gridix/ui";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   partner: AgencyPartner | null;
-  onPayout: (amount: number) => void;
+  onPayout: (payoutIds: string[]) => Promise<void>;
+  getPendingPayouts: (partnerId: string) => Promise<PayoutItem[]>;
 }
 
 export const PartnerPayoutModal: React.FC<Props> = ({
@@ -18,21 +18,58 @@ export const PartnerPayoutModal: React.FC<Props> = ({
   onClose,
   partner,
   onPayout,
+  getPendingPayouts,
 }) => {
   const { t } = useLanguage();
-  const [amount, setAmount] = useState("");
+  const [payouts, setPayouts] = useState<PayoutItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && partner) {
+      setLoading(true);
+      getPendingPayouts(partner.id).then((res) => {
+        setPayouts(res);
+        setLoading(false);
+      });
+    } else {
+      setPayouts([]);
+      setSelectedIds(new Set());
+    }
+  }, [isOpen, partner, getPendingPayouts]);
 
   if (!partner) return null;
 
-  const maxAmount = partner.stats.commissionPending;
+  const toggleSelection = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const selectAll = () => {
+    if (selectedIds.size === payouts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(payouts.map((p) => p.id)));
+    }
+  };
+
+  const totalSelected = payouts
+    .filter((p) => selectedIds.has(p.id))
+    .reduce((acc, p) => acc + p.amount, 0);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const val = Number(amount);
-    if (val > 0 && val <= maxAmount) {
-      onPayout(val);
-      onClose();
-      setAmount("");
+    if (selectedIds.size > 0) {
+      setSubmitting(true);
+      try {
+        await onPayout(Array.from(selectedIds));
+        onClose();
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -57,52 +94,96 @@ export const PartnerPayoutModal: React.FC<Props> = ({
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">
-                {t("partners.payoutModal.availableToPayout")}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold uppercase text-slate-500">
+                {t("partners.payoutModal.soldObjects")}
               </span>
-              <span className="font-bold text-slate-900">
-                ${maxAmount.toLocaleString()}
-              </span>
+              {payouts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={selectAll}
+                  className="text-xs font-bold text-green-600 hover:text-green-700"
+                >
+                  {selectedIds.size === payouts.length
+                    ? t("partners.payoutModal.deselectAll")
+                    : t("partners.payoutModal.selectAll")}
+                </button>
+              )}
             </div>
 
-            <div className="relative">
-              <label className="mb-1.5 block text-xs font-bold uppercase text-slate-500">
-                {t("partners.payoutModal.amountLabel")}
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">
-                  $
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                <Loader2 className="mb-2 animate-spin" size={24} />
+                <span className="text-xs">
+                  {t("partners.payoutModal.loadingPayouts")}
                 </span>
-                <Input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-8 pr-4 font-mono text-lg font-bold outline-none transition-all focus:ring-green-500"
-                  placeholder={t("partners.payoutModal.amountPlaceholder")}
-                  autoFocus
-                  max={maxAmount}
-                />
               </div>
-            </div>
-
-            {maxAmount === 0 && (
-              <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
-                <AlertCircle size={14} className="mt-0.5" />
+            ) : payouts.length === 0 ? (
+              <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-4 text-xs text-amber-700">
+                <AlertCircle size={16} className="shrink-0" />
                 {t("partners.payoutModal.noCommissions")}
+              </div>
+            ) : (
+              <div className="custom-scrollbar max-h-[300px] space-y-2 overflow-y-auto pr-2">
+                {payouts.map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => toggleSelection(p.id)}
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all ${
+                      selectedIds.has(p.id)
+                        ? "border-green-500 bg-green-50 ring-1 ring-green-500"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${
+                        selectedIds.has(p.id)
+                          ? "border-green-500 bg-green-500"
+                          : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {selectedIds.has(p.id) && (
+                        <Check size={14} className="text-white" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-bold text-slate-900">
+                        {p.leadName || t("partners.payoutModal.unknownLead")}
+                      </div>
+                      <div className="font-mono text-[10px] text-slate-500">
+                        {p.date ? new Date(p.date).toLocaleDateString() : "-"}
+                      </div>
+                    </div>
+                    <div className="text-sm font-bold text-slate-900">
+                      ${p.amount.toLocaleString()}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          <div className="pt-2">
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between rounded-xl bg-slate-900 p-4 text-white">
+              <span className="text-sm font-medium opacity-70">
+                {t("partners.payoutModal.totalSelected")}
+              </span>
+              <span className="text-xl font-bold">
+                ${totalSelected.toLocaleString()}
+              </span>
+            </div>
+
             <Button
               type="submit"
-              disabled={
-                !amount || Number(amount) <= 0 || Number(amount) > maxAmount
-              }
+              disabled={selectedIds.size === 0 || submitting}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-6 font-bold text-white shadow-lg shadow-green-100 transition-all hover:bg-green-700 disabled:opacity-50"
             >
-              <Wallet size={18} /> {t("partners.payoutModal.confirmPayout")}
+              {submitting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Wallet size={18} />
+              )}{" "}
+              {t("partners.payoutModal.confirmPayout")}
             </Button>
           </div>
         </form>

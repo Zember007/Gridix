@@ -8,6 +8,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
   Input,
   Label,
   Select,
@@ -188,6 +190,9 @@ export default function AgentApplicationPage() {
     Record<string, string>
   >({});
   const [acceptedAgreements, setAcceptedAgreements] = useState(false);
+  const [fullscreenTemplatePath, setFullscreenTemplatePath] = useState<
+    string | null
+  >(null);
 
   // Signed contracts returned after successful submission (for download on success screen)
   const [signedContractsResult, setSignedContractsResult] = useState<
@@ -411,9 +416,25 @@ export default function AgentApplicationPage() {
       .map((p) => mapByPath.get(p))
       .filter((t): t is ContractTemplate => !!t);
   }, [selectedLangs, selectedTemplateByLang, templates]);
+  const fullscreenTemplate = useMemo(
+    () =>
+      selectedTemplates.find(
+        (t) => t.storage_path === fullscreenTemplatePath,
+      ) ?? null,
+    [selectedTemplates, fullscreenTemplatePath],
+  );
 
   const finalSignatureDataUrl =
     signatureMethod === "draw" ? signatureDataUrl : uploadedSignatureDataUrl;
+
+  useEffect(() => {
+    if (!fullscreenTemplatePath) return;
+    if (
+      !selectedTemplates.some((t) => t.storage_path === fullscreenTemplatePath)
+    ) {
+      setFullscreenTemplatePath(null);
+    }
+  }, [fullscreenTemplatePath, selectedTemplates]);
 
   const displayName =
     personType === "company" ? formData.company_name : formData.full_name;
@@ -788,6 +809,9 @@ export default function AgentApplicationPage() {
     template: ContractTemplate;
     renderedHtml: string | null;
     label: string;
+    maxWidth?: number;
+    widthClassName?: string;
+    onOpenFullscreen?: () => void;
   }) => {
     const A4_W = 794; // px @ 96dpi
     const A4_H = 1123;
@@ -841,7 +865,10 @@ export default function AgentApplicationPage() {
       setPageCount(nextCount);
     }, [COLUMN_GAP, contentViewportH, contentViewportW, props.renderedHtml]);
 
-    const targetWidth = Math.min(containerWidth || 520, 520);
+    const maxWidth = props.maxWidth ?? 340;
+    const containerClassName =
+      props.widthClassName ?? "w-[76vw] max-w-[340px] shrink-0";
+    const targetWidth = Math.min(containerWidth || maxWidth, maxWidth);
     const scale = targetWidth > 0 ? targetWidth / A4_W : 1;
     const scaledHeight = Math.round(A4_H * scale);
 
@@ -852,8 +879,26 @@ export default function AgentApplicationPage() {
     const visibleShiftX = pageIndex * (contentViewportW + COLUMN_GAP);
 
     return (
-      <div ref={containerRef} className="w-[92vw] max-w-[520px] shrink-0">
-        <div className="relative" style={{ height: scaledHeight || 0 }}>
+      <div ref={containerRef} className={containerClassName}>
+        <div
+          className={
+            props.onOpenFullscreen ? "relative cursor-zoom-in" : "relative"
+          }
+          style={{ height: scaledHeight || 0 }}
+          onClick={props.onOpenFullscreen}
+        >
+          {props.onOpenFullscreen && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onOpenFullscreen?.();
+              }}
+              className="absolute right-2 top-2 z-20 rounded-md bg-slate-900/80 px-2 py-1 text-[11px] font-bold text-white backdrop-blur transition hover:bg-slate-900"
+            >
+              Full screen
+            </button>
+          )}
           <div
             className="absolute left-0 top-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
             style={{
@@ -1127,7 +1172,7 @@ export default function AgentApplicationPage() {
     <div className="min-h-screen bg-[#F3F5F9]">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
         <aside className="hidden w-72 border-r border-slate-200/60 bg-transparent px-10 py-12 lg:flex lg:flex-col">
-          <div className="mt-10 space-y-10">
+          <div className="sticky top-10 mt-10 space-y-10">
             {stepItems.map((item, idx) => {
               const active = step === item.key;
               const done = idx < currentStepIndex;
@@ -1813,8 +1858,8 @@ export default function AgentApplicationPage() {
                         )}
 
                         {/* A4 previews row */}
-                        <div className="overflow-x-auto rounded-2xl bg-slate-200 p-4 md:p-8">
-                          <div className="flex items-start gap-6">
+                        <div className="overflow-x-auto rounded-2xl bg-slate-200 p-3 md:p-4">
+                          <div className="flex items-start gap-4">
                             {selectedTemplates.map((t) => (
                               <ContractPreview
                                 key={t.storage_path}
@@ -1828,10 +1873,43 @@ export default function AgentApplicationPage() {
                                     : null
                                 }
                                 label={`${t.lang ?? "—"} · ${t.name}`}
+                                onOpenFullscreen={() =>
+                                  setFullscreenTemplatePath(t.storage_path)
+                                }
                               />
                             ))}
                           </div>
                         </div>
+                        <Dialog
+                          open={!!fullscreenTemplate}
+                          onOpenChange={(open) => {
+                            if (!open) setFullscreenTemplatePath(null);
+                          }}
+                        >
+                          <DialogContent className="h-[96vh] w-[96vw] max-w-[1280px] overflow-y-auto p-4 md:p-6">
+                            {fullscreenTemplate && (
+                              <div className="space-y-4">
+                                <div className="text-sm font-bold text-slate-700">
+                                  {`${fullscreenTemplate.lang ?? "—"} · ${fullscreenTemplate.name}`}
+                                </div>
+                                <ContractPreview
+                                  template={fullscreenTemplate}
+                                  renderedHtml={
+                                    fullscreenTemplate.content_html
+                                      ? renderHtmlTemplate(
+                                          fullscreenTemplate.content_html,
+                                          contractPayload,
+                                        )
+                                      : null
+                                  }
+                                  label={`${fullscreenTemplate.lang ?? "—"} · ${fullscreenTemplate.name}`}
+                                  maxWidth={1100}
+                                  widthClassName="mx-auto w-full max-w-[1100px] shrink-0"
+                                />
+                              </div>
+                            )}
+                          </DialogContent>
+                        </Dialog>
 
                         <div className="rounded-xl border border-slate-200 bg-white p-4">
                           <label className="flex cursor-pointer items-start gap-3">

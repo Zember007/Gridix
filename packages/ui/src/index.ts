@@ -45,6 +45,7 @@ export * from "./resizable";
 export * from "./scroll-area";
 export * from "./select";
 export * from "./separator";
+export * from "./set-password-page";
 export * from "./sheet";
 export * from "./sidebar";
 export * from "./sidebar-button";

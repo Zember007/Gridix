@@ -343,7 +343,11 @@
     "approve": "Approve partner",
     "payout": "Commission payout",
     "block": "Block",
-    "unblock": "Unblock"
+    "unblock": "Unblock",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "deleteConfirmTitle": "Delete partner?",
+    "deleteConfirmDescription": "This will permanently remove the partner {name} and all their application data. This action cannot be undone."
   },
   "agencyNotifications": {
     "loadError": "Failed to load partners",
@@ -354,7 +358,10 @@
     "rateUpdated": "Rate updated",
     "rateUpdateError": "Failed to update rate",
     "markedPaid": "Marked as paid",
-    "payoutStatusError": "Failed to update payout status"
+    "payoutStatusError": "Failed to update payout status",
+    "deleted": "Partner deleted successfully",
+    "deleteError": "Failed to delete partner",
+    "managerCannotDelete": "Managers do not have permission to delete partners. Please contact a developer."
   },
   "filters": "Filters",
   "filtersPanel": {
@@ -379,6 +386,7 @@
     "leadLockProtocol": "Lead Lock Protocol",
     "leadLockDescription": "Partners who register via this link automatically accept your standard agency agreement (offer). All their leads will be protected by the system.",
     "registrationLinkLabel": "Agent registration link",
+    "linkLanguageLabel": "Language",
     "linkHint": "Send this link to an agent or real estate agency manager.",
     "emailInvite": "Email invitation",
     "qrCode": "QR code",
@@ -459,7 +467,13 @@
     "amountLabel": "Payout amount",
     "amountPlaceholder": "0.00",
     "noCommissions": "Partner has no confirmed commissions to pay out.",
-    "confirmPayout": "Confirm payout"
+    "confirmPayout": "Confirm payout",
+    "soldObjects": "Sold objects",
+    "deselectAll": "Deselect all",
+    "selectAll": "Select all",
+    "loadingPayouts": "Loading commissions...",
+    "totalSelected": "Total selected:",
+    "unknownLead": "Unknown object"
   },
   "generalConditions": {
     "title": "General conditions",
