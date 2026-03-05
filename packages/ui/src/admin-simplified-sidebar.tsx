@@ -409,6 +409,9 @@ export function SimplifiedSidebar({
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [manuallyCollapsedItems, setManuallyCollapsedItems] = useState<
+    string[]
+  >([]);
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const languageRef = useRef(language);
 
@@ -444,19 +447,30 @@ export function SimplifiedSidebar({
         const hasActiveChild = item.children.some(
           (child) => child.id === activeSection,
         );
-        if (!hasActiveChild) return;
+        if (!hasActiveChild || manuallyCollapsedItems.includes(item.id)) return;
         if (next.includes(item.id)) return;
         next = [...next, item.id];
       });
       return next;
     });
-  }, [activeSection, primaryNavItems]);
+  }, [activeSection, manuallyCollapsedItems, primaryNavItems]);
 
   const toggleExpand = (id: string) => {
     if (isCollapsed && onToggleCollapse) onToggleCollapse();
-    setExpandedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
+    setExpandedItems((prev) => {
+      const isCurrentlyExpanded = prev.includes(id);
+
+      setManuallyCollapsedItems((collapsedPrev) => {
+        if (isCurrentlyExpanded) {
+          return collapsedPrev.includes(id)
+            ? collapsedPrev
+            : [...collapsedPrev, id];
+        }
+        return collapsedPrev.filter((itemId) => itemId !== id);
+      });
+
+      return isCurrentlyExpanded ? prev.filter((i) => i !== id) : [...prev, id];
+    });
   };
 
   // Apply CSS variables for theme
@@ -564,7 +578,7 @@ export function SimplifiedSidebar({
                 label={item.label}
                 isActive={
                   hasChildren
-                    ? Boolean(isChildActive && !isExpanded)
+                    ? Boolean(isChildActive)
                     : activeSection === item.id
                 }
                 isCollapsed={isCollapsed}
