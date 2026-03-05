@@ -379,6 +379,8 @@ const BuildingImageEditor = ({
                 drawingEnabled={floor.isEditing}
                 getStyleById={floor.getStyleById}
                 onSelectAnnotationId={(id) => {
+                  if (floor.consumeCancelSelectionGuard()) return;
+
                   if (!floor.isEditing && id) {
                     const floorData = loader.buildingFloors.find(
                       (f) => f.id === id,

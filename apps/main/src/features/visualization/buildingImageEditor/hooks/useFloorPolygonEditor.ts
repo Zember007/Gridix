@@ -34,9 +34,16 @@ export function useFloorPolygonEditor({
   const [editingFloorId, setEditingFloorId] = useState<string | null>(null);
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
   const autoSaveTimerRef = useRef<number | null>(null);
+  const autoSaveRequestRef = useRef<Promise<void>>(Promise.resolve());
   const lastSavedPointsRef = useRef<string>("");
   const editingFloorIdRef = useRef<string | null>(null);
   const isCreatingNewFloorRef = useRef(false);
+  const suppressNextSelectionAutoEditRef = useRef(false);
+  const preCancelShapeRef = useRef<{
+    floorId: string;
+    points: { x: number; y: number }[];
+    color: string;
+  } | null>(null);
 
   const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
 
@@ -80,6 +87,11 @@ export function useFloorPolygonEditor({
         color: floor.color || "#3b82f6",
         isSelected: true,
       };
+      preCancelShapeRef.current = {
+        floorId: floor.id,
+        points: floor.polygon.map((point) => ({ ...point })),
+        color: floor.color || "#3b82f6",
+      };
       lastSavedPointsRef.current = JSON.stringify(editingShape.points);
       setCurrentShape(editingShape);
     }
@@ -93,6 +105,7 @@ export function useFloorPolygonEditor({
     setEditingFloorId(null);
     resetStacks();
     lastSavedPointsRef.current = "";
+    preCancelShapeRef.current = null;
     setCurrentShape(null);
   };
 
@@ -136,13 +149,14 @@ export function useFloorPolygonEditor({
 
       clearAutoSaveTimer();
       autoSaveTimerRef.current = window.setTimeout(() => {
-        void persistExistingPolygon(
+        const request = persistExistingPolygon(
           floorId,
           shape.points as { x: number; y: number }[],
           shape.color,
         ).catch((error) => {
           console.error("Error auto-saving polygon:", error);
         });
+        autoSaveRequestRef.current = request;
       }, 400);
     },
     [clearAutoSaveTimer, persistExistingPolygon],
@@ -225,6 +239,7 @@ export function useFloorPolygonEditor({
       setIsEditing(false);
       resetStacks();
       clearAutoSaveTimer();
+      preCancelShapeRef.current = null;
 
       await loadBuildingData();
     } catch (error) {
@@ -237,8 +252,12 @@ export function useFloorPolygonEditor({
     }
   };
 
-  const handlePolygonCancel = () => {
+  const handlePolygonCancel = async () => {
+    const cancelFloorId = editingFloorIdRef.current;
+    const preCancelShape = preCancelShapeRef.current;
+
     clearAutoSaveTimer();
+    suppressNextSelectionAutoEditRef.current = true;
     editingFloorIdRef.current = null;
     isCreatingNewFloorRef.current = false;
     setIsEditing(false);
@@ -246,7 +265,35 @@ export function useFloorPolygonEditor({
     setIsCreatingNewFloor(false);
     setCurrentShape(null);
     resetStacks();
-    loadBuildingData();
+    preCancelShapeRef.current = null;
+
+    try {
+      await autoSaveRequestRef.current;
+
+      if (
+        cancelFloorId &&
+        preCancelShape &&
+        preCancelShape.floorId === cancelFloorId
+      ) {
+        await api.updateFloorPolygon(
+          cancelFloorId,
+          preCancelShape.points,
+          preCancelShape.color,
+        );
+        lastSavedPointsRef.current = JSON.stringify(preCancelShape.points);
+      }
+
+      await loadBuildingData();
+    } catch (error) {
+      console.error("Error cancelling polygon changes:", error);
+      toast.error(t("buildingImage.polygon.saveError"));
+    }
+  };
+
+  const consumeCancelSelectionGuard = () => {
+    const shouldSuppress = suppressNextSelectionAutoEditRef.current;
+    suppressNextSelectionAutoEditRef.current = false;
+    return shouldSuppress;
   };
 
   const handleDeleteFloorPolygon = async (floorId: string) => {
@@ -268,6 +315,7 @@ export function useFloorPolygonEditor({
     setIsEditing(false);
     setEditingFloorId(null);
     setIsCreatingNewFloor(false);
+    preCancelShapeRef.current = null;
     resetStacks();
   };
 
@@ -291,6 +339,7 @@ export function useFloorPolygonEditor({
     startCreatingNewFloor,
     handlePolygonSave,
     handlePolygonCancel,
+    consumeCancelSelectionGuard,
     handleDeleteFloorPolygon,
     resetEditing,
   };
