@@ -2,12 +2,25 @@ import { SetPasswordPage as GlobalSetPasswordPage } from "@gridix/ui";
 import { addLanguageToPath } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export default function SetPasswordPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    return <Navigate to={addLanguageToPath("/auth", language)} replace />;
+  }
+
+  if (user.user_metadata?.requires_password_setup !== true) {
+    return <Navigate to={addLanguageToPath("/", language)} replace />;
+  }
+
   return (
     <GlobalSetPasswordPage
       userId={user?.id}
