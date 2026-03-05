@@ -56,6 +56,15 @@ const AdminWidgets = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { projects, loading } = useUserProjects(user?.id);
+  const selectedProjectData = projects.find(
+    (project) => project.id === selectedProject,
+  );
+  const selectedProjectEmbedIdentifier =
+    selectedProjectData?.slug && selectedProjectData.slug.trim().length > 0
+      ? selectedProjectData.slug
+      : selectedProject
+        ? `id/${selectedProject}`
+        : "";
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -96,7 +105,9 @@ const AdminWidgets = () => {
       floatingButtonBottomOffset,
       floatingButtonSideOffset,
     };
-    if (selectedProject !== "all") params.projectId = selectedProject;
+    if (selectedProject !== "all" && selectedProjectEmbedIdentifier) {
+      params.projectId = selectedProjectEmbedIdentifier;
+    }
     /*     if (selectedProject === 'all' && user?.id) params.userId = user.id; */
 
     const attrs = Object.entries(params)
@@ -127,9 +138,10 @@ const AdminWidgets = () => {
     let previewUrl = "";
     if (selectedProject === "all") {
       previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
-    } else {
-      previewUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
+    } else if (selectedProjectEmbedIdentifier) {
+      previewUrl = `${baseUrl}/embed/project/${selectedProjectEmbedIdentifier}?lang=${defaultLanguage}`;
     }
+    if (!previewUrl) return;
     window.open(previewUrl, "_blank");
   };
 
@@ -417,7 +429,7 @@ const AdminWidgets = () => {
               <Label>{t("adminWidgets.selectedProject")}</Label>
               <div className="flex items-center gap-2">
                 <Input
-                  value={`${window.location.origin}/embed/project/${selectedProject}`}
+                  value={`${window.location.origin}/embed/project/${selectedProjectEmbedIdentifier}`}
                   readOnly
                   className="bg-gray-50"
                 />
@@ -426,7 +438,7 @@ const AdminWidgets = () => {
                   size="sm"
                   onClick={() =>
                     window.open(
-                      `${window.location.origin}/embed/project/${selectedProject}`,
+                      `${window.location.origin}/embed/project/${selectedProjectEmbedIdentifier}`,
                       "_blank",
                     )
                   }
