@@ -33,6 +33,9 @@ export function useFloorPolygonEditor({
   const [isEditing, setIsEditing] = useState(false);
   const [editingFloorId, setEditingFloorId] = useState<string | null>(null);
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
+  const [selectedVertexIndex, setSelectedVertexIndex] = useState<number | null>(
+    null,
+  );
   const [isSwitchDialogOpen, setIsSwitchDialogOpen] = useState(false);
   const [isSwitchingFloor, setIsSwitchingFloor] = useState(false);
   const [pendingSwitchFloorId, setPendingSwitchFloorId] = useState<
@@ -103,6 +106,7 @@ export function useFloorPolygonEditor({
           color: floor.color || "#3b82f6",
         };
         lastSavedPointsRef.current = JSON.stringify(editingShape.points);
+        setSelectedVertexIndex(null);
         setCurrentShape(editingShape);
       }
     },
@@ -140,6 +144,7 @@ export function useFloorPolygonEditor({
     resetStacks();
     lastSavedPointsRef.current = "";
     preCancelShapeRef.current = null;
+    setSelectedVertexIndex(null);
     setCurrentShape(null);
   };
 
@@ -198,6 +203,10 @@ export function useFloorPolygonEditor({
 
   const handleCurrentShapeUpdate = useCallback(
     (shape: Shape | null) => {
+      setSelectedVertexIndex((prev) => {
+        if (shape === null || prev === null) return prev;
+        return prev >= shape.points.length ? null : prev;
+      });
       handleCurrentShapeUpdateBase(shape);
       if (shape && editingFloorIdRef.current) {
         scheduleAutoSave(shape);
@@ -287,6 +296,7 @@ export function useFloorPolygonEditor({
           setEditingFloorId(null);
           setIsCreatingNewFloor(false);
           setCurrentShape(null);
+          setSelectedVertexIndex(null);
           setIsEditing(false);
           resetStacks();
           preCancelShapeRef.current = null;
@@ -330,6 +340,64 @@ export function useFloorPolygonEditor({
     await saveCurrentPolygon();
   }, [saveCurrentPolygon]);
 
+  const pointCount = currentShape?.points.length ?? 0;
+  const normalizedSelectedVertexIndex =
+    selectedVertexIndex !== null &&
+    selectedVertexIndex >= 0 &&
+    selectedVertexIndex < pointCount
+      ? selectedVertexIndex
+      : pointCount > 0
+        ? pointCount - 1
+        : null;
+  const selectedVertexDisplayIndex =
+    normalizedSelectedVertexIndex !== null
+      ? normalizedSelectedVertexIndex + 1
+      : 0;
+  const canSelectVertex = useCallback(() => pointCount > 0, [pointCount]);
+  const selectPrevVertex = useCallback(() => {
+    if (pointCount <= 0) return;
+    setSelectedVertexIndex((prev) => {
+      const current =
+        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
+      return current === 0 ? pointCount - 1 : current - 1;
+    });
+  }, [pointCount]);
+  const selectNextVertex = useCallback(() => {
+    if (pointCount <= 0) return;
+    setSelectedVertexIndex((prev) => {
+      const current =
+        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
+      return (current + 1) % pointCount;
+    });
+  }, [pointCount]);
+  const handleDeletePoint = useCallback(async () => {
+    let shapeToEdit = currentShape;
+    if (polygonAnnotatorRef.current) {
+      const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
+      if (actualShape) {
+        shapeToEdit = actualShape;
+      }
+    }
+
+    if (!shapeToEdit || shapeToEdit.points.length <= 3) return;
+    const deleteIndex =
+      normalizedSelectedVertexIndex !== null
+        ? normalizedSelectedVertexIndex
+        : shapeToEdit.points.length - 1;
+    const nextPoints = shapeToEdit.points.filter(
+      (_, idx) => idx !== deleteIndex,
+    );
+    setSelectedVertexIndex(
+      nextPoints.length > 0
+        ? Math.min(deleteIndex, nextPoints.length - 1)
+        : null,
+    );
+    handleCurrentShapeUpdate({
+      ...shapeToEdit,
+      points: nextPoints,
+    });
+  }, [currentShape, handleCurrentShapeUpdate, normalizedSelectedVertexIndex]);
+
   const discardCurrentPolygonChanges = useCallback(
     async ({
       keepEditingState = false,
@@ -352,6 +420,7 @@ export function useFloorPolygonEditor({
         setEditingFloorId(null);
         setIsCreatingNewFloor(false);
         setCurrentShape(null);
+        setSelectedVertexIndex(null);
         resetStacks();
         preCancelShapeRef.current = null;
       }
@@ -467,6 +536,7 @@ export function useFloorPolygonEditor({
     editingFloorIdRef.current = null;
     isCreatingNewFloorRef.current = false;
     setCurrentShape(null);
+    setSelectedVertexIndex(null);
     setIsEditing(false);
     setEditingFloorId(null);
     setIsCreatingNewFloor(false);
@@ -489,6 +559,13 @@ export function useFloorPolygonEditor({
     handleCurrentShapeUpdate,
     handleUndo,
     handleRedo,
+    canSelectVertex,
+    pointCount,
+    selectedVertexDisplayIndex,
+    selectPrevVertex,
+    selectNextVertex,
+    handleDeletePoint,
+    selectedVertexIndex,
     undoStackRef,
     redoStackRef,
 

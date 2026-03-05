@@ -46,6 +46,7 @@ interface PolygonAnnotatorProps {
   imageUrl: string;
   shapes?: Shape[];
   currentShape?: Shape | null;
+  selectedVertexIndex?: number | null;
   onCurrentShapeUpdate?: (shape: Shape | null) => void;
   drawingEnabled?: boolean;
   mode?: "edit" | "view";
@@ -69,6 +70,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       imageUrl,
       shapes = [],
       currentShape,
+      selectedVertexIndex = null,
       onCurrentShapeUpdate,
       drawingEnabled = true,
       mode = "edit",
@@ -90,10 +92,12 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
     const prevShapesRef = useRef<Shape[]>([]);
     const prevCurrentShapeIdRef = useRef<string | null>(null);
+    const prevCurrentShapePointsSignatureRef = useRef<string | null>(null);
     const [selectedAnnotationId, setSelectedAnnotationId] = useState<
       string | null
     >(null);
     const labelOverlaysRef = useRef<HTMLElement[]>([]);
+    const selectedVertexOverlayRef = useRef<HTMLElement | null>(null);
     const prevHoverIdRef = useRef<string | null>(null);
     // Keep a ref to annotations so imperative methods always read the latest value
     const annotationsRef = useRef<Annotation[]>([]);
@@ -603,13 +607,20 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       if (!annotator) return;
 
       const currentShapeId = currentShape?.id || null;
+      const currentPointsSignature = currentShape
+        ? JSON.stringify(currentShape.points)
+        : null;
 
-      // Если ID currentShape не изменился, ничего не делаем
-      if (currentShapeId === prevCurrentShapeIdRef.current) {
+      // Skip re-sync only when neither shape id nor geometry changed.
+      if (
+        currentShapeId === prevCurrentShapeIdRef.current &&
+        currentPointsSignature === prevCurrentShapePointsSignatureRef.current
+      ) {
         return;
       }
 
       prevCurrentShapeIdRef.current = currentShapeId;
+      prevCurrentShapePointsSignatureRef.current = currentPointsSignature;
 
       // Показываем все shapes: фоновые + текущий редактируемый
       const allShapes: Shape[] = [];
@@ -887,6 +898,79 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       };
     }, [getEffectiveImageSize, labelsById, mode, shapes, showLabels, viewer]);
 
+    useEffect(() => {
+      if (mode === "view") return;
+      if (!viewer) return;
+
+      const clearSelectedVertexOverlay = () => {
+        const overlay = selectedVertexOverlayRef.current;
+        if (!overlay) return;
+        try {
+          viewer.removeOverlay(overlay);
+        } catch {
+          // ignore
+        }
+        selectedVertexOverlayRef.current = null;
+      };
+
+      if (
+        !currentShape ||
+        selectedVertexIndex === null ||
+        selectedVertexIndex < 0 ||
+        selectedVertexIndex >= currentShape.points.length
+      ) {
+        clearSelectedVertexOverlay();
+        return;
+      }
+
+      let cancelled = false;
+
+      const renderSelectedVertexOverlay = async () => {
+        const { width, height } = await getEffectiveImageSize();
+        if (cancelled) return;
+
+        const shapeInPixels = shapeToPixels(currentShape, width, height);
+        const selectedPoint = shapeInPixels.points[selectedVertexIndex];
+        if (!selectedPoint) {
+          clearSelectedVertexOverlay();
+          return;
+        }
+
+        clearSelectedVertexOverlay();
+
+        const overlayEl = document.createElement("div");
+        overlayEl.style.width = "14px";
+        overlayEl.style.height = "14px";
+        overlayEl.style.borderRadius = "9999px";
+        overlayEl.style.border = "2px solid #ffffff";
+        overlayEl.style.background = "#2563eb";
+        overlayEl.style.boxShadow = "0 0 0 2px rgba(37,99,235,0.35)";
+        overlayEl.style.transform = "translate(-50%, -50%)";
+        overlayEl.style.pointerEvents = "none";
+        overlayEl.style.zIndex = "30";
+
+        const location = viewer.viewport.imageToViewportCoordinates(
+          selectedPoint.x,
+          selectedPoint.y,
+        );
+        viewer.addOverlay(overlayEl, location);
+        selectedVertexOverlayRef.current = overlayEl;
+      };
+
+      void renderSelectedVertexOverlay();
+
+      return () => {
+        cancelled = true;
+        clearSelectedVertexOverlay();
+      };
+    }, [
+      currentShape,
+      getEffectiveImageSize,
+      mode,
+      selectedVertexIndex,
+      viewer,
+    ]);
+
     // Force Annotorious to commit in-progress handle edits on every pointerup.
     // Annotorious only fires `updateAnnotation` when the annotation is deselected,
     // so we briefly deselect and reselect to flush pending geometry changes.
@@ -921,7 +1005,10 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     }, [annotator, drawingEnabled, mode]);
 
     return (
-      <div ref={viewerHostRef} className="flex h-full w-full flex-col gap-2">
+      <div
+        ref={viewerHostRef}
+        className="relative flex h-full w-full flex-col gap-2"
+      >
         {/* Область аннотирования */}
         <div className="flex-1 overflow-hidden rounded-lg border">
           <OpenSeadragonAnnotator
