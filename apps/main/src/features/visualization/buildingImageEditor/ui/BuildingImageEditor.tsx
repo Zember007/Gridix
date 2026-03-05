@@ -541,7 +541,7 @@ const BuildingImageEditor = ({
           }
         }}
       >
-        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-[560px] p-5 sm:p-6">
+        <AlertDialogContent className="flex w-[calc(100vw-2rem)] min-w-[620px] flex-col items-center justify-center p-5 sm:p-6">
           <AlertDialogHeader className="space-y-2">
             <AlertDialogTitle>
               {loader.t("buildingImage.polygon.switchDialog.title")}
