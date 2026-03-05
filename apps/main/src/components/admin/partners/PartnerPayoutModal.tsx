@@ -41,6 +41,18 @@ export const PartnerPayoutModal: React.FC<Props> = ({
 
   if (!partner) return null;
 
+  const bankSummary = [
+    partner.bankDetails?.bank_name,
+    partner.bankDetails?.iban,
+  ]
+    .filter((item): item is string => Boolean(item && item.trim().length > 0))
+    .join(" • ");
+
+  const bankDetailsLine =
+    bankSummary ||
+    partner.bankDetails?.details ||
+    t("partners.drawer.noBankDetails");
+
   const toggleSelection = (id: string) => {
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id);
@@ -87,8 +99,7 @@ export const PartnerPayoutModal: React.FC<Props> = ({
             <div>
               <div className="font-bold text-slate-900">{partner.name}</div>
               <div className="mt-0.5 font-mono text-xs text-slate-500">
-                {partner.bankDetails?.details ||
-                  t("partners.drawer.noBankDetails")}
+                {bankDetailsLine}
               </div>
             </div>
           </div>

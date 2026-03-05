@@ -177,6 +177,38 @@ export const PartnerDrawer: React.FC<Props> = ({
       ? t("partners.drawer.typeAgency")
       : t("partners.drawer.typePrivateBroker");
 
+  const bankDetailsItems = [
+    {
+      label: t("agentApplication.bankName"),
+      value: partner.bankDetails?.bank_name ?? "—",
+      mono: false,
+    },
+    {
+      label: t("agentApplication.ibanLabel"),
+      value: partner.bankDetails?.iban ?? "—",
+      mono: true,
+    },
+    {
+      label: t("agentApplication.billingCurrency"),
+      value: partner.bankDetails?.billing_currency ?? "—",
+      mono: false,
+    },
+    {
+      label: t("agentApplication.isVatPayer"),
+      value:
+        typeof partner.bankDetails?.is_vat_payer === "boolean"
+          ? partner.bankDetails.is_vat_payer
+            ? t("common.yes")
+            : t("common.no")
+          : "—",
+      mono: false,
+    },
+  ];
+
+  const hasStructuredBankDetails = bankDetailsItems.some(
+    (item) => item.value !== "—",
+  );
+
   return (
     <>
       <div
@@ -327,55 +359,22 @@ export const PartnerDrawer: React.FC<Props> = ({
                       <CreditCard size={14} className="text-blue-500" />
                       {t("partners.drawer.bankDetails")}
                     </div>
-                    {partner.bankDetails?.bank_name ||
-                    partner.bankDetails?.iban ? (
-                      <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                        {partner.bankDetails.bank_name && (
-                          <div>
-                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
-                              {t("agentApplication.bankName")}
-                            </div>
-                            <div className="text-sm font-semibold text-slate-900">
-                              {partner.bankDetails.bank_name}
-                            </div>
+                    <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                      {bankDetailsItems.map((item) => (
+                        <div key={item.label}>
+                          <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
+                            {item.label}
                           </div>
-                        )}
-                        {partner.bankDetails.iban && (
-                          <div>
-                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
-                              {t("agentApplication.ibanLabel")}
-                            </div>
-                            <div className="font-mono text-sm font-semibold text-slate-900">
-                              {partner.bankDetails.iban}
-                            </div>
+                          <div
+                            className={`text-sm font-semibold text-slate-900 ${item.mono ? "font-mono" : ""}`}
+                          >
+                            {item.value}
                           </div>
-                        )}
-                        {partner.bankDetails.billing_currency && (
-                          <div>
-                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
-                              {t("agentApplication.billingCurrency")}
-                            </div>
-                            <div className="text-sm font-semibold text-slate-900">
-                              {partner.bankDetails.billing_currency}
-                            </div>
-                          </div>
-                        )}
-                        {typeof partner.bankDetails.is_vat_payer ===
-                          "boolean" && (
-                          <div>
-                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
-                              {t("agentApplication.isVatPayer")}
-                            </div>
-                            <div className="text-sm font-semibold text-slate-900">
-                              {partner.bankDetails.is_vat_payer
-                                ? t("common.yes")
-                                : t("common.no")}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-700">
+                        </div>
+                      ))}
+                    </div>
+                    {!hasStructuredBankDetails && (
+                      <div className="mt-2 text-xs text-slate-500">
                         {partner.bankDetails?.details ||
                           t("partners.drawer.noBankDetails")}
                       </div>
