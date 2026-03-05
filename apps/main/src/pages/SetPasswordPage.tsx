@@ -1,13 +1,25 @@
 import { SetPasswordPage as GlobalSetPasswordPage } from "@gridix/ui";
 import { addLanguageToPath } from "@gridix/utils/lib";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 
 const SetPasswordPage = () => {
-  const { user } = useAuth();
+  const { user, loading, requiresPasswordSetup } = useAuth();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  if (loading) {
+    return <FullPageLoaderView />;
+  }
+
+  if (!user) {
+    return <Navigate to={addLanguageToPath("/auth", language)} replace />;
+  }
+
+  if (!requiresPasswordSetup) {
+    return <Navigate to={addLanguageToPath("/", language)} replace />;
+  }
 
   return (
     <GlobalSetPasswordPage
