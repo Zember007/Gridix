@@ -1,0 +1,48 @@
+---
+description: Semi-auto routing for Gridix skills (triage, routing, ui, plan-first-apply) with mandatory explicit APPLY confirmation
+alwaysApply: true
+---
+
+# Gridix Skill Routing (Semi-Auto)
+
+## Goal
+
+Включить полуавтоматический выбор skills без автоприменения изменений.
+
+## Routing order
+
+1. Сначала оцени тип запроса.
+2. Предложи 1-2 релевантных skill из:
+   - `gridix-task-triage`
+   - `gridix-fsd-routing`
+   - `gridix-ui-standards`
+   - `gridix-plan-first-apply`
+3. Дождись подтверждения пользователя на выбранный путь.
+
+## Mandatory behavior
+
+- Нельзя выполнять изменения кода "по умолчанию" внутри skill-flow.
+- Для перехода в реализацию нужен явный пользовательский сигнал `APPLY`.
+- До `APPLY` разрешены только:
+  - triage/spec;
+  - routing решений;
+  - UI-checklist/риски;
+  - plan + exact file list.
+- Если пользователь просит поправить план/оценку, применяй gate `ADJUST`.
+
+## Response contract
+
+- Русский язык.
+- Compact-формат по умолчанию.
+- Полная версия только по запросу.
+- В plan/apply контексте обязательно включать:
+  - `EXACT APPLY FILE LIST`
+  - `Manual verify`
+  - `Checks run/skipped`
+
+## Stop conditions
+
+- Неоднозначный scope или конфликт требований.
+- Нужен выход за пределы согласованного `EXACT APPLY FILE LIST`.
+
+В этих случаях остановись и запроси уточнение/повторный `APPLY`.
