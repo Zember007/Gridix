@@ -33,12 +33,16 @@ export function useFloorPolygonEditor({
   const [isEditing, setIsEditing] = useState(false);
   const [editingFloorId, setEditingFloorId] = useState<string | null>(null);
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
+  const [isSwitchDialogOpen, setIsSwitchDialogOpen] = useState(false);
+  const [isSwitchingFloor, setIsSwitchingFloor] = useState(false);
+  const [pendingSwitchFloorId, setPendingSwitchFloorId] = useState<
+    string | null
+  >(null);
   const autoSaveTimerRef = useRef<number | null>(null);
   const autoSaveRequestRef = useRef<Promise<void>>(Promise.resolve());
   const lastSavedPointsRef = useRef<string>("");
   const editingFloorIdRef = useRef<string | null>(null);
   const isCreatingNewFloorRef = useRef(false);
-  const suppressNextSelectionAutoEditRef = useRef(false);
   const preCancelShapeRef = useRef<{
     floorId: string;
     points: { x: number; y: number }[];
@@ -69,35 +73,60 @@ export function useFloorPolygonEditor({
     [facadeDisplaySettings],
   );
 
-  const startEditingFloor = (floorId: string) => {
-    const floor = buildingFloors.find((f) => f.id === floorId);
-    if (floor) {
-      editingFloorIdRef.current = floorId;
-      isCreatingNewFloorRef.current = false;
-      setEditingFloorId(floorId);
-      setSelectedFloor(floor.floor_number);
-      setIsEditing(true);
-      setIsCreatingNewFloor(false);
-      resetStacks();
+  const startEditingFloor = useCallback(
+    (floorId: string) => {
+      const floor = buildingFloors.find((f) => f.id === floorId);
+      if (floor) {
+        editingFloorIdRef.current = floorId;
+        isCreatingNewFloorRef.current = false;
+        setEditingFloorId(floorId);
+        setSelectedFloor(floor.floor_number);
+        setIsEditing(true);
+        setIsCreatingNewFloor(false);
+        resetStacks();
 
-      const editingShape: Shape = {
-        id: floor.id,
-        type: "polygon",
-        points: floor.polygon,
-        color: floor.color || "#3b82f6",
-        isSelected: true,
-      };
-      preCancelShapeRef.current = {
-        floorId: floor.id,
-        points: floor.polygon.map((point) => ({ ...point })),
-        color: floor.color || "#3b82f6",
-      };
-      lastSavedPointsRef.current = JSON.stringify(editingShape.points);
-      setCurrentShape(editingShape);
-    }
-  };
+        const editingShape: Shape = {
+          id: floor.id,
+          type: "polygon",
+          points: floor.polygon,
+          color: floor.color || "#3b82f6",
+          isSelected: true,
+        };
+        preCancelShapeRef.current = {
+          floorId: floor.id,
+          points: floor.polygon.map((point) => ({ ...point })),
+          color: floor.color || "#3b82f6",
+        };
+        lastSavedPointsRef.current = JSON.stringify(editingShape.points);
+        setCurrentShape(editingShape);
+      }
+    },
+    [buildingFloors, resetStacks, setCurrentShape],
+  );
+
+  const closeSwitchDialog = useCallback(() => {
+    setPendingSwitchFloorId(null);
+    setIsSwitchDialogOpen(false);
+  }, []);
+
+  const requestStartEditingFloor = useCallback(
+    (floorId: string) => {
+      if (isSwitchingFloor) return;
+      if (editingFloorIdRef.current === floorId) return;
+
+      if (isEditing) {
+        setPendingSwitchFloorId(floorId);
+        setIsSwitchDialogOpen(true);
+        return;
+      }
+
+      startEditingFloor(floorId);
+    },
+    [isEditing, isSwitchingFloor, startEditingFloor],
+  );
 
   const startCreatingNewFloor = () => {
+    if (isSwitchingFloor) return;
     editingFloorIdRef.current = null;
     isCreatingNewFloorRef.current = true;
     setIsCreatingNewFloor(true);
@@ -186,115 +215,225 @@ export function useFloorPolygonEditor({
     scheduleAutoSave,
   ]);
 
-  const handlePolygonSave = async () => {
-    if (!currentShape) return;
-    if (!activeFacade?.id) return;
+  const saveCurrentPolygon = useCallback(
+    async ({
+      keepEditingState = false,
+      silent = false,
+    }: {
+      keepEditingState?: boolean;
+      silent?: boolean;
+    } = {}) => {
+      if (!currentShape) return false;
+      if (!activeFacade?.id) return false;
 
-    try {
-      let shapeToSave = currentShape;
-      if (polygonAnnotatorRef.current) {
-        const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
-        if (actualShape) {
-          shapeToSave = actualShape;
+      try {
+        let shapeToSave = currentShape;
+        if (polygonAnnotatorRef.current) {
+          const actualShape =
+            await polygonAnnotatorRef.current.getCurrentShape();
+          if (actualShape) {
+            shapeToSave = actualShape;
+          }
         }
-      }
 
-      if (isCreatingNewFloor) {
-        await api.upsertFloorPolygon({
-          projectId: project?.id || projectId,
-          facadeId: activeFacade.id,
-          floorNumber: selectedFloor,
-          polygon: shapeToSave.points as { x: number; y: number }[],
-          color: shapeToSave.color,
-        });
+        if (isCreatingNewFloor) {
+          await api.upsertFloorPolygon({
+            projectId: project?.id || projectId,
+            facadeId: activeFacade.id,
+            floorNumber: selectedFloor,
+            polygon: shapeToSave.points as { x: number; y: number }[],
+            color: shapeToSave.color,
+          });
 
-        if (project && selectedFloor > (project.floors ?? 0)) {
-          await api.updateProjectFloors(
-            project?.id || projectId,
-            selectedFloor,
+          if (project && selectedFloor > (project.floors ?? 0)) {
+            await api.updateProjectFloors(
+              project?.id || projectId,
+              selectedFloor,
+            );
+          }
+
+          if (!silent) {
+            toast.success(
+              t("buildingImage.polygon.createSuccess", {
+                floor: selectedFloor,
+              }),
+            );
+          }
+        } else if (editingFloorId) {
+          clearAutoSaveTimer();
+          await persistExistingPolygon(
+            editingFloorId,
+            shapeToSave.points as { x: number; y: number }[],
+            shapeToSave.color,
+          );
+
+          if (!silent) {
+            toast.success(
+              t("buildingImage.polygon.saveSuccess", { floor: selectedFloor }),
+            );
+          }
+        }
+
+        editingFloorIdRef.current = null;
+        isCreatingNewFloorRef.current = false;
+        setEditingFloorId(null);
+        setIsCreatingNewFloor(false);
+        setCurrentShape(null);
+        if (!keepEditingState) {
+          setIsEditing(false);
+        }
+        resetStacks();
+        clearAutoSaveTimer();
+        preCancelShapeRef.current = null;
+
+        await loadBuildingData();
+        return true;
+      } catch (error) {
+        console.error("Error saving polygon:", error);
+        if (!silent) {
+          toast.error(
+            isCreatingNewFloor
+              ? t("buildingImage.polygon.createError")
+              : t("buildingImage.polygon.saveError"),
           );
         }
-
-        toast.success(
-          t("buildingImage.polygon.createSuccess", { floor: selectedFloor }),
-        );
-      } else if (editingFloorId) {
-        clearAutoSaveTimer();
-        await persistExistingPolygon(
-          editingFloorId,
-          shapeToSave.points as { x: number; y: number }[],
-          shapeToSave.color,
-        );
-
-        toast.success(
-          t("buildingImage.polygon.saveSuccess", { floor: selectedFloor }),
-        );
+        return false;
       }
+    },
+    [
+      activeFacade?.id,
+      clearAutoSaveTimer,
+      currentShape,
+      editingFloorId,
+      isCreatingNewFloor,
+      loadBuildingData,
+      persistExistingPolygon,
+      project,
+      projectId,
+      resetStacks,
+      selectedFloor,
+      setCurrentShape,
+      t,
+    ],
+  );
 
+  const handlePolygonSave = useCallback(async () => {
+    await saveCurrentPolygon();
+  }, [saveCurrentPolygon]);
+
+  const discardCurrentPolygonChanges = useCallback(
+    async ({
+      keepEditingState = false,
+      silent = false,
+    }: {
+      keepEditingState?: boolean;
+      silent?: boolean;
+    } = {}) => {
+      const cancelFloorId = editingFloorIdRef.current;
+      const preCancelShape = preCancelShapeRef.current;
+
+      clearAutoSaveTimer();
       editingFloorIdRef.current = null;
       isCreatingNewFloorRef.current = false;
+      if (!keepEditingState) {
+        setIsEditing(false);
+      }
       setEditingFloorId(null);
       setIsCreatingNewFloor(false);
       setCurrentShape(null);
-      setIsEditing(false);
       resetStacks();
-      clearAutoSaveTimer();
       preCancelShapeRef.current = null;
 
-      await loadBuildingData();
-    } catch (error) {
-      console.error("Error saving polygon:", error);
-      toast.error(
-        isCreatingNewFloor
-          ? t("buildingImage.polygon.createError")
-          : t("buildingImage.polygon.saveError"),
-      );
-    }
-  };
+      try {
+        await autoSaveRequestRef.current;
+
+        if (
+          cancelFloorId &&
+          preCancelShape &&
+          preCancelShape.floorId === cancelFloorId
+        ) {
+          await api.updateFloorPolygon(
+            cancelFloorId,
+            preCancelShape.points,
+            preCancelShape.color,
+          );
+          lastSavedPointsRef.current = JSON.stringify(preCancelShape.points);
+        }
+
+        await loadBuildingData();
+        return true;
+      } catch (error) {
+        console.error("Error cancelling polygon changes:", error);
+        if (!silent) {
+          toast.error(t("buildingImage.polygon.saveError"));
+        }
+        return false;
+      }
+    },
+    [clearAutoSaveTimer, loadBuildingData, resetStacks, setCurrentShape, t],
+  );
 
   const handlePolygonCancel = async () => {
-    const cancelFloorId = editingFloorIdRef.current;
-    const preCancelShape = preCancelShapeRef.current;
+    await discardCurrentPolygonChanges();
+  };
 
-    clearAutoSaveTimer();
-    suppressNextSelectionAutoEditRef.current = true;
-    editingFloorIdRef.current = null;
-    isCreatingNewFloorRef.current = false;
-    setIsEditing(false);
-    setEditingFloorId(null);
-    setIsCreatingNewFloor(false);
-    setCurrentShape(null);
-    resetStacks();
-    preCancelShapeRef.current = null;
+  const handleSwitchDialogStay = useCallback(() => {
+    closeSwitchDialog();
+  }, [closeSwitchDialog]);
 
-    try {
-      await autoSaveRequestRef.current;
-
-      if (
-        cancelFloorId &&
-        preCancelShape &&
-        preCancelShape.floorId === cancelFloorId
-      ) {
-        await api.updateFloorPolygon(
-          cancelFloorId,
-          preCancelShape.points,
-          preCancelShape.color,
-        );
-        lastSavedPointsRef.current = JSON.stringify(preCancelShape.points);
-      }
-
-      await loadBuildingData();
-    } catch (error) {
-      console.error("Error cancelling polygon changes:", error);
-      toast.error(t("buildingImage.polygon.saveError"));
+  const handleSwitchDialogDiscardAndSwitch = useCallback(async () => {
+    const targetFloorId = pendingSwitchFloorId;
+    if (!targetFloorId) {
+      closeSwitchDialog();
+      return;
     }
-  };
 
-  const consumeCancelSelectionGuard = () => {
-    const shouldSuppress = suppressNextSelectionAutoEditRef.current;
-    suppressNextSelectionAutoEditRef.current = false;
-    return shouldSuppress;
-  };
+    closeSwitchDialog();
+    setIsSwitchingFloor(true);
+    try {
+      const cancelled = await discardCurrentPolygonChanges({
+        keepEditingState: true,
+        silent: true,
+      });
+      if (cancelled) {
+        startEditingFloor(targetFloorId);
+      }
+    } finally {
+      setIsSwitchingFloor(false);
+    }
+  }, [
+    closeSwitchDialog,
+    discardCurrentPolygonChanges,
+    pendingSwitchFloorId,
+    startEditingFloor,
+  ]);
+
+  const handleSwitchDialogSaveAndSwitch = useCallback(async () => {
+    const targetFloorId = pendingSwitchFloorId;
+    if (!targetFloorId) {
+      closeSwitchDialog();
+      return;
+    }
+
+    closeSwitchDialog();
+    setIsSwitchingFloor(true);
+    try {
+      const saved = await saveCurrentPolygon({
+        keepEditingState: true,
+        silent: true,
+      });
+      if (saved) {
+        startEditingFloor(targetFloorId);
+      }
+    } finally {
+      setIsSwitchingFloor(false);
+    }
+  }, [
+    closeSwitchDialog,
+    pendingSwitchFloorId,
+    saveCurrentPolygon,
+    startEditingFloor,
+  ]);
 
   const handleDeleteFloorPolygon = async (floorId: string) => {
     try {
@@ -315,6 +454,8 @@ export function useFloorPolygonEditor({
     setIsEditing(false);
     setEditingFloorId(null);
     setIsCreatingNewFloor(false);
+    setIsSwitchingFloor(false);
+    closeSwitchDialog();
     preCancelShapeRef.current = null;
     resetStacks();
   };
@@ -323,6 +464,7 @@ export function useFloorPolygonEditor({
     selectedFloor,
     setSelectedFloor,
     isEditing,
+    isSwitchingFloor,
     editingFloorId,
     isCreatingNewFloor,
     polygonAnnotatorRef,
@@ -335,11 +477,14 @@ export function useFloorPolygonEditor({
     redoStackRef,
 
     getStyleById,
-    startEditingFloor,
+    requestStartEditingFloor,
     startCreatingNewFloor,
     handlePolygonSave,
     handlePolygonCancel,
-    consumeCancelSelectionGuard,
+    isSwitchDialogOpen,
+    handleSwitchDialogStay,
+    handleSwitchDialogDiscardAndSwitch,
+    handleSwitchDialogSaveAndSwitch,
     handleDeleteFloorPolygon,
     resetEditing,
   };

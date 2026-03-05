@@ -32,7 +32,14 @@
     "deleteSuccess": "Floor polygon deleted",
     "save": "Save",
     "saveError": "Error saving polygon",
-    "saveSuccess": "Polygon for floor {{floor}} saved"
+    "saveSuccess": "Polygon for floor {{floor}} saved",
+    "switchDialog": {
+      "title": "Switch polygon?",
+      "description": "You have unsaved changes. What would you like to do before switching to another polygon?",
+      "stay": "Stay on current polygon",
+      "discard": "Discard changes",
+      "save": "Save and switch"
+    }
   },
   "facades": {
     "add": "Add facade",

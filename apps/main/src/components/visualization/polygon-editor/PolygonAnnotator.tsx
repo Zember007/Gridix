@@ -50,6 +50,7 @@ interface PolygonAnnotatorProps {
   drawingEnabled?: boolean;
   mode?: "edit" | "view";
   onSelectAnnotationId?: (id: string | null) => void;
+  onClickAnnotationId?: (id: string) => void;
   onHoverAnnotationId?: (id: string | null) => void;
   zoomToSelection?: boolean;
   getStyleById?: (id: string) => DrawingStyle;
@@ -72,6 +73,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       drawingEnabled = true,
       mode = "edit",
       onSelectAnnotationId,
+      onClickAnnotationId,
       onHoverAnnotationId,
       zoomToSelection = false,
       getStyleById,
@@ -747,11 +749,18 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         }
       };
 
+      const handleClickAnnotation = (annotation: Annotation) => {
+        if (annotation?.id) {
+          onClickAnnotationId?.(annotation.id);
+        }
+      };
+
       if (mode !== "view") {
         annotator.on("createAnnotation", handleCreate);
         annotator.on("updateAnnotation", handleUpdate);
         annotator.on("deleteAnnotation", handleDelete);
       }
+      annotator.on("clickAnnotation", handleClickAnnotation);
       annotator.on("selectionChanged", handleSelectionChanged);
 
       return () => {
@@ -760,10 +769,12 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
           annotator.off("updateAnnotation", handleUpdate);
           annotator.off("deleteAnnotation", handleDelete);
         }
+        annotator.off("clickAnnotation", handleClickAnnotation);
         annotator.off("selectionChanged", handleSelectionChanged);
       };
     }, [
       annotator,
+      onClickAnnotationId,
       onCurrentShapeUpdate,
       annotationToShape,
       drawingEnabled,
