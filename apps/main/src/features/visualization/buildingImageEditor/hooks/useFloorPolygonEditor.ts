@@ -41,6 +41,7 @@ export function useFloorPolygonEditor({
   const autoSaveTimerRef = useRef<number | null>(null);
   const autoSaveRequestRef = useRef<Promise<void>>(Promise.resolve());
   const lastSavedPointsRef = useRef<string>("");
+  const buildingFloorsRef = useRef(buildingFloors);
   const editingFloorIdRef = useRef<string | null>(null);
   const isCreatingNewFloorRef = useRef(false);
   const preCancelShapeRef = useRef<{
@@ -73,9 +74,13 @@ export function useFloorPolygonEditor({
     [facadeDisplaySettings],
   );
 
+  useEffect(() => {
+    buildingFloorsRef.current = buildingFloors;
+  }, [buildingFloors]);
+
   const startEditingFloor = useCallback(
     (floorId: string) => {
-      const floor = buildingFloors.find((f) => f.id === floorId);
+      const floor = buildingFloorsRef.current.find((f) => f.id === floorId);
       if (floor) {
         editingFloorIdRef.current = floorId;
         isCreatingNewFloorRef.current = false;
@@ -101,7 +106,7 @@ export function useFloorPolygonEditor({
         setCurrentShape(editingShape);
       }
     },
-    [buildingFloors, resetStacks, setCurrentShape],
+    [resetStacks, setCurrentShape],
   );
 
   const closeSwitchDialog = useCallback(() => {
@@ -219,9 +224,11 @@ export function useFloorPolygonEditor({
     async ({
       keepEditingState = false,
       silent = false,
+      reloadData = true,
     }: {
       keepEditingState?: boolean;
       silent?: boolean;
+      reloadData?: boolean;
     } = {}) => {
       if (!currentShape) return false;
       if (!activeFacade?.id) return false;
@@ -276,17 +283,19 @@ export function useFloorPolygonEditor({
 
         editingFloorIdRef.current = null;
         isCreatingNewFloorRef.current = false;
-        setEditingFloorId(null);
-        setIsCreatingNewFloor(false);
-        setCurrentShape(null);
         if (!keepEditingState) {
+          setEditingFloorId(null);
+          setIsCreatingNewFloor(false);
+          setCurrentShape(null);
           setIsEditing(false);
+          resetStacks();
+          preCancelShapeRef.current = null;
         }
-        resetStacks();
         clearAutoSaveTimer();
-        preCancelShapeRef.current = null;
 
-        await loadBuildingData();
+        if (reloadData) {
+          await loadBuildingData();
+        }
         return true;
       } catch (error) {
         console.error("Error saving polygon:", error);
@@ -325,24 +334,27 @@ export function useFloorPolygonEditor({
     async ({
       keepEditingState = false,
       silent = false,
+      reloadData = true,
     }: {
       keepEditingState?: boolean;
       silent?: boolean;
+      reloadData?: boolean;
     } = {}) => {
       const cancelFloorId = editingFloorIdRef.current;
       const preCancelShape = preCancelShapeRef.current;
 
       clearAutoSaveTimer();
-      editingFloorIdRef.current = null;
-      isCreatingNewFloorRef.current = false;
+
       if (!keepEditingState) {
+        editingFloorIdRef.current = null;
+        isCreatingNewFloorRef.current = false;
         setIsEditing(false);
+        setEditingFloorId(null);
+        setIsCreatingNewFloor(false);
+        setCurrentShape(null);
+        resetStacks();
+        preCancelShapeRef.current = null;
       }
-      setEditingFloorId(null);
-      setIsCreatingNewFloor(false);
-      setCurrentShape(null);
-      resetStacks();
-      preCancelShapeRef.current = null;
 
       try {
         await autoSaveRequestRef.current;
@@ -360,7 +372,9 @@ export function useFloorPolygonEditor({
           lastSavedPointsRef.current = JSON.stringify(preCancelShape.points);
         }
 
-        await loadBuildingData();
+        if (reloadData) {
+          await loadBuildingData();
+        }
         return true;
       } catch (error) {
         console.error("Error cancelling polygon changes:", error);
@@ -394,6 +408,7 @@ export function useFloorPolygonEditor({
       const cancelled = await discardCurrentPolygonChanges({
         keepEditingState: true,
         silent: true,
+        reloadData: true,
       });
       if (cancelled) {
         startEditingFloor(targetFloorId);
@@ -421,6 +436,7 @@ export function useFloorPolygonEditor({
       const saved = await saveCurrentPolygon({
         keepEditingState: true,
         silent: true,
+        reloadData: true,
       });
       if (saved) {
         startEditingFloor(targetFloorId);
