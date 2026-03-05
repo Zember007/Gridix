@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -43,6 +43,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | null>(null);
+  const skipNextFieldsChangeRefreshRef = useRef(false);
   const { t, language } = useLanguage();
 
   // Функция для получения локализованного названия поля
@@ -147,6 +148,8 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     }
     if (!field.id) return;
 
+    // Skip first callback from CustomFieldsManager initial load to avoid UI reset.
+    skipNextFieldsChangeRefreshRef.current = true;
     setEditingField({
       id: field.id,
       field_name: field.field_name,
@@ -177,6 +180,10 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
         <CustomFieldsManager
           projectId={projectId}
           onFieldsChange={() => {
+            if (skipNextFieldsChangeRefreshRef.current) {
+              skipNextFieldsChangeRefreshRef.current = false;
+              return;
+            }
             if (editorData) {
               void editorData.refresh();
               return;
@@ -318,7 +325,12 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
         )}
 
         <Button
-          onClick={() => !isSaving && setShowAddForm(true)}
+          onClick={() => {
+            if (isSaving) return;
+            // Skip first callback from CustomFieldsManager initial load to avoid UI reset.
+            skipNextFieldsChangeRefreshRef.current = true;
+            setShowAddForm(true);
+          }}
           disabled={isSaving}
           className="w-full"
           variant="outline"
