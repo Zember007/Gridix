@@ -1,13 +1,5 @@
 import { Button } from "@gridix/ui";
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@gridix/ui";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -72,7 +64,7 @@ const BuildingImageEditor = ({
                     onClick={() => {
                       void selectFacade(f.id, f.image_url ?? null);
                     }}
-                    disabled={floor.isEditing || floor.isSwitchingFloor}
+                    disabled={floor.isEditing}
                     title={f.name}
                   >
                     <span className="max-w-[180px] truncate font-medium">
@@ -92,7 +84,7 @@ const BuildingImageEditor = ({
                   size="sm"
                   className="h-8"
                   onClick={() => facade.setIsAddingFacade((v) => !v)}
-                  disabled={floor.isEditing || floor.isSwitchingFloor}
+                  disabled={floor.isEditing}
                 >
                   <Plus className="mr-1 h-3 w-3" />
                   {loader.t("buildingImage.facades.add")}
@@ -200,7 +192,7 @@ const BuildingImageEditor = ({
                       e.target.value,
                     )
                   }
-                  disabled={floor.isEditing || floor.isSwitchingFloor}
+                  disabled={floor.isEditing}
                 />
                 <Button
                   type="button"
@@ -210,11 +202,7 @@ const BuildingImageEditor = ({
                   onClick={() =>
                     void facade.handleDeleteFacade(loader.activeFacade!.id)
                   }
-                  disabled={
-                    floor.isEditing ||
-                    floor.isSwitchingFloor ||
-                    loader.facades.length <= 1
-                  }
+                  disabled={floor.isEditing || loader.facades.length <= 1}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   {loader.t("buildingImage.facades.delete")}
@@ -264,7 +252,7 @@ const BuildingImageEditor = ({
                     floor.setSelectedFloor(Number(e.target.value))
                   }
                   className="min-w-[80px] rounded border px-2 py-1 text-sm"
-                  disabled={floor.isEditing || floor.isSwitchingFloor}
+                  disabled={floor.isEditing}
                 >
                   {loader.isObjectProject
                     ? loader.apartmentNumbers.length > 0
@@ -303,7 +291,7 @@ const BuildingImageEditor = ({
                 </select>
               </div>
 
-              {!floor.isEditing && !floor.isSwitchingFloor && (
+              {!floor.isEditing && (
                 <Button
                   onClick={floor.startCreatingNewFloor}
                   size="sm"
@@ -477,7 +465,7 @@ const BuildingImageEditor = ({
                             floor.handleDeleteFloorPolygon(floorItem.id)
                           }
                           className="h-6 w-6 p-0"
-                          disabled={floor.isEditing || floor.isSwitchingFloor}
+                          disabled={floor.isEditing}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -532,54 +520,6 @@ const BuildingImageEditor = ({
           });
         }}
       />
-
-      <AlertDialog
-        open={floor.isSwitchDialogOpen}
-        onOpenChange={(open) => {
-          if (!open && !floor.isSwitchingFloor) {
-            floor.handleSwitchDialogStay();
-          }
-        }}
-      >
-        <AlertDialogContent className="flex w-[calc(100vw-2rem)] min-w-[620px] flex-col items-center justify-center p-5 sm:p-6">
-          <AlertDialogHeader className="space-y-2">
-            <AlertDialogTitle>
-              {loader.t("buildingImage.polygon.switchDialog.title")}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="leading-6">
-              {loader.t("buildingImage.polygon.switchDialog.description")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-2 gap-2 sm:flex-wrap sm:justify-end sm:space-x-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={floor.handleSwitchDialogStay}
-              disabled={floor.isSwitchingFloor}
-              className="w-full sm:w-auto"
-            >
-              {loader.t("buildingImage.polygon.switchDialog.stay")}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void floor.handleSwitchDialogDiscardAndSwitch()}
-              disabled={floor.isSwitchingFloor}
-              className="w-full sm:w-auto"
-            >
-              {loader.t("buildingImage.polygon.switchDialog.discard")}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => void floor.handleSwitchDialogSaveAndSwitch()}
-              disabled={floor.isSwitchingFloor}
-              className="w-full sm:w-auto"
-            >
-              {loader.t("buildingImage.polygon.switchDialog.save")}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

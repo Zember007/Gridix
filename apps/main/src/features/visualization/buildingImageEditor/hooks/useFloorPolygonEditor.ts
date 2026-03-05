@@ -36,11 +36,6 @@ export function useFloorPolygonEditor({
   const [selectedVertexIndex, setSelectedVertexIndex] = useState<number | null>(
     null,
   );
-  const [isSwitchDialogOpen, setIsSwitchDialogOpen] = useState(false);
-  const [isSwitchingFloor, setIsSwitchingFloor] = useState(false);
-  const [pendingSwitchFloorId, setPendingSwitchFloorId] = useState<
-    string | null
-  >(null);
   const autoSaveTimerRef = useRef<number | null>(null);
   const autoSaveRequestRef = useRef<Promise<void>>(Promise.resolve());
   const lastSavedPointsRef = useRef<string>("");
@@ -113,29 +108,15 @@ export function useFloorPolygonEditor({
     [resetStacks, setCurrentShape],
   );
 
-  const closeSwitchDialog = useCallback(() => {
-    setPendingSwitchFloorId(null);
-    setIsSwitchDialogOpen(false);
-  }, []);
-
   const requestStartEditingFloor = useCallback(
     (floorId: string) => {
-      if (isSwitchingFloor) return;
       if (editingFloorIdRef.current === floorId) return;
-
-      if (isEditing) {
-        setPendingSwitchFloorId(floorId);
-        setIsSwitchDialogOpen(true);
-        return;
-      }
-
       startEditingFloor(floorId);
     },
-    [isEditing, isSwitchingFloor, startEditingFloor],
+    [startEditingFloor],
   );
 
   const startCreatingNewFloor = () => {
-    if (isSwitchingFloor) return;
     editingFloorIdRef.current = null;
     isCreatingNewFloorRef.current = true;
     setIsCreatingNewFloor(true);
@@ -460,66 +441,6 @@ export function useFloorPolygonEditor({
     await discardCurrentPolygonChanges();
   };
 
-  const handleSwitchDialogStay = useCallback(() => {
-    closeSwitchDialog();
-  }, [closeSwitchDialog]);
-
-  const handleSwitchDialogDiscardAndSwitch = useCallback(async () => {
-    const targetFloorId = pendingSwitchFloorId;
-    if (!targetFloorId) {
-      closeSwitchDialog();
-      return;
-    }
-
-    closeSwitchDialog();
-    setIsSwitchingFloor(true);
-    try {
-      const cancelled = await discardCurrentPolygonChanges({
-        keepEditingState: true,
-        silent: true,
-        reloadData: true,
-      });
-      if (cancelled) {
-        startEditingFloor(targetFloorId);
-      }
-    } finally {
-      setIsSwitchingFloor(false);
-    }
-  }, [
-    closeSwitchDialog,
-    discardCurrentPolygonChanges,
-    pendingSwitchFloorId,
-    startEditingFloor,
-  ]);
-
-  const handleSwitchDialogSaveAndSwitch = useCallback(async () => {
-    const targetFloorId = pendingSwitchFloorId;
-    if (!targetFloorId) {
-      closeSwitchDialog();
-      return;
-    }
-
-    closeSwitchDialog();
-    setIsSwitchingFloor(true);
-    try {
-      const saved = await saveCurrentPolygon({
-        keepEditingState: true,
-        silent: true,
-        reloadData: true,
-      });
-      if (saved) {
-        startEditingFloor(targetFloorId);
-      }
-    } finally {
-      setIsSwitchingFloor(false);
-    }
-  }, [
-    closeSwitchDialog,
-    pendingSwitchFloorId,
-    saveCurrentPolygon,
-    startEditingFloor,
-  ]);
-
   const handleDeleteFloorPolygon = async (floorId: string) => {
     try {
       await api.deleteFloorPolygon(floorId);
@@ -540,8 +461,6 @@ export function useFloorPolygonEditor({
     setIsEditing(false);
     setEditingFloorId(null);
     setIsCreatingNewFloor(false);
-    setIsSwitchingFloor(false);
-    closeSwitchDialog();
     preCancelShapeRef.current = null;
     resetStacks();
   };
@@ -550,7 +469,6 @@ export function useFloorPolygonEditor({
     selectedFloor,
     setSelectedFloor,
     isEditing,
-    isSwitchingFloor,
     editingFloorId,
     isCreatingNewFloor,
     polygonAnnotatorRef,
@@ -574,10 +492,6 @@ export function useFloorPolygonEditor({
     startCreatingNewFloor,
     handlePolygonSave,
     handlePolygonCancel,
-    isSwitchDialogOpen,
-    handleSwitchDialogStay,
-    handleSwitchDialogDiscardAndSwitch,
-    handleSwitchDialogSaveAndSwitch,
     handleDeleteFloorPolygon,
     resetEditing,
   };

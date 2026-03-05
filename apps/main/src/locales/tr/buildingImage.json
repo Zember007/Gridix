@@ -32,14 +32,7 @@
     "deleteSuccess": "Kat çokgeni silindi",
     "save": "Kaydetmek",
     "saveError": "Çokgen kaydedilirken hata oluştu",
-    "saveSuccess": "{{floor}} katının poligonu kaydedildi",
-    "switchDialog": {
-      "title": "Poligon değiştirilsin mi?",
-      "description": "Kaydedilmemiş değişiklikleriniz var. Başka bir poligona geçmeden önce ne yapmak istersiniz?",
-      "stay": "Mevcut poligonda kal",
-      "discard": "Değişiklikleri at",
-      "save": "Kaydet ve geç"
-    }
+    "saveSuccess": "{{floor}} katının poligonu kaydedildi"
   },
   "facades": {
     "add": "Cephe ekle",
