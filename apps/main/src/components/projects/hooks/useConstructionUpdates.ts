@@ -12,9 +12,31 @@ interface UseConstructionUpdatesOptions {
 interface AddUpdateParams {
   files: File[];
   links?: string[];
+  currentLanguage?: string;
+  titleTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
   clearFiles: () => void;
   clearLinks?: () => void;
 }
+
+const normalizeLanguageCode = (language?: string): string => {
+  if (!language) return "en";
+  return language.toLowerCase().replace("_", "-").split("-")[0] ?? "en";
+};
+
+const normalizeTranslations = (
+  source?: Record<string, string>,
+): Record<string, string> => {
+  if (!source) return {};
+
+  const entries = Object.entries(source)
+    .map(
+      ([lang, value]) => [normalizeLanguageCode(lang), value.trim()] as const,
+    )
+    .filter(([, value]) => value.length > 0);
+
+  return Object.fromEntries(entries);
+};
 
 export const useConstructionUpdates = ({
   projectId,
@@ -32,13 +54,16 @@ export const useConstructionUpdates = ({
   const addUpdate = async ({
     files,
     links = [],
+    currentLanguage,
+    titleTranslations,
+    descriptionTranslations,
     clearFiles,
     clearLinks,
   }: AddUpdateParams) => {
-    if (!newTitle.trim() || !newDesc.trim()) return;
+    if (!newTitle.trim() || !newDesc.trim()) return false;
     if (!userId) {
       toast.error(t("projectList.authRequired"));
-      return;
+      return false;
     }
 
     const normalizedLinks = links
@@ -58,7 +83,7 @@ export const useConstructionUpdates = ({
 
     if (normalizedLinks.some((link) => link === null)) {
       toast.error(t("projectList.media.invalidLink"));
-      return;
+      return false;
     }
 
     const safeLinks = Array.from(
@@ -87,6 +112,39 @@ export const useConstructionUpdates = ({
         uploadedFiles.push(urlData.publicUrl);
       }
 
+      const normalizedCurrentLanguage = normalizeLanguageCode(currentLanguage);
+      const normalizedTitleTranslations =
+        normalizeTranslations(titleTranslations);
+      const normalizedDescriptionTranslations = normalizeTranslations(
+        descriptionTranslations,
+      );
+
+      if (newTitle.trim()) {
+        normalizedTitleTranslations[normalizedCurrentLanguage] =
+          newTitle.trim();
+      }
+      if (newDesc.trim()) {
+        normalizedDescriptionTranslations[normalizedCurrentLanguage] =
+          newDesc.trim();
+      }
+
+      const translationLanguages = new Set([
+        ...Object.keys(normalizedTitleTranslations),
+        ...Object.keys(normalizedDescriptionTranslations),
+      ]);
+
+      const translationsPayload = Array.from(translationLanguages).reduce<
+        Record<string, { title?: string; description?: string }>
+      >((acc, lang) => {
+        const title = normalizedTitleTranslations[lang];
+        const description = normalizedDescriptionTranslations[lang];
+        if (!title && !description) return acc;
+        acc[lang] = {};
+        if (title) acc[lang].title = title;
+        if (description) acc[lang].description = description;
+        return acc;
+      }, {});
+
       const { error } = await supabase.functions.invoke("project-drawer", {
         body: {
           action: "add_construction_update",
@@ -94,6 +152,18 @@ export const useConstructionUpdates = ({
           date: newDate,
           title: newTitle,
           description: newDesc,
+          title_translations:
+            Object.keys(normalizedTitleTranslations).length > 0
+              ? normalizedTitleTranslations
+              : undefined,
+          description_translations:
+            Object.keys(normalizedDescriptionTranslations).length > 0
+              ? normalizedDescriptionTranslations
+              : undefined,
+          translations:
+            Object.keys(translationsPayload).length > 0
+              ? translationsPayload
+              : undefined,
           images: [...uploadedFiles, ...safeLinks],
         },
       });
@@ -105,9 +175,11 @@ export const useConstructionUpdates = ({
       clearFiles();
       clearLinks?.();
       await reloadProject(projectId);
+      return true;
     } catch (e) {
       console.error("Failed to add construction update", e);
       toast.error(t("projectList.construction.addError"));
+      return false;
     } finally {
       setIsPublishing(false);
     }

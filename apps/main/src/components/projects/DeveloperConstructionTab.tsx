@@ -1,12 +1,17 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ClipboardEvent as ReactClipboardEvent,
   type DragEvent as ReactDragEvent,
 } from "react";
-import { ConstructionUpdateAttachments, type SharedProject } from "@gridix/ui";
+import {
+  ConstructionUpdateAttachments,
+  resolveConstructionUpdateLocale,
+  type SharedProject,
+} from "@gridix/ui";
 import {
   FileText,
   GripVertical,
@@ -17,6 +22,11 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import {
+  LANGUAGE_CONFIG,
+  SUPPORTED_LANGUAGES,
+  type Language,
+} from "@/shared/lib/language-utils";
 import { useConstructionAttachments } from "./hooks/useConstructionAttachments";
 import { useConstructionUpdates } from "./hooks/useConstructionUpdates";
 
@@ -84,6 +94,31 @@ const getLinkDisplayFallback = (url: string) => {
   }
 };
 
+const normalizeLanguageCode = (rawLanguage: string): Language => {
+  const normalized = rawLanguage.toLowerCase().replace("_", "-").split("-")[0];
+  if (normalized && SUPPORTED_LANGUAGES.includes(normalized as Language)) {
+    return normalized as Language;
+  }
+  return "en";
+};
+
+const getLocalizedLanguageName = (
+  languageCode: Language,
+  uiLanguage: Language,
+): string => {
+  try {
+    const display = new Intl.DisplayNames([uiLanguage], { type: "language" });
+    const localized = display.of(languageCode);
+    if (typeof localized === "string" && localized.trim().length > 0) {
+      return localized;
+    }
+  } catch {
+    // Ignore and fall back to static language names.
+  }
+
+  return LANGUAGE_CONFIG[languageCode].name;
+};
+
 const fetchYoutubeTitle = async (link: string): Promise<string | null> => {
   try {
     const response = await fetch(
@@ -108,12 +143,21 @@ export const DeveloperConstructionTab = ({
   t,
   reloadProject,
 }: DeveloperConstructionTabProps) => {
+  const currentLanguage = normalizeLanguageCode(language);
   const isMountedRef = useRef(true);
   const pendingLinkRequestsRef = useRef<Set<string>>(new Set());
+  const [selectedContentLanguage, setSelectedContentLanguage] =
+    useState<Language>(currentLanguage);
   const [linkPreviewMap, setLinkPreviewMap] = useState<
     Record<string, { title?: string; thumbnailUrl?: string; loading: boolean }>
   >({});
   const [newMediaLinks, setNewMediaLinks] = useState<string[]>([]);
+  const [localizedTitles, setLocalizedTitles] = useState<
+    Record<string, string>
+  >({});
+  const [localizedDescriptions, setLocalizedDescriptions] = useState<
+    Record<string, string>
+  >({});
   const {
     newTitle,
     setNewTitle,
@@ -130,6 +174,10 @@ export const DeveloperConstructionTab = ({
     t,
     reloadProject,
   });
+
+  useEffect(() => {
+    setSelectedContentLanguage(currentLanguage);
+  }, [currentLanguage]);
   const {
     files: newFiles,
     isDropActive,
@@ -288,7 +336,56 @@ export const DeveloperConstructionTab = ({
     };
   }, [isPublishing, addLinksFromText]);
 
-  const updates = project.constructionProgress ?? [];
+  const updates = useMemo(
+    () => project.constructionProgress ?? [],
+    [project.constructionProgress],
+  );
+  const isCurrentLanguageSelected = selectedContentLanguage === currentLanguage;
+  const draftTitle = isCurrentLanguageSelected
+    ? newTitle
+    : (localizedTitles[selectedContentLanguage] ?? "");
+  const draftDescription = isCurrentLanguageSelected
+    ? newDesc
+    : (localizedDescriptions[selectedContentLanguage] ?? "");
+
+  const updateDraftTitle = (value: string) => {
+    if (isCurrentLanguageSelected) {
+      setNewTitle(value);
+      return;
+    }
+    setLocalizedTitles((prev) => ({
+      ...prev,
+      [selectedContentLanguage]: value,
+    }));
+  };
+
+  const updateDraftDescription = (value: string) => {
+    if (isCurrentLanguageSelected) {
+      setNewDesc(value);
+      return;
+    }
+    setLocalizedDescriptions((prev) => ({
+      ...prev,
+      [selectedContentLanguage]: value,
+    }));
+  };
+
+  const getLanguageBadgeState = (lang: Language) => {
+    if (lang === currentLanguage) {
+      return Boolean(newTitle.trim() && newDesc.trim());
+    }
+    return Boolean(
+      localizedTitles[lang]?.trim() && localizedDescriptions[lang]?.trim(),
+    );
+  };
+  const localizedUpdates = useMemo(
+    () =>
+      updates.map((update) => ({
+        update,
+        localized: resolveConstructionUpdateLocale(update, currentLanguage),
+      })),
+    [updates, currentLanguage],
+  );
 
   return (
     <div className="p-6">
@@ -306,18 +403,54 @@ export const DeveloperConstructionTab = ({
           />
           <input
             type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder={t("projectList.construction.titlePlaceholder")}
+            value={draftTitle}
+            onChange={(e) => updateDraftTitle(e.target.value)}
+            placeholder={t("projectList.construction.titlePlaceholder", {
+              language: LANGUAGE_CONFIG[selectedContentLanguage].name,
+            })}
             className="w-full rounded border p-2 text-sm"
           />
           <textarea
-            value={newDesc}
-            onChange={(e) => setNewDesc(e.target.value)}
+            value={draftDescription}
+            onChange={(e) => updateDraftDescription(e.target.value)}
             onPaste={onDescriptionPaste}
-            placeholder={t("projectList.construction.descriptionPlaceholder")}
+            placeholder={t("projectList.construction.descriptionPlaceholder", {
+              language: LANGUAGE_CONFIG[selectedContentLanguage].name,
+            })}
             className="h-32 w-full resize-none rounded border p-2 text-sm"
           />
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-2 text-xs font-semibold text-slate-600">
+              {t("projectList.construction.languageSection")}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {SUPPORTED_LANGUAGES.map((langCode) => {
+                const isSelected = selectedContentLanguage === langCode;
+                const hasContent = getLanguageBadgeState(langCode);
+                return (
+                  <button
+                    key={langCode}
+                    type="button"
+                    onClick={() => setSelectedContentLanguage(langCode)}
+                    className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800"
+                    }`}
+                  >
+                    <span>
+                      {getLocalizedLanguageName(langCode, currentLanguage)}
+                    </span>
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        hasContent ? "bg-emerald-500" : "bg-slate-300"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="space-y-2">
             <label className="block cursor-pointer">
               <div
@@ -531,14 +664,23 @@ export const DeveloperConstructionTab = ({
           </div>
           <button
             type="button"
-            onClick={() =>
-              void addUpdate({
+            onClick={async () => {
+              const published = await addUpdate({
                 files: newFiles,
                 links: newMediaLinks,
+                currentLanguage,
+                titleTranslations: localizedTitles,
+                descriptionTranslations: localizedDescriptions,
                 clearFiles,
                 clearLinks: clearMediaLinks,
-              })
-            }
+              });
+
+              if (published) {
+                setLocalizedTitles({});
+                setLocalizedDescriptions({});
+                setSelectedContentLanguage(currentLanguage);
+              }
+            }}
             disabled={isPublishing}
             className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -556,34 +698,36 @@ export const DeveloperConstructionTab = ({
             {t("projectList.construction.noUpdates")}
           </div>
         )}
-        {updates.map((u) => (
-          <div key={u.id} className="relative pl-6">
-            <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-blue-500 ring-4 ring-white" />
-            <div className="flex items-start justify-between gap-4">
-              <div className="grow">
-                <div className="mb-1 text-xs font-bold text-slate-400">
-                  {new Date(u.date).toLocaleDateString()}
+        {localizedUpdates.map(({ update: u, localized }) => {
+          return (
+            <div key={u.id} className="relative pl-6">
+              <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-blue-500 ring-4 ring-white" />
+              <div className="flex items-start justify-between gap-4">
+                <div className="grow">
+                  <div className="mb-1 text-xs font-bold text-slate-400">
+                    {new Date(u.date).toLocaleDateString()}
+                  </div>
+                  <h4 className="mb-1 text-sm font-bold text-slate-900">
+                    {localized.title}
+                  </h4>
+                  <ConstructionUpdateAttachments
+                    description={localized.description}
+                    media={u.images ?? []}
+                    modalZIndex={120}
+                  />
                 </div>
-                <h4 className="mb-1 text-sm font-bold text-slate-900">
-                  {u.title}
-                </h4>
-                <ConstructionUpdateAttachments
-                  description={u.description}
-                  media={u.images ?? []}
-                  modalZIndex={120}
-                />
+                <button
+                  type="button"
+                  onClick={() => void deleteUpdate(u.id)}
+                  className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                  title={t("projectList.construction.delete")}
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => void deleteUpdate(u.id)}
-                className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                title={t("projectList.construction.delete")}
-              >
-                <X size={16} />
-              </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

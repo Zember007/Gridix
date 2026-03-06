@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X,
@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@gridix/ui";
+import { resolveConstructionUpdateLocale } from "./construction-update-localization";
 
 // --- Types ---
 
@@ -46,6 +47,14 @@ export interface ConstructionUpdate {
   title: string;
   description: string;
   images?: string[];
+  titleTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
+  title_translations?: Record<string, string>;
+  description_translations?: Record<string, string>;
+  translations?: Record<
+    string,
+    { title?: string | null; description?: string | null }
+  >;
 }
 
 export interface ProjectPartnershipSettings {
@@ -503,8 +512,20 @@ const MediaTab: React.FC<{
 const ConstructionTab: React.FC<{
   project: SharedProject;
   t: (key: string, params?: Record<string, unknown>) => string;
-}> = ({ project, t }) => {
-  const updates = project.constructionProgress ?? [];
+  language: string;
+}> = ({ project, t, language }) => {
+  const updates = useMemo(
+    () => project.constructionProgress ?? [],
+    [project.constructionProgress],
+  );
+  const localizedUpdates = useMemo(
+    () =>
+      updates.map((update) => ({
+        update,
+        localized: resolveConstructionUpdateLocale(update, language),
+      })),
+    [updates, language],
+  );
 
   return (
     <div className="p-6">
@@ -517,22 +538,24 @@ const ConstructionTab: React.FC<{
         </div>
       ) : (
         <div className="relative space-y-8 border-l border-slate-200 pl-4">
-          {updates.map((update) => (
-            <div key={update.id} className="relative pl-6">
-              <div className="absolute top-1 -left-[21px] h-3 w-3 rounded-full bg-[var(--admin-primary)] ring-4 ring-white" />
-              <div className="mb-1 text-xs font-bold text-slate-400">
-                {new Date(update.date).toLocaleDateString()}
+          {localizedUpdates.map(({ update, localized }) => {
+            return (
+              <div key={update.id} className="relative pl-6">
+                <div className="absolute top-1 -left-[21px] h-3 w-3 rounded-full bg-[var(--admin-primary)] ring-4 ring-white" />
+                <div className="mb-1 text-xs font-bold text-slate-400">
+                  {new Date(update.date).toLocaleDateString()}
+                </div>
+                <h4 className="mb-1 text-sm font-bold text-slate-900">
+                  {localized.title}
+                </h4>
+                <ConstructionUpdateAttachments
+                  description={localized.description}
+                  media={update.images ?? []}
+                  modalZIndex={220}
+                />
               </div>
-              <h4 className="mb-1 text-sm font-bold text-slate-900">
-                {update.title}
-              </h4>
-              <ConstructionUpdateAttachments
-                description={update.description}
-                media={update.images ?? []}
-                modalZIndex={220}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -559,9 +582,10 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   initialTab = "overview",
 }) => {
   void _onUpdate; // Reserved for future use
-  const { t: tRaw } = useTranslation();
+  const { t: tRaw, i18n } = useTranslation();
   const t = (key: string, params?: Record<string, unknown>): string =>
     tRaw(key, (params ?? {}) as Record<string, string | number>);
+  const language = i18n.resolvedLanguage ?? i18n.language;
   const [activeTab, setActiveTab] =
     useState<SharedProjectDrawerTab>(initialTab);
 
@@ -737,7 +761,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
             (renderConstructionTab ? (
               renderConstructionTab(project)
             ) : (
-              <ConstructionTab project={project} t={t} />
+              <ConstructionTab project={project} t={t} language={language} />
             ))}
           {/*
           {activeTab === "partners" &&

@@ -60,8 +60,9 @@
   "widgetCodeCopied": "Widget code copied",
   "construction": {
     "addNews": "Add update",
-    "titlePlaceholder": "Title",
-    "descriptionPlaceholder": "Description...",
+    "titlePlaceholder": "Title ({{language}})",
+    "descriptionPlaceholder": "Description ({{language}})...",
+    "languageSection": "News content languages",
     "publish": "Publish",
     "noUpdates": "No updates",
     "delete": "Delete",

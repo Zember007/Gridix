@@ -65,6 +65,7 @@ export * from "./testimonials";
 export * from "./textarea";
 export * from "./timeline";
 export * from "./construction-update-attachments";
+export * from "./construction-update-localization";
 export * from "./toast";
 export * from "./toaster";
 export * from "./toggle";
