@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, PlayCircle, X } from "lucide-react";
 
-type AttachmentKind = "image" | "video" | "document";
+type AttachmentKind = "image" | "video" | "youtube" | "document";
 
 interface ConstructionUpdateAttachmentsProps {
   description: string;
@@ -15,7 +15,43 @@ const isVideoUrl = (url: string) =>
 const isImageUrl = (url: string) =>
   /\.(jpg|jpeg|png|gif|webp|bmp|svg|avif)(\?|#|$)/i.test(url);
 
+const getYoutubeVideoId = (url: string): string | null => {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+
+    if (host === "youtu.be") {
+      const id = parsed.pathname.split("/").filter(Boolean)[0];
+      return id ? id.slice(0, 20) : null;
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (parsed.pathname === "/watch") {
+        const id = parsed.searchParams.get("v");
+        return id ? id.slice(0, 20) : null;
+      }
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      if (
+        parts.length >= 2 &&
+        (parts[0] === "embed" || parts[0] === "shorts" || parts[0] === "live")
+      ) {
+        return parts[1] ? parts[1].slice(0, 20) : null;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const getYoutubeEmbedUrl = (videoId: string) =>
+  `https://www.youtube.com/embed/${videoId}`;
+const getYoutubePreviewUrl = (videoId: string) =>
+  `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
 const getUrlAttachmentKind = (url: string): AttachmentKind => {
+  if (getYoutubeVideoId(url)) return "youtube";
   if (isVideoUrl(url)) return "video";
   if (isImageUrl(url)) return "image";
   return "document";
@@ -46,18 +82,46 @@ export const ConstructionUpdateAttachments = ({
 }: ConstructionUpdateAttachmentsProps) => {
   const { t } = useTranslation();
   const [previewMedia, setPreviewMedia] = useState<{
-    isVideo: boolean;
+    kind: "video" | "image" | "youtube";
     url: string;
   } | null>(null);
 
   const renderMediaAsset = (assetUrl: string, key: string) => {
     const kind = getUrlAttachmentKind(assetUrl);
+    if (kind === "youtube") {
+      const videoId = getYoutubeVideoId(assetUrl);
+      const previewUrl = videoId ? getYoutubePreviewUrl(videoId) : null;
+      const embedUrl = videoId ? getYoutubeEmbedUrl(videoId) : assetUrl;
+      return (
+        <button
+          key={key}
+          type="button"
+          onClick={() => setPreviewMedia({ kind: "youtube", url: embedUrl })}
+          className="group relative block overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-transform hover:scale-[1.01]"
+        >
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt={key}
+              className="aspect-video w-full bg-black object-cover"
+            />
+          ) : (
+            <div className="aspect-video w-full bg-black" />
+          )}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 opacity-90">
+            <div className="rounded-full bg-black/60 p-2 text-white backdrop-blur-sm">
+              <PlayCircle size={16} />
+            </div>
+          </div>
+        </button>
+      );
+    }
     if (kind === "video") {
       return (
         <button
           key={key}
           type="button"
-          onClick={() => setPreviewMedia({ isVideo: true, url: assetUrl })}
+          onClick={() => setPreviewMedia({ kind: "video", url: assetUrl })}
           className="group relative block overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-transform hover:scale-[1.01]"
         >
           <video
@@ -81,7 +145,7 @@ export const ConstructionUpdateAttachments = ({
         <button
           key={key}
           type="button"
-          onClick={() => setPreviewMedia({ isVideo: false, url: assetUrl })}
+          onClick={() => setPreviewMedia({ kind: "image", url: assetUrl })}
           className="group relative block overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-transform hover:scale-[1.01]"
         >
           <img
@@ -148,7 +212,15 @@ export const ConstructionUpdateAttachments = ({
             className="max-h-[90vh] w-full max-w-5xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {previewMedia.isVideo ? (
+            {previewMedia.kind === "youtube" ? (
+              <iframe
+                src={previewMedia.url}
+                title="YouTube video preview"
+                className="aspect-video w-full rounded-xl bg-black"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            ) : previewMedia.kind === "video" ? (
               <video
                 src={previewMedia.url}
                 controls

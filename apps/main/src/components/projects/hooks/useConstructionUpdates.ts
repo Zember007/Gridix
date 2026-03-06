@@ -11,7 +11,9 @@ interface UseConstructionUpdatesOptions {
 
 interface AddUpdateParams {
   files: File[];
+  links?: string[];
   clearFiles: () => void;
+  clearLinks?: () => void;
 }
 
 export const useConstructionUpdates = ({
@@ -27,12 +29,41 @@ export const useConstructionUpdates = ({
   );
   const [isPublishing, setIsPublishing] = useState(false);
 
-  const addUpdate = async ({ files, clearFiles }: AddUpdateParams) => {
+  const addUpdate = async ({
+    files,
+    links = [],
+    clearFiles,
+    clearLinks,
+  }: AddUpdateParams) => {
     if (!newTitle.trim() || !newDesc.trim()) return;
     if (!userId) {
       toast.error(t("projectList.authRequired"));
       return;
     }
+
+    const normalizedLinks = links
+      .map((link) => link.trim())
+      .filter(Boolean)
+      .map((link) => {
+        try {
+          const parsed = new URL(link);
+          if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            return null;
+          }
+          return parsed.toString();
+        } catch {
+          return null;
+        }
+      });
+
+    if (normalizedLinks.some((link) => link === null)) {
+      toast.error(t("projectList.media.invalidLink"));
+      return;
+    }
+
+    const safeLinks = Array.from(
+      new Set(normalizedLinks.filter((link): link is string => Boolean(link))),
+    );
 
     setIsPublishing(true);
     try {
@@ -63,7 +94,7 @@ export const useConstructionUpdates = ({
           date: newDate,
           title: newTitle,
           description: newDesc,
-          images: uploadedFiles,
+          images: [...uploadedFiles, ...safeLinks],
         },
       });
       if (error) throw error;
@@ -72,6 +103,7 @@ export const useConstructionUpdates = ({
       setNewTitle("");
       setNewDesc("");
       clearFiles();
+      clearLinks?.();
       await reloadProject(projectId);
     } catch (e) {
       console.error("Failed to add construction update", e);
