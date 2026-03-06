@@ -570,7 +570,7 @@ const ProjectList = ({
                   <h4 className="mb-1 text-sm font-bold text-slate-900">
                     {u.title}
                   </h4>
-                  <p className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
+                  <p className="whitespace-pre-line rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
                     {u.description}
                   </p>
                 </div>

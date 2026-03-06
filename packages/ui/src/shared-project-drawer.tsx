@@ -525,7 +525,7 @@ const ConstructionTab: React.FC<{
               <h4 className="mb-1 text-sm font-bold text-slate-900">
                 {update.title}
               </h4>
-              <p className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
+              <p className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-line text-slate-600">
                 {update.description}
               </p>
               {update.images && update.images.length > 0 && (
