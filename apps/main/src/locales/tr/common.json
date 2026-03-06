@@ -69,7 +69,9 @@
     },
     "construction": {
       "title": "İnşaat ilerlemesi",
-      "noUpdates": "Güncelleme yok"
+      "noUpdates": "Güncelleme yok",
+      "openDocument": "Belgeyi ac",
+      "attachmentAlt": "Insaat guncelleme eki"
     },
     "units": {
       "legend": {

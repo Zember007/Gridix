@@ -69,7 +69,9 @@
     },
     "construction": {
       "title": "Construction progress",
-      "noUpdates": "No updates"
+      "noUpdates": "No updates",
+      "openDocument": "Open document",
+      "attachmentAlt": "Construction update attachment"
     },
     "units": {
       "legend": {

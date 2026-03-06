@@ -69,7 +69,9 @@
     },
     "construction": {
       "title": "התקדמות הבנייה",
-      "noUpdates": "אין עדכונים"
+      "noUpdates": "אין עדכונים",
+      "openDocument": "פתח מסמך",
+      "attachmentAlt": "קובץ מצורף לעדכון בנייה"
     },
     "units": {
       "legend": {
