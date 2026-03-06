@@ -152,14 +152,6 @@ export const useConstructionUpdates = ({
           date: newDate,
           title: newTitle,
           description: newDesc,
-          title_translations:
-            Object.keys(normalizedTitleTranslations).length > 0
-              ? normalizedTitleTranslations
-              : undefined,
-          description_translations:
-            Object.keys(normalizedDescriptionTranslations).length > 0
-              ? normalizedDescriptionTranslations
-              : undefined,
           translations:
             Object.keys(translationsPayload).length > 0
               ? translationsPayload
