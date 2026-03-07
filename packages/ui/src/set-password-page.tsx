@@ -73,6 +73,10 @@ export const SetPasswordPage = ({
         }
       }
 
+      if (typeof window !== "undefined" && userId) {
+        window.sessionStorage.setItem(`has_password:${userId}`, "true");
+      }
+
       toast.success(texts.passwordUpdatedSuccess);
       onSuccess();
     } catch (error: unknown) {

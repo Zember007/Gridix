@@ -69,7 +69,11 @@
     },
     "construction": {
       "title": "Ход строительства",
-      "noUpdates": "Нет обновлений"
+      "noUpdates": "Нет обновлений",
+      "openDocument": "Открыть документ",
+      "openLink": "Открыть ссылку",
+      "linkType": "Ссылка",
+      "attachmentAlt": "Вложение обновления строительства"
     },
     "units": {
       "legend": {

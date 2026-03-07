@@ -69,7 +69,11 @@
     },
     "construction": {
       "title": "მშენებლობის პროგრესი",
-      "noUpdates": "განახლებები არ არის"
+      "noUpdates": "განახლებები არ არის",
+      "openDocument": "დოკუმენტის გახსნა",
+      "openLink": "ბმულის გახსნა",
+      "linkType": "ბმული",
+      "attachmentAlt": "მშენებლობის განახლების დანართი"
     },
     "units": {
       "legend": {

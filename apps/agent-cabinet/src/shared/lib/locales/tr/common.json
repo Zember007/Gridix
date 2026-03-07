@@ -145,7 +145,11 @@
     },
     "construction": {
       "title": "İnşaat ilerlemesi",
-      "noUpdates": "Güncelleme yok"
+      "noUpdates": "Güncelleme yok",
+      "openDocument": "Belgeyi ac",
+      "openLink": "Bağlantıyı aç",
+      "linkType": "Bağlantı",
+      "attachmentAlt": "İnşaat güncellemesi eki"
     },
     "units": {
       "legend": {
