@@ -380,24 +380,28 @@ const PolygonCustomizationSettings = ({
                 }
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.showArea")}</Label>
-              <Switch
-                checked={settings.display.showArea}
-                onCheckedChange={(checked) =>
-                  updateSettings("display.showArea", checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.showPrice")}</Label>
-              <Switch
-                checked={settings.display.showPrice}
-                onCheckedChange={(checked) =>
-                  updateSettings("display.showPrice", checked)
-                }
-              />
-            </div>
+            {type !== "building" && (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label>{t("polygonSettings.showArea")}</Label>
+                  <Switch
+                    checked={settings.display.showArea}
+                    onCheckedChange={(checked) =>
+                      updateSettings("display.showArea", checked)
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>{t("polygonSettings.showPrice")}</Label>
+                  <Switch
+                    checked={settings.display.showPrice}
+                    onCheckedChange={(checked) =>
+                      updateSettings("display.showPrice", checked)
+                    }
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 

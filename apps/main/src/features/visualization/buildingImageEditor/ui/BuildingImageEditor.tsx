@@ -19,6 +19,8 @@ import {
   Check,
   Undo2,
   Redo2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import PolygonAnnotator from "@/components/visualization/polygon-editor/PolygonAnnotator";
 import PolygonCustomizationSettings, {
@@ -343,6 +345,39 @@ const BuildingImageEditor = ({
                       <Redo2 className="h-3.5 w-3.5" />
                     </Button>
                     <Button
+                      onClick={() => void floor.handleDeletePoint()}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      disabled={!floor.isEditing || floor.pointCount <= 3}
+                      title="Delete point"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={floor.selectPrevVertex}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      disabled={!floor.canSelectVertex()}
+                      title="Previous point"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="min-w-[56px] text-center text-xs text-muted-foreground">
+                      {floor.selectedVertexDisplayIndex}/{floor.pointCount}
+                    </span>
+                    <Button
+                      onClick={floor.selectNextVertex}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      disabled={!floor.canSelectVertex()}
+                      title="Next point"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
                       onClick={floor.handlePolygonSave}
                       size="sm"
                       className="h-8"
@@ -374,20 +409,19 @@ const BuildingImageEditor = ({
                 imageUrl={loader.buildingImage}
                 shapes={loader.shapes}
                 currentShape={floor.currentShape}
+                selectedVertexIndex={floor.selectedVertexIndex}
                 onCurrentShapeUpdate={floor.handleCurrentShapeUpdate}
+                onClickAnnotationId={(id) => {
+                  const floorData = loader.buildingFloors.find(
+                    (f) => f.id === id,
+                  );
+                  if (floorData) {
+                    floor.requestStartEditingFloor(floorData.id);
+                  }
+                }}
                 mode={floor.isEditing ? "edit" : "view"}
                 drawingEnabled={floor.isEditing}
                 getStyleById={floor.getStyleById}
-                onSelectAnnotationId={(id) => {
-                  if (!floor.isEditing && id) {
-                    const floorData = loader.buildingFloors.find(
-                      (f) => f.id === id,
-                    );
-                    if (floorData) {
-                      floor.startEditingFloor(floorData.id);
-                    }
-                  }
-                }}
               />
             </div>
 
@@ -417,9 +451,10 @@ const BuildingImageEditor = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => floor.startEditingFloor(floorItem.id)}
+                          onClick={() =>
+                            floor.requestStartEditingFloor(floorItem.id)
+                          }
                           className="h-6 w-6 p-0"
-                          disabled={floor.isEditing}
                         >
                           <Edit3 className="h-3 w-3" />
                         </Button>
