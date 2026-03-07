@@ -71,6 +71,8 @@
       "title": "İnşaat ilerlemesi",
       "noUpdates": "Güncelleme yok",
       "openDocument": "Belgeyi ac",
+      "openLink": "Bağlantıyı aç",
+      "linkType": "Bağlantı",
       "attachmentAlt": "Insaat guncelleme eki"
     },
     "units": {

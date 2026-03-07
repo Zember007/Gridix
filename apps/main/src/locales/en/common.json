@@ -71,6 +71,8 @@
       "title": "Construction progress",
       "noUpdates": "No updates",
       "openDocument": "Open document",
+      "openLink": "Open link",
+      "linkType": "Link",
       "attachmentAlt": "Construction update attachment"
     },
     "units": {

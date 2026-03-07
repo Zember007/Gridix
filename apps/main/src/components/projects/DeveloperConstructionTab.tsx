@@ -148,6 +148,8 @@ export const DeveloperConstructionTab = ({
   const pendingLinkRequestsRef = useRef<Set<string>>(new Set());
   const [selectedContentLanguage, setSelectedContentLanguage] =
     useState<Language>(currentLanguage);
+  const [selectedPreviewLanguage, setSelectedPreviewLanguage] =
+    useState<Language>(currentLanguage);
   const [linkPreviewMap, setLinkPreviewMap] = useState<
     Record<string, { title?: string; thumbnailUrl?: string; loading: boolean }>
   >({});
@@ -177,6 +179,7 @@ export const DeveloperConstructionTab = ({
 
   useEffect(() => {
     setSelectedContentLanguage(currentLanguage);
+    setSelectedPreviewLanguage(currentLanguage);
   }, [currentLanguage]);
   const {
     files: newFiles,
@@ -382,9 +385,12 @@ export const DeveloperConstructionTab = ({
     () =>
       updates.map((update) => ({
         update,
-        localized: resolveConstructionUpdateLocale(update, currentLanguage),
+        localized: resolveConstructionUpdateLocale(
+          update,
+          selectedPreviewLanguage,
+        ),
       })),
-    [updates, currentLanguage],
+    [updates, selectedPreviewLanguage],
   );
 
   return (
@@ -692,6 +698,28 @@ export const DeveloperConstructionTab = ({
         </div>
       </div>
 
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold text-slate-500">
+          {t("projectList.construction.languageSection")}:
+        </span>
+        {SUPPORTED_LANGUAGES.map((langCode) => {
+          const isSelected = selectedPreviewLanguage === langCode;
+          return (
+            <button
+              key={`preview-lang-${langCode}`}
+              type="button"
+              onClick={() => setSelectedPreviewLanguage(langCode)}
+              className={`rounded-md border px-2 py-1 text-[11px] font-medium transition-colors ${
+                isSelected
+                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800"
+              }`}
+            >
+              {getLocalizedLanguageName(langCode, currentLanguage)}
+            </button>
+          );
+        })}
+      </div>
       <div className="relative space-y-8 border-l border-slate-200 pl-4">
         {updates.length === 0 && (
           <div className="pl-4 text-sm italic text-slate-400">

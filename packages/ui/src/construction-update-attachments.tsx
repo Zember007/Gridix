@@ -67,12 +67,14 @@ const getFileNameFromUrl = (url: string) => {
   }
 };
 
-const getDocTypeFromUrl = (url: string) => {
+type AttachmentFileType = "PDF" | "DOCX" | "DOC" | "LINK";
+
+const getDocTypeFromUrl = (url: string): AttachmentFileType => {
   const name = getFileNameFromUrl(url).toLowerCase();
   if (name.endsWith(".pdf")) return "PDF";
   if (name.endsWith(".docx")) return "DOCX";
   if (name.endsWith(".doc")) return "DOC";
-  return "DOC";
+  return "LINK";
 };
 
 export const ConstructionUpdateAttachments = ({
@@ -157,6 +159,18 @@ export const ConstructionUpdateAttachments = ({
       );
     }
 
+    const docType = getDocTypeFromUrl(assetUrl);
+    const isLink = docType === "LINK";
+    const displayName = isLink
+      ? (() => {
+          try {
+            return new URL(assetUrl).hostname.replace(/^www\./, "");
+          } catch {
+            return getFileNameFromUrl(assetUrl);
+          }
+        })()
+      : getFileNameFromUrl(assetUrl);
+
     return (
       <button
         key={key}
@@ -169,14 +183,22 @@ export const ConstructionUpdateAttachments = ({
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold text-slate-800">
-            {getFileNameFromUrl(assetUrl)}
+            {displayName}
           </div>
           <div className="text-[11px] text-slate-500">
-            {t("drawer.construction.openDocument")}
+            {isLink
+              ? t("drawer.construction.openLink", {
+                  defaultValue: "Open link",
+                })
+              : t("drawer.construction.openDocument", {
+                  defaultValue: "Open document",
+                })}
           </div>
         </div>
         <div className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">
-          {getDocTypeFromUrl(assetUrl)}
+          {docType === "LINK"
+            ? t("drawer.construction.linkType", { defaultValue: "Link" })
+            : docType}
         </div>
       </button>
     );

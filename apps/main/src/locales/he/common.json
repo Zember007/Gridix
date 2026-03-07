@@ -71,6 +71,8 @@
       "title": "התקדמות הבנייה",
       "noUpdates": "אין עדכונים",
       "openDocument": "פתח מסמך",
+      "openLink": "פתח קישור",
+      "linkType": "קישור",
       "attachmentAlt": "קובץ מצורף לעדכון בנייה"
     },
     "units": {
