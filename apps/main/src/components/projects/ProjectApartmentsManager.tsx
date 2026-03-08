@@ -1230,6 +1230,7 @@ const ProjectApartmentsManager = ({
         sourceApartment={syncSourceApartment}
         targetApartments={syncTargetApartments}
         onSyncComplete={handleSyncComplete}
+        currencySymbol={currencySymbol}
         getStatusColor={getStatusColor}
         getStatusLabel={getStatusLabel}
       />

@@ -69,7 +69,11 @@
     },
     "construction": {
       "title": "تقدم البناء",
-      "noUpdates": "لا توجد تحديثات"
+      "noUpdates": "لا توجد تحديثات",
+      "openDocument": "فتح المستند",
+      "openLink": "فتح الرابط",
+      "linkType": "رابط",
+      "attachmentAlt": "مرفق تحديث البناء"
     },
     "units": {
       "legend": {

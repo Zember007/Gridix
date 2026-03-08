@@ -41,6 +41,7 @@ import { LeadsStats } from "@/components/admin/LeadsNotification";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
+import { DeveloperConstructionTab } from "./DeveloperConstructionTab";
 
 const ProjectUnitsChessEditorTab = lazy(
   () => import("@/components/projects/ProjectUnitsChessEditorTab"),
@@ -461,135 +462,6 @@ const ProjectList = ({
     );
   };
 
-  const DeveloperConstructionTab = ({
-    project,
-  }: {
-    project: SharedProject;
-  }) => {
-    const [newTitle, setNewTitle] = useState("");
-    const [newDesc, setNewDesc] = useState("");
-    const [newDate, setNewDate] = useState(
-      () => new Date().toISOString().split("T")[0],
-    );
-
-    const addUpdate = async () => {
-      if (!newTitle.trim() || !newDesc.trim()) return;
-      try {
-        const { error } = await supabase.functions.invoke("project-drawer", {
-          body: {
-            action: "add_construction_update",
-            project_id: project.id,
-            date: newDate,
-            title: newTitle,
-            description: newDesc,
-            images: [],
-          },
-        });
-        if (error) throw error;
-        toast.success(t("projectList.construction.addSuccess"));
-        setNewTitle("");
-        setNewDesc("");
-        await loadDrawerProject(project.id);
-      } catch (e) {
-        console.error("Failed to add construction update", e);
-        toast.error(t("projectList.construction.addError"));
-      }
-    };
-
-    const deleteUpdate = async (id: string) => {
-      try {
-        const { error } = await supabase.functions.invoke("project-drawer", {
-          body: {
-            action: "delete_construction_update",
-            project_id: project.id,
-            id,
-          },
-        });
-        if (error) throw error;
-        toast.success(t("projectList.construction.deleteSuccess"));
-        await loadDrawerProject(project.id);
-      } catch (e) {
-        console.error("Failed to delete construction update", e);
-        toast.error(t("projectList.construction.deleteError"));
-      }
-    };
-
-    const updates = project.constructionProgress ?? [];
-
-    return (
-      <div className="p-6">
-        <div className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-500">
-            {t("projectList.construction.addNews")}
-          </h4>
-          <div className="space-y-3">
-            <input
-              type="date"
-              lang={language}
-              value={newDate}
-              onChange={(e) => setNewDate(e.target.value)}
-              className="w-full rounded border p-2 text-sm"
-            />
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder={t("projectList.construction.titlePlaceholder")}
-              className="w-full rounded border p-2 text-sm"
-            />
-            <textarea
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              placeholder={t("projectList.construction.descriptionPlaceholder")}
-              className="h-20 w-full resize-none rounded border p-2 text-sm"
-            />
-            <button
-              type="button"
-              onClick={addUpdate}
-              className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-slate-800"
-            >
-              <Plus size={16} /> {t("projectList.construction.publish")}
-            </button>
-          </div>
-        </div>
-
-        <div className="relative space-y-8 border-l border-slate-200 pl-4">
-          {updates.length === 0 && (
-            <div className="pl-4 text-sm italic text-slate-400">
-              {t("projectList.construction.noUpdates")}
-            </div>
-          )}
-          {updates.map((u) => (
-            <div key={u.id} className="relative pl-6">
-              <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-blue-500 ring-4 ring-white" />
-              <div className="flex items-start justify-between gap-4">
-                <div className="grow">
-                  <div className="mb-1 text-xs font-bold text-slate-400">
-                    {new Date(u.date).toLocaleDateString()}
-                  </div>
-                  <h4 className="mb-1 text-sm font-bold text-slate-900">
-                    {u.title}
-                  </h4>
-                  <p className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
-                    {u.description}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => deleteUpdate(u.id)}
-                  className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                  title={t("projectList.construction.delete")}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const DeveloperMediaTab = ({ project }: { project: SharedProject }) => {
     const [uploading, setUploading] = useState<
       null | "render" | "video" | "presentation"
@@ -854,7 +726,13 @@ const ProjectList = ({
                 {t("projectList.media.loading")}
               </div>
             ) : (
-              <DeveloperConstructionTab project={p} />
+              <DeveloperConstructionTab
+                project={p}
+                language={language}
+                userId={user?.id}
+                t={t}
+                reloadProject={loadDrawerProject}
+              />
             )
           }
         />

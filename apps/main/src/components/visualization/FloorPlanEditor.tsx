@@ -152,6 +152,7 @@ const FloorPlanEditor = ({
   const { project } = useProjectInEditorScope(projectId);
   const editorData = useProjectEditorDataContext();
   const { t } = useLanguage();
+  const currencySymbol = getCurrencySymbolSafe(project?.currency ?? "USD");
 
   useEffect(() => {
     if (editorData) {
@@ -1399,6 +1400,7 @@ const FloorPlanEditor = ({
         sourceApartment={syncSourceApartment}
         targetApartments={syncTargetApartments}
         onSyncComplete={handleSyncComplete}
+        currencySymbol={currencySymbol}
         getStatusColor={getStatusColorClass}
         getStatusLabel={getStatusLabel}
       />

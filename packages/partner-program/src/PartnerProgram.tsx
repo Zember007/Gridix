@@ -10,6 +10,9 @@ import { PartnerReferralsSection } from "./ui/PartnerReferralsSection";
 import { PartnerClientsSection } from "./ui/PartnerClientsSection";
 import { Spinner } from "./ui/Spinner";
 
+const PARTNER_OFFER_URL =
+  "https://docs.google.com/document/d/1pJEnwxZWOUdwJbd1oihc5MzlOxuZ_Sbx/edit?usp=sharing&ouid=102001712373516470082&rtpof=true&sd=true";
+
 export type PartnerSection =
   | "account"
   | "overview"
@@ -44,6 +47,11 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
+  const offerConsentText = t("partners.offerConsentText");
+  const offerLinkText = t("partners.offerLinkText");
+  const hasOfferPlaceholder = offerConsentText.includes("{offerLink}");
+  const [offerTextBeforeLink, ...offerTextAfterLinkParts] =
+    offerConsentText.split("{offerLink}");
 
   // Internal state for tabs mode; external state for sidebar mode
   const [internalTab, setInternalTab] = useState<PartnerSection>("overview");
@@ -100,7 +108,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
     );
   }
 
-  if (!isPartner) {
+  if (isPartner) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
@@ -186,6 +194,34 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
                       ? t("partners.creating")
                       : t("partners.becomePartner")}
                   </Button>
+                  <p className="mt-2 text-center text-xs text-gray-500">
+                    {hasOfferPlaceholder ? (
+                      <>
+                        {offerTextBeforeLink}
+                        <a
+                          href={PARTNER_OFFER_URL}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="underline hover:text-gray-700"
+                        >
+                          {offerLinkText}
+                        </a>
+                        {offerTextAfterLinkParts.join("{offerLink}")}
+                      </>
+                    ) : (
+                      <>
+                        {offerConsentText}{" "}
+                        <a
+                          href={PARTNER_OFFER_URL}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="underline hover:text-gray-700"
+                        >
+                          {offerLinkText}
+                        </a>
+                      </>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>

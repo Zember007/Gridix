@@ -46,10 +46,12 @@ interface PolygonAnnotatorProps {
   imageUrl: string;
   shapes?: Shape[];
   currentShape?: Shape | null;
+  selectedVertexIndex?: number | null;
   onCurrentShapeUpdate?: (shape: Shape | null) => void;
   drawingEnabled?: boolean;
   mode?: "edit" | "view";
   onSelectAnnotationId?: (id: string | null) => void;
+  onClickAnnotationId?: (id: string) => void;
   onHoverAnnotationId?: (id: string | null) => void;
   zoomToSelection?: boolean;
   getStyleById?: (id: string) => DrawingStyle;
@@ -68,10 +70,12 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       imageUrl,
       shapes = [],
       currentShape,
+      selectedVertexIndex = null,
       onCurrentShapeUpdate,
       drawingEnabled = true,
       mode = "edit",
       onSelectAnnotationId,
+      onClickAnnotationId,
       onHoverAnnotationId,
       zoomToSelection = false,
       getStyleById,
@@ -88,11 +92,17 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
     const prevShapesRef = useRef<Shape[]>([]);
     const prevCurrentShapeIdRef = useRef<string | null>(null);
+    const prevCurrentShapePointsSignatureRef = useRef<string | null>(null);
     const [selectedAnnotationId, setSelectedAnnotationId] = useState<
       string | null
     >(null);
     const labelOverlaysRef = useRef<HTMLElement[]>([]);
+    const selectedVertexOverlayRef = useRef<HTMLElement | null>(null);
     const prevHoverIdRef = useRef<string | null>(null);
+    const selectionRetryTimeoutsRef = useRef<number[]>([]);
+    const selectionSyncRunIdRef = useRef(0);
+    const pointerFlushTimeoutsRef = useRef<number[]>([]);
+    const lastAnnotationClickTsRef = useRef(0);
     // Keep a ref to annotations so imperative methods always read the latest value
     const annotationsRef = useRef<Annotation[]>([]);
     annotationsRef.current = annotations;
@@ -201,6 +211,11 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       if (osdImageSize) return osdImageSize;
       return await getImageSize(imageUrl);
     }, [imageUrl, osdImageSize]);
+
+    const clearTimeoutIds = useCallback((ids: number[]) => {
+      ids.forEach((id) => window.clearTimeout(id));
+      ids.length = 0;
+    }, []);
 
     // View mode: propagate hover changes (for external tooltips)
     useEffect(() => {
@@ -599,15 +614,25 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     // Отдельно обрабатываем изменение currentShape (когда начинаем/завершаем редактирование)
     useEffect(() => {
       if (!annotator) return;
+      selectionSyncRunIdRef.current += 1;
+      const runId = selectionSyncRunIdRef.current;
+      clearTimeoutIds(selectionRetryTimeoutsRef.current);
 
       const currentShapeId = currentShape?.id || null;
+      const currentPointsSignature = currentShape
+        ? JSON.stringify(currentShape.points)
+        : null;
 
-      // Если ID currentShape не изменился, ничего не делаем
-      if (currentShapeId === prevCurrentShapeIdRef.current) {
+      // Skip re-sync only when neither shape id nor geometry changed.
+      if (
+        currentShapeId === prevCurrentShapeIdRef.current &&
+        currentPointsSignature === prevCurrentShapePointsSignatureRef.current
+      ) {
         return;
       }
 
       prevCurrentShapeIdRef.current = currentShapeId;
+      prevCurrentShapePointsSignatureRef.current = currentPointsSignature;
 
       // Показываем все shapes: фоновые + текущий редактируемый
       const allShapes: Shape[] = [];
@@ -623,6 +648,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       }
 
       saveShapesToAnnotations(allShapes).then(() => {
+        if (runId !== selectionSyncRunIdRef.current) return;
         // После загрузки аннотаций, выделяем currentShape для редактирования
         if (currentShape && currentShape.id) {
           const targetId = currentShape.id;
@@ -630,6 +656,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
           // after setAnnotations(). Try up to 5 times with increasing delays.
           let attempt = 0;
           const trySelect = () => {
+            if (runId !== selectionSyncRunIdRef.current) return;
             attempt++;
             try {
               annotator.setSelected(targetId);
@@ -637,17 +664,29 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
               // ignore; we'll retry below
             } finally {
               if (attempt < 5) {
-                setTimeout(trySelect, 80 * attempt);
+                const timeoutId = window.setTimeout(trySelect, 80 * attempt);
+                selectionRetryTimeoutsRef.current.push(timeoutId);
               }
             }
           };
-          setTimeout(trySelect, 80);
+          const timeoutId = window.setTimeout(trySelect, 80);
+          selectionRetryTimeoutsRef.current.push(timeoutId);
         } else {
           // Снимаем выделение если currentShape === null
           annotator.setSelected();
         }
       });
-    }, [currentShape, shapes, annotator, saveShapesToAnnotations]);
+      return () => {
+        selectionSyncRunIdRef.current += 1;
+        clearTimeoutIds(selectionRetryTimeoutsRef.current);
+      };
+    }, [
+      annotator,
+      clearTimeoutIds,
+      currentShape,
+      saveShapesToAnnotations,
+      shapes,
+    ]);
 
     // Подписываемся на события создания/обновления/выделения аннотаций
     useEffect(() => {
@@ -747,11 +786,19 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         }
       };
 
+      const handleClickAnnotation = (annotation: Annotation) => {
+        lastAnnotationClickTsRef.current = Date.now();
+        if (annotation?.id) {
+          onClickAnnotationId?.(annotation.id);
+        }
+      };
+
       if (mode !== "view") {
         annotator.on("createAnnotation", handleCreate);
         annotator.on("updateAnnotation", handleUpdate);
         annotator.on("deleteAnnotation", handleDelete);
       }
+      annotator.on("clickAnnotation", handleClickAnnotation);
       annotator.on("selectionChanged", handleSelectionChanged);
 
       return () => {
@@ -760,10 +807,12 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
           annotator.off("updateAnnotation", handleUpdate);
           annotator.off("deleteAnnotation", handleDelete);
         }
+        annotator.off("clickAnnotation", handleClickAnnotation);
         annotator.off("selectionChanged", handleSelectionChanged);
       };
     }, [
       annotator,
+      onClickAnnotationId,
       onCurrentShapeUpdate,
       annotationToShape,
       drawingEnabled,
@@ -876,6 +925,79 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       };
     }, [getEffectiveImageSize, labelsById, mode, shapes, showLabels, viewer]);
 
+    useEffect(() => {
+      if (mode === "view") return;
+      if (!viewer) return;
+
+      const clearSelectedVertexOverlay = () => {
+        const overlay = selectedVertexOverlayRef.current;
+        if (!overlay) return;
+        try {
+          viewer.removeOverlay(overlay);
+        } catch {
+          // ignore
+        }
+        selectedVertexOverlayRef.current = null;
+      };
+
+      if (
+        !currentShape ||
+        selectedVertexIndex === null ||
+        selectedVertexIndex < 0 ||
+        selectedVertexIndex >= currentShape.points.length
+      ) {
+        clearSelectedVertexOverlay();
+        return;
+      }
+
+      let cancelled = false;
+
+      const renderSelectedVertexOverlay = async () => {
+        const { width, height } = await getEffectiveImageSize();
+        if (cancelled) return;
+
+        const shapeInPixels = shapeToPixels(currentShape, width, height);
+        const selectedPoint = shapeInPixels.points[selectedVertexIndex];
+        if (!selectedPoint) {
+          clearSelectedVertexOverlay();
+          return;
+        }
+
+        clearSelectedVertexOverlay();
+
+        const overlayEl = document.createElement("div");
+        overlayEl.style.width = "14px";
+        overlayEl.style.height = "14px";
+        overlayEl.style.borderRadius = "9999px";
+        overlayEl.style.border = "2px solid #ffffff";
+        overlayEl.style.background = "#2563eb";
+        overlayEl.style.boxShadow = "0 0 0 2px rgba(37,99,235,0.35)";
+        overlayEl.style.transform = "translate(-50%, -50%)";
+        overlayEl.style.pointerEvents = "none";
+        overlayEl.style.zIndex = "30";
+
+        const location = viewer.viewport.imageToViewportCoordinates(
+          selectedPoint.x,
+          selectedPoint.y,
+        );
+        viewer.addOverlay(overlayEl, location);
+        selectedVertexOverlayRef.current = overlayEl;
+      };
+
+      void renderSelectedVertexOverlay();
+
+      return () => {
+        cancelled = true;
+        clearSelectedVertexOverlay();
+      };
+    }, [
+      currentShape,
+      getEffectiveImageSize,
+      mode,
+      selectedVertexIndex,
+      viewer,
+    ]);
+
     // Force Annotorious to commit in-progress handle edits on every pointerup.
     // Annotorious only fires `updateAnnotation` when the annotation is deselected,
     // so we briefly deselect and reselect to flush pending geometry changes.
@@ -886,31 +1008,44 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       if (!hostEl) return;
 
       const handlePointerUp = () => {
+        // Prevent stale deselect/reselect when user quickly switches polygons.
+        if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
         const id = prevCurrentShapeIdRef.current;
         if (!id) return;
 
-        setTimeout(() => {
+        const firstTimeoutId = window.setTimeout(() => {
+          if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
           try {
             annotator.setSelected();
           } catch {
             // ignore
           }
-          setTimeout(() => {
+          const secondTimeoutId = window.setTimeout(() => {
+            if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
+            if (id !== prevCurrentShapeIdRef.current) return;
             try {
               annotator.setSelected(id);
             } catch {
               // ignore
             }
           }, 60);
+          pointerFlushTimeoutsRef.current.push(secondTimeoutId);
         }, 80);
+        pointerFlushTimeoutsRef.current.push(firstTimeoutId);
       };
 
       hostEl.addEventListener("pointerup", handlePointerUp);
-      return () => hostEl.removeEventListener("pointerup", handlePointerUp);
-    }, [annotator, drawingEnabled, mode]);
+      return () => {
+        hostEl.removeEventListener("pointerup", handlePointerUp);
+        clearTimeoutIds(pointerFlushTimeoutsRef.current);
+      };
+    }, [annotator, clearTimeoutIds, drawingEnabled, mode]);
 
     return (
-      <div ref={viewerHostRef} className="flex h-full w-full flex-col gap-2">
+      <div
+        ref={viewerHostRef}
+        className="relative flex h-full w-full flex-col gap-2"
+      >
         {/* Область аннотирования */}
         <div className="flex-1 overflow-hidden rounded-lg border">
           <OpenSeadragonAnnotator
