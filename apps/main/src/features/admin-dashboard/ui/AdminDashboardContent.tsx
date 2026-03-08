@@ -1,13 +1,13 @@
 import ProjectList from "@/components/projects/ProjectList";
 import { AdminSettingsRoot } from "@/features/admin-settings";
 import { AdminWidgets } from "@/features/admin-widgets";
-import { LeadsManager } from "@/components/admin/LeadsManager";
+import { LeadsManager } from "@/features/admin-leads-manager";
 import { SubscriptionTab } from "@/features/admin-subscription";
 import PartnersPage from "@/pages/PartnersPage";
-import { AgencyPartnersPage } from "@/components/admin/partners/AgencyPartnersPage";
+import { AgencyPartnersPage } from "@/features/agency-partners-management";
 import { AdminAnalytics } from "@/features/admin-analytics";
 import { IntegrationsTab } from "@/features/admin-integrations";
-import { AdminContactsPage } from "@/components/admin/contacts/AdminContactsPage";
+import { AdminContactsPanel as AdminContactsPage } from "@/features/admin-contacts";
 import type { UserRole } from "@/hooks/useUserRole";
 
 type AdminDashboardContentProps = {
