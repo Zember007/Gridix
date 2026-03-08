@@ -8,10 +8,12 @@ import { useLanguageNavigation } from "@gridix/utils/react";
 import { useProjects } from "@/entities/project/queries/useProjects";
 
 import { Button } from "@gridix/ui";
-import { BindingStatusCard } from "@/components/amocrm-link/BindingStatusCard";
-import { ProjectSelect } from "@/components/amocrm-link/ProjectSelect";
-import { ApartmentChessboard } from "@/components/amocrm-link/ApartmentChessboard";
-import { ObjectUnitSelect } from "@/components/amocrm-link/ObjectUnitSelect";
+import {
+  BindingStatusCard,
+  ProjectSelect,
+  ApartmentChessboard,
+  ObjectUnitSelect,
+} from "@/features/amocrm-lead-link";
 import type { Apartment } from "@/entities/apartment/model/types";
 
 type BindingStatus =

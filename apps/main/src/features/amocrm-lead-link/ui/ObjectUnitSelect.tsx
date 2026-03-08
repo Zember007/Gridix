@@ -2,20 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useApartmentsByProject } from "@gridix/utils";
 import type { Apartment } from "@/entities/apartment/model/types";
 import { normalizeApartmentData } from "@/entities/apartment/model/types";
-
-function isNumericLike(v: string) {
-  return v.trim() !== "" && Number.isFinite(Number(v));
-}
-
-function sortByApartmentNumber(a: Apartment, b: Apartment) {
-  const an = a.apartment_number ?? "";
-  const bn = b.apartment_number ?? "";
-  if (isNumericLike(an) && isNumericLike(bn)) return Number(an) - Number(bn);
-  return an.localeCompare(bn, undefined, {
-    numeric: true,
-    sensitivity: "base",
-  });
-}
+import { sortAndNormalizeApartments } from "@/shared/lib/amocrm-link/apartmentSort";
 
 export function ObjectUnitSelect({
   projectId,
@@ -34,7 +21,7 @@ export function ObjectUnitSelect({
   }, [projectId]);
 
   const options = useMemo(() => {
-    return (data ?? []).map(normalizeApartmentData).sort(sortByApartmentNumber);
+    return sortAndNormalizeApartments(data, normalizeApartmentData);
   }, [data]);
 
   if (isLoading) {
