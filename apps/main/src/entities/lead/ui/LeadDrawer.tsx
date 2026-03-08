@@ -14,11 +14,50 @@ import {
 import { useTranslation } from "react-i18next";
 import { ExtendedLead, FunnelStage } from "@/entities/crm/model/types";
 import { LeadTask, LeadUser, TaskType } from "@/entities/crm/model/types";
-import {
-  TaskComposer,
-  TaskCard,
-} from "@/components/admin/leads/TaskComponents";
-import { UserAvatar } from "@/components/admin/UserAvatar";
+import { TaskComposer, TaskCard } from "./TaskComponents";
+
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+const getAvatarColor = (name: string) => {
+  const colors = [
+    "bg-red-500",
+    "bg-orange-500",
+    "bg-amber-500",
+    "bg-green-500",
+    "bg-emerald-500",
+    "bg-teal-500",
+    "bg-cyan-500",
+    "bg-blue-500",
+    "bg-indigo-500",
+    "bg-violet-500",
+    "bg-purple-500",
+    "bg-fuchsia-500",
+    "bg-pink-500",
+    "bg-rose-500",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const UserAvatar: React.FC<{ name: string; className?: string }> = ({
+  name,
+  className = "w-8 h-8 text-xs",
+}) => (
+  <div
+    className={`${className} rounded-full ${getAvatarColor(name)} flex items-center justify-center font-bold text-white shadow-sm ring-2 ring-white`}
+  >
+    {getInitials(name)}
+  </div>
+);
 
 interface Props {
   lead: ExtendedLead | null;

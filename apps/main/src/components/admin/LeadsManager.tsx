@@ -19,14 +19,12 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { LeadsList } from "@/components/admin/leads/LeadsList";
-import { LeadsKanban } from "@/components/admin/leads/LeadsKanban";
-import { LeadDrawer } from "@/components/admin/leads/LeadDrawer";
-import { CreateLeadModal } from "@/components/admin/leads/CreateLeadModal";
-import { FunnelSetup } from "@/components/admin/leads/FunnelSetup";
-import { CardAppearanceModal } from "@/components/admin/leads/CardAppearanceModal";
-import { ImportModal } from "@/components/admin/leads/ImportModal";
-import { DuplicateFinderModal } from "@/components/admin/leads/DuplicateFinderModal";
+import { LeadsList, LeadsKanban, LeadDrawer } from "@/entities/lead/index";
+import { CreateLeadModal } from "@/features/create-lead/index";
+import { FunnelSetup } from "@/features/admin-funnel-setup/index";
+import { CardAppearanceModal } from "@/features/card-appearance-config/index";
+import { ImportModal } from "@/features/import-leads/index";
+import { DuplicateFinderModal } from "@/features/merge-duplicate-leads/index";
 import { useAdminLeadsData } from "@/hooks/useAdminLeadsData";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { showToast } from "@gridix/utils/lib";
