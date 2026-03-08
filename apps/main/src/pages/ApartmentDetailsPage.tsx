@@ -3,7 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import type { Project } from "@/entities/project/queries/useProjects";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { formatPriceWithCurrency, convertPrice } from "@gridix/utils/lib";
-import CurrencyToggle from "@/components/common/CurrencyToggle";
+import { CurrencyToggle } from "@/shared/ui/currency-toggle";
 import { Language } from "@gridix/utils/lib";
 import { Badge } from "@gridix/ui";
 import { Button } from "@gridix/ui";

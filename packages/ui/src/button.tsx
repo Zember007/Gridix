@@ -64,15 +64,21 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...props}
       >
-        {loading
-          ? (loadingIndicator ?? (
-              <span
-                aria-hidden="true"
-                className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-              />
-            ))
-          : null}
-        {children}
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {loading
+              ? (loadingIndicator ?? (
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  />
+                ))
+              : null}
+            {children}
+          </>
+        )}
       </Comp>
     );
   },

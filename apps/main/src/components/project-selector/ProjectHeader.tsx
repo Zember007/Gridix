@@ -1,14 +1,9 @@
 import { RefObject, useEffect } from "react";
-import {
-  Button,
-  LanguageToggle,
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@gridix/ui";
+import { LanguageToggle, Sheet, SheetContent, SheetTrigger } from "@gridix/ui";
 import { SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
-import { AdvancedFilters, CompactFilters, ViewModeButtons } from "@/components";
+import { CompactFilters, ViewModeButtons } from "@/components";
+import { AdvancedFilters } from "@/features/project-selector/advanced-filters";
 import type { Project } from "@/entities/project/queries/useProjects";
 import type { ProjectFilters } from "./hooks/useProjectFilters";
 import { cn, Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
@@ -115,14 +110,11 @@ export const ProjectHeader = ({
             {isMobile && (
               <div className="flex shrink-0 items-center gap-2">
                 <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="px-2 text-xs"
-                    >
-                      <SlidersHorizontal className="h-3 w-3" />
-                    </Button>
+                  <SheetTrigger
+                    aria-label="Open filters"
+                    className="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-2 text-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <SlidersHorizontal className="h-3 w-3" />
                   </SheetTrigger>
                   <SheetContent side="top" className="h-[90dvh] p-0">
                     <div className="mt-6 h-full overflow-y-auto">

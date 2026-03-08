@@ -5,7 +5,6 @@ export { FloorSelector } from "./FloorSelector";
 // Filters
 export { CompactFilters } from "./filters/CompactFilters";
 export { ExpandedFilters } from "./filters/ExpandedFilters";
-export { AdvancedFilters } from "./filters/AdvancedFilters";
 
 // Views
 export { ListView } from "./views/ListView";

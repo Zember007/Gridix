@@ -1,9 +1,9 @@
-import { Button, Popover, PopoverContent, PopoverTrigger } from "@gridix/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@gridix/ui";
 import { SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tables } from "@gridix/types/database";
 import { useState } from "react";
-import { AdvancedFilters } from "@/components";
+import { AdvancedFilters } from "@/features/project-selector/advanced-filters";
 import type { FilterFieldKey } from "../hooks/useProjectFilters";
 
 type Project = Tables<"projects">;
@@ -89,16 +89,12 @@ export const CompactFilters = ({
     <div className="flex min-w-0 flex-wrap items-center gap-2">
       {/* Left: advanced filters */}
       <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 shrink-0 basis-9 rounded-full border-gray-200 bg-white p-0 [&_svg]:size-4"
-            aria-label={t("project.filters")}
-            title={t("project.filters")}
-          >
-            <SlidersHorizontal className="h-4 w-4 text-gray-700" />
-          </Button>
+        <PopoverTrigger
+          aria-label={t("project.filters")}
+          title={t("project.filters")}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+        >
+          <SlidersHorizontal className="h-4 w-4 text-gray-700" />
         </PopoverTrigger>
         <PopoverContent
           align="start"
