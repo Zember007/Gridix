@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@gridix/ui";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { PartnerFilter } from "./types";
+import type { PartnerFilter } from "@/entities/agency-partner";
 
 interface Props {
   filters: PartnerFilter;

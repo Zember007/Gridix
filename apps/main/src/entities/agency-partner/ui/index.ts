@@ -1,0 +1,1 @@
+export { PartnerStatusBadge } from "./PartnerStatusBadge";

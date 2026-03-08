@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AgencyPartner, PayoutItem } from "./types";
+import type { AgencyPartner, PayoutItem } from "@/entities/agency-partner";
 import { Wallet, Building2, AlertCircle, Check, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@gridix/ui";
 import { Button } from "@gridix/ui";

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@gridix/ui";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@gridix/utils/api";
+import { supabase } from "@/shared/api/supabase";
 import { type Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
 
 interface Props {
