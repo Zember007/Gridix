@@ -1,15 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguageNavigation } from "@gridix/utils/react";
-import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
-import {
-  isDevTourMode,
-  startAdminChecklist,
-  startAdminOnboardingTour,
-  startPartnersTour,
-  startProjectCreationTour,
-  waitForSelectors,
-} from "@gridix/utils/integrations";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -17,7 +8,8 @@ import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { useLeadsRealtime } from "@/hooks/useLeadsRealtime";
 import { useLeads } from "@/entities/lead/queries/useLeads";
-import { buildTourUserPayload } from "../lib/buildTourUserPayload";
+import { useAdminDashboardInit } from "./useAdminDashboardInit";
+import { useAdminDashboardTours } from "./useAdminDashboardTours";
 
 export const useAdminDashboardController = () => {
   const [activeTab, setActiveTab] = useState("projects");
@@ -35,132 +27,20 @@ export const useAdminDashboardController = () => {
   const { amoWidget } = useAmoWidget();
   const { leads: allLeadsForUnread } = useLeads();
 
-  const startedAdminTourRef = useRef(false);
-  const startedAdminChecklistRef = useRef(false);
-  const startedPartnersTourRef = useRef(false);
-  const startedProjectCreationTourRef = useRef(false);
-
   useLeadsRealtime();
+  useAdminDashboardInit(setActiveTab);
+  useAdminDashboardTours({
+    loading,
+    activeTab,
+    showCreateModal,
+    user,
+    userProfile,
+  });
 
   const crmUnreadCount = useMemo(
     () => allLeadsForUnread.filter((lead) => !lead.read_at).length,
     [allLeadsForUnread],
   );
-
-  useEffect(() => {
-    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
-    Object.entries(themeVariables).forEach(([key, value]) => {
-      document.documentElement.style.setProperty(key, value);
-    });
-
-    const queryParams = new URLSearchParams(window.location.search);
-    const tab = queryParams.get("page");
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user?.id) return;
-    if (startedAdminTourRef.current) return;
-
-    startedAdminTourRef.current = true;
-    const run = async () => {
-      try {
-        const anchorsReady = await waitForSelectors(
-          [
-            ".sidebar_usertour",
-            ".projects_list_usertour",
-            ".create_project_usertour",
-            ".support_usertour",
-          ],
-          { timeoutMs: 8000, intervalMs: 100, debugLabel: "admin_onboarding" },
-        );
-
-        if (!anchorsReady) {
-          startedAdminTourRef.current = false;
-          return;
-        }
-
-        await startAdminOnboardingTour(buildTourUserPayload(user, userProfile));
-      } catch (error) {
-        console.warn("Failed to start admin onboarding tour:", error);
-        startedAdminTourRef.current = false;
-      }
-    };
-
-    void run();
-  }, [loading, user, userProfile]);
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user?.id) return;
-    if (startedAdminChecklistRef.current) return;
-
-    startedAdminChecklistRef.current = true;
-    const run = async () => {
-      try {
-        await startAdminChecklist(buildTourUserPayload(user, userProfile));
-      } catch (error) {
-        console.warn("Failed to start admin checklist:", error);
-        startedAdminChecklistRef.current = false;
-      }
-    };
-
-    void run();
-  }, [loading, user, userProfile]);
-
-  useEffect(() => {
-    if (loading) return;
-    const devTour = isDevTourMode();
-
-    if (devTour && !showCreateModal) {
-      startedProjectCreationTourRef.current = false;
-      return;
-    }
-
-    if (!showCreateModal) return;
-    if (!user?.id) return;
-    if (startedProjectCreationTourRef.current) return;
-
-    startedProjectCreationTourRef.current = true;
-    const run = async () => {
-      try {
-        await startProjectCreationTour(buildTourUserPayload(user, userProfile));
-      } catch (error) {
-        console.warn(
-          "Failed to start project creation onboarding tour:",
-          error,
-        );
-      }
-    };
-
-    void run();
-  }, [loading, showCreateModal, user, userProfile]);
-
-  useEffect(() => {
-    const devTour = isDevTourMode();
-    if (devTour && activeTab !== "partners") {
-      startedPartnersTourRef.current = false;
-      return;
-    }
-    if (loading) return;
-    if (activeTab !== "partners") return;
-    if (!user?.id) return;
-    if (startedPartnersTourRef.current) return;
-
-    startedPartnersTourRef.current = true;
-    const run = async () => {
-      try {
-        await startPartnersTour(buildTourUserPayload(user, userProfile));
-      } catch (error) {
-        console.warn("Failed to start partners onboarding tour:", error);
-      }
-    };
-
-    void run();
-  }, [activeTab, loading, user, userProfile]);
 
   const handleCreateNew = () => {
     if (amoWidget) {
