@@ -125,6 +125,33 @@ Use this exact gate text:
 - change only approved files
 - if new file/importer appears -> STOP, explain delta, ask for re-approval
 - if apply fails partly -> report exactly what changed and what did not
+- after APPLY, always run **Depth Check** (see below)
+
+### Phase 3: POST-APPLY DEPTH CHECK (required)
+
+Run this check after every successful APPLY.
+
+Ask for deeper decomposition **only if at least one condition is true**:
+
+1. legacy file in `components/*` is not a thin wrapper (more than ~30 lines or contains business logic)
+2. any newly created/updated file mixes responsibilities (state/effects + large UI composition + side-effects)
+3. feature/model file is still large (`>300` lines) and can be split without behavior change
+4. obvious dead code remains after migration
+
+If any condition is true:
+
+- output compact **DEEP_PLAN** with:
+  - why deeper decomposition is needed
+  - exact extra file operations
+  - full `EXACT APPLY FILE LIST` for deep pass
+- ask for explicit approval with this exact text:
+
+> "Нужна дополнительная декомпозиция. Reply DEEP_APPLY to execute this deep pass EXACTLY for the listed files. Reply DONE to keep current result."
+
+If no condition is true:
+
+- state explicitly: `Дополнительная декомпозиция не требуется.`
+- do not ask for `DEEP_APPLY`
 
 APPLY summary (Russian):
 
