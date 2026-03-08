@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@gridix/ui";
 
 import heroVideoSrc from "@/assets/gridix-intro.webm";
 
@@ -595,13 +596,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
+                loading={loading}
                 className="animate-delay-600 w-full animate-element rounded-2xl bg-[var(--admin-primary)] py-4 font-medium text-[var(--admin-text-on-primary)] transition-colors hover:bg-[var(--admin-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {mode === "signin" ? signInButton : signUpButton}
-              </button>
+              </Button>
             </form>
 
             {mode === "signin" && !hideOAuth && oauthBlock}
