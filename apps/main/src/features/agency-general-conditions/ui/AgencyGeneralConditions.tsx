@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -37,7 +37,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@gridix/ui";
-import { supabase } from "@gridix/utils/api";
+import { supabase } from "@/shared/api/supabase";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";

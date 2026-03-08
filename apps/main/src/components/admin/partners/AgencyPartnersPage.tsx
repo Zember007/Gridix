@@ -26,7 +26,7 @@ import {
 import { PartnerInviteModal } from "./PartnerInviteModal";
 import { PartnerDrawer } from "./PartnerDrawer";
 import { PartnerPayoutModal } from "./PartnerPayoutModal";
-import { AgencyGeneralConditions } from "./AgencyGeneralConditions";
+import { AgencyGeneralConditions } from "@/features/agency-general-conditions/ui/AgencyGeneralConditions";
 import { AgencyPartner } from "./types";
 import {
   Button,
@@ -218,25 +218,6 @@ export const AgencyPartnersPage: React.FC = () => {
                   className="h-10 border-slate-200 bg-white pl-10"
                 />
               </div>
-
-              {/*          <Popover open={isFilterPanelOpen} onOpenChange={setIsFilterPanelOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="font-bold flex items-center gap-2">
-                                        <Filter size={16} />
-                                        {t('partners.filters')}
-                                        {activeFiltersCount > 0 ? (
-                                            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)]">
-                                                {activeFiltersCount}
-                                            </span>
-                                        ) : null}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PartnerFiltersPanel
-                                    filters={filters}
-                                    setFilters={setFilters}
-                                    onClose={() => setIsFilterPanelOpen(false)}
-                                />
-                            </Popover> */}
 
               <Button
                 onClick={() => setIsInviteModalOpen(true)}
