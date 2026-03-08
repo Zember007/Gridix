@@ -29,10 +29,12 @@ import {
 } from "@gridix/utils/integrations";
 import { AdminContactsPage } from "@/components/admin/contacts/AdminContactsPage";
 import { useLeads } from "@/entities/lead/queries/useLeads";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("projects");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const { user, userProfile, signOut, loading } = useAuth();
 
@@ -314,11 +316,17 @@ const AdminDashboard = () => {
   };
 
   const handleSignOut = async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
     try {
       await signOut();
       navigate("/");
     } catch (error) {
       console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -331,6 +339,7 @@ const AdminDashboard = () => {
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
         onSignOut={handleSignOut}
+        isSigningOut={isSigningOut}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
         crmUnreadCount={crmUnreadCount}

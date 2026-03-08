@@ -173,6 +173,7 @@ export function AdminSidebar({
   isMobileOpen,
   setIsMobileOpen,
   onSignOut,
+  isSigningOut = false,
   isCollapsed,
   setIsCollapsed,
   crmUnreadCount = 0,
@@ -184,7 +185,8 @@ export function AdminSidebar({
   onTabChange?: (tab: string) => void;
   isMobileOpen?: boolean;
   setIsMobileOpen?: (open: boolean) => void;
-  onSignOut?: () => void;
+  onSignOut?: () => Promise<void> | void;
+  isSigningOut?: boolean;
   crmUnreadCount?: number;
 }) {
   const { t } = useLanguage();
@@ -246,6 +248,7 @@ export function AdminSidebar({
       }}
       showSupportButton
       {...(onSignOut && { onSignOut })}
+      isSigningOut={isSigningOut}
       userId={user?.id}
       preferredLocale={userProfile?.preferred_locale ?? undefined}
     />

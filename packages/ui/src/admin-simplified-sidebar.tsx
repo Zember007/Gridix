@@ -9,6 +9,7 @@ import {
   CaretUp as ChevronUp,
   Globe,
   SignOut as LogOut,
+  SpinnerGap,
   UserCircle as UserIcon,
 } from "@phosphor-icons/react";
 import {
@@ -48,6 +49,7 @@ const ProfileFooterMenu = ({
   isCollapsed,
   isMobile = false,
   onSignOut,
+  isSigningOut = false,
   language,
   setLanguage,
   docsUrl,
@@ -57,7 +59,8 @@ const ProfileFooterMenu = ({
   userEmail: string;
   isCollapsed: boolean;
   isMobile?: boolean;
-  onSignOut?: () => void;
+  onSignOut?: () => Promise<void> | void;
+  isSigningOut?: boolean;
   language: Language;
   setLanguage: (l: Language) => void;
   docsUrl?: string;
@@ -286,10 +289,23 @@ const ProfileFooterMenu = ({
         <DropdownMenuItem
           className="flex cursor-pointer items-center gap-2"
           style={{ color: "#dc2626" }}
-          onSelect={() => onSignOut?.()}
+          disabled={isSigningOut}
+          onSelect={(event) => {
+            if (isSigningOut) {
+              event.preventDefault();
+              return;
+            }
+            onSignOut?.();
+          }}
         >
-          <LogOut className="h-4 w-4" />
-          <span>{t("auth.signOut")}</span>
+          {isSigningOut ? (
+            <SpinnerGap className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
+          <span>
+            {isSigningOut ? `${t("auth.signOut")}...` : t("auth.signOut")}
+          </span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -377,6 +393,7 @@ export function SimplifiedSidebar({
   onMobileOpenChange,
   onMobileClose,
   onSignOut,
+  isSigningOut = false,
   hideTitle = false,
   hideFooter = false,
   docsUrl,
@@ -397,7 +414,8 @@ export function SimplifiedSidebar({
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
   onMobileClose?: () => void;
-  onSignOut?: () => void;
+  onSignOut?: () => Promise<void> | void;
+  isSigningOut?: boolean;
   hideTitle?: boolean;
   hideFooter?: boolean;
   docsUrl?: string;
@@ -631,6 +649,7 @@ export function SimplifiedSidebar({
             isCollapsed={isCollapsed}
             isMobile={isMobile}
             {...(onSignOut ? { onSignOut } : {})}
+            isSigningOut={isSigningOut}
             language={language}
             setLanguage={setLanguage}
             docsUrl={resolvedDocsUrl}
