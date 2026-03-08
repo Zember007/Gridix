@@ -26,6 +26,7 @@ import {
 import {
   AlertTriangle,
   Building,
+  ChevronUp,
   Copy,
   Edit2,
   FileSpreadsheet,
@@ -98,6 +99,7 @@ const ProjectApartmentsManager = ({
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [excelSyncDialogOpen, setExcelSyncDialogOpen] = useState(false);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(1);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const { t } = useLanguage();
   const { project } = useProjectInEditorScope(projectId);
   const editorData = useProjectEditorDataContext();
@@ -503,6 +505,54 @@ const ProjectApartmentsManager = ({
     priceRange[1] !== maxPrice ||
     areaRange[0] !== minArea ||
     areaRange[1] !== maxArea;
+
+  const getScrollContainer = useCallback(() => {
+    if (typeof document === "undefined") return null;
+    return document.querySelector<HTMLElement>(
+      ".project_editor_content_usertour",
+    );
+  }, []);
+
+  useEffect(() => {
+    const scrollContainer = getScrollContainer();
+    const threshold = 300;
+
+    const handleScroll = () => {
+      const containerTop = scrollContainer?.scrollTop ?? 0;
+      const windowTop =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+      const scrollTop = Math.max(containerTop, windowTop);
+      const shouldShow = scrollTop > threshold;
+      setShowScrollToTop((prev) => (prev === shouldShow ? prev : shouldShow));
+    };
+
+    handleScroll();
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", handleScroll, {
+        passive: true,
+      });
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener("scroll", handleScroll);
+      }
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [getScrollContainer]);
+
+  const handleScrollToTop = useCallback(() => {
+    const scrollContainer = getScrollContainer();
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [getScrollContainer]);
 
   const handleDeleteFloor = async (floorNumber: number) => {
     const apartmentsOnFloor = apartments.filter(
@@ -1285,6 +1335,20 @@ const ProjectApartmentsManager = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {showScrollToTop && (
+        <Button
+          type="button"
+          size="icon"
+          aria-label={t("common.back")}
+          title={t("common.back")}
+          className="fixed bottom-6 right-6 z-40 rounded-full shadow-lg"
+          onClick={handleScrollToTop}
+          style={{ backgroundColor: ADMIN_THEME.primary }}
+        >
+          <ChevronUp className="h-4 w-4" />
+        </Button>
+      )}
     </Card>
   );
 };
