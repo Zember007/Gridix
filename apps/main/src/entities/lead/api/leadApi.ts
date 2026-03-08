@@ -16,17 +16,30 @@ export const fetchLeads = async (
     .from("leads")
     .select(
       `
-      *,
+      id,
+      created_at,
+      updated_at,
+      name,
+      email,
+      phone,
+      project_id,
+      apartment_id,
+      amocrm_lead_id,
+      amocrm_sent_at,
+      status,
+      source,
+      notes,
+      agent_id,
+      pipeline_stage_id,
+      assigned_to_user_id,
+      tags,
       projects!inner (
-        name,
-        address
+        name
       ),
       apartments!inner (
         apartment_number,
         area,
-        price,
-        floor_number,
-        rooms
+        price
       )
     `,
     )
