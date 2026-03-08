@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { AuthForm } from "@/components/Auth/AuthForm";
-import ResetPasswordForm from "@/components/Auth/ResetPasswordForm";
+import { AuthForm, ResetPasswordForm } from "@/features/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { useUserRole } from "@/hooks/useUserRole";

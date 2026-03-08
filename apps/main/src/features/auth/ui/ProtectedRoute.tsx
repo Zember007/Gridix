@@ -1,10 +1,10 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
-import { supabase } from "@gridix/utils/api";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
-import { hasUserPassword, hasAuthTokensInHash } from "@gridix/utils";
+import { hasAuthTokensInHash } from "@gridix/utils";
+import { usePasswordGate } from "../model/usePasswordGate";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,13 +17,17 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading, requiresPasswordSetup } = useAuth();
   const location = useLocation();
-  const [passwordGateLoading, setPasswordGateLoading] = useState(false);
-  const [needsPasswordSet, setNeedsPasswordSet] = useState(false);
-  const passwordCheckCacheRef = useRef<Map<string, boolean>>(new Map());
   const currentLanguage = useMemo(
     () => getLanguageFromPath(location.pathname),
     [location.pathname],
   );
+  const { passwordGateLoading, needsPasswordSet } = usePasswordGate({
+    loading,
+    requireAuth,
+    userId: user?.id,
+    provider: user?.app_metadata?.provider,
+    requiresPasswordSetup,
+  });
 
   // Если открылись из amoCRM без SSO — сохраняем параметры установки в localStorage,
   // чтобы не потерять их при редиректе на /auth/signup
@@ -49,71 +53,6 @@ export const ProtectedRoute = ({
       console.error("Failed to persist amoCRM install params:", e);
     }
   }, [location.search]);
-
-  // Проверяем, требуется ли установка пароля (через RPC, без localStorage хаков).
-  // ВАЖНО: этот useEffect должен быть до любых ранних return'ов,
-  // иначе нарушится порядок хуков при изменении `loading`.
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      if (loading || !requireAuth || !user?.id) {
-        setNeedsPasswordSet(false);
-        setPasswordGateLoading(false);
-        return;
-      }
-      try {
-        const cacheKey = `has_password:${user.id}`;
-        const cachedHasPassword = passwordCheckCacheRef.current.get(user.id);
-        const storedHasPassword =
-          typeof window !== "undefined"
-            ? window.sessionStorage.getItem(cacheKey)
-            : null;
-
-        const isEmailProvider = user.app_metadata?.provider === "email";
-        const mustSetPassword =
-          (isEmailProvider && !cachedHasPassword) || requiresPasswordSetup;
-
-        if (cachedHasPassword !== undefined) {
-          setNeedsPasswordSet(mustSetPassword);
-          setPasswordGateLoading(false);
-          return;
-        }
-
-        if (storedHasPassword === "true" || storedHasPassword === "false") {
-          const hasPassword = storedHasPassword === "true";
-          passwordCheckCacheRef.current.set(user.id, hasPassword);
-          setNeedsPasswordSet(
-            (isEmailProvider && !hasPassword) || requiresPasswordSetup,
-          );
-          setPasswordGateLoading(false);
-          return;
-        }
-
-        setPasswordGateLoading(true);
-        const hasPassword = await hasUserPassword(supabase as any);
-
-        if (!cancelled) {
-          passwordCheckCacheRef.current.set(user.id, hasPassword);
-          if (typeof window !== "undefined") {
-            window.sessionStorage.setItem(cacheKey, String(hasPassword));
-          }
-          const isEmailProvider = user.app_metadata?.provider === "email";
-          setNeedsPasswordSet(
-            (isEmailProvider && !hasPassword) || requiresPasswordSetup,
-          );
-        }
-      } catch (e) {
-        // If RPC fails, fall back to requiresPasswordSetup only.
-        if (!cancelled) setNeedsPasswordSet(!!requiresPasswordSetup);
-      } finally {
-        if (!cancelled) setPasswordGateLoading(false);
-      }
-    };
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [loading, requireAuth, user?.id, requiresPasswordSetup]);
 
   if (loading) {
     return <FullPageLoaderView />;

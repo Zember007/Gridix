@@ -1,5 +1,5 @@
 import { AdminSidebar } from "@/shared/ui/sidebar-component";
-import { ManagerBlockedScreen } from "@/components/Auth/ManagerBlockedScreen";
+import { ManagerBlockedScreen } from "@/features/auth";
 import ProjectCreationModal from "@/components/projects/ProjectCreationModal";
 import { useAdminDashboardController } from "../model/useAdminDashboardController";
 import { AdminDashboardContent } from "./AdminDashboardContent";

@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Routes, Route } from "react-router-dom";
-import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
+import { ProtectedRoute } from "@/features/auth";
 
 // Lazy load admin pages
 const AdminPage = lazy(() => import("@/pages/AdminPage"));

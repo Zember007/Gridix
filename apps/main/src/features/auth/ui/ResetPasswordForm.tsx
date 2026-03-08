@@ -10,7 +10,7 @@ import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { toast } from "sonner";
-import { supabase } from "@gridix/utils/api";
+import { supabase } from "@/shared/api/supabase";
 import { fetchCurrentSession } from "@gridix/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 

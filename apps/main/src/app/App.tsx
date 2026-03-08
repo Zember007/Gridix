@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
+import { ProtectedRoute } from "@/features/auth";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import {
   AdminProviders,
