@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import {
@@ -46,7 +46,6 @@ interface ApartmentDetailsWithFieldsProps {
 
 const ApartmentDetailsWithFields = ({
   projectId,
-  apartmentId,
   apartmentData,
   onApartmentDataChange,
   readOnly = false,
@@ -55,7 +54,6 @@ const ApartmentDetailsWithFields = ({
   const [loading, setLoading] = useState(true);
   const { t, language } = useLanguage();
 
-  // Функция для получения локализованного названия поля
   const getFieldLabel = (field: {
     field_label: string;
     field_label_translations?: Partial<Record<Language, string>>;
@@ -69,33 +67,26 @@ const ApartmentDetailsWithFields = ({
     return field.field_label;
   };
 
-  useEffect(() => {
-    loadAllFields();
-  }, [projectId]);
-
-  const loadAllFields = async () => {
+  const loadAllFields = useCallback(async () => {
     try {
-      // Загружаем настройки стандартных полей
       const { data: settingsData, error: settingsError } = await supabase
         .from("project_field_settings")
         .select("*")
-        .eq("project_id", projectId) // Этот компонент получает реальный ID проекта
+        .eq("project_id", projectId)
         .eq("is_visible", true)
         .order("sort_order");
 
       if (settingsError) throw settingsError;
 
-      // Загружаем кастомные поля
       const { data: customData, error: customError } = await supabase
         .from("project_custom_fields")
         .select("*")
-        .eq("project_id", projectId) // Этот компонент получает реальный ID проекта
+        .eq("project_id", projectId)
         .eq("is_visible", true)
         .order("sort_order");
 
       if (customError) throw customError;
 
-      // Объединяем данные
       const combinedFields: FieldSetting[] = [
         ...settingsData.map((field) => ({
           id: field.id,
@@ -127,7 +118,6 @@ const ApartmentDetailsWithFields = ({
         })),
       ];
 
-      // Сортируем по sort_order
       combinedFields.sort((a, b) => a.sort_order - b.sort_order);
       setAllFields(combinedFields);
     } catch (error) {
@@ -135,14 +125,17 @@ const ApartmentDetailsWithFields = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    void loadAllFields();
+  }, [loadAllFields]);
 
   const handleFieldChange = (
     fieldName: string,
     value: any,
     isCustom: boolean,
   ) => {
-    // Treat "none" as null/empty for select fields
     const processedValue = value === "none" ? null : value;
 
     if (isCustom) {

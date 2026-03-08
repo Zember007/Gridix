@@ -44,8 +44,8 @@ import PolygonAnnotator, {
   PolygonAnnotatorRef,
 } from "./polygon-editor/PolygonAnnotator";
 import { Shape } from "./polygon-editor/GeometryShapes";
-import ApartmentCustomFields from "@/components/apartment/ApartmentCustomFields";
-import ApartmentSyncDialog from "@/components/apartment/ApartmentSyncDialog";
+import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
+import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { useLanguage } from "@gridix/utils/react";

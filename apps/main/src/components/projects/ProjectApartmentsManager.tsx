@@ -38,8 +38,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import ApartmentCustomFields from "@/components/apartment/ApartmentCustomFields";
-import ApartmentSyncDialog from "@/components/apartment/ApartmentSyncDialog";
+import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
+import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
 import ProjectApartmentsExcelSyncDialog from "@/components/projects/ProjectApartmentsExcelSyncDialog";
 import {
   Apartment,

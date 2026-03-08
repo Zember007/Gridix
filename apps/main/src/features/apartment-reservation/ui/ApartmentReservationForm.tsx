@@ -42,12 +42,10 @@ const ApartmentReservationForm = ({
 
     setSubmitting(true);
     try {
-      // Call the custom onSubmit if provided (for backward compatibility)
       if (onSubmit) {
         onSubmit({ name, email, phone, apartmentId, projectId });
       }
 
-      // Send lead to CRM(s) via Edge Function
       const { data, error } = await supabase.functions.invoke(
         "crm-create-lead",
         {
@@ -76,10 +74,7 @@ const ApartmentReservationForm = ({
         return;
       }
 
-      // Show success notification
       setShowSuccess(true);
-
-      // Clear form
       setName("");
       setEmail("");
       setPhone("");
@@ -93,7 +88,6 @@ const ApartmentReservationForm = ({
 
   const handleSuccessClose = () => {
     setShowSuccess(false);
-    // Close modal after success notification
     setTimeout(() => {
       onCancel?.();
     }, 300);

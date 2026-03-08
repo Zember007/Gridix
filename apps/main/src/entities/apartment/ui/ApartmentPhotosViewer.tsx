@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Card, CardContent } from "@gridix/ui";
 import { Button } from "@gridix/ui";
@@ -14,23 +14,6 @@ import {
   type CarouselApi,
 } from "@gridix/ui";
 
-interface ApartmentPhoto {
-  id: string;
-  apartment_id: string;
-  image_url: string;
-  description?: string | null;
-  order_index: number;
-}
-
-interface LayoutPhoto {
-  id: string;
-  project_id: string;
-  layout_type: string;
-  image_url: string;
-  description?: string | null;
-  order_index: number;
-}
-
 interface CombinedPhoto {
   id: string;
   image_url: string;
@@ -42,7 +25,7 @@ interface CombinedPhoto {
 interface ApartmentPhotosViewerProps {
   projectId?: string;
   apartmentId?: string;
-  preloadedLayoutPhotos?: CombinedPhoto[]; // если переданы, используем их без запросов
+  preloadedLayoutPhotos?: CombinedPhoto[];
 }
 
 const ApartmentPhotosViewer = ({
@@ -139,7 +122,6 @@ const ApartmentPhotosViewer = ({
     }
   }, []);
 
-  // Синхронизируем индекс активного слайда с Embla-каруселью
   useEffect(() => {
     if (!carouselApi) return;
 
@@ -156,7 +138,6 @@ const ApartmentPhotosViewer = ({
     };
   }, [carouselApi]);
 
-  // При смене текущего индекса (например, из лайтбокса) прокручиваем карусель
   useEffect(() => {
     if (!carouselApi) return;
     carouselApi.scrollTo(currentPhotoIndex, true);

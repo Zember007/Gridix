@@ -33,8 +33,8 @@ import { loadApartmentDetails } from "@/features/projectSelector/api/projectSele
 import type { FieldSetting } from "@/hooks/useFields";
 import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
 import RecommendedApartmentCard from "@/pages/components/RecommendedApartmentCard";
-import ApartmentPhotosViewer from "@/components/apartment/ApartmentPhotosViewer";
-import ApartmentReservationForm from "@/components/apartment/ApartmentReservationForm";
+import ApartmentPhotosViewer from "@/entities/apartment/ui/ApartmentPhotosViewer";
+import ApartmentReservationForm from "@/features/apartment-reservation/ui/ApartmentReservationForm";
 import InstallmentCalculator from "@/components/InstallmentCalculator";
 import { useInstallment } from "@/hooks/useInstallment";
 import { useFavorites } from "@/hooks/useFavorites";

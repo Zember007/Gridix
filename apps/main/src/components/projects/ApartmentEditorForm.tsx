@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@gridix/ui";
 import { Save, X } from "lucide-react";
-import ApartmentCustomFields from "@/components/apartment/ApartmentCustomFields";
+import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Apartment } from "@/entities/apartment/model/types";
 import { ADMIN_THEME } from "@gridix/utils/lib";

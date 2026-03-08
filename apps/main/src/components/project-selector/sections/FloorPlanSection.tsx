@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import ApartmentFloorPlan from "../../apartment/ApartmentFloorPlan";
+import ApartmentFloorPlan from "@/features/apartment-floor-plan/ui/ApartmentFloorPlan";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
 import type { FieldSetting } from "@/hooks/useFields";

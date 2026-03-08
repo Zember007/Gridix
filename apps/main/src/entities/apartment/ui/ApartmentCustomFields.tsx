@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import {
@@ -44,7 +44,6 @@ const ApartmentCustomFields = ({
   const [loading, setLoading] = useState(true);
   const { t, language } = useLanguage();
 
-  // Функция для получения локализованного названия поля
   const getFieldLabel = (field: CustomField) => {
     if (
       field.field_label_translations &&
@@ -55,11 +54,7 @@ const ApartmentCustomFields = ({
     return field.field_label;
   };
 
-  useEffect(() => {
-    loadCustomFields();
-  }, [projectId]);
-
-  const loadCustomFields = async () => {
+  const loadCustomFields = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("project_custom_fields")
@@ -95,7 +90,11 @@ const ApartmentCustomFields = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    void loadCustomFields();
+  }, [loadCustomFields]);
 
   const handleFieldChange = (fieldName: string, value: any) => {
     const updatedData = { ...customFieldsData, [fieldName]: value };

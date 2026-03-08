@@ -1,9 +1,3 @@
-// Admin components
-export * from "./admin";
-
-// Apartment components
-export * from "./apartment";
-
 // Auth components
 
 // Data import components

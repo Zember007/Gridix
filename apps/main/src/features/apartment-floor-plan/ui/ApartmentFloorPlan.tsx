@@ -57,14 +57,12 @@ const ApartmentFloorPlan = ({
     fetchFloors();
   }, [projectId]);
 
-  // Определяем выбранный этаж: используем переданный prop или первый доступный этаж
   const selectedFloor =
     typeof selectedFloorNumber === "number"
       ? selectedFloorNumber
       : buildingFloors.length > 0
         ? (buildingFloors[0]?.floor_number ?? null)
         : null;
-  // Убрали тяжёлую загрузку полигонов этажей здесь — не требуется для FloorPlanView
 
   if (!buildingFloors.length || selectedFloor === null) {
     return (

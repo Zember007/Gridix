@@ -54,7 +54,7 @@ import {
 import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsManager";
 import BuildingImageEditor from "@/components/visualization/BuildingImageEditor";
 import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
-import ApartmentPhotosManager from "@/components/apartment/ApartmentPhotosManager";
+import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/ApartmentPhotosManager";
 
 import ProjectDomainSettings from "@/features/admin-project-domain-settings";
 import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";

@@ -10,7 +10,7 @@ import { useProjectCurrency } from "@/entities/project/queries/useProjectCache";
 interface ApartmentListProps {
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
-  projectId?: string; // Добавляем ID проекта для получения информации о валюте
+  projectId?: string;
 }
 
 const ApartmentList = ({
@@ -19,7 +19,7 @@ const ApartmentList = ({
   projectId,
 }: ApartmentListProps) => {
   const { t } = useLanguage();
-  const { currency, loading: currencyLoading } = useProjectCurrency(projectId);
+  const { currency } = useProjectCurrency(projectId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -155,7 +155,6 @@ const ApartmentList = ({
                 </Button>
               </div>
 
-              {/* Пользовательские поля */}
               {apartment.custom_fields &&
                 typeof apartment.custom_fields === "object" && (
                   <div className="mt-3 border-t border-gray-100 pt-3">

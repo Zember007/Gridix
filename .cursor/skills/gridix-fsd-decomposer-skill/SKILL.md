@@ -44,8 +44,9 @@ Supabase wrapper:
 - Root `hooks/*` and `contexts/*` are legacy; migrate when touched.
 - Move co-located tests/styles with component.
 - Do not create new tests unless explicitly requested by user.
-- If compatibility wrapper is kept in `components/*`, add:
-  `// TODO: remove wrapper — direct import from <new-path>`
+- By default, do **not** keep compatibility wrappers in `components/*`.
+- After moving logic, update all importers to new FSD paths and delete legacy files.
+- Keep wrapper only if user explicitly requests `KEEP_WRAPPERS`.
 
 Classification:
 
@@ -95,7 +96,7 @@ NO-OP template:
 > - Строк: `<N>`
 > - Причина: `<why no decomposition>`
 
-If file is in `components/*`, decomposition is usually required (except thin re-export wrapper).
+If file is in `components/*`, decomposition is usually required (except thin re-export wrapper explicitly approved by user via `KEEP_WRAPPERS`).
 
 ### COMPACT_PLAN format (default)
 

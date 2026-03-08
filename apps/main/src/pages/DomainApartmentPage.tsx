@@ -38,8 +38,8 @@ import {
   Apartment,
   normalizeApartmentData,
 } from "@/entities/apartment/model/types";
-import ApartmentPhotosViewer from "@/components/apartment/ApartmentPhotosViewer";
-import ApartmentReservationForm from "@/components/apartment/ApartmentReservationForm";
+import ApartmentPhotosViewer from "@/entities/apartment/ui/ApartmentPhotosViewer";
+import ApartmentReservationForm from "@/features/apartment-reservation/ui/ApartmentReservationForm";
 import InstallmentCalculator from "@/components/InstallmentCalculator";
 import { useIsMobile } from "@gridix/ui";
 import { useFavorites } from "@/hooks/useFavorites";

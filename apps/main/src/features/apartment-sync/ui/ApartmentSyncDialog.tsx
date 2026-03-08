@@ -8,15 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@gridix/ui";
-import { Checkbox } from "@gridix/ui";
 import { toast } from "sonner";
-import { supabase } from "@gridix/utils/api";
 import { ADMIN_THEME } from "@gridix/utils/lib";
-import {
-  Apartment,
-  normalizeApartmentData,
-} from "@/entities/apartment/model/types";
+import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import ApartmentSyncTargetsList from "./ApartmentSyncTargetsList";
+import { syncApartments } from "../model/syncApartments";
 
 interface ApartmentSyncDialogProps {
   open: boolean;
@@ -100,41 +97,11 @@ const ApartmentSyncDialog = ({
 
     setIsSyncing(true);
     try {
-      // Подготовить данные для синхронизации (исключаем уникальные поля)
-      const syncData = {
-        price: sourceApartment.price,
-        status: sourceApartment.status,
-        custom_fields: sourceApartment.custom_fields,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Получить выбранные квартиры для синхронизации
-      const apartmentsToSync = targetApartments.filter((apt) =>
-        selectedApartments.has(apt.id),
-      );
-
-      // Обновить все выбранные квартиры
-      const updatePromises = apartmentsToSync.map((apartment) =>
-        supabase
-          .from("apartments")
-          .update(syncData)
-          .eq("id", apartment.id)
-          .select()
-          .single(),
-      );
-
-      const results = await Promise.all(updatePromises);
-
-      // Проверить наличие ошибок
-      const errors = results.filter((result) => result.error);
-      if (errors.length > 0) {
-        throw new Error(`Ошибка при обновлении ${errors.length} квартир`);
-      }
-
-      // Обновить локальное состояние
-      const updatedApartments = results.map((result) =>
-        normalizeApartmentData(result.data),
-      );
+      const updatedApartments = await syncApartments({
+        sourceApartment,
+        targetApartments,
+        selectedApartmentIds: selectedApartments,
+      });
       onSyncComplete(updatedApartments);
 
       onOpenChange(false);
@@ -153,7 +120,6 @@ const ApartmentSyncDialog = ({
 
   const handleClose = () => {
     onOpenChange(false);
-    // Сбросить выбор при закрытии
     setSelectedApartments(new Set(targetApartments.map((apt) => apt.id)));
   };
 
@@ -170,7 +136,6 @@ const ApartmentSyncDialog = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Исходная квартира */}
           <div
             className="rounded-lg border p-4"
             style={{
@@ -218,7 +183,6 @@ const ApartmentSyncDialog = ({
             </div>
           </div>
 
-          {/* Выбор квартир для синхронизации */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4
@@ -237,82 +201,17 @@ const ApartmentSyncDialog = ({
               </Button>
             </div>
 
-            <div
-              className="max-h-64 space-y-2 overflow-y-auto rounded-lg border p-3"
-              style={{ borderColor: ADMIN_THEME.border }}
-            >
-              {targetApartments.map((apartment) => (
-                <div
-                  key={apartment.id}
-                  className="flex items-start gap-4 rounded border p-3 transition-colors"
-                  style={{
-                    backgroundColor: ADMIN_THEME.backgroundSecondary,
-                    borderColor: ADMIN_THEME.borderLight,
-                  }}
-                >
-                  <Checkbox
-                    id={`apartment-${apartment.id}`}
-                    checked={selectedApartments.has(apartment.id)}
-                    onCheckedChange={() => handleApartmentToggle(apartment.id)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <label
-                      htmlFor={`apartment-${apartment.id}`}
-                      className="cursor-pointer text-sm font-medium"
-                    >
-                      <strong>
-                        {t("apartmentsManager.apartment", {
-                          number: apartment.apartment_number,
-                        })}
-                      </strong>{" "}
-                      (
-                      {t("apartmentsManager.floor", {
-                        floor: apartment.floor_number,
-                      })}
-                      )
-                    </label>
-                    <div
-                      className="space-y-1 text-xs"
-                      style={{ color: ADMIN_THEME.textSecondary }}
-                    >
-                      <div className="flex justify-between">
-                        <span>
-                          {t("apartmentsManager.syncDialog.currentPrice")}:{" "}
-                          {formatPrice(apartment.price)}
-                        </span>
-                        {apartment.price !== sourceApartment.price && (
-                          <span style={{ color: ADMIN_THEME.info }}>
-                            → {formatPrice(sourceApartment.price)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>
-                          {t("apartmentsManager.status")}:{" "}
-                          <Badge className={getStatusColor(apartment.status)}>
-                            {getStatusLabel(apartment.status)}
-                          </Badge>
-                        </span>
-                        {apartment.status !== sourceApartment.status && (
-                          <span>
-                            →{" "}
-                            <Badge
-                              className={getStatusColor(sourceApartment.status)}
-                            >
-                              {getStatusLabel(sourceApartment.status)}
-                            </Badge>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ApartmentSyncTargetsList
+              targetApartments={targetApartments}
+              sourceApartment={sourceApartment}
+              selectedApartments={selectedApartments}
+              onApartmentToggle={handleApartmentToggle}
+              formatPrice={formatPrice}
+              getStatusColor={getStatusColor}
+              getStatusLabel={getStatusLabel}
+            />
           </div>
 
-          {/* Информация о синхронизации */}
           <div
             className="rounded-lg border p-4"
             style={{
@@ -342,7 +241,6 @@ const ApartmentSyncDialog = ({
             </p>
           </div>
 
-          {/* Кнопки действий */}
           <div className="flex gap-2 pt-4">
             <Button
               onClick={handleConfirmSync}
