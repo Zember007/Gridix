@@ -136,7 +136,6 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
         </h3>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          {/* Status filter */}
           <div className="no-scrollbar flex overflow-x-auto whitespace-nowrap rounded-lg bg-slate-100 p-1">
             {(["all", "paid", "pending"] as const).map((f) => (
               <button

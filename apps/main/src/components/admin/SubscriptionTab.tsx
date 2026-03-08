@@ -10,11 +10,13 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@gridix/utils/api";
 import { fetchCurrentSession } from "@gridix/utils";
 import { toast } from "sonner";
-import { ProjectSubscriptionsList } from "./subscription/ProjectSubscriptionsList";
-import { DurationSelector } from "./subscription/DurationSelector";
-import { PricingPlans } from "./subscription/PricingPlans";
-import { OrderHistory } from "./subscription/OrderHistory";
-import { CheckoutModal } from "./subscription/CheckoutModal";
+import {
+  ProjectSubscriptionsList,
+  DurationSelector,
+  PricingPlans,
+  OrderHistory,
+} from "@/entities/subscription/ui";
+import { CheckoutModal } from "@/features/subscription-checkout";
 import { trackUsertourEvent } from "@gridix/utils/integrations";
 import { Spinner } from "@/shared/ui/Spinner";
 

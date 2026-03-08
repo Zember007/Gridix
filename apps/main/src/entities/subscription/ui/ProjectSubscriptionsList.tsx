@@ -58,7 +58,6 @@ export const ProjectSubscriptionsList: React.FC<
             className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center">
-              {/* Project Info */}
               <div className="flex min-w-[250px] items-center gap-4">
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold uppercase ${
@@ -83,9 +82,7 @@ export const ProjectSubscriptionsList: React.FC<
                 </div>
               </div>
 
-              {/* Subscription Status Info */}
               <div className="flex flex-1 gap-4 border-t border-slate-100 pt-4 max-lg:flex-col max-lg:gap-1 max-md:flex-row max-md:gap-4 md:border-l md:border-t-0 md:pl-6 md:pt-0 lg:gap-4">
-                {/* Plan Name */}
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     {t("admin.subscriptionPage.projects.tariff")}
@@ -101,7 +98,6 @@ export const ProjectSubscriptionsList: React.FC<
                   )}
                 </div>
 
-                {/* Dates */}
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     {t("admin.subscriptionPage.projects.expiresAt")}
@@ -131,7 +127,6 @@ export const ProjectSubscriptionsList: React.FC<
                   )}
                 </div>
 
-                {/* Status Badge */}
                 <div className="flex items-center sm:justify-start">
                   {isActive ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">
@@ -151,7 +146,6 @@ export const ProjectSubscriptionsList: React.FC<
                 </div>
               </div>
 
-              {/* Action Button */}
               <div className="flex pt-2 md:justify-end md:pt-0">
                 {isActive ? (
                   <Button
@@ -176,7 +170,6 @@ export const ProjectSubscriptionsList: React.FC<
               </div>
             </div>
 
-            {/* Progress Bar for Active Subs */}
             {isActive && daysLeft > 0 && daysLeft < 30 && (
               <div className="h-1 w-full bg-slate-100">
                 <div
