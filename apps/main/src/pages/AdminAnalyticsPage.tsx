@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { AdminAnalytics } from "@/components/admin/analytics/AdminAnalytics.tsx";
+import { AdminAnalytics } from "@/features/admin-analytics";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 
 const AdminAnalyticsPage = () => {

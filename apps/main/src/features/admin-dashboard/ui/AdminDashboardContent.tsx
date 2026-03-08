@@ -1,12 +1,12 @@
 import ProjectList from "@/components/projects/ProjectList";
-import AdminSettings from "@/components/admin/AdminSettings";
-import AdminWidgets from "@/components/admin/AdminWidgets";
+import { AdminSettingsRoot } from "@/features/admin-settings";
+import { AdminWidgets } from "@/features/admin-widgets";
 import { LeadsManager } from "@/components/admin/LeadsManager";
-import SubscriptionTab from "@/components/admin/SubscriptionTab";
+import { SubscriptionTab } from "@/features/admin-subscription";
 import PartnersPage from "@/pages/PartnersPage";
 import { AgencyPartnersPage } from "@/components/admin/partners/AgencyPartnersPage";
-import { AdminAnalytics } from "@/components/admin/analytics/AdminAnalytics.tsx";
-import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
+import { AdminAnalytics } from "@/features/admin-analytics";
+import { IntegrationsTab } from "@/features/admin-integrations";
 import { AdminContactsPage } from "@/components/admin/contacts/AdminContactsPage";
 import type { UserRole } from "@/hooks/useUserRole";
 
@@ -88,7 +88,7 @@ export const AdminDashboardContent = ({
         userRole.type !== "manager" &&
         developerId && (
           <div className="space-y-6">
-            <AdminSettings
+            <AdminSettingsRoot
               userProfile={user as never}
               loading={loading}
               developerId={developerId}

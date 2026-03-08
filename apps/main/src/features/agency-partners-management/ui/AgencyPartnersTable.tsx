@@ -8,7 +8,7 @@ import {
 } from "@gridix/ui";
 import type { AgencyPartner, PartnerFilter } from "@/entities/agency-partner";
 import { PartnerStatusBadge } from "@/entities/agency-partner";
-import { UserAvatar } from "@/components/admin/UserAvatar";
+import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {

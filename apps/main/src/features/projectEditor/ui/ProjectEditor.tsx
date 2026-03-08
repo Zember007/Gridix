@@ -53,7 +53,7 @@ import {
 } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsManager";
 import BuildingImageEditor from "@/components/visualization/BuildingImageEditor";
-import AllFieldsManager from "@/components/admin/AllFieldsManager";
+import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
 import ApartmentPhotosManager from "@/components/apartment/ApartmentPhotosManager";
 
 import ProjectDomainSettings from "@/features/admin-project-domain-settings";

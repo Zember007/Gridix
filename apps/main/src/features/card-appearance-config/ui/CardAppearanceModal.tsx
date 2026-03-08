@@ -7,7 +7,7 @@ import {
   LeadUser,
 } from "@/entities/crm/model/types";
 import { getCardFieldOptions } from "@/constants/crm";
-import { UserAvatar } from "@/components/admin/UserAvatar";
+import { UserAvatar } from "@/shared/ui/UserAvatar";
 
 interface Props {
   isOpen: boolean;

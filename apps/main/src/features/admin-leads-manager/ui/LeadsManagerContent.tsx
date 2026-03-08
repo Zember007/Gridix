@@ -1,7 +1,7 @@
 import { Search, X } from "lucide-react";
 import { LeadsKanban, LeadsList } from "@/entities/lead";
 import { FunnelSetup } from "@/features/admin-funnel-setup";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/shared/ui/EmptyState";
 import Spinner from "@/shared/ui/Spinner";
 
 type FunnelName = { name: string };

@@ -37,7 +37,7 @@ import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { LeadsStats } from "@/components/admin/LeadsNotification";
+import { LeadsStats } from "@/entities/lead/ui/LeadsNotification";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";

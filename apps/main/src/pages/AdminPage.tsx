@@ -1,7 +1,7 @@
-import AdminDashboard from "@/components/admin/AdminDashboard";
+import { AdminDashboardRoot } from "@/features/admin-dashboard";
 
 const AdminPage = () => {
-  return <AdminDashboard />;
+  return <AdminDashboardRoot />;
 };
 
 export default AdminPage;

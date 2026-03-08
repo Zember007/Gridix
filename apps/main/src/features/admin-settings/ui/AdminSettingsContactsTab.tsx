@@ -1,4 +1,4 @@
-import ManagerAccountsManager from "@/components/admin/ManagerAccountsManager";
+import ManagerAccountsManager from "@/features/admin-settings/ui/ManagerAccountsManager";
 import type { ManagerRole } from "@/hooks/useUserRole";
 
 type AdminSettingsContactsTabProps = {
