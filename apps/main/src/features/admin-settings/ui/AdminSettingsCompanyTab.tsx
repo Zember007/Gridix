@@ -9,7 +9,7 @@ import {
   SelectValue,
   Textarea,
 } from "@gridix/ui";
-import { Building, Link as LinkIcon, Upload } from "lucide-react";
+import { Building, Upload } from "lucide-react";
 import type { ChangeEvent } from "react";
 
 import type { Tables } from "@gridix/types/database";
@@ -86,21 +86,6 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
           </div>
         </div>
       </div>
-
-      {/*  <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
-        <div className="flex items-center gap-2">
-          <LinkIcon className="h-4 w-4 text-muted-foreground" />
-          <div className="font-medium">
-            {props.t("adminSettings.systemDomain")}
-          </div>
-        </div>
-        <div className="break-all font-mono text-sm">
-          https://{props.systemDomain}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {props.t("adminSettings.systemDomainHint")}
-        </p>
-      </div> */}
 
       <div>
         <Label htmlFor="brand_name">{props.t("adminSettings.brandName")}</Label>

@@ -46,10 +46,12 @@ import ManagerAccountsManager from "@/components/admin/ManagerAccountsManager";
 import { ManagerRole } from "@/hooks/useUserRole";
 import { Tables, TablesInsert } from "@gridix/types/database";
 import { Spinner } from "@/shared/ui/Spinner";
-import { AdminSettingsCompanyTab } from "@/components/admin/settings/AdminSettingsCompanyTab";
-import { AdminSettingsDataTab } from "@/components/admin/settings/AdminSettingsDataTab";
-import { AdminSettingsNotificationsTab } from "@/components/admin/settings/AdminSettingsNotificationsTab";
-import { AdminSettingsTemplatesTab } from "@/components/admin/settings/AdminSettingsTemplatesTab";
+import {
+  AdminSettingsCompanyTab,
+  AdminSettingsDataTab,
+  AdminSettingsNotificationsTab,
+  AdminSettingsTemplatesTab,
+} from "@/features/admin-settings";
 import {
   GlobalAccountProfileSection,
   GlobalAccountSecuritySection,
