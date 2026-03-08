@@ -56,7 +56,7 @@ import BuildingImageEditor from "@/components/visualization/BuildingImageEditor"
 import AllFieldsManager from "@/components/admin/AllFieldsManager";
 import ApartmentPhotosManager from "@/components/apartment/ApartmentPhotosManager";
 
-import ProjectDomainSettings from "@/components/admin/ProjectDomainSettings";
+import ProjectDomainSettings from "@/features/admin-project-domain-settings";
 import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
