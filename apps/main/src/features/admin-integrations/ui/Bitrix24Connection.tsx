@@ -200,7 +200,10 @@ export const Bitrix24Connection = () => {
               <Button
                 className="w-full bg-[#2fc6f6] text-white hover:bg-[#20b0dd]"
                 onClick={() =>
-                  window.open("https://www.bitrix24.com/apps/", "_blank")
+                  window.open(
+                    "https://www.bitrix24.kz/apps/app/gridix.live/",
+                    "_blank",
+                  )
                 }
               >
                 <ExternalLink className="mr-2 h-4 w-4" />

@@ -37,8 +37,6 @@ isProject: false
 
 ### 0. Окружения и инварианты (фиксируем до работ)
 
-- **Источник данных для проверки**: Supabase **prod** проект `ebonmrtmfopohayxfvdy` (см. `supabase/config.toml`, `apps/main/.env`).
-- **Dev проект**: `cednalyslckqlqctuzfs` будет обновлён из prod после утверждения плана; все рискованные изменения (DDL/edge function деплой/Stripe webhook) сначала делаем в dev.
 - **Валюта**: **USD** в Stripe и в UI (в коде уже используется `$` и текст `USD / month`).
 - **Совместимость**: текущий invoice flow (`request-invoice` → `pending_payment` → супер-админ `confirm-payment`) должен продолжать работать без изменений и параллельно с Stripe.
 
@@ -51,7 +49,7 @@ isProject: false
 
 ### 2. Проверка триггеров и функций в Supabase (trial и ежедневная экспирация)
 
-- **Идентифицировать объекты БД** (prod `ebonmrtmfopohayxfvdy`): с помощью Supabase MCP (`list_tables` + `execute_sql`) подтвердить таблицы `projects`, `user_subscriptions`, `subscription_plans`, `subscription_history`, а также существование функции `check_and_expire_subscriptions` (тип виден в `packages/types/src/database.ts`).
+- **Идентифицировать объекты БД** : с помощью Supabase MCP (`list_tables` + `execute_sql`) подтвердить таблицы `projects`, `user_subscriptions`, `subscription_plans`, `subscription_history`, а также существование функции `check_and_expire_subscriptions` (тип виден в `packages/types/src/database.ts`).
 - **Проверить edge-функции управления подпиской**: через `list_edge_functions` и `get_edge_function` прочитать реализацию `subscription-management` (и `generate-invoice`), чтобы понять текущие действия:
   - создание `pending_payment` подписок для invoice,
   - подтверждение платежа (`confirm-payment`),
