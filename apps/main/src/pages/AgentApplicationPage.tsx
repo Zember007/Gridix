@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -75,50 +75,142 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function resolvePath(obj: unknown, path: string): unknown {
-  if (!path) return undefined;
-  const parts = path.split(".");
-  let cur: unknown = obj;
-  for (const p of parts) {
-    if (
-      cur &&
-      typeof cur === "object" &&
-      p in (cur as Record<string, unknown>)
-    ) {
-      cur = (cur as Record<string, unknown>)[p];
-    } else {
-      return undefined;
-    }
-  }
-  return cur;
-}
+type ContractPreviewProps = {
+  template: ContractTemplate;
+  previewUrl: string | null;
+  previewMime: string | null;
+  isLoading: boolean;
+  label: string;
+  maxWidth?: number;
+  widthClassName?: string;
+  onOpenFullscreen?: () => void;
+  loadingText: string;
+  contractText: string;
+  htmlVersionNotSetText: string;
+  pdfAvailableText: string;
+  openFileText: string;
+};
 
-function renderHtmlTemplate(
-  template: string,
-  payload: Record<string, unknown>,
-): string {
-  if (!template) return "";
+const ContractPreview = memo(
+  (props: ContractPreviewProps) => {
+    const A4_W = 794;
+    const A4_H = 1123;
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState<number>(0);
 
-  // Raw: triple braces
-  const withRaw = template.replace(
-    /\{\{\{\s*([\w.]+)\s*\}\}\}/g,
-    (_m: string, key: string) => {
-      const v = resolvePath(payload, key);
-      if (v === null || v === undefined) return "";
-      return String(v);
-    },
-  );
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      const ro = new ResizeObserver((entries) => {
+        const w = entries[0]?.contentRect?.width ?? 0;
+        setContainerWidth(w);
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, []);
 
-  // Escaped: double braces
-  return withRaw.replace(
-    /\{\{\s*([\w.]+)\s*\}\}/g,
-    (_m: string, key: string) => {
-      const v = resolvePath(payload, key);
-      if (v === null || v === undefined) return "";
-      return escapeHtml(String(v));
-    },
-  );
-}
+    const maxWidth = props.maxWidth ?? 340;
+    const containerClassName =
+      props.widthClassName ?? "w-[76vw] max-w-[340px] shrink-0";
+    const targetWidth = Math.min(containerWidth || maxWidth, maxWidth);
+    const scale = targetWidth > 0 ? targetWidth / A4_W : 1;
+    const scaledHeight = Math.round(A4_H * scale);
+    const embeddedUrl =
+      props.previewUrl && props.previewMime === "application/pdf"
+        ? props.previewUrl
+        : props.previewUrl
+          ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(props.previewUrl)}`
+          : null;
+
+    return (
+      <div ref={containerRef} className={containerClassName}>
+        <div
+          className={
+            props.onOpenFullscreen ? "relative cursor-zoom-in" : "relative"
+          }
+          style={{ height: scaledHeight || 0 }}
+          onClick={props.onOpenFullscreen}
+        >
+          {props.onOpenFullscreen && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onOpenFullscreen?.();
+              }}
+              className="absolute right-2 top-2 z-20 rounded-md bg-slate-900/80 px-2 py-1 text-[11px] font-bold text-white backdrop-blur transition hover:bg-slate-900"
+            >
+              Full screen
+            </button>
+          )}
+          <div
+            className="absolute left-0 top-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
+            style={{
+              width: A4_W,
+              height: A4_H,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            {props.isLoading ? (
+              <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-500">
+                {props.loadingText}
+              </div>
+            ) : embeddedUrl ? (
+              <iframe
+                title={props.label}
+                src={embeddedUrl}
+                className="h-full w-full border-0"
+              />
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center p-10 text-center">
+                <div className="text-lg font-black text-slate-900">
+                  {props.contractText}
+                </div>
+                <div className="mt-2 text-sm text-slate-500">
+                  {props.htmlVersionNotSetText}
+                </div>
+                {props.template.url && (
+                  <a
+                    href={props.template.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 text-sm font-bold underline"
+                  >
+                    {props.openFileText}
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-3 text-center text-xs font-bold text-slate-600">
+          {props.label}
+        </div>
+        <div className="mt-3 flex items-center justify-end gap-3">
+          <div className="text-xs font-bold text-slate-400">
+            {props.pdfAvailableText}
+          </div>
+        </div>
+      </div>
+    );
+  },
+  (prev, next) =>
+    prev.template.storage_path === next.template.storage_path &&
+    prev.previewUrl === next.previewUrl &&
+    prev.previewMime === next.previewMime &&
+    prev.isLoading === next.isLoading &&
+    prev.label === next.label &&
+    prev.maxWidth === next.maxWidth &&
+    prev.widthClassName === next.widthClassName &&
+    Boolean(prev.onOpenFullscreen) === Boolean(next.onOpenFullscreen) &&
+    prev.loadingText === next.loadingText &&
+    prev.contractText === next.contractText &&
+    prev.htmlVersionNotSetText === next.htmlVersionNotSetText &&
+    prev.pdfAvailableText === next.pdfAvailableText &&
+    prev.openFileText === next.openFileText,
+);
 
 export default function AgentApplicationPage() {
   const [searchParams] = useSearchParams();
@@ -193,6 +285,14 @@ export default function AgentApplicationPage() {
   const [fullscreenTemplatePath, setFullscreenTemplatePath] = useState<
     string | null
   >(null);
+  const [previewByTemplatePath, setPreviewByTemplatePath] = useState<
+    Record<
+      string,
+      { url: string | null; mime: string | null; loading: boolean }
+    >
+  >({});
+  const previewPayloadRef = useRef<Record<string, unknown> | null>(null);
+  const requestedPreviewPathsRef = useRef<Set<string>>(new Set());
 
   // Signed contracts returned after successful submission (for download on success screen)
   const [signedContractsResult, setSignedContractsResult] = useState<
@@ -225,7 +325,12 @@ export default function AgentApplicationPage() {
 
         const nextTemplates = (
           (data?.templates ?? []) as ContractTemplate[]
-        ).filter((t) => t && typeof t.storage_path === "string");
+        ).filter(
+          (t) =>
+            t &&
+            typeof t.storage_path === "string" &&
+            String(t.storage_path).toLowerCase().endsWith(".docx"),
+        );
         setTemplates(nextTemplates);
         setDeveloperAssets((data?.developer_assets ?? null) as DeveloperAssets);
         setDeveloperProfile(
@@ -570,10 +675,7 @@ export default function AgentApplicationPage() {
     developerAssets,
     displayName,
     finalSignatureDataUrl,
-    formData.bank_name,
-    formData.iban,
-    formData.billing_currency,
-    formData.is_vat_payer,
+    formData.bank_details,
     formData.agent_company_type,
     formData.agent_registered_office,
     formData.agent_representative_name,
@@ -587,6 +689,82 @@ export default function AgentApplicationPage() {
     programSettings,
     todayStr,
   ]);
+
+  useEffect(() => {
+    setPreviewByTemplatePath({});
+    previewPayloadRef.current = null;
+    requestedPreviewPathsRef.current.clear();
+  }, [developerId]);
+
+  useEffect(() => {
+    if (step !== "contracts") return;
+    if (!previewPayloadRef.current) {
+      previewPayloadRef.current = contractPayload;
+    }
+  }, [contractPayload, step]);
+
+  useEffect(() => {
+    if (step !== "contracts") return;
+    if (!developerId || selectedTemplates.length === 0) {
+      return;
+    }
+
+    const payload = previewPayloadRef.current;
+    if (!payload) return;
+
+    const templatesToFetch = selectedTemplates.filter(
+      (tmpl) => !requestedPreviewPathsRef.current.has(tmpl.storage_path),
+    );
+    if (templatesToFetch.length === 0) return;
+
+    setPreviewByTemplatePath((prev) => {
+      const next = { ...prev };
+      for (const tmpl of templatesToFetch) {
+        const existing = next[tmpl.storage_path];
+        next[tmpl.storage_path] = existing
+          ? { ...existing, loading: true }
+          : { url: null, mime: null, loading: true };
+      }
+      return next;
+    });
+
+    void Promise.all(
+      templatesToFetch.map(async (tmpl) => {
+        requestedPreviewPathsRef.current.add(tmpl.storage_path);
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "agent-program",
+            {
+              body: {
+                action: "render_contract_template_preview_public",
+                developer_id: developerId,
+                contract_template_path: tmpl.storage_path,
+                payload,
+              },
+            },
+          );
+          if (error) throw error;
+          setPreviewByTemplatePath((prev) => ({
+            ...prev,
+            [tmpl.storage_path]: {
+              url: typeof data?.url === "string" ? data.url : null,
+              mime: typeof data?.mime === "string" ? data.mime : null,
+              loading: false,
+            },
+          }));
+        } catch {
+          setPreviewByTemplatePath((prev) => ({
+            ...prev,
+            [tmpl.storage_path]: {
+              url: null,
+              mime: null,
+              loading: false,
+            },
+          }));
+        }
+      }),
+    );
+  }, [developerId, selectedTemplates, step]);
 
   const detailsValid =
     authUserExists === true
@@ -686,24 +864,36 @@ export default function AgentApplicationPage() {
       const applicationId = String((response as any)?.data?.data?.id ?? "");
       if (!applicationId) throw new Error("Failed to create application");
 
-      // Sign multiple contracts (public flow for invite wizard).
-      const signResp = await supabase.functions.invoke("agent-program", {
-        body: {
-          action: "sign_agreements_public",
-          application_id: applicationId,
-          email: formData.email,
-          signature_data_url: finalSignatureDataUrl,
-          signature_method: signatureMethod,
-          accepted: true,
-          contract_template_paths: selectedTemplates.map((t) => t.storage_path),
-        },
-      });
-      if (signResp.error) throw new Error(signResp.error.message);
+      // Sign per template to avoid CPU spikes in a single edge invocation.
+      const signedContractsAccum: Array<{
+        contract_template_path: string;
+        signed_contract_path: string;
+        signed_contract_mime: string;
+        signed_download_url?: string | null;
+        template_lang?: string | null;
+        template_name?: string | null;
+      }> = [];
 
-      // Capture signed contracts for download on the success screen
-      const sc = signResp.data?.signed_contracts;
-      if (Array.isArray(sc)) {
-        setSignedContractsResult(sc);
+      for (const tmpl of selectedTemplates) {
+        const signResp = await supabase.functions.invoke("agent-program", {
+          body: {
+            action: "sign_agreements_public",
+            application_id: applicationId,
+            email: formData.email,
+            signature_data_url: finalSignatureDataUrl,
+            signature_method: signatureMethod,
+            accepted: true,
+            contract_template_paths: [tmpl.storage_path],
+          },
+        });
+        if (signResp.error) throw new Error(signResp.error.message);
+        const sc = signResp.data?.signed_contracts;
+        if (Array.isArray(sc)) {
+          signedContractsAccum.push(...sc);
+        }
+      }
+      if (signedContractsAccum.length > 0) {
+        setSignedContractsResult(signedContractsAccum);
       }
 
       setStep("success");
@@ -803,293 +993,6 @@ export default function AgentApplicationPage() {
       setSignatureMethod("upload");
     };
     reader.readAsDataURL(file);
-  };
-
-  const ContractPreview = (props: {
-    template: ContractTemplate;
-    renderedHtml: string | null;
-    label: string;
-    maxWidth?: number;
-    widthClassName?: string;
-    onOpenFullscreen?: () => void;
-  }) => {
-    const A4_W = 794; // px @ 96dpi
-    const A4_H = 1123;
-    const PAGE_PAD = 40; // similar to `p-10`
-    const FOOTER_PAD_BOTTOM = 40; // similar to `bottom-10`
-    const hasInlineSignatures =
-      typeof props.renderedHtml === "string" &&
-      (props.renderedHtml.includes("data-gridix-signature=") ||
-        props.renderedHtml.includes("data-gridix-stamp="));
-    const FOOTER_H = hasInlineSignatures ? 0 : 170; // reserved space for signature blocks (only if not in-template)
-    const COLUMN_GAP = 48; // px between pages in column layout
-
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [containerWidth, setContainerWidth] = useState<number>(0);
-    const measureRef = useRef<HTMLDivElement>(null);
-    const [pageIndex, setPageIndex] = useState(0);
-    const [pageCount, setPageCount] = useState(1);
-    const [exportPageIndex] = useState(0);
-    void exportPageIndex; // reserved for future use
-
-    useEffect(() => {
-      const el = containerRef.current;
-      if (!el) return;
-      const ro = new ResizeObserver((entries) => {
-        const w = entries[0]?.contentRect?.width ?? 0;
-        setContainerWidth(w);
-      });
-      ro.observe(el);
-      return () => ro.disconnect();
-    }, []);
-
-    const contentViewportH =
-      A4_H - PAGE_PAD - (FOOTER_H + FOOTER_PAD_BOTTOM) - PAGE_PAD;
-    const contentViewportW = A4_W - PAGE_PAD * 2;
-
-    useLayoutEffect(() => {
-      // Reset & measure pages whenever html changes
-      setPageIndex(0);
-      if (!props.renderedHtml) {
-        setPageCount(1);
-        return;
-      }
-
-      const el = measureRef.current;
-      if (!el) return;
-
-      // Use CSS multi-column layout to flow content into pages (columns).
-      const sw = el.scrollWidth || 0;
-      const denom = contentViewportW + COLUMN_GAP;
-      const nextCount = Math.max(1, Math.ceil((sw + COLUMN_GAP) / denom));
-      setPageCount(nextCount);
-    }, [COLUMN_GAP, contentViewportH, contentViewportW, props.renderedHtml]);
-
-    const maxWidth = props.maxWidth ?? 340;
-    const containerClassName =
-      props.widthClassName ?? "w-[76vw] max-w-[340px] shrink-0";
-    const targetWidth = Math.min(containerWidth || maxWidth, maxWidth);
-    const scale = targetWidth > 0 ? targetWidth / A4_W : 1;
-    const scaledHeight = Math.round(A4_H * scale);
-
-    useEffect(() => {
-      setPageIndex((p) => Math.min(Math.max(p, 0), Math.max(0, pageCount - 1)));
-    }, [pageCount]);
-
-    const visibleShiftX = pageIndex * (contentViewportW + COLUMN_GAP);
-
-    return (
-      <div ref={containerRef} className={containerClassName}>
-        <div
-          className={
-            props.onOpenFullscreen ? "relative cursor-zoom-in" : "relative"
-          }
-          style={{ height: scaledHeight || 0 }}
-          onClick={props.onOpenFullscreen}
-        >
-          {props.onOpenFullscreen && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onOpenFullscreen?.();
-              }}
-              className="absolute right-2 top-2 z-20 rounded-md bg-slate-900/80 px-2 py-1 text-[11px] font-bold text-white backdrop-blur transition hover:bg-slate-900"
-            >
-              Full screen
-            </button>
-          )}
-          <div
-            className="absolute left-0 top-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
-            style={{
-              width: A4_W,
-              height: A4_H,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-            }}
-          >
-            {/* Hidden measure strip: multi-column flow */}
-            <div
-              ref={measureRef}
-              className={[
-                "absolute -left-[9999px] top-0 text-[10px] text-slate-800",
-                // Restore rich typography
-                "[&_h1]:my-3 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:leading-tight",
-                "[&_h2]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:leading-tight",
-                "[&_h3]:my-2 [&_h3]:text-lg [&_h3]:font-bold",
-                "[&_strong]:font-bold",
-                "[&_em]:italic",
-                "[&_u]:underline",
-                "[&_p]:my-2 [&_p]:leading-relaxed",
-                "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5",
-                "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5",
-                "[&_li]:my-1",
-                "[&_table]:my-2 [&_table]:w-full [&_table]:table-fixed",
-                "[&_th]:border [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:p-1 [&_th]:font-bold",
-                "[&_td]:border [&_td]:border-slate-200 [&_td]:p-1",
-                "[&_blockquote]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600",
-              ].join(" ")}
-              style={{
-                width: contentViewportW,
-                height: contentViewportH,
-                columnWidth: contentViewportW,
-                columnGap: COLUMN_GAP,
-                columnFill: "auto",
-              }}
-              dangerouslySetInnerHTML={{ __html: props.renderedHtml ?? "" }}
-            />
-
-            {/* Page body (clipped viewport) */}
-            <div
-              className="absolute left-10 top-10 overflow-hidden text-[10px] text-slate-800"
-              style={{ width: contentViewportW, height: contentViewportH }}
-            >
-              {props.renderedHtml ? (
-                <div
-                  className={[
-                    "h-full",
-                    // Restore rich typography
-                    "[&_h1]:my-3 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:leading-tight",
-                    "[&_h2]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:leading-tight",
-                    "[&_h3]:my-2 [&_h3]:text-lg [&_h3]:font-bold",
-                    "[&_strong]:font-bold",
-                    "[&_em]:italic",
-                    "[&_u]:underline",
-                    "[&_p]:my-2 [&_p]:leading-relaxed",
-                    "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5",
-                    "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5",
-                    "[&_li]:my-1",
-                    "[&_table]:my-2 [&_table]:w-full [&_table]:table-fixed",
-                    "[&_th]:border [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:p-1 [&_th]:font-bold",
-                    "[&_td]:border [&_td]:border-slate-200 [&_td]:p-1",
-                    "[&_blockquote]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600",
-                  ].join(" ")}
-                  style={{
-                    width: contentViewportW,
-                    height: contentViewportH,
-                    columnWidth: contentViewportW,
-                    columnGap: COLUMN_GAP,
-                    columnFill: "auto",
-                    transform: `translateX(-${visibleShiftX}px)`,
-                    transformOrigin: "top left",
-                  }}
-                  dangerouslySetInnerHTML={{ __html: props.renderedHtml }}
-                />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center p-10 text-center">
-                  <div className="text-lg font-black text-slate-900">
-                    {t("agentApplication.contract")}
-                  </div>
-                  <div className="mt-2 text-sm text-slate-500">
-                    {t("agentApplication.htmlVersionNotSet")}
-                  </div>
-                  {props.template.url && (
-                    <a
-                      href={props.template.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 text-sm font-bold underline"
-                    >
-                      {t("agentApplication.openFile", {
-                        name: props.template.name,
-                      })}
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Signature area: developer + agent (only when template doesn't include inline signatures) */}
-            {!hasInlineSignatures && (
-              <div className="absolute bottom-10 left-10 right-10 flex items-end justify-between border-t border-slate-200 pt-6">
-                <div className="relative w-48">
-                  <div className="mb-2 border-b border-slate-900" />
-                  <div className="text-[11px] font-extrabold uppercase">
-                    {t("agentApplication.developer")}
-                  </div>
-                  {developerAssets.stamp_url && (
-                    <img
-                      src={developerAssets.stamp_url}
-                      alt="developer-stamp"
-                      crossOrigin="anonymous"
-                      className="absolute bottom-5 left-0 h-24 w-24 object-contain opacity-80 mix-blend-multiply"
-                    />
-                  )}
-                  {developerAssets.signature_url && (
-                    <img
-                      src={developerAssets.signature_url}
-                      alt="developer-signature"
-                      crossOrigin="anonymous"
-                      className="absolute bottom-7 left-0 h-16 w-28 object-contain mix-blend-multiply"
-                    />
-                  )}
-                </div>
-
-                <div className="relative w-48">
-                  {finalSignatureDataUrl && (
-                    <img
-                      src={finalSignatureDataUrl}
-                      alt="agent-signature"
-                      crossOrigin="anonymous"
-                      className="absolute bottom-7 left-0 h-20 w-32 object-contain mix-blend-multiply"
-                      style={{ filter: "contrast(1.35)" }}
-                    />
-                  )}
-                  <div className="mb-2 border-b border-slate-900" />
-                  <div className="text-[11px] font-extrabold uppercase">
-                    {t("agentApplication.agent")}
-                  </div>
-                  <div className="text-[10px] text-slate-500">
-                    {displayName || "—"}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Controls under the document */}
-        <div className="mt-3 text-center text-xs font-bold text-slate-600">
-          {props.label}
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          {pageCount > 1 ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                disabled={pageIndex <= 0}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-800 disabled:opacity-40"
-              >
-                {t("agentApplication.pageBack")}
-              </button>
-              <div className="text-xs font-extrabold tabular-nums text-slate-700">
-                {t("agentApplication.pageOf", {
-                  current: pageIndex + 1,
-                  total: pageCount,
-                })}
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setPageIndex((p) => Math.min(pageCount - 1, p + 1))
-                }
-                disabled={pageIndex >= pageCount - 1}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-800 disabled:opacity-40"
-              >
-                {t("agentApplication.pageNext")}
-              </button>
-            </div>
-          ) : (
-            <div />
-          )}
-
-          <div className="text-xs font-bold text-slate-400">
-            {t("agentApplication.pdfAvailableAfterSubmit")}
-          </div>
-        </div>
-      </div>
-    );
   };
 
   if (step === "success") {
@@ -1860,21 +1763,40 @@ export default function AgentApplicationPage() {
                         {/* A4 previews row */}
                         <div className="overflow-x-auto rounded-2xl bg-slate-200 p-3 md:p-4">
                           <div className="flex items-start gap-4">
-                            {selectedTemplates.map((t) => (
+                            {selectedTemplates.map((template) => (
                               <ContractPreview
-                                key={t.storage_path}
-                                template={t}
-                                renderedHtml={
-                                  t.content_html
-                                    ? renderHtmlTemplate(
-                                        t.content_html,
-                                        contractPayload,
-                                      )
-                                    : null
+                                key={template.storage_path}
+                                template={template}
+                                previewUrl={
+                                  previewByTemplatePath[template.storage_path]
+                                    ?.url ?? null
                                 }
-                                label={`${t.lang ?? "—"} · ${t.name}`}
+                                previewMime={
+                                  previewByTemplatePath[template.storage_path]
+                                    ?.mime ?? null
+                                }
+                                isLoading={
+                                  previewByTemplatePath[template.storage_path]
+                                    ?.loading ?? true
+                                }
+                                label={`${template.lang ?? "—"} · ${template.name}`}
+                                loadingText={t(
+                                  "agentApplication.loadingContracts",
+                                )}
+                                contractText={t("agentApplication.contract")}
+                                htmlVersionNotSetText={t(
+                                  "agentApplication.htmlVersionNotSet",
+                                )}
+                                pdfAvailableText={t(
+                                  "agentApplication.pdfAvailableAfterSubmit",
+                                )}
+                                openFileText={t("agentApplication.openFile", {
+                                  name: template.name,
+                                })}
                                 onOpenFullscreen={() =>
-                                  setFullscreenTemplatePath(t.storage_path)
+                                  setFullscreenTemplatePath(
+                                    template.storage_path,
+                                  )
                                 }
                               />
                             ))}
@@ -1894,15 +1816,35 @@ export default function AgentApplicationPage() {
                                 </div>
                                 <ContractPreview
                                   template={fullscreenTemplate}
-                                  renderedHtml={
-                                    fullscreenTemplate.content_html
-                                      ? renderHtmlTemplate(
-                                          fullscreenTemplate.content_html,
-                                          contractPayload,
-                                        )
-                                      : null
+                                  previewUrl={
+                                    previewByTemplatePath[
+                                      fullscreenTemplate.storage_path
+                                    ]?.url ?? null
+                                  }
+                                  previewMime={
+                                    previewByTemplatePath[
+                                      fullscreenTemplate.storage_path
+                                    ]?.mime ?? null
+                                  }
+                                  isLoading={
+                                    previewByTemplatePath[
+                                      fullscreenTemplate.storage_path
+                                    ]?.loading ?? true
                                   }
                                   label={`${fullscreenTemplate.lang ?? "—"} · ${fullscreenTemplate.name}`}
+                                  loadingText={t(
+                                    "agentApplication.loadingContracts",
+                                  )}
+                                  contractText={t("agentApplication.contract")}
+                                  htmlVersionNotSetText={t(
+                                    "agentApplication.htmlVersionNotSet",
+                                  )}
+                                  pdfAvailableText={t(
+                                    "agentApplication.pdfAvailableAfterSubmit",
+                                  )}
+                                  openFileText={t("agentApplication.openFile", {
+                                    name: fullscreenTemplate.name,
+                                  })}
                                   maxWidth={1100}
                                   widthClassName="mx-auto w-full max-w-[1100px] shrink-0"
                                 />

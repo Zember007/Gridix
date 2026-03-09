@@ -2,7 +2,7 @@ export type Template = {
   id: number;
   name: string;
   lang: string;
-  content_html: string | null;
+  content_html?: string | null;
   storage_path: string;
   created_at: string;
   updated_at: string;
