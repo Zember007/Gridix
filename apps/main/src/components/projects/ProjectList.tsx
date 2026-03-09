@@ -466,6 +466,7 @@ const ProjectList = ({
     const [uploading, setUploading] = useState<
       null | "render" | "video" | "presentation"
     >(null);
+    const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
 
     const uploadFiles = async (
       kind: "render" | "video" | "presentation",
@@ -506,6 +507,32 @@ const ProjectList = ({
       }
     };
 
+    const handleDeleteMedia = async (url: string) => {
+      if (!url || deletingUrl) return;
+      setDeletingUrl(url);
+      try {
+        const { data, error } = await supabase.functions.invoke(
+          "project-drawer",
+          {
+            body: {
+              action: "delete_media_item",
+              project_id: project.id,
+              url,
+            },
+          },
+        );
+        if (error) throw error;
+        if (data?.error) throw new Error(String(data.error));
+        toast.success("Media deleted");
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to delete media", e);
+        toast.error("Failed to delete media");
+      } finally {
+        setDeletingUrl(null);
+      }
+    };
+
     const renders = project.media?.renders ?? [];
     const videos = project.media?.videos ?? [];
     const docs = project.media?.presentations ?? [];
@@ -538,6 +565,15 @@ const ProjectList = ({
                 key={`${url}-${i}`}
                 className="group relative aspect-video overflow-hidden rounded-lg border border-slate-200"
               >
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteMedia(url)}
+                  disabled={deletingUrl === url}
+                  className="absolute right-2 top-2 z-10 rounded-md bg-white/90 p-1 text-red-600 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Delete media"
+                >
+                  <Trash2 size={14} />
+                </button>
                 <img
                   src={url}
                   alt={`${t("projectList.media.renders")} ${i + 1}`}
@@ -570,35 +606,45 @@ const ProjectList = ({
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {videos.map((vid, i) => (
-              <a
-                key={`${vid.url}-${i}`}
-                href={vid.url}
-                target="_blank"
-                rel="noreferrer"
-                className="group space-y-2"
-              >
-                <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-black">
-                  {vid.thumbnail ? (
-                    <img
-                      src={vid.thumbnail}
-                      alt={vid.title}
-                      className="h-full w-full object-cover opacity-80"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-white/50">
-                      NO PREVIEW
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
-                      <PlayCircle size={20} />
+              <div key={`${vid.url}-${i}`} className="group relative">
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteMedia(vid.url)}
+                  disabled={deletingUrl === vid.url}
+                  className="absolute right-2 top-2 z-10 rounded-md bg-white/90 p-1 text-red-600 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Delete media"
+                >
+                  <Trash2 size={14} />
+                </button>
+                <a
+                  href={vid.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block space-y-2"
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-black">
+                    {vid.thumbnail ? (
+                      <img
+                        src={vid.thumbnail}
+                        alt={vid.title}
+                        className="h-full w-full object-cover opacity-80"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-white/50">
+                        NO PREVIEW
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
+                        <PlayCircle size={20} />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="truncate text-xs font-bold text-slate-700 group-hover:text-blue-600">
-                  {vid.title}
-                </div>
-              </a>
+                  <div className="truncate text-xs font-bold text-slate-700 group-hover:text-blue-600">
+                    {vid.title}
+                  </div>
+                </a>
+              </div>
             ))}
           </div>
         </div>
@@ -627,19 +673,21 @@ const ProjectList = ({
           </div>
           <div className="space-y-2">
             {docs.map((doc) => (
-              <a
+              <div
                 key={doc.id}
-                href={doc.url ?? "#"}
-                target="_blank"
-                rel="noreferrer"
                 className="group flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-blue-300"
               >
-                <div className="flex items-center gap-3">
+                <a
+                  href={doc.url ?? "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
                   <div className="rounded-lg bg-red-50 p-2 text-red-600">
                     <FileText size={16} />
                   </div>
-                  <div>
-                    <div className="text-sm font-medium text-slate-900">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-slate-900">
                       {doc.title}
                     </div>
                     <div className="text-[10px] text-slate-400">
@@ -648,8 +696,17 @@ const ProjectList = ({
                         : ""}
                     </div>
                   </div>
-                </div>
-              </a>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => doc.url && void handleDeleteMedia(doc.url)}
+                  disabled={!doc.url || deletingUrl === doc.url}
+                  className="ml-3 rounded-md p-1 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Delete media"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             ))}
           </div>
         </div>
