@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, useState } from "react";
+import React, { ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X,
@@ -298,7 +298,86 @@ const MediaTab: React.FC<{
   onConnect?: ((project: SharedProject) => void) | undefined;
   t: (key: string, params?: Record<string, unknown>) => string;
 }> = ({ project, isConnected, onConnect, t }) => {
+  const [zipping, setZipping] = useState(false);
   const media = project.media;
+
+  // Derived values — safe to use before early returns in hooks
+  const renders = media?.renders;
+  const videos = media?.videos;
+  const presentations = media?.presentations;
+  const projectName = safeFilename(project.name);
+
+  const handleDownloadAll = useCallback(async () => {
+    if (zipping) return;
+    const items: Array<{ url: string; filename: string }> = [];
+    renders?.forEach((url, i) => {
+      items.push({
+        url,
+        filename: `${projectName}-render-${i + 1}${extFromUrl(url, ".jpg")}`,
+      });
+    });
+    videos?.forEach((vid, i) => {
+      items.push({
+        url: vid.url,
+        filename: `${projectName}-video-${i + 1}-${safeFilename(vid.title)}${extFromUrl(vid.url, ".mp4")}`,
+      });
+    });
+    presentations?.forEach((doc) => {
+      if (doc.url) {
+        items.push({
+          url: doc.url,
+          filename: `${projectName}-${safeFilename(doc.title)}.pdf`,
+        });
+      }
+    });
+
+    if (items.length === 0) return;
+    setZipping(true);
+    try {
+      const { zip } = await import("fflate");
+
+      const fetchResults = await Promise.allSettled(
+        items.map(async ({ url, filename }) => {
+          const res = await fetch(url, { mode: "cors" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const buf = await res.arrayBuffer();
+          return { filename, data: new Uint8Array(buf) };
+        }),
+      );
+
+      const files: Record<string, Uint8Array> = {};
+      for (const result of fetchResults) {
+        if (result.status === "fulfilled") {
+          files[result.value.filename] = result.value.data;
+        } else {
+          console.warn("ZIP: failed to fetch file", result.reason);
+        }
+      }
+
+      if (Object.keys(files).length === 0) return;
+
+      const zipped = await new Promise<Uint8Array>((resolve, reject) => {
+        // level 0 = store (fastest; media files are already compressed)
+        zip(files, { level: 0 }, (err, data) => {
+          if (err) reject(err);
+          else resolve(data);
+        });
+      });
+
+      const blob = new Blob([zipped.buffer as ArrayBuffer], {
+        type: "application/zip",
+      });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${projectName}-media.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      console.error("ZIP creation failed", e);
+    } finally {
+      setZipping(false);
+    }
+  }, [zipping, renders, videos, presentations, projectName]);
 
   if (!isConnected) {
     return (
@@ -330,36 +409,6 @@ const MediaTab: React.FC<{
       </div>
     );
   }
-
-  const { renders, videos, presentations } = media;
-  const projectName = safeFilename(project.name);
-
-  const handleDownloadAll = () => {
-    const items: Array<{ url: string; filename: string }> = [];
-    renders?.forEach((url, i) => {
-      items.push({
-        url,
-        filename: `${projectName}-render-${i + 1}${extFromUrl(url, ".jpg")}`,
-      });
-    });
-    videos?.forEach((vid, i) => {
-      items.push({
-        url: vid.url,
-        filename: `${projectName}-video-${i + 1}-${safeFilename(vid.title)}${extFromUrl(vid.url, ".mp4")}`,
-      });
-    });
-    presentations?.forEach((doc) => {
-      if (doc.url) {
-        items.push({
-          url: doc.url,
-          filename: `${projectName}-${safeFilename(doc.title)}.pdf`,
-        });
-      }
-    });
-    items.forEach((item, index) => {
-      setTimeout(() => downloadFile(item.url, item.filename), index * 250);
-    });
-  };
 
   const handleDownloadRender = (url: string, index: number) => {
     downloadFile(
@@ -395,12 +444,12 @@ const MediaTab: React.FC<{
         </h4>
         <button
           type="button"
-          onClick={handleDownloadAll}
-          disabled={!canDownloadAll}
+          onClick={() => void handleDownloadAll()}
+          disabled={!canDownloadAll || zipping}
           className="flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FolderArchive size={16} />
-          {t("drawer.media.downloadAll")}
+          {zipping ? "…" : t("drawer.media.downloadAll")}
         </button>
       </div>
 
@@ -417,13 +466,23 @@ const MediaTab: React.FC<{
                 type="button"
                 key={`render-${i}`}
                 onClick={() => handleDownloadRender(url, i)}
-                className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg border border-slate-200 text-left focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2 focus:outline-none"
+                className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-slate-100 text-left focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2 focus:outline-none"
               >
                 <img
                   src={url}
-                  alt={`Render ${i}`}
+                  alt={`Render ${i + 1}`}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  onError={(e) => {
+                    const img = e.currentTarget;
+                    img.style.display = "none";
+                    const sibling =
+                      img.nextElementSibling as HTMLElement | null;
+                    if (sibling) sibling.style.display = "flex";
+                  }}
                 />
+                <div className="absolute inset-0 hidden items-center justify-center bg-slate-100">
+                  <ImageIcon size={28} className="text-slate-300" />
+                </div>
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                   <Download size={20} className="text-white" />
                 </div>
@@ -446,19 +505,29 @@ const MediaTab: React.FC<{
                 type="button"
                 key={`video-${i}`}
                 onClick={() => handleDownloadVideo(vid)}
-                className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-black text-left focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2 focus:outline-none"
+                className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-slate-900 text-left focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2 focus:outline-none"
               >
-                <img
-                  src={vid.thumbnail ?? ""}
-                  alt={vid.title}
-                  className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
-                />
+                {vid.thumbnail ? (
+                  <img
+                    src={vid.thumbnail}
+                    alt={vid.title}
+                    className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display =
+                        "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-900">
+                    <PlayCircle size={36} className="text-white/20" />
+                  </div>
+                )}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
-                    <PlayCircle size={20} fill="currentColor" />
+                    <Download size={18} className="text-white" />
                   </div>
                 </div>
-                <div className="absolute bottom-2 left-2 text-xs font-bold text-white">
+                <div className="absolute bottom-2 left-2 max-w-[90%] truncate text-xs font-bold text-white drop-shadow">
                   {vid.title}
                 </div>
               </button>

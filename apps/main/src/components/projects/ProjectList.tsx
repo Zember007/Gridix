@@ -480,39 +480,21 @@ const ProjectList = ({
       setUploading(kind);
       try {
         for (const file of Array.from(files)) {
-          const safeName = file.name.replace(/\//g, "_");
-          const filePath = `${user.id}/${project.id}/drawer_media/${kind}/${Date.now()}_${safeName}`;
-          const { error: uploadError } = await supabase.storage
-            .from("project-files")
-            .upload(filePath, file, {
-              cacheControl: "3600",
-              upsert: false,
-              contentType: file.type || "application/octet-stream",
-            });
-          if (uploadError) throw uploadError;
-          const { data: urlData } = supabase.storage
-            .from("project-files")
-            .getPublicUrl(filePath);
-          const publicUrl = urlData.publicUrl;
+          const form = new FormData();
+          form.set("action", "upload_media_item");
+          form.set("project_id", project.id);
+          form.set("kind", kind);
+          form.set("file", file);
+          if (kind === "presentation" || kind === "video") {
+            form.set("title", file.name.replace(/\.[^/.]+$/, ""));
+          }
 
-          const title =
-            kind === "presentation" || kind === "video"
-              ? safeName.replace(/\.[^/.]+$/, "")
-              : null;
-
-          const { error: addErr } = await supabase.functions.invoke(
+          const { data, error: invokeErr } = await supabase.functions.invoke(
             "project-drawer",
-            {
-              body: {
-                action: "add_media_item",
-                project_id: project.id,
-                kind,
-                url: publicUrl,
-                title,
-              },
-            },
+            { body: form },
           );
-          if (addErr) throw addErr;
+          if (invokeErr) throw invokeErr;
+          if (data?.error) throw new Error(String(data.error));
         }
         toast.success(t("projectList.media.uploadSuccess"));
         await loadDrawerProject(project.id);
