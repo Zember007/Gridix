@@ -5,6 +5,9 @@ import {
   useCallback,
   useMemo,
   useLayoutEffect,
+  type MouseEvent,
+  type PointerEvent,
+  type TouchEvent,
 } from "react";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import {
@@ -913,16 +916,62 @@ const BuildingFacadeView = ({
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
+  const blockArrowDragStart = useCallback(
+    (
+      event:
+        | PointerEvent<HTMLButtonElement>
+        | TouchEvent<HTMLButtonElement>
+        | MouseEvent<HTMLButtonElement>,
+    ) => {
+      // Keep arrow click working, but don't let Embla start a drag gesture
+      // from the arrow button itself.
+      event.stopPropagation();
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!carouselApi) return;
 
     const index = floorsWithPolygon.findIndex(
       (f) => f.floor_number === selectedFloor,
     );
+    if (index < 0) return;
+
+    const currentIndex = carouselApi.selectedScrollSnap();
+    const currentFloor = floorsWithPolygon[currentIndex]?.floor_number;
+
+    // Skip redundant scrolls when carousel itself already selected this floor.
+    if (currentFloor === selectedFloor) return;
+
     if (index >= 0) {
-      carouselApi.scrollTo(index, true);
+      carouselApi.scrollTo(index, false);
     }
   }, [carouselApi, floorsWithPolygon, selectedFloor]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const syncSelectedFloorWithCarousel = () => {
+      const currentIndex = carouselApi.selectedScrollSnap();
+      const currentFloor = floorsWithPolygon[currentIndex];
+      if (!currentFloor) return;
+
+      const floorNumber = currentFloor.floor_number;
+      setSelectedFloor((prev) => (prev === floorNumber ? prev : floorNumber));
+    };
+
+    // Initialize and then keep selected floor in sync
+    // when user navigates with carousel arrows.
+    syncSelectedFloorWithCarousel();
+    carouselApi.on("select", syncSelectedFloorWithCarousel);
+    carouselApi.on("reInit", syncSelectedFloorWithCarousel);
+
+    return () => {
+      carouselApi.off("select", syncSelectedFloorWithCarousel);
+      carouselApi.off("reInit", syncSelectedFloorWithCarousel);
+    };
+  }, [carouselApi, floorsWithPolygon]);
 
   if (loading) {
     return (
@@ -1217,8 +1266,20 @@ const BuildingFacadeView = ({
 
                     {floorsWithPolygon.length > 3 && (
                       <>
-                        <CarouselPrevious className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
-                        <CarouselNext className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                        <CarouselPrevious
+                          className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                          style={{ touchAction: "manipulation" }}
+                          onPointerDown={blockArrowDragStart}
+                          onTouchStart={blockArrowDragStart}
+                          onMouseDown={blockArrowDragStart}
+                        />
+                        <CarouselNext
+                          className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                          style={{ touchAction: "manipulation" }}
+                          onPointerDown={blockArrowDragStart}
+                          onTouchStart={blockArrowDragStart}
+                          onMouseDown={blockArrowDragStart}
+                        />
                       </>
                     )}
                   </Carousel>
