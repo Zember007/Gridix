@@ -264,6 +264,8 @@ export function ProjectEditorSidebar({
   setIsMobileOpen,
   isCollapsed,
   setIsCollapsed,
+  onSignOut,
+  isSigningOut = false,
 }: {
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
@@ -273,6 +275,8 @@ export function ProjectEditorSidebar({
   projectType?: "building" | "object" | null;
   isMobileOpen?: boolean;
   setIsMobileOpen?: (open: boolean) => void;
+  onSignOut?: () => Promise<void> | void;
+  isSigningOut?: boolean;
 }) {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
@@ -322,6 +326,8 @@ export function ProjectEditorSidebar({
         }
       }}
       showSupportButton={false}
+      {...(onSignOut && { onSignOut })}
+      isSigningOut={isSigningOut}
     />
   );
 }

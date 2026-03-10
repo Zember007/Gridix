@@ -92,12 +92,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     DEFAULT_PROJECT_EDITOR_PROJECT,
   );
   const [saving, setSaving] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [accessError, setAccessError] = useState<string | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const { navigate } = useLanguageNavigation();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, signOut } = useAuth();
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
@@ -572,6 +573,21 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <ProjectEditorSidebar
@@ -583,6 +599,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         setIsMobileOpen={setIsMobileOpen}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
+        onSignOut={handleSignOut}
+        isSigningOut={isSigningOut}
       />
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
