@@ -166,7 +166,6 @@ export const ListView = ({
   const priceVisible = fieldVisibility.price;
   const areaVisible = fieldVisibility.area;
   const roomsVisible = fieldVisibility.rooms;
-
   const hasVisibleCardDetails = useMemo(() => {
     const hasCustomVisibleFields = getVisibleFields().some(
       (field) => field.is_custom,
@@ -237,23 +236,41 @@ export const ListView = ({
               )
             }
           >
-            <TabsList className="flex h-auto w-full flex-col md:flex-row">
-              <TabsTrigger className="w-full" value="all">
-                {t("project.allTypes")}
-              </TabsTrigger>
-              <TabsTrigger className="w-full" value="apartment">
-                {t("apartmentsManager.typeApartment")}
-              </TabsTrigger>
-              {project?.has_commercial && (
-                <TabsTrigger className="w-full" value="commercial">
-                  {t("apartmentsManager.typeCommercial")}
+            <TabsList
+              wrap={false}
+              className="no-scrollbar h-auto w-full max-w-full items-stretch rounded-2xl border border-gray-200 bg-gray-100/80 p-1"
+            >
+              {[
+                { value: "all" as const, label: t("project.allTypes") },
+                {
+                  value: "apartment" as const,
+                  label: t("apartmentsManager.typeApartment"),
+                },
+                ...(project?.has_commercial
+                  ? [
+                      {
+                        value: "commercial" as const,
+                        label: t("apartmentsManager.typeCommercial"),
+                      },
+                    ]
+                  : []),
+                ...(project?.has_parking
+                  ? [
+                      {
+                        value: "parking" as const,
+                        label: t("apartmentsManager.typeParking"),
+                      },
+                    ]
+                  : []),
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  className="min-h-11 flex-none rounded-xl px-4 py-2 text-sm md:min-w-0 md:flex-1"
+                  value={tab.value}
+                >
+                  {tab.label}
                 </TabsTrigger>
-              )}
-              {project?.has_parking && (
-                <TabsTrigger className="w-full" value="parking">
-                  {t("apartmentsManager.typeParking")}
-                </TabsTrigger>
-              )}
+              ))}
             </TabsList>
           </Tabs>
         )}
