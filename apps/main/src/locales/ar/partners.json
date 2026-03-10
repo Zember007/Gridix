@@ -345,11 +345,7 @@
     "approve": "الموافقة على الشريك",
     "payout": "دفع العمولة",
     "block": "حاجز",
-    "unblock": "إلغاء الحظر",
-    "delete": "يمسح",
-    "cancel": "يلغي",
-    "deleteConfirmTitle": "هل تريد حذف الشريك؟",
-    "deleteConfirmDescription": "سيؤدي هذا إلى إزالة الشريك {name} وجميع بيانات التطبيق الخاصة به نهائيًا. لا يمكن التراجع عن هذا الإجراء."
+    "unblock": "إلغاء الحظر"
   },
   "agencyNotifications": {
     "loadError": "تعذر تحميل الشركاء",
@@ -360,10 +356,7 @@
     "rateUpdated": "تم تحديث نسبة العمولة",
     "rateUpdateError": "تعذر تحديث نسبة العمولة",
     "markedPaid": "تم وضع علامة مدفوع",
-    "payoutStatusError": "تعذر تحديث حالة الدفعات",
-    "deleted": "تم حذف الشريك بنجاح",
-    "deleteError": "فشل حذف الشريك",
-    "managerCannotDelete": "ليس لدى المديرين إذن بحذف الشركاء. يرجى الاتصال بالمطور."
+    "payoutStatusError": "تعذر تحديث حالة الدفعات"
   },
   "filters": "الفلاتر",
   "filtersPanel": {
@@ -388,7 +381,6 @@
     "leadLockProtocol": "بروتوكول قفل الرصاص",
     "leadLockDescription": "الشركاء الذين يسجلون عبر هذا الرابط يقبلون تلقائيًا اتفاقية الوكالة القياسية (العرض). سيتم حماية كافة العملاء المتوقعين من قبل النظام.",
     "registrationLinkLabel": "رابط تسجيل الوكيل",
-    "linkLanguageLabel": "لغة",
     "linkHint": "أرسل هذا الرابط إلى وكيل أو مدير وكالة عقارية.",
     "emailInvite": "دعوة بالبريد الإلكتروني",
     "qrCode": "رمز الاستجابة السريعة",
@@ -469,13 +461,7 @@
     "amountLabel": "مبلغ الصرف",
     "amountPlaceholder": "0.00",
     "noCommissions": "لا توجد عمولات مؤكدة للشريك للصرف.",
-    "confirmPayout": "تأكيد الصرف",
-    "soldObjects": "الكائنات المباعة",
-    "deselectAll": "قم بإلغاء تحديد الكل",
-    "selectAll": "حدد الكل",
-    "loadingPayouts": "جارٍ تحميل العمولات...",
-    "totalSelected": "الإجمالي المحدد:",
-    "unknownLead": "كائن غير معروف"
+    "confirmPayout": "تأكيد الصرف"
   },
   "generalConditions": {
     "title": "الشروط العامة",

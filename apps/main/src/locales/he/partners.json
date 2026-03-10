@@ -345,11 +345,7 @@
     "approve": "אשר שותף",
     "payout": "תשלום עמלה",
     "block": "לַחסוֹם",
-    "unblock": "בטל את החסימה",
-    "delete": "לִמְחוֹק",
-    "cancel": "לְבַטֵל",
-    "deleteConfirmTitle": "למחוק את השותף?",
-    "deleteConfirmDescription": "פעולה זו תסיר לצמיתות את השותף {name} ואת כל נתוני היישום שלו. לא ניתן לבטל פעולה זו."
+    "unblock": "בטל את החסימה"
   },
   "agencyNotifications": {
     "loadError": "טעינת השותפים נכשלה",
@@ -360,10 +356,7 @@
     "rateUpdated": "שיעור העמלה עודכן",
     "rateUpdateError": "עדכון שיעור העמלה נכשל",
     "markedPaid": "סומן כשולם",
-    "payoutStatusError": "עדכון סטטוס התשלום נכשל",
-    "deleted": "השותף נמחק בהצלחה",
-    "deleteError": "מחיקת השותף נכשלה",
-    "managerCannotDelete": "למנהלים אין הרשאה למחוק שותפים. אנא צור קשר עם מפתח."
+    "payoutStatusError": "עדכון סטטוס התשלום נכשל"
   },
   "filters": "מסננים",
   "filtersPanel": {
@@ -388,7 +381,6 @@
     "leadLockProtocol": "פרוטוקול נעילת לידים",
     "leadLockDescription": "שותפים שנרשמים דרך קישור זה מקבלים באופן אוטומטי את הסכם הסוכנות הרגיל (הצעה). כל הלידים שלהם יהיו מוגנים על ידי המערכת.",
     "registrationLinkLabel": "קישור לרישום סוכן",
-    "linkLanguageLabel": "שָׂפָה",
     "linkHint": "שלח קישור זה לסוכן או מנהל משרד תיווך.",
     "emailInvite": "הזמנה באימייל",
     "qrCode": "קוד QR",
@@ -469,13 +461,7 @@
     "amountLabel": "סכום התשלום",
     "amountPlaceholder": "0.00",
     "noCommissions": "לשותף אין עמלות מאושרות לתשלום.",
-    "confirmPayout": "אישור תשלום",
-    "soldObjects": "נמכרו חפצים",
-    "deselectAll": "בטל את הבחירה בכולם",
-    "selectAll": "בחר הכל",
-    "loadingPayouts": "טוען עמלות...",
-    "totalSelected": "סה\"כ נבחר:",
-    "unknownLead": "חפץ לא ידוע"
+    "confirmPayout": "אישור תשלום"
   },
   "generalConditions": {
     "title": "תנאים כלליים",
