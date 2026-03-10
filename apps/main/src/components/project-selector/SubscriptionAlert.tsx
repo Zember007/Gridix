@@ -19,14 +19,14 @@ export const SubscriptionAlert = ({
   if (!isSubscriptionInactive) return null;
 
   return (
-    <Alert className="m-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+    <Alert className="mx-4 my-4 w-auto min-w-0 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
       <AlertTriangle className="h-4 w-4 text-yellow-600" />
       <AlertTitle className="text-yellow-800 dark:text-yellow-200">
         {isOwner
           ? t("subscription.projectAccessAlert.ownerTitle")
           : t("subscription.projectAccessAlert.guestTitle")}
       </AlertTitle>
-      <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+      <AlertDescription className="min-w-0 break-words text-yellow-700 dark:text-yellow-300">
         {isOwner
           ? t("subscription.projectAccessAlert.ownerDescription")
           : t("subscription.projectAccessAlert.guestDescription")}
@@ -35,7 +35,7 @@ export const SubscriptionAlert = ({
         <Button
           variant="outline"
           size="sm"
-          className="mt-2 border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+          className="mt-3 w-full border-yellow-600 text-yellow-800 hover:bg-yellow-100 sm:w-fit"
           onClick={() =>
             (window.location.href = `/${language}/admin#subscription`)
           }
