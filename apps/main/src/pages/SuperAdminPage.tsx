@@ -26,16 +26,20 @@ import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@gridix/ui";
+import { useLanguageNavigation } from "@gridix/utils/react";
+import { toast } from "sonner";
 
 const SuperAdminPage = () => {
   const { isSuperAdmin, loading } = useSuperAdmin();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { navigate: navigateWithLanguage } = useLanguageNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "users";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -56,6 +60,21 @@ const SuperAdminPage = () => {
       document.documentElement.style.setProperty(key, value);
     });
   }, []);
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      navigateWithLanguage("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   const menuItems = [
     {
@@ -146,6 +165,8 @@ const SuperAdminPage = () => {
     isMobile,
     onMobileClose: () => setIsMobileOpen(false),
     showSupportButton: true,
+    onSignOut: handleSignOut,
+    isSigningOut,
   };
 
   return (
