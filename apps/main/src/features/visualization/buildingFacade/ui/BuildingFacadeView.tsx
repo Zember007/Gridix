@@ -915,6 +915,8 @@ const BuildingFacadeView = ({
   }, [floorsWithPolygon, imageRect, isExpanded, isMobile]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
+  const isCarouselInteractingRef = useRef(false);
+  const swipeGuardRef = useRef({ x: 0, y: 0, moved: false });
 
   const blockArrowDragStart = useCallback(
     (
@@ -926,6 +928,28 @@ const BuildingFacadeView = ({
       // Keep arrow click working, but don't let Embla start a drag gesture
       // from the arrow button itself.
       event.stopPropagation();
+    },
+    [],
+  );
+
+  const beginSwipeGuard = useCallback(
+    (event: PointerEvent<HTMLButtonElement>) => {
+      swipeGuardRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+        moved: false,
+      };
+    },
+    [],
+  );
+
+  const trackSwipeGuard = useCallback(
+    (event: PointerEvent<HTMLButtonElement>) => {
+      const dx = Math.abs(event.clientX - swipeGuardRef.current.x);
+      const dy = Math.abs(event.clientY - swipeGuardRef.current.y);
+      if (dx > 8 || dy > 8) {
+        swipeGuardRef.current.moved = true;
+      }
     },
     [],
   );
@@ -943,6 +967,8 @@ const BuildingFacadeView = ({
 
     // Skip redundant scrolls when carousel itself already selected this floor.
     if (currentFloor === selectedFloor) return;
+    // Avoid fighting with Embla while user drags with inertia.
+    if (isCarouselInteractingRef.current) return;
 
     if (index >= 0) {
       carouselApi.scrollTo(index, false);
@@ -972,6 +998,27 @@ const BuildingFacadeView = ({
       carouselApi.off("reInit", syncSelectedFloorWithCarousel);
     };
   }, [carouselApi, floorsWithPolygon]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const handlePointerDown = () => {
+      isCarouselInteractingRef.current = true;
+    };
+    const handleSettle = () => {
+      isCarouselInteractingRef.current = false;
+    };
+
+    carouselApi.on("pointerDown", handlePointerDown);
+    carouselApi.on("settle", handleSettle);
+    carouselApi.on("reInit", handleSettle);
+
+    return () => {
+      carouselApi.off("pointerDown", handlePointerDown);
+      carouselApi.off("settle", handleSettle);
+      carouselApi.off("reInit", handleSettle);
+    };
+  }, [carouselApi]);
 
   if (loading) {
     return (
@@ -1227,11 +1274,14 @@ const BuildingFacadeView = ({
               <div className="flex min-h-0 flex-1 items-center justify-center py-2">
                 <div className="relative w-full max-w-[60vw]">
                   <Carousel
-                    className="h-full w-full"
+                    className="h-full w-full touch-pan-y"
                     orientation="horizontal"
                     opts={{
                       align: "center",
                       loop: floorsWithPolygon.length > 3,
+                      dragFree: true,
+                      skipSnaps: true,
+                      containScroll: "trimSnaps",
                     }}
                     setApi={setCarouselApi}
                   >
@@ -1253,9 +1303,15 @@ const BuildingFacadeView = ({
                                   ? { backgroundColor: themeColor }
                                   : {}
                               }
-                              onClick={() =>
-                                handleSVGFloorHover(floor.floor_number)
-                              }
+                              onPointerDown={beginSwipeGuard}
+                              onPointerMove={trackSwipeGuard}
+                              onClick={() => {
+                                if (swipeGuardRef.current.moved) {
+                                  swipeGuardRef.current.moved = false;
+                                  return;
+                                }
+                                handleSVGFloorHover(floor.floor_number);
+                              }}
                             >
                               {floor.floor_number}
                             </button>
