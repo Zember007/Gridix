@@ -62,6 +62,8 @@
   "profileInfoDesc": "თქვენი პირადი მონაცემები",
   "fullName": "სრული სახელი",
   "fullNamePlaceholder": "მაგალითად: გიორგი ბერიძე",
+  "language": "ენა",
+  "languageHint": "გამოიყენება ელფოსტებისთვის და ინტერფეისის ნაგულისხმევ ენად.",
   "companyLogo": "კომპანიის ლოგო",
   "uploadLogo": "ლოგოს ატვირთვა",
   "logoHint": "PNG, JPG ან SVG. რეკომენდებულია კვადრატული გამოსახულება.",
@@ -132,7 +134,5 @@
   "resetButton": "პარამეტრების გასუფთავება",
   "telegramNeedsStart": "Telegram არ არის დაკავშირებული",
   "telegramNeedsStartDesc": "გთხოვთ დაიწყოთ ჩატი {{bot}}-თან, რომ მან შეძლოს შეტყობინებების გამოგზავნა.",
-  "telegramVerifyError": "Telegram-ის შემოწმება ვერ მოხერხდა",
-  "language": "ენა",
-  "languageHint": "გამოიყენება ელფოსტებისთვის და ინტერფეისის ნაგულისხმევ ენად."
+  "telegramVerifyError": "Telegram-ის შემოწმება ვერ მოხერხდა"
 }

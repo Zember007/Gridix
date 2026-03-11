@@ -88,10 +88,12 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(
       !hasAnyPopupContent(settings, apartment, { showStatus, showFloor })
     )
       return null;
+
     const isAbsolute = variant !== "static";
     const position = isAbsolute
       ? (rest as AbsoluteVariantProps).position
       : undefined;
+
     return (
       <div
         ref={ref}
@@ -169,9 +171,7 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(
             apartment.rooms !== undefined && (
               <div className="text-sm text-gray-600">
                 {t("project.rooms")}:{" "}
-                {apartment.rooms === 0 || apartment.rooms === "0"
-                  ? t("project.studio")
-                  : apartment.rooms}
+                {apartment.rooms === 0 ? "S" : apartment.rooms}
               </div>
             )}
         </div>
