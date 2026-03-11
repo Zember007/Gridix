@@ -194,7 +194,7 @@ export const LayoutGallery = ({
         </div>
 
         {/* Layout cards grid */}
-        <div className={`flex flex-wrap gap-4 md:gap-6`}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {(() => {
             // Group apartments by layout depending on type
             const layoutGroups: { [key: string]: Apartment[] } = {};
@@ -297,7 +297,7 @@ export const LayoutGallery = ({
               return (
                 <Card
                   key={key}
-                  className="w-[318px] max-w-full overflow-hidden transition-shadow hover:shadow-lg"
+                  className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-lg"
                 >
                   <div className="relative aspect-[4/3] bg-gray-100">
                     {(() => {
