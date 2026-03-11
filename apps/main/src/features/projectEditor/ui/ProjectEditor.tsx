@@ -61,7 +61,7 @@ import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
-import { Spinner } from "@/shared/ui/Spinner";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import {
   isDevTourMode,
   startProjectChecklist,
@@ -678,7 +678,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         {isEditorDataLoading ? (
           <div className="flex min-h-full items-center justify-center">
-            <Spinner size="md" />
+            <LoadingProgress />
           </div>
         ) : (
           <div className="project_editor_content_usertour flex-1 overflow-y-auto py-4 lg:px-6 lg:py-6">

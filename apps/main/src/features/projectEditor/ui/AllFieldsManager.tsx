@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import CustomFieldsManager from "@/components/fields/CustomFieldsManager";
 import { useAllFieldsManager } from "@/features/projectEditor/model/useAllFieldsManager";
 import { FieldRow } from "@/features/projectEditor/ui/FieldRow";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface AllFieldsManagerProps {
   projectId: string;
@@ -57,7 +58,11 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
   }
 
   if (isWaitingForEditorData || loading) {
-    return <div className="p-4 text-center">{t("customFields.loading")}</div>;
+    return (
+      <div className="flex min-h-32 items-center justify-center p-4">
+        <LoadingProgress />
+      </div>
+    );
   }
 
   return (

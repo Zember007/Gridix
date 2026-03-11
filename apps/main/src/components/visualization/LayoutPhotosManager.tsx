@@ -25,8 +25,8 @@ import {
 } from "@/entities/apartment/model/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { compressToWebP } from "@gridix/utils/lib";
-import { Spinner } from "@/shared/ui/Spinner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface LayoutPhotosManagerProps {
   projectId: string;
@@ -306,7 +306,7 @@ const LayoutPhotosManager = ({
     return (
       <Card>
         <CardContent className="flex h-32 items-center justify-center">
-          <Spinner size="md" />
+          <LoadingProgress />
         </CardContent>
       </Card>
     );

@@ -51,6 +51,7 @@ import { useProjectEditorDataContext } from "@/features/projectEditor/context/Pr
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { ADMIN_THEME, cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import {
   AdminApartmentFilters,
   type ApartmentStatusFilter,
@@ -901,7 +902,9 @@ const ProjectApartmentsManager = ({
 
   if (loading) {
     return (
-      <div className="p-4 text-center">{t("apartmentsManager.loading")}</div>
+      <div className="flex min-h-32 items-center justify-center p-4">
+        <LoadingProgress />
+      </div>
     );
   }
 

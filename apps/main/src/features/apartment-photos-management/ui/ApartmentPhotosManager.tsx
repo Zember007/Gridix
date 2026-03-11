@@ -17,12 +17,12 @@ import {
 } from "@gridix/ui";
 import { Home, Layout } from "lucide-react";
 import LayoutPhotosManager from "@/components/visualization/LayoutPhotosManager";
-import { Spinner } from "@/shared/ui/Spinner";
 import { useLanguage } from "@gridix/utils/react";
 import ApartmentPhotosCoveragePanel from "./ApartmentPhotosCoveragePanel";
 import ApartmentPhotosUploadPanel from "./ApartmentPhotosUploadPanel";
 import ApartmentPhotosGrid from "./ApartmentPhotosGrid";
 import { useApartmentPhotosManager } from "../model/useApartmentPhotosManager";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
@@ -59,7 +59,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     return (
       <Card>
         <CardContent className="flex h-32 items-center justify-center">
-          <Spinner size="md" />
+          <LoadingProgress />
         </CardContent>
       </Card>
     );
