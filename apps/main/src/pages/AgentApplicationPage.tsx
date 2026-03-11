@@ -66,15 +66,6 @@ type ProgramSettings = {
   originals_count: number | null;
 };
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 type ContractPreviewProps = {
   template: ContractTemplate;
   previewUrl: string | null;
@@ -622,15 +613,9 @@ export default function AgentApplicationPage() {
       email: developerProfile?.email ?? null,
     };
 
-    const agentSigHtml = finalSignatureDataUrl
-      ? `<img data-gridix-signature="agent" src="${escapeHtml(finalSignatureDataUrl)}" alt="agent signature" style="height:64px;object-fit:contain;mix-blend-mode:multiply;" />`
-      : "";
-    const developerSigHtml = developerAssets?.signature_url
-      ? `<img data-gridix-signature="developer" src="${escapeHtml(developerAssets.signature_url)}" alt="developer signature" style="height:64px;object-fit:contain;mix-blend-mode:multiply;" />`
-      : "";
-    const developerStampHtml = developerAssets?.stamp_url
-      ? `<img data-gridix-stamp="developer" src="${escapeHtml(developerAssets.stamp_url)}" alt="developer stamp" style="height:64px;object-fit:contain;mix-blend-mode:multiply;opacity:0.9;" />`
-      : "";
+    const agentSignatureImage = finalSignatureDataUrl ?? "";
+    const developerSignatureImage = developerAssets?.signature_url ?? "";
+    const developerStampImage = developerAssets?.stamp_url ?? "";
 
     return {
       agent,
@@ -638,9 +623,9 @@ export default function AgentApplicationPage() {
       developer,
       program,
       signatures: {
-        agent: agentSigHtml,
-        developer: developerSigHtml,
-        developer_stamp: developerStampHtml,
+        agent: agentSignatureImage,
+        developer: developerSignatureImage,
+        developer_stamp: developerStampImage,
       },
       date: { today: todayStr },
 
@@ -652,11 +637,11 @@ export default function AgentApplicationPage() {
       address: agent.legal_address,
       date_text: todayStr,
       commission_rate: String(program.default_commission_rate ?? ""),
-      sign_image: agentSigHtml,
+      sign_image: agentSignatureImage,
 
-      agent_signature: agentSigHtml,
-      developer_signature: developerSigHtml,
-      developer_stamp: developerStampHtml,
+      agent_signature: agentSignatureImage,
+      developer_signature: developerSignatureImage,
+      developer_stamp: developerStampImage,
 
       // Program aliases (to keep templates simpler if needed)
       default_commission_rate: program.default_commission_rate,
@@ -698,10 +683,18 @@ export default function AgentApplicationPage() {
 
   useEffect(() => {
     if (step !== "contracts") return;
-    if (!previewPayloadRef.current) {
-      previewPayloadRef.current = contractPayload;
-    }
+    previewPayloadRef.current = contractPayload;
   }, [contractPayload, step]);
+
+  useEffect(() => {
+    if (step !== "contracts") return;
+    requestedPreviewPathsRef.current.clear();
+  }, [
+    finalSignatureDataUrl,
+    developerAssets?.signature_url,
+    developerAssets?.stamp_url,
+    step,
+  ]);
 
   useEffect(() => {
     if (step !== "contracts") return;
@@ -764,7 +757,14 @@ export default function AgentApplicationPage() {
         }
       }),
     );
-  }, [developerId, selectedTemplates, step]);
+  }, [
+    developerId,
+    selectedTemplates,
+    step,
+    finalSignatureDataUrl,
+    developerAssets?.signature_url,
+    developerAssets?.stamp_url,
+  ]);
 
   const detailsValid =
     authUserExists === true
