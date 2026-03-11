@@ -1,4 +1,4 @@
-import { Input, Label, Switch } from "@gridix/ui";
+import { Switch } from "@gridix/ui";
 
 export interface NotificationSettingsUIProps {
   loading: boolean;
