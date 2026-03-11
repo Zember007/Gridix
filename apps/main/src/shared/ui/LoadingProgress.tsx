@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@gridix/utils/lib";
 import { Spinner } from "./Spinner";
 
@@ -8,22 +8,38 @@ interface LoadingProgressProps {
   textClassName?: string;
 }
 
+const INITIAL_PROGRESS = 3;
+
+const getNextProgress = (current: number) => {
+  if (current >= 95) return current;
+  if (current >= 90) return current + 1;
+  if (current >= 75) return current + 2;
+  if (current >= 50) return current + 4;
+  return current + 7;
+};
+
 export const LoadingProgress = ({
   className,
   spinnerClassName,
   textClassName,
 }: LoadingProgressProps) => {
-  const [progress, setProgress] = useState(3);
+  const progressRef = useRef(INITIAL_PROGRESS);
+  const textRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    const textNode = textRef.current;
+    if (!textNode) return;
+
+    textNode.textContent = `${progressRef.current}%`;
+
     const timer = window.setInterval(() => {
-      setProgress((current) => {
-        if (current >= 95) return current;
-        if (current >= 90) return current + 1;
-        if (current >= 75) return current + 2;
-        if (current >= 50) return current + 4;
-        return current + 7;
-      });
+      const nextProgress = getNextProgress(progressRef.current);
+      progressRef.current = nextProgress;
+      textNode.textContent = `${nextProgress}%`;
+
+      if (nextProgress >= 95) {
+        window.clearInterval(timer);
+      }
     }, 180);
 
     return () => {
@@ -40,13 +56,12 @@ export const LoadingProgress = ({
     >
       <Spinner size="md" className={spinnerClassName} />
       <div
+        ref={textRef}
         className={cn(
           "text-sm font-medium tabular-nums text-muted-foreground",
           textClassName,
         )}
-      >
-        {progress}%
-      </div>
+      />
     </div>
   );
 };
