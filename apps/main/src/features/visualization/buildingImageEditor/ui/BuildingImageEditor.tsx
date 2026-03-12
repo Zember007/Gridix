@@ -130,7 +130,7 @@ const BuildingImageEditor = ({
     setFloorInputError(null);
   };
 
-  const applyFloorInputSelection = () => {
+  const applyFloorInputSelection = async () => {
     if (!floorInRange || floorInputError) {
       setFloorInputError(floorInputInvalidText);
       return;
@@ -140,6 +140,25 @@ const BuildingImageEditor = ({
     const existingFloor = loader.buildingFloors.find(
       (floorItem) => floorItem.floor_number === floorNumber,
     );
+
+    // No-op when user re-selects the currently edited floor.
+    if (existingFloor && existingFloor.id === floor.editingFloorId) {
+      return;
+    }
+
+    if (
+      !existingFloor &&
+      floor.selectedFloor === floorNumber &&
+      floor.isCreatingNewFloor
+    ) {
+      return;
+    }
+
+    const persisted = await floor.persistCurrentPolygonBeforeFloorSwitch();
+    if (!persisted) {
+      setFloorInputValue(String(floor.selectedFloor));
+      return;
+    }
 
     floor.setSelectedFloor(floorNumber);
 
@@ -373,11 +392,13 @@ const BuildingImageEditor = ({
                     step={1}
                     value={floorInputValue}
                     onChange={(e) => handleFloorInputChange(e.target.value)}
-                    onBlur={applyFloorInputSelection}
+                    onBlur={() => {
+                      void applyFloorInputSelection();
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        applyFloorInputSelection();
+                        void applyFloorInputSelection();
                       }
                     }}
                     className={`h-8 w-[92px] ${
@@ -493,6 +514,24 @@ const BuildingImageEditor = ({
                         ? loader.t("buildingImage.polygon.create")
                         : loader.t("buildingImage.polygon.save")}
                     </Button>
+                    {floor.editingFloorId && !floor.isCreatingNewFloor && (
+                      <Button
+                        onClick={async () => {
+                          const deleted = await floor.handleDeleteFloorPolygon(
+                            floor.editingFloorId!,
+                          );
+                          if (deleted) {
+                            floor.resetEditing();
+                          }
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="h-8"
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" />
+                        {loader.t("domains.delete")}
+                      </Button>
+                    )}
                     <Button
                       onClick={floor.handlePolygonCancel}
                       variant="outline"
@@ -508,6 +547,7 @@ const BuildingImageEditor = ({
 
               <PolygonAnnotator
                 ref={floor.polygonAnnotatorRef}
+                engine="controlled"
                 imageUrl={loader.buildingImage}
                 shapes={loader.shapes}
                 currentShape={floor.currentShape}
@@ -518,11 +558,20 @@ const BuildingImageEditor = ({
                     (f) => f.id === id,
                   );
                   if (floorData) {
-                    floor.requestStartEditingFloor(floorData.id);
+                    if (floorData.id === floor.editingFloorId) {
+                      return;
+                    }
+                    void (async () => {
+                      const persisted =
+                        await floor.persistCurrentPolygonBeforeFloorSwitch();
+                      if (!persisted) return;
+                      floor.setSelectedFloor(floorData.floor_number);
+                      floor.requestStartEditingFloor(floorData.id);
+                    })();
                   }
                 }}
                 mode={floor.isEditing ? "edit" : "view"}
-                drawingEnabled={floor.isEditing}
+                drawingEnabled={floor.isPolygonCreationEnabled}
                 getStyleById={floor.getStyleById}
               />
             </div>

@@ -49,6 +49,7 @@ interface PolygonAnnotatorProps {
   selectedVertexIndex?: number | null;
   onCurrentShapeUpdate?: (shape: Shape | null) => void;
   drawingEnabled?: boolean;
+  engine?: "annotorious" | "controlled";
   mode?: "edit" | "view";
   onSelectAnnotationId?: (id: string | null) => void;
   onClickAnnotationId?: (id: string) => void;
@@ -64,6 +65,502 @@ export interface PolygonAnnotatorRef {
   getCurrentShape: () => Promise<Shape | null>;
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function pointInPolygon(point: Point, polygon: Point[]) {
+  let isInside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const pi = polygon[i];
+    const pj = polygon[j];
+    if (!pi || !pj) continue;
+    const xi = pi.x;
+    const yi = pi.y;
+    const xj = pj.x;
+    const yj = pj.y;
+    const intersect =
+      yi > point.y !== yj > point.y &&
+      point.x < ((xj - xi) * (point.y - yi)) / (yj - yi || Number.EPSILON) + xi;
+    if (intersect) isInside = !isInside;
+  }
+  return isInside;
+}
+
+function pointToSegmentDistance(
+  point: { x: number; y: number },
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) {
+  const projection = projectPointToSegment(point, start, end);
+  return projection.distance;
+}
+
+function projectPointToSegment(
+  point: { x: number; y: number },
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  if (dx === 0 && dy === 0) {
+    return {
+      projected: { x: start.x, y: start.y },
+      distance: Math.hypot(point.x - start.x, point.y - start.y),
+    };
+  }
+  const t = clamp(
+    ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy),
+    0,
+    1,
+  );
+  const projX = start.x + t * dx;
+  const projY = start.y + t * dy;
+  return {
+    projected: { x: projX, y: projY },
+    distance: Math.hypot(point.x - projX, point.y - projY),
+  };
+}
+
+const ControlledPolygonAnnotator = forwardRef<
+  PolygonAnnotatorRef,
+  PolygonAnnotatorProps
+>(
+  (
+    {
+      imageUrl,
+      shapes = [],
+      currentShape = null,
+      selectedVertexIndex = null,
+      onCurrentShapeUpdate,
+      drawingEnabled,
+      mode = "edit",
+      onClickAnnotationId,
+      getStyleById,
+      className,
+    },
+    ref,
+  ) => {
+    const isDrawingEnabled = drawingEnabled ?? mode !== "view";
+    const hostRef = useRef<HTMLDivElement | null>(null);
+    const imageRef = useRef<HTMLImageElement | null>(null);
+    const currentShapeRef = useRef<Shape | null>(currentShape);
+    const dragStateRef = useRef<{
+      pointerId: number;
+      vertexIndex: number;
+    } | null>(null);
+    const dragStartPointRef = useRef<{ x: number; y: number } | null>(null);
+    const didVertexDragMoveRef = useRef(false);
+    const suppressNextCanvasClickRef = useRef(false);
+    const [renderBox, setRenderBox] = useState<{
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+    } | null>(null);
+    const [insertPreview, setInsertPreview] = useState<{
+      edgeIndex: number;
+      pointPercent: Point;
+      pointPx: { x: number; y: number };
+    } | null>(null);
+
+    currentShapeRef.current = currentShape;
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        getCurrentShape: async () => currentShapeRef.current,
+      }),
+      [],
+    );
+
+    const recomputeRenderBox = useCallback(() => {
+      const host = hostRef.current;
+      const image = imageRef.current;
+      if (!host || !image) return;
+      const hostRect = host.getBoundingClientRect();
+      const naturalW = image.naturalWidth || 1;
+      const naturalH = image.naturalHeight || 1;
+      const hostRatio = hostRect.width / hostRect.height;
+      const imageRatio = naturalW / naturalH;
+      let width = hostRect.width;
+      let height = hostRect.height;
+      let left = 0;
+      let top = 0;
+      if (imageRatio > hostRatio) {
+        height = hostRect.width / imageRatio;
+        top = (hostRect.height - height) / 2;
+      } else {
+        width = hostRect.height * imageRatio;
+        left = (hostRect.width - width) / 2;
+      }
+      setRenderBox({ left, top, width, height });
+    }, []);
+
+    useEffect(() => {
+      recomputeRenderBox();
+      const host = hostRef.current;
+      if (!host) return;
+      const ro = new ResizeObserver(() => recomputeRenderBox());
+      ro.observe(host);
+      window.addEventListener("resize", recomputeRenderBox);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener("resize", recomputeRenderBox);
+      };
+    }, [recomputeRenderBox]);
+
+    const toPercentPoint = useCallback(
+      (clientX: number, clientY: number): Point | null => {
+        const host = hostRef.current;
+        if (!host || !renderBox) return null;
+        const rect = host.getBoundingClientRect();
+        const x = clientX - rect.left - renderBox.left;
+        const y = clientY - rect.top - renderBox.top;
+        if (x < 0 || y < 0 || x > renderBox.width || y > renderBox.height)
+          return null;
+        return {
+          x: clamp((x / renderBox.width) * 100, 0, 100),
+          y: clamp((y / renderBox.height) * 100, 0, 100),
+        };
+      },
+      [renderBox],
+    );
+
+    const shapeToPixels = useCallback(
+      (shape: Shape) => {
+        if (!renderBox) return [];
+        return shape.points.map((p) => ({
+          x: renderBox.left + (p.x / 100) * renderBox.width,
+          y: renderBox.top + (p.y / 100) * renderBox.height,
+        }));
+      },
+      [renderBox],
+    );
+
+    const findClickedShapeId = useCallback(
+      (point: Point) => {
+        const ordered = currentShape
+          ? [currentShape, ...shapes.filter((s) => s.id !== currentShape.id)]
+          : shapes;
+        for (const shape of ordered) {
+          if (!shape.points || shape.points.length < 3) continue;
+          const polygon = shape.points.map((p) => ({ x: p.x, y: p.y }));
+          if (pointInPolygon(point, polygon)) return shape.id;
+        }
+        return null;
+      },
+      [currentShape, shapes],
+    );
+
+    const getEdgeInsertionCandidate = useCallback(
+      (clickPx: { x: number; y: number }) => {
+        if (!currentShape || !renderBox) return null;
+        const currentPointsPx = shapeToPixels(currentShape);
+        if (currentPointsPx.length < 3) return null;
+
+        const minVertexDistance = currentPointsPx.reduce((acc, point) => {
+          return Math.min(
+            acc,
+            Math.hypot(clickPx.x - point.x, clickPx.y - point.y),
+          );
+        }, Number.POSITIVE_INFINITY);
+        if (minVertexDistance <= 10) return null;
+
+        let bestEdgeIndex = -1;
+        let bestEdgeDistance = Number.POSITIVE_INFINITY;
+        let bestProjected: { x: number; y: number } | null = null;
+
+        for (let i = 0; i < currentPointsPx.length; i += 1) {
+          const start = currentPointsPx[i];
+          const end = currentPointsPx[(i + 1) % currentPointsPx.length];
+          if (!start || !end) continue;
+          const projection = projectPointToSegment(clickPx, start, end);
+          if (projection.distance < bestEdgeDistance) {
+            bestEdgeDistance = projection.distance;
+            bestEdgeIndex = i;
+            bestProjected = projection.projected;
+          }
+        }
+
+        if (bestEdgeIndex < 0 || !bestProjected || bestEdgeDistance > 12)
+          return null;
+
+        return {
+          edgeIndex: bestEdgeIndex,
+          pointPx: bestProjected,
+          pointPercent: {
+            x: clamp(
+              ((bestProjected.x - renderBox.left) / renderBox.width) * 100,
+              0,
+              100,
+            ),
+            y: clamp(
+              ((bestProjected.y - renderBox.top) / renderBox.height) * 100,
+              0,
+              100,
+            ),
+          },
+        };
+      },
+      [currentShape, renderBox, shapeToPixels],
+    );
+
+    const handleCanvasClick = useCallback(
+      (event: React.MouseEvent<SVGSVGElement>) => {
+        if (suppressNextCanvasClickRef.current) {
+          suppressNextCanvasClickRef.current = false;
+          return;
+        }
+
+        const percentPoint = toPercentPoint(event.clientX, event.clientY);
+        if (!percentPoint) return;
+
+        if (isDrawingEnabled && !currentShape) {
+          const d = 2;
+          const seedColor = shapes[0]?.color || "#3b82f6";
+          const seedShape: Shape = {
+            id: `draft-${Date.now()}`,
+            type: "polygon",
+            color: seedColor,
+            isSelected: true,
+            points: [
+              {
+                x: clamp(percentPoint.x - d, 0, 100),
+                y: clamp(percentPoint.y - d, 0, 100),
+              },
+              {
+                x: clamp(percentPoint.x + d, 0, 100),
+                y: clamp(percentPoint.y - d, 0, 100),
+              },
+              {
+                x: clamp(percentPoint.x + d, 0, 100),
+                y: clamp(percentPoint.y + d, 0, 100),
+              },
+              {
+                x: clamp(percentPoint.x - d, 0, 100),
+                y: clamp(percentPoint.y + d, 0, 100),
+              },
+            ],
+          };
+          onCurrentShapeUpdate?.(seedShape);
+          return;
+        }
+
+        if (mode === "edit" && currentShape && !isDrawingEnabled) {
+          const host = hostRef.current;
+          if (host) {
+            const rect = host.getBoundingClientRect();
+            const clickPx = {
+              x: event.clientX - rect.left,
+              y: event.clientY - rect.top,
+            };
+            const candidate =
+              insertPreview ?? getEdgeInsertionCandidate(clickPx);
+            if (candidate) {
+              const nextPoints = [...currentShape.points];
+              nextPoints.splice(
+                candidate.edgeIndex + 1,
+                0,
+                candidate.pointPercent,
+              );
+              onCurrentShapeUpdate?.({
+                ...currentShape,
+                points: nextPoints,
+              });
+              return;
+            }
+          }
+        }
+
+        const clickedId = findClickedShapeId(percentPoint);
+        if (clickedId) onClickAnnotationId?.(clickedId);
+      },
+      [
+        currentShape,
+        findClickedShapeId,
+        isDrawingEnabled,
+        insertPreview,
+        getEdgeInsertionCandidate,
+        mode,
+        onClickAnnotationId,
+        onCurrentShapeUpdate,
+        toPercentPoint,
+      ],
+    );
+
+    const updateVertexFromEvent = useCallback(
+      (event: PointerEvent, vertexIndex: number) => {
+        if (!currentShapeRef.current) return;
+        const nextPoint = toPercentPoint(event.clientX, event.clientY);
+        if (!nextPoint) return;
+        const nextPoints = currentShapeRef.current.points.map((p, i) =>
+          i === vertexIndex ? nextPoint : p,
+        );
+        onCurrentShapeUpdate?.({
+          ...currentShapeRef.current,
+          points: nextPoints,
+        });
+      },
+      [onCurrentShapeUpdate, toPercentPoint],
+    );
+
+    useEffect(() => {
+      const handlePointerMove = (event: PointerEvent) => {
+        const drag = dragStateRef.current;
+        if (!drag) return;
+        const start = dragStartPointRef.current;
+        if (start) {
+          const movedDistance = Math.hypot(
+            event.clientX - start.x,
+            event.clientY - start.y,
+          );
+          if (movedDistance > 2) {
+            didVertexDragMoveRef.current = true;
+          }
+        }
+        updateVertexFromEvent(event, drag.vertexIndex);
+      };
+      const handlePointerUp = (event: PointerEvent) => {
+        const drag = dragStateRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        if (didVertexDragMoveRef.current) {
+          suppressNextCanvasClickRef.current = true;
+        }
+        dragStartPointRef.current = null;
+        didVertexDragMoveRef.current = false;
+        dragStateRef.current = null;
+      };
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
+      return () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerUp);
+      };
+    }, [updateVertexFromEvent]);
+
+    const renderedShapes = currentShape
+      ? [...shapes.filter((s) => s.id !== currentShape.id), currentShape]
+      : shapes;
+
+    return (
+      <div className={className ?? "h-[600px] w-full"}>
+        <div
+          ref={hostRef}
+          className="relative h-full w-full overflow-hidden rounded-lg border bg-black/5"
+        >
+          <img
+            ref={imageRef}
+            src={imageUrl}
+            alt=""
+            className="h-full w-full select-none object-contain"
+            draggable={false}
+            onLoad={recomputeRenderBox}
+          />
+          {renderBox && (
+            <svg
+              className="absolute inset-0 h-full w-full"
+              onClick={handleCanvasClick}
+              onMouseMove={(event) => {
+                if (
+                  mode !== "edit" ||
+                  !currentShape ||
+                  isDrawingEnabled ||
+                  dragStateRef.current
+                ) {
+                  if (insertPreview) setInsertPreview(null);
+                  return;
+                }
+                const host = hostRef.current;
+                if (!host) return;
+                const rect = host.getBoundingClientRect();
+                const candidate = getEdgeInsertionCandidate({
+                  x: event.clientX - rect.left,
+                  y: event.clientY - rect.top,
+                });
+                setInsertPreview(candidate);
+              }}
+              onMouseLeave={() => setInsertPreview(null)}
+            >
+              {renderedShapes.map((shape) => {
+                if (!shape.points || shape.points.length < 3) return null;
+                const pointsPx = shapeToPixels(shape);
+                const pointsAttr = pointsPx
+                  .map((p) => `${p.x},${p.y}`)
+                  .join(" ");
+                const style = getStyleById?.(shape.id);
+                const isActive = currentShape?.id === shape.id;
+                return (
+                  <polygon
+                    key={shape.id}
+                    points={pointsAttr}
+                    fill={(style?.fill as string) || shape.color || "#3b82f6"}
+                    fillOpacity={isActive ? 0.35 : 0.2}
+                    stroke={
+                      (style?.stroke as string) || shape.color || "#3b82f6"
+                    }
+                    strokeWidth={isActive ? 3 : 2}
+                    strokeOpacity={1}
+                  />
+                );
+              })}
+
+              {currentShape &&
+                shapeToPixels(currentShape).map((point, index) => {
+                  const isActive = selectedVertexIndex === index;
+                  return (
+                    <circle
+                      key={`vertex-${index}`}
+                      cx={point.x}
+                      cy={point.y}
+                      r={isActive ? 7 : 4}
+                      fill={isActive ? "#2563eb" : "#ef4444"}
+                      stroke="#ffffff"
+                      strokeWidth={isActive ? 2 : 1}
+                      style={{ cursor: mode === "edit" ? "grab" : "default" }}
+                      onPointerDown={(e) => {
+                        if (mode !== "edit") return;
+                        e.stopPropagation();
+                        setInsertPreview(null);
+                        dragStartPointRef.current = {
+                          x: e.clientX,
+                          y: e.clientY,
+                        };
+                        didVertexDragMoveRef.current = false;
+                        dragStateRef.current = {
+                          pointerId: e.pointerId,
+                          vertexIndex: index,
+                        };
+                      }}
+                    />
+                  );
+                })}
+              {mode === "edit" &&
+                currentShape &&
+                !isDrawingEnabled &&
+                insertPreview && (
+                  <circle
+                    cx={insertPreview.pointPx.x}
+                    cy={insertPreview.pointPx.y}
+                    r={5}
+                    fill="#9ca3af"
+                    stroke="#ffffff"
+                    strokeWidth={1.5}
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+            </svg>
+          )}
+        </div>
+      </div>
+    );
+  },
+);
+
+ControlledPolygonAnnotator.displayName = "ControlledPolygonAnnotator";
+
 const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
   (
     {
@@ -72,7 +569,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       currentShape,
       selectedVertexIndex = null,
       onCurrentShapeUpdate,
-      drawingEnabled = true,
+      drawingEnabled,
       mode = "edit",
       onSelectAnnotationId,
       onClickAnnotationId,
@@ -97,7 +594,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       string | null
     >(null);
     const labelOverlaysRef = useRef<HTMLElement[]>([]);
-    const selectedVertexOverlayRef = useRef<HTMLElement | null>(null);
+    const vertexOverlaysRef = useRef<HTMLElement[]>([]);
     const prevHoverIdRef = useRef<string | null>(null);
     const selectionRetryTimeoutsRef = useRef<number[]>([]);
     const selectionSyncRunIdRef = useRef(0);
@@ -111,6 +608,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       width: number;
       height: number;
     } | null>(null);
+    const isDrawingEnabled = drawingEnabled ?? mode !== "view";
 
     useEffect(() => {
       // Reset size when image URL changes (viewer will re-open)
@@ -213,7 +711,10 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     }, [imageUrl, osdImageSize]);
 
     const clearTimeoutIds = useCallback((ids: number[]) => {
-      ids.forEach((id) => window.clearTimeout(id));
+      ids.forEach((id) => {
+        window.clearTimeout(id);
+        window.cancelAnimationFrame(id);
+      });
       ids.length = 0;
     }, []);
 
@@ -659,7 +1160,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             if (runId !== selectionSyncRunIdRef.current) return;
             attempt++;
             try {
-              annotator.setSelected(targetId);
+              annotator.setSelected(targetId, true);
             } catch {
               // ignore; we'll retry below
             } finally {
@@ -697,7 +1198,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
         if (shape) {
           // Если мы в режиме редактирования и создаем новый полигон
-          if (drawingEnabled && onCurrentShapeUpdate) {
+          if (isDrawingEnabled && onCurrentShapeUpdate) {
             // Помечаем новый shape как незавершенный (редактируемый)
             const editableShape = { ...shape, isSelected: false };
             onCurrentShapeUpdate(editableShape);
@@ -775,7 +1276,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
           // Edit mode: selecting sets currentShape (existing behavior)
           const shape = await annotationToShape(annotation);
           if (shape && onCurrentShapeUpdate) onCurrentShapeUpdate(shape);
-        } else if (!drawingEnabled) {
+        } else if (!isDrawingEnabled) {
           // Снято выделение и мы не в режиме редактирования
           if (mode === "view") {
             setSelectedAnnotationId(null);
@@ -815,7 +1316,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       onClickAnnotationId,
       onCurrentShapeUpdate,
       annotationToShape,
-      drawingEnabled,
+      isDrawingEnabled,
       currentShape,
       mode,
       onSelectAnnotationId,
@@ -929,66 +1430,72 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       if (mode === "view") return;
       if (!viewer) return;
 
-      const clearSelectedVertexOverlay = () => {
-        const overlay = selectedVertexOverlayRef.current;
-        if (!overlay) return;
-        try {
-          viewer.removeOverlay(overlay);
-        } catch {
-          // ignore
-        }
-        selectedVertexOverlayRef.current = null;
+      const clearVertexOverlays = () => {
+        vertexOverlaysRef.current.forEach((overlay) => {
+          try {
+            viewer.removeOverlay(overlay);
+          } catch {
+            // ignore
+          }
+        });
+        vertexOverlaysRef.current = [];
       };
 
-      if (
-        !currentShape ||
-        selectedVertexIndex === null ||
-        selectedVertexIndex < 0 ||
-        selectedVertexIndex >= currentShape.points.length
-      ) {
-        clearSelectedVertexOverlay();
+      if (!currentShape || currentShape.points.length === 0) {
+        clearVertexOverlays();
         return;
       }
 
       let cancelled = false;
 
-      const renderSelectedVertexOverlay = async () => {
+      const renderVertexOverlays = async () => {
         const { width, height } = await getEffectiveImageSize();
         if (cancelled) return;
 
         const shapeInPixels = shapeToPixels(currentShape, width, height);
-        const selectedPoint = shapeInPixels.points[selectedVertexIndex];
-        if (!selectedPoint) {
-          clearSelectedVertexOverlay();
+        if (!shapeInPixels.points.length) {
+          clearVertexOverlays();
           return;
         }
 
-        clearSelectedVertexOverlay();
+        clearVertexOverlays();
+        const nextOverlays: HTMLElement[] = [];
 
-        const overlayEl = document.createElement("div");
-        overlayEl.style.width = "14px";
-        overlayEl.style.height = "14px";
-        overlayEl.style.borderRadius = "9999px";
-        overlayEl.style.border = "2px solid #ffffff";
-        overlayEl.style.background = "#2563eb";
-        overlayEl.style.boxShadow = "0 0 0 2px rgba(37,99,235,0.35)";
-        overlayEl.style.transform = "translate(-50%, -50%)";
-        overlayEl.style.pointerEvents = "none";
-        overlayEl.style.zIndex = "30";
+        shapeInPixels.points.forEach((point, index) => {
+          const isActive =
+            selectedVertexIndex !== null && selectedVertexIndex === index;
+          const overlayEl = document.createElement("div");
 
-        const location = viewer.viewport.imageToViewportCoordinates(
-          selectedPoint.x,
-          selectedPoint.y,
-        );
-        viewer.addOverlay(overlayEl, location);
-        selectedVertexOverlayRef.current = overlayEl;
+          overlayEl.style.width = isActive ? "14px" : "8px";
+          overlayEl.style.height = isActive ? "14px" : "8px";
+          overlayEl.style.borderRadius = "9999px";
+          overlayEl.style.border = isActive
+            ? "2px solid #ffffff"
+            : "1px solid #ffffff";
+          overlayEl.style.background = isActive ? "#2563eb" : "#ef4444";
+          overlayEl.style.boxShadow = isActive
+            ? "0 0 0 2px rgba(37,99,235,0.35)"
+            : "0 0 0 1px rgba(239,68,68,0.35)";
+          overlayEl.style.transform = "translate(-50%, -50%)";
+          overlayEl.style.pointerEvents = "none";
+          overlayEl.style.zIndex = isActive ? "30" : "20";
+
+          const location = viewer.viewport.imageToViewportCoordinates(
+            point.x,
+            point.y,
+          );
+          viewer.addOverlay(overlayEl, location);
+          nextOverlays.push(overlayEl);
+        });
+
+        vertexOverlaysRef.current = nextOverlays;
       };
 
-      void renderSelectedVertexOverlay();
+      void renderVertexOverlays();
 
       return () => {
         cancelled = true;
-        clearSelectedVertexOverlay();
+        clearVertexOverlays();
       };
     }, [
       currentShape,
@@ -1002,7 +1509,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     // Annotorious only fires `updateAnnotation` when the annotation is deselected,
     // so we briefly deselect and reselect to flush pending geometry changes.
     useEffect(() => {
-      if (mode === "view" || !drawingEnabled || !annotator) return;
+      if (mode === "view" || isDrawingEnabled || !annotator) return;
 
       const hostEl = viewerHostRef.current;
       if (!hostEl) return;
@@ -1012,26 +1519,27 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
         const id = prevCurrentShapeIdRef.current;
         if (!id) return;
-
-        const firstTimeoutId = window.setTimeout(() => {
-          if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
-          try {
-            annotator.setSelected();
-          } catch {
-            // ignore
-          }
-          const secondTimeoutId = window.setTimeout(() => {
+        queueMicrotask(() => {
+          const rafId = window.requestAnimationFrame(() => {
             if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
-            if (id !== prevCurrentShapeIdRef.current) return;
             try {
-              annotator.setSelected(id);
+              annotator.setSelected();
             } catch {
               // ignore
             }
-          }, 60);
-          pointerFlushTimeoutsRef.current.push(secondTimeoutId);
-        }, 80);
-        pointerFlushTimeoutsRef.current.push(firstTimeoutId);
+            const secondTimeoutId = window.setTimeout(() => {
+              if (Date.now() - lastAnnotationClickTsRef.current < 220) return;
+              if (id !== prevCurrentShapeIdRef.current) return;
+              try {
+                annotator.setSelected(id, true);
+              } catch {
+                // ignore
+              }
+            }, 60);
+            pointerFlushTimeoutsRef.current.push(secondTimeoutId);
+          });
+          pointerFlushTimeoutsRef.current.push(rafId);
+        });
       };
 
       hostEl.addEventListener("pointerup", handlePointerUp);
@@ -1039,7 +1547,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         hostEl.removeEventListener("pointerup", handlePointerUp);
         clearTimeoutIds(pointerFlushTimeoutsRef.current);
       };
-    }, [annotator, clearTimeoutIds, drawingEnabled, mode]);
+    }, [annotator, clearTimeoutIds, isDrawingEnabled, mode]);
 
     return (
       <div
@@ -1051,8 +1559,8 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
           <OpenSeadragonAnnotator
             style={annotationStyle}
             drawingMode="click"
-            tool={mode === "view" ? null : "polygon"}
-            drawingEnabled={mode === "view" ? false : drawingEnabled}
+            drawingEnabled={isDrawingEnabled}
+            tool={mode === "view" || !isDrawingEnabled ? undefined : "polygon"}
             userSelectAction={
               mode === "view" ? UserSelectAction.SELECT : UserSelectAction.EDIT
             }
@@ -1069,6 +1577,10 @@ AnnotatorContent.displayName = "AnnotatorContent";
 
 const PolygonAnnotator = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
   (props, ref) => {
+    if (props.engine === "controlled") {
+      return <ControlledPolygonAnnotator {...props} ref={ref} />;
+    }
+
     return (
       <div className={props.className ?? "h-[600px] w-full"}>
         <Annotorious>
