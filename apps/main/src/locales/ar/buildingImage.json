@@ -10,6 +10,7 @@
     "creatingNew": "إنشاء الطابق {{floor}}",
     "description": "اختر طابقًا وحدد منطقته على صورة المبنى",
     "edit": "تعديل",
+    "delete": "حذف الطابق",
     "floor": "الطابق:",
     "floorNumber": "الطابق {{floor}}",
     "title": "تكوين الطوابق"
@@ -20,6 +21,7 @@
     "configured": "الكائنات المكوّنة",
     "creating": "إنشاء مضلع للكائن رقم {{number}}",
     "number": "رقم الكائن",
+    "delete": "حذف الكائن",
     "objectNumber": "كائن رقم {{number}}",
     "plan": "خطة الكائنات",
     "polygonsDescription": "حدد المناطق على الخطة لكل كائن (فيلات، منازل)",

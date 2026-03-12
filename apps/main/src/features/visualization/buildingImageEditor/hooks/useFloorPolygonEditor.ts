@@ -510,6 +510,7 @@ export function useFloorPolygonEditor({
     selectNextVertex,
     handleDeletePoint,
     selectedVertexIndex,
+    setSelectedVertexIndex,
     undoStackRef,
     redoStackRef,
 

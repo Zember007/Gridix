@@ -581,7 +581,9 @@ const BuildingImageEditor = ({
                         className="h-8"
                       >
                         <Trash2 className="mr-1 h-3 w-3" />
-                        {loader.t("domains.delete")}
+                        {loader.isObjectProject
+                          ? loader.t("buildingImage.object.delete")
+                          : loader.t("buildingImage.floors.delete")}
                       </Button>
                     )}
                     <Button
@@ -604,6 +606,7 @@ const BuildingImageEditor = ({
                 shapes={loader.shapes}
                 currentShape={floor.currentShape}
                 selectedVertexIndex={floor.selectedVertexIndex}
+                onSelectVertexIndex={floor.setSelectedVertexIndex}
                 onCurrentShapeUpdate={floor.handleCurrentShapeUpdate}
                 onClickAnnotationId={(id) => {
                   const floorData = loader.buildingFloors.find(

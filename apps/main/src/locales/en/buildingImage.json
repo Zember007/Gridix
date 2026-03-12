@@ -10,6 +10,7 @@
     "creatingNew": "Creating floor {{floor}}",
     "description": "Select a floor and mark its area on the building image",
     "edit": "Edit",
+    "delete": "Delete floor",
     "floor": "Floor:",
     "floorNumber": "Floor {{floor}}",
     "title": "Floor Configuration"
@@ -20,6 +21,7 @@
     "configured": "Configured Objects",
     "creating": "Creating polygon for object #{{number}}",
     "number": "Object Number",
+    "delete": "Delete object",
     "objectNumber": "Object #{{number}}",
     "plan": "Objects Plan",
     "polygonsDescription": "Mark areas on the plan for each object (villas, townhouses)",

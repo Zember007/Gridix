@@ -10,6 +10,7 @@
     "creatingNew": "{{floor}}. kat oluşturuluyor",
     "description": "Bir kat seçin ve alanını bina görselinde işaretleyin",
     "edit": "Düzenlemek",
+    "delete": "Katı sil",
     "floor": "Zemin:",
     "floorNumber": "Kat {{kat}}",
     "title": "Kat Yapılandırması"
@@ -20,6 +21,7 @@
     "configured": "Yapılandırılmış Nesneler",
     "creating": "#{{number}} nesnesi için çokgen oluşturuluyor",
     "number": "Nesne Numarası",
+    "delete": "Nesneyi sil",
     "objectNumber": "Nesne #{{sayı}}",
     "plan": "Nesne Planı",
     "polygonsDescription": "Her nesne için plandaki alanları işaretleyin (villalar, şehir evleri)",

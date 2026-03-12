@@ -47,6 +47,7 @@ interface PolygonAnnotatorProps {
   shapes?: Shape[];
   currentShape?: Shape | null;
   selectedVertexIndex?: number | null;
+  onSelectVertexIndex?: (index: number | null) => void;
   onCurrentShapeUpdate?: (shape: Shape | null) => void;
   drawingEnabled?: boolean;
   engine?: "annotorious" | "controlled";
@@ -123,6 +124,7 @@ const ControlledPolygonAnnotator = forwardRef<
       shapes = [],
       currentShape = null,
       selectedVertexIndex = null,
+      onSelectVertexIndex,
       onCurrentShapeUpdate,
       drawingEnabled,
       mode = "edit",
@@ -683,6 +685,7 @@ const ControlledPolygonAnnotator = forwardRef<
                         e.preventDefault();
                         e.stopPropagation();
                         setInsertPreview(null);
+                        onSelectVertexIndex?.(index);
                         dragStartPointRef.current = {
                           x: e.clientX,
                           y: e.clientY,
