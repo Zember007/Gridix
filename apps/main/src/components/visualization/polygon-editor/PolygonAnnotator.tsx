@@ -87,15 +87,6 @@ function pointInPolygon(point: Point, polygon: Point[]) {
   return isInside;
 }
 
-function pointToSegmentDistance(
-  point: { x: number; y: number },
-  start: { x: number; y: number },
-  end: { x: number; y: number },
-) {
-  const projection = projectPointToSegment(point, start, end);
-  return projection.distance;
-}
-
 function projectPointToSegment(
   point: { x: number; y: number },
   start: { x: number; y: number },
@@ -150,8 +141,16 @@ const ControlledPolygonAnnotator = forwardRef<
       pointerId: number;
       vertexIndex: number;
     } | null>(null);
+    const polygonDragStateRef = useRef<{
+      pointerId: number;
+      startClientX: number;
+      startClientY: number;
+      startPoints: Point[];
+      sourceShapeId: string;
+    } | null>(null);
     const dragStartPointRef = useRef<{ x: number; y: number } | null>(null);
     const didVertexDragMoveRef = useRef(false);
+    const didPolygonDragMoveRef = useRef(false);
     const suppressNextCanvasClickRef = useRef(false);
     const [renderBox, setRenderBox] = useState<{
       left: number;
@@ -164,6 +163,7 @@ const ControlledPolygonAnnotator = forwardRef<
       pointPercent: Point;
       pointPx: { x: number; y: number };
     } | null>(null);
+    const [hoveredShapeId, setHoveredShapeId] = useState<string | null>(null);
     const prevHoverIdRef = useRef<string | null>(null);
 
     currentShapeRef.current = currentShape;
@@ -416,33 +416,91 @@ const ControlledPolygonAnnotator = forwardRef<
       [onCurrentShapeUpdate, toPercentPoint],
     );
 
+    const updatePolygonFromEvent = useCallback(
+      (event: PointerEvent) => {
+        const drag = polygonDragStateRef.current;
+        const activeShape = currentShapeRef.current;
+        if (!drag || !activeShape || !renderBox) return;
+        if (activeShape.id !== drag.sourceShapeId) return;
+
+        const dxPixels = event.clientX - drag.startClientX;
+        const dyPixels = event.clientY - drag.startClientY;
+        const rawDxPercent = (dxPixels / renderBox.width) * 100;
+        const rawDyPercent = (dyPixels / renderBox.height) * 100;
+
+        const minX = Math.min(...drag.startPoints.map((point) => point.x));
+        const maxX = Math.max(...drag.startPoints.map((point) => point.x));
+        const minY = Math.min(...drag.startPoints.map((point) => point.y));
+        const maxY = Math.max(...drag.startPoints.map((point) => point.y));
+
+        const boundedDxPercent = clamp(rawDxPercent, -minX, 100 - maxX);
+        const boundedDyPercent = clamp(rawDyPercent, -minY, 100 - maxY);
+
+        const nextPoints = drag.startPoints.map((point) => ({
+          x: clamp(point.x + boundedDxPercent, 0, 100),
+          y: clamp(point.y + boundedDyPercent, 0, 100),
+        }));
+
+        onCurrentShapeUpdate?.({
+          ...activeShape,
+          points: nextPoints,
+        });
+      },
+      [onCurrentShapeUpdate, renderBox],
+    );
+
     useEffect(() => {
       const handlePointerMove = (event: PointerEvent) => {
-        const drag = dragStateRef.current;
-        if (!drag) return;
-        event.preventDefault();
-        const start = dragStartPointRef.current;
-        if (start) {
-          const movedDistance = Math.hypot(
-            event.clientX - start.x,
-            event.clientY - start.y,
-          );
-          if (movedDistance > 2) {
-            didVertexDragMoveRef.current = true;
+        const vertexDrag = dragStateRef.current;
+        if (vertexDrag) {
+          event.preventDefault();
+          const start = dragStartPointRef.current;
+          if (start) {
+            const movedDistance = Math.hypot(
+              event.clientX - start.x,
+              event.clientY - start.y,
+            );
+            if (movedDistance > 2) {
+              didVertexDragMoveRef.current = true;
+            }
           }
+          updateVertexFromEvent(event, vertexDrag.vertexIndex);
+          return;
         }
-        updateVertexFromEvent(event, drag.vertexIndex);
+
+        const polygonDrag = polygonDragStateRef.current;
+        if (!polygonDrag) return;
+        event.preventDefault();
+        const movedDistance = Math.hypot(
+          event.clientX - polygonDrag.startClientX,
+          event.clientY - polygonDrag.startClientY,
+        );
+        if (movedDistance > 2) {
+          didPolygonDragMoveRef.current = true;
+        }
+        updatePolygonFromEvent(event);
       };
       const handlePointerUp = (event: PointerEvent) => {
-        const drag = dragStateRef.current;
-        if (!drag || drag.pointerId !== event.pointerId) return;
+        const vertexDrag = dragStateRef.current;
+        if (vertexDrag && vertexDrag.pointerId === event.pointerId) {
+          event.preventDefault();
+          if (didVertexDragMoveRef.current) {
+            suppressNextCanvasClickRef.current = true;
+          }
+          dragStartPointRef.current = null;
+          didVertexDragMoveRef.current = false;
+          dragStateRef.current = null;
+          return;
+        }
+
+        const polygonDrag = polygonDragStateRef.current;
+        if (!polygonDrag || polygonDrag.pointerId !== event.pointerId) return;
         event.preventDefault();
-        if (didVertexDragMoveRef.current) {
+        if (didPolygonDragMoveRef.current) {
           suppressNextCanvasClickRef.current = true;
         }
-        dragStartPointRef.current = null;
-        didVertexDragMoveRef.current = false;
-        dragStateRef.current = null;
+        didPolygonDragMoveRef.current = false;
+        polygonDragStateRef.current = null;
       };
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handlePointerUp);
@@ -452,7 +510,7 @@ const ControlledPolygonAnnotator = forwardRef<
         window.removeEventListener("pointerup", handlePointerUp);
         window.removeEventListener("pointercancel", handlePointerUp);
       };
-    }, [updateVertexFromEvent]);
+    }, [updatePolygonFromEvent, updateVertexFromEvent]);
 
     const renderedShapes = currentShape
       ? [...shapes.filter((s) => s.id !== currentShape.id), currentShape]
@@ -482,14 +540,17 @@ const ControlledPolygonAnnotator = forwardRef<
                   event.clientX,
                   event.clientY,
                 );
-                emitHoverId(
-                  percentPoint ? findClickedShapeId(percentPoint) : null,
-                );
+                const hoveredId = percentPoint
+                  ? findClickedShapeId(percentPoint)
+                  : null;
+                emitHoverId(hoveredId);
+                setHoveredShapeId(hoveredId);
                 if (
                   mode !== "edit" ||
                   !currentShape ||
                   isDrawingEnabled ||
-                  dragStateRef.current
+                  dragStateRef.current ||
+                  polygonDragStateRef.current
                 ) {
                   if (insertPreview) setInsertPreview(null);
                   return;
@@ -506,6 +567,7 @@ const ControlledPolygonAnnotator = forwardRef<
               onMouseLeave={() => {
                 setInsertPreview(null);
                 emitHoverId(null);
+                setHoveredShapeId(null);
               }}
             >
               {renderedShapes.map((shape) => {
@@ -516,17 +578,89 @@ const ControlledPolygonAnnotator = forwardRef<
                   .join(" ");
                 const style = getStyleById?.(shape.id);
                 const isActive = currentShape?.id === shape.id;
+                const isHovered = hoveredShapeId === shape.id;
+                const isDraggableHover =
+                  mode === "edit" && isActive && !isDrawingEnabled && isHovered;
+                const isPolygonHoverHighlight =
+                  isHovered &&
+                  (mode === "view" ||
+                    (mode === "edit" && !isDrawingEnabled && !isActive));
+                const baseFill =
+                  (style?.fill as string) || shape.color || "#3b82f6";
+                const baseStroke =
+                  (style?.stroke as string) || shape.color || "#3b82f6";
+                const baseFillOpacity =
+                  typeof style?.fillOpacity === "number"
+                    ? style.fillOpacity
+                    : isActive
+                      ? 0.35
+                      : 0.2;
+                const baseStrokeWidth =
+                  typeof style?.strokeWidth === "number"
+                    ? style.strokeWidth
+                    : isActive
+                      ? 3
+                      : 2;
                 return (
                   <polygon
                     key={shape.id}
                     points={pointsAttr}
-                    fill={(style?.fill as string) || shape.color || "#3b82f6"}
-                    fillOpacity={isActive ? 0.35 : 0.2}
-                    stroke={
-                      (style?.stroke as string) || shape.color || "#3b82f6"
+                    fill={isPolygonHoverHighlight ? "#3b82f6" : baseFill}
+                    fillOpacity={
+                      isDraggableHover
+                        ? Math.max(baseFillOpacity, 0.45)
+                        : isPolygonHoverHighlight
+                          ? Math.max(baseFillOpacity, 0.5)
+                          : baseFillOpacity
                     }
-                    strokeWidth={isActive ? 3 : 2}
+                    stroke={isPolygonHoverHighlight ? "#3b82f6" : baseStroke}
+                    strokeWidth={
+                      isDraggableHover
+                        ? Math.max(baseStrokeWidth, 4)
+                        : isPolygonHoverHighlight
+                          ? Math.max(baseStrokeWidth, 3.5)
+                          : baseStrokeWidth
+                    }
                     strokeOpacity={1}
+                    style={{
+                      cursor:
+                        mode === "edit" && isActive && !isDrawingEnabled
+                          ? "move"
+                          : mode === "view"
+                            ? "pointer"
+                            : isPolygonHoverHighlight
+                              ? "pointer"
+                              : "default",
+                      transition:
+                        "fill-opacity 120ms ease, stroke-width 120ms ease",
+                    }}
+                    onPointerDown={(event) => {
+                      if (
+                        mode !== "edit" ||
+                        !isActive ||
+                        isDrawingEnabled ||
+                        event.button !== 0
+                      ) {
+                        return;
+                      }
+                      if (!currentShapeRef.current) return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setInsertPreview(null);
+                      polygonDragStateRef.current = {
+                        pointerId: event.pointerId,
+                        startClientX: event.clientX,
+                        startClientY: event.clientY,
+                        startPoints: currentShapeRef.current.points.map(
+                          (point) => ({
+                            x: point.x,
+                            y: point.y,
+                          }),
+                        ),
+                        sourceShapeId: currentShapeRef.current.id,
+                      };
+                      didPolygonDragMoveRef.current = false;
+                    }}
                   />
                 );
               })}

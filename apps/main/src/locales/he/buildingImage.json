@@ -4,6 +4,7 @@
   "settings": "חזית הגדרות",
   "floors": {
     "addNew": "הוסף קומה",
+    "allowedRange": "טווח קומות מותר: {{min}}-{{max}}",
     "canvas": "ציור קנבס",
     "configured": "קומות מוגדרות:",
     "creatingNew": "יצירת קומה {{קומה}}",
@@ -15,6 +16,7 @@
   },
   "object": {
     "addNew": "הוסף אובייקט",
+    "allowedRange": "טווח מותר: {{min}}-{{max}}",
     "configured": "אובייקטים מוגדרים",
     "creating": "יצירת מצולע עבור אובייקט מס' {{number}}",
     "number": "מספר אובייקט",

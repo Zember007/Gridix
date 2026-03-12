@@ -111,6 +111,11 @@ const BuildingImageEditor = ({
     };
   }, []);
 
+  const clearHoveredFloor = useCallback(() => {
+    setHoveredFloorId(null);
+    setHoverPopupPos(null);
+  }, []);
+
   const parsedFloorInput = Number(floorInputValue);
   const floorInputIsInteger =
     floorInputValue.trim() !== "" && Number.isInteger(parsedFloorInput);
@@ -123,8 +128,14 @@ const BuildingImageEditor = ({
     (floorInputValue.trim() !== "" && !floorInRange) ||
     floorInputError !== null;
   const floorInputInvalidText = loader.isObjectProject
-    ? "Invalid object number"
-    : "Invalid floor number";
+    ? loader.t("buildingImage.object.allowedRange", {
+        min: floorInputRange.min,
+        max: floorInputRange.max,
+      })
+    : loader.t("buildingImage.floors.allowedRange", {
+        min: floorInputRange.min,
+        max: floorInputRange.max,
+      });
 
   const handleFloorInputChange = (value: string) => {
     const trimmedValue = value.trim();
@@ -395,14 +406,22 @@ const BuildingImageEditor = ({
               </span>
               <span className="mt-1 block text-xs text-muted-foreground">
                 {loader.isObjectProject
-                  ? `Allowed range: ${floorInputRange.min}-${floorInputRange.max}`
-                  : `Allowed floor range: ${floorInputRange.min}-${floorInputRange.max}`}
+                  ? loader.t("buildingImage.object.allowedRange", {
+                      min: floorInputRange.min,
+                      max: floorInputRange.max,
+                    })
+                  : loader.t("buildingImage.floors.allowedRange", {
+                      min: floorInputRange.min,
+                      max: floorInputRange.max,
+                    })}
               </span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex flex-col gap-1">
+            <div
+              className={`flex flex-wrap items-center gap-4 ${floorInputInvalid ? "pb-5" : ""}`}
+            >
+              <div className="relative flex flex-col">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="floor-select" className="text-sm font-medium">
                     {loader.isObjectProject
@@ -434,7 +453,7 @@ const BuildingImageEditor = ({
                   />
                 </div>
                 {floorInputInvalid && (
-                  <p className="text-xs text-destructive">
+                  <p className="absolute left-0 top-full mt-1 whitespace-nowrap text-xs text-destructive">
                     {floorInputInvalidText}
                   </p>
                 )}
@@ -462,10 +481,7 @@ const BuildingImageEditor = ({
               ref={viewerWrapRef}
               className="relative rounded-lg border bg-muted/30 p-4"
               onMouseMove={updateMousePos}
-              onMouseLeave={() => {
-                setHoveredFloorId(null);
-                setHoverPopupPos(null);
-              }}
+              onMouseLeave={clearHoveredFloor}
             >
               <div className="mb-4 flex items-center justify-between">
                 <h4 className="text-sm font-medium">
@@ -608,13 +624,11 @@ const BuildingImageEditor = ({
                 }}
                 onHoverAnnotationId={(id) => {
                   if (floor.isEditing) {
-                    setHoveredFloorId(null);
-                    setHoverPopupPos(null);
+                    clearHoveredFloor();
                     return;
                   }
                   if (!id) {
-                    setHoveredFloorId(null);
-                    setHoverPopupPos(null);
+                    clearHoveredFloor();
                     return;
                   }
                   setHoveredFloorId(id);

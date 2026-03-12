@@ -4,6 +4,7 @@
   "settings": "واجهة الإعدادات",
   "floors": {
     "addNew": "إضافة طابق",
+    "allowedRange": "نطاق الطوابق المسموح: {{min}}-{{max}}",
     "canvas": "لوحة الرسم",
     "configured": "الطوابق المكوّنة:",
     "creatingNew": "إنشاء الطابق {{floor}}",
@@ -15,6 +16,7 @@
   },
   "object": {
     "addNew": "إضافة كائن",
+    "allowedRange": "النطاق المسموح: {{min}}-{{max}}",
     "configured": "الكائنات المكوّنة",
     "creating": "إنشاء مضلع للكائن رقم {{number}}",
     "number": "رقم الكائن",

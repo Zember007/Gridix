@@ -4,6 +4,7 @@
   "settings": "Ayarlar cephesi",
   "floors": {
     "addNew": "Kat Ekle",
+    "allowedRange": "İzin verilen kat aralığı: {{min}}-{{max}}",
     "canvas": "Çizim Tuvali",
     "configured": "Yapılandırılmış katlar:",
     "creatingNew": "{{floor}}. kat oluşturuluyor",
@@ -15,6 +16,7 @@
   },
   "object": {
     "addNew": "Nesne Ekle",
+    "allowedRange": "İzin verilen aralık: {{min}}-{{max}}",
     "configured": "Yapılandırılmış Nesneler",
     "creating": "#{{number}} nesnesi için çokgen oluşturuluyor",
     "number": "Nesne Numarası",

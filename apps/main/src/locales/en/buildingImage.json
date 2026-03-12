@@ -4,6 +4,7 @@
   "settings": "Settings facade",
   "floors": {
     "addNew": "Add Floor",
+    "allowedRange": "Allowed floor range: {{min}}-{{max}}",
     "canvas": "Drawing Canvas",
     "configured": "Configured floors:",
     "creatingNew": "Creating floor {{floor}}",
@@ -15,6 +16,7 @@
   },
   "object": {
     "addNew": "Add Object",
+    "allowedRange": "Allowed range: {{min}}-{{max}}",
     "configured": "Configured Objects",
     "creating": "Creating polygon for object #{{number}}",
     "number": "Object Number",
