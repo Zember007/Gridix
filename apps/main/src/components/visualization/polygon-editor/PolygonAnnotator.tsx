@@ -409,6 +409,7 @@ const ControlledPolygonAnnotator = forwardRef<
       const handlePointerMove = (event: PointerEvent) => {
         const drag = dragStateRef.current;
         if (!drag) return;
+        event.preventDefault();
         const start = dragStartPointRef.current;
         if (start) {
           const movedDistance = Math.hypot(
@@ -424,6 +425,7 @@ const ControlledPolygonAnnotator = forwardRef<
       const handlePointerUp = (event: PointerEvent) => {
         const drag = dragStateRef.current;
         if (!drag || drag.pointerId !== event.pointerId) return;
+        event.preventDefault();
         if (didVertexDragMoveRef.current) {
           suppressNextCanvasClickRef.current = true;
         }
@@ -455,13 +457,14 @@ const ControlledPolygonAnnotator = forwardRef<
             ref={imageRef}
             src={imageUrl}
             alt=""
-            className="h-full w-full select-none object-contain"
+            className="pointer-events-none h-full w-full select-none object-contain"
             draggable={false}
             onLoad={recomputeRenderBox}
           />
           {renderBox && (
             <svg
               className="absolute inset-0 h-full w-full"
+              style={{ touchAction: mode === "edit" ? "none" : "auto" }}
               onClick={handleCanvasClick}
               onMouseMove={(event) => {
                 if (
@@ -522,6 +525,7 @@ const ControlledPolygonAnnotator = forwardRef<
                       style={{ cursor: mode === "edit" ? "grab" : "default" }}
                       onPointerDown={(e) => {
                         if (mode !== "edit") return;
+                        e.preventDefault();
                         e.stopPropagation();
                         setInsertPreview(null);
                         dragStartPointRef.current = {
