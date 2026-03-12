@@ -1,10 +1,11 @@
-import { ReactNode, useEffect, useMemo } from "react";
+import { ReactNode, useEffect, useMemo, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import { hasAuthTokensInHash } from "@gridix/utils";
 import { usePasswordGate } from "../model/usePasswordGate";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,6 +18,8 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading, requiresPasswordSetup } = useAuth();
   const location = useLocation();
+  const { isSuperAdmin, loading: superAdminLoading } = useSuperAdmin();
+  const superAdminRedirectStartedRef = useRef(false);
   const currentLanguage = useMemo(
     () => getLanguageFromPath(location.pathname),
     [location.pathname],
@@ -53,6 +56,46 @@ export const ProtectedRoute = ({
       console.error("Failed to persist amoCRM install params:", e);
     }
   }, [location.search]);
+
+  useEffect(() => {
+    const isAdminRoute = /^\/[^/]+\/admin(\/|$)/.test(location.pathname);
+    if (
+      !requireAuth ||
+      !user ||
+      !isAdminRoute ||
+      superAdminLoading ||
+      !isSuperAdmin
+    ) {
+      superAdminRedirectStartedRef.current = false;
+      return;
+    }
+
+    if (superAdminRedirectStartedRef.current) {
+      return;
+    }
+
+    const superadminBase = import.meta.env.VITE_SUPERADMIN_APP_URL?.trim();
+    if (!superadminBase) {
+      return;
+    }
+
+    superAdminRedirectStartedRef.current = true;
+    const base = superadminBase.endsWith("/")
+      ? superadminBase.slice(0, -1)
+      : superadminBase;
+
+    window.location.replace(
+      `${base}/${currentLanguage}/?redirect_to=${encodeURIComponent(window.location.origin + location.pathname + (location.search || ""))}`,
+    );
+  }, [
+    currentLanguage,
+    isSuperAdmin,
+    location.pathname,
+    location.search,
+    requireAuth,
+    superAdminLoading,
+    user,
+  ]);
 
   if (loading) {
     return <FullPageLoaderView />;
@@ -119,6 +162,19 @@ export const ProtectedRoute = ({
   }
 
   if (requireAuth && user) {
+    const isAdminRoute = /^\/[^/]+\/admin(\/|$)/.test(location.pathname);
+    if (isAdminRoute) {
+      if (superAdminLoading) return <FullPageLoaderView />;
+      if (isSuperAdmin) {
+        if (import.meta.env.VITE_SUPERADMIN_APP_URL?.trim()) {
+          return <FullPageLoaderView />;
+        }
+        return (
+          <Navigate to={addLanguageToPath("/", currentLanguage)} replace />
+        );
+      }
+    }
+
     if (passwordGateLoading) return <FullPageLoaderView />;
     if (needsPasswordSet) {
       const setPasswordPath = addLanguageToPath(

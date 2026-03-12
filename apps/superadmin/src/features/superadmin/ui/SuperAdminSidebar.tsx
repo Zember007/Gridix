@@ -17,7 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@gridix/ui";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@gridix/utils/react";
 
 interface SuperAdminSidebarProps {
   activeTab: string;

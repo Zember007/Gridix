@@ -43,7 +43,7 @@ import {
 import { Badge } from "@gridix/ui";
 import { Alert, AlertDescription } from "@gridix/ui";
 import { Checkbox } from "@gridix/ui";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@gridix/utils/react";
 
 interface Subscription {
   id: string;

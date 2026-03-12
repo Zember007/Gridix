@@ -1,26 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Button } from "@gridix/ui";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@gridix/ui";
+import { Card, CardContent } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
 import { Switch } from "@gridix/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@gridix/ui";
+import { Tabs, TabsList, TabsTrigger } from "@gridix/ui";
 import {
   Dialog,
   DialogContent,
@@ -34,11 +20,9 @@ import { Badge } from "@gridix/ui";
 import {
   Loader2,
   Plus,
-  Edit,
   Trash2,
   Save,
   Eye,
-  EyeOff,
   Code,
   LayoutTemplate,
 } from "lucide-react";
@@ -454,7 +438,7 @@ export const EmailTemplatesManagement = () => {
                     value={
                       availableLocalesForKey.includes(activeLocale)
                         ? activeLocale
-                        : availableLocalesForKey[0]
+                        : (availableLocalesForKey[0] ?? "")
                     }
                     onValueChange={setActiveLocale}
                     className="w-full"

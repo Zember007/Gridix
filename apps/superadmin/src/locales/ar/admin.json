@@ -1,0 +1,720 @@
+{
+  "analytics": {
+    "title": "التحليلات",
+    "loading": "جارٍ تحميل التحليلات...",
+    "filters": "المرشحات",
+    "period": "الفترة",
+    "periods": {
+      "7days": "7 أيام",
+      "30days": "30 يوم",
+      "90days": "90 يوم",
+      "all": "كل الوقت"
+    },
+    "dateFrom": "التاريخ من",
+    "dateTo": "التاريخ إلى",
+    "project": "المشروع",
+    "allProjects": "جميع المشاريع",
+    "totalViews": "إجمالي المشاهدات",
+    "totalLeads": "إجمالي العملاء المحتملين",
+    "conversionRate": "معدل التحويل",
+    "totalApartments": "إجمالي الشقق",
+    "projectViews": "مشاهدات المشاريع",
+    "projectViewsDescription": "ديناميكية المشاهدات حسب الأيام",
+    "leads": "العملاء المحتملون",
+    "leadsDescription": "ديناميكية العملاء المحتملين حسب الأيام",
+    "topProjects": "أفضل المشاريع",
+    "topProjectsDescription": "أفضل 10 مشاريع حسب المشاهدات",
+    "views": "المشاهدات",
+    "topApartments": "أفضل الشقق حسب المشاهدات",
+    "topApartmentsDescription": "أفضل 10 شقق حسب عدد المشاهدات",
+    "apartment": "الشقة",
+    "apartmentsStats": "إحصائيات الشقق",
+    "apartmentsStatsDescription": "توزيع الشقق حسب الحالة",
+    "apartments": {
+      "available": "متاحة",
+      "sold": "مباعة",
+      "reserved": "محجوزة"
+    },
+    "projectsTable": "إحصائيات مفصلة حسب المشاريع",
+    "projectsTableDescription": "معلومات مفصلة لكل مشروع",
+    "conversion": "التحويل",
+    "noData": "لا توجد بيانات"
+  },
+  "analyticsComingSoon": "ستتم إضافة ميزة التحليلات لاحقاً",
+  "analyticsDescription": "إحصائيات المشاريع والشقق",
+  "back": "رجوع",
+  "dashboard": "لوحة الإدارة",
+  "dashboardDescription": "إدارة المشاريع والإعدادات",
+  "leads": "العملاء المحتملون",
+  "crm": "إدارة علاقات العملاء",
+  "agent_network": "شبكة الوكيل",
+  "contacts": "اتصالات",
+  "contactsPage": {
+    "title": "جهات الاتصال",
+    "description": "العملاء من العملاء المحتملين ووكلاؤك/شركاؤك.",
+    "searchPlaceholder": "البحث بالاسم أو الهاتف أو البريد الإلكتروني...",
+    "filterAll": "الكل",
+    "filterClients": "العملاء",
+    "filterAgents": "الوكلاء",
+    "tableContact": "جهة الاتصال",
+    "tableType": "النوع",
+    "tablePhone": "الهاتف",
+    "tableEmail": "البريد الإلكتروني",
+    "tableDetails": "التفاصيل",
+    "tableDate": "التاريخ",
+    "loading": "جاري التحميل...",
+    "noContacts": "لم يتم العثور على جهات اتصال",
+    "typeAgent": "وكيل",
+    "typeClient": "عميل",
+    "detailsLeads": "{{count}} عميل محتمل",
+    "noName": "بدون اسم",
+    "exportBtn": "تصدير",
+    "toastNothingToExportTitle": "لا يوجد شيء للتصدير",
+    "toastNothingToExportDesc": "لا توجد جهات اتصال للتصدير.",
+    "toastExportDoneTitle": "اكتمل التصدير",
+    "toastExportDoneDesc": "تم تصدير جهات الاتصال إلى CSV."
+  },
+  "project": {
+    "create": {
+      "description": "اختر كيفية إنشاء المشروع",
+      "googleSheets": "Google Sheets:",
+      "import": {
+        "benefit": {
+          "fresh": "البيانات دائمًا محدثة",
+          "noReupload": "لا حاجة لإعادة رفع الملف",
+          "sync": "مزامنة تلقائية عند تغيير البيانات"
+        },
+        "benefitsTitle": "مزایا الاستيراد عبر الرابط:",
+        "byLink": "الاستيراد عبر الرابط",
+        "description": "قم بتحميل ملف Excel يحتوي على بيانات الشقق لإنشاء مشروع تلقائيًا",
+        "processing": "جارٍ المعالجة...",
+        "template": "تنزيل النموذج",
+        "demo": "تنزيل العرض التوضيحي",
+        "title": "الاستيراد من Excel",
+        "uploadButton": "رفع ملف Excel",
+        "uploadTab": "رفع ملف",
+        "urlTab": "عبر الرابط"
+      },
+      "infoText": "أي تنسيق للرابط، تحويل ومزامنة تلقائيان",
+      "layout": {
+        "different": {
+          "help": "ستحتاج إلى ضبط كل طابق بشكل منفصل"
+        },
+        "question": "هل المخطط نفسه في جميع الطوابق؟",
+        "same": {
+          "help": "يمكنك تحديد الشقق مرة واحدة وتطبيقها تلقائيًا على جميع الطوابق"
+        },
+        "title": "مخطط الطوابق"
+      },
+      "manual": {
+        "description": "أنشئ مشروعًا من الصفر وقم بتكوينه بنفسك",
+        "start": "بدء الإنشاء اليدوي",
+        "title": "إعداد يدوي"
+      },
+      "requiredData": {
+        "title": "البيانات المطلوبة:",
+        "fields": "أرقام الشقق، الطوابق، الغرف، المساحة، السعر، الحالة"
+      },
+      "supportedFormats": "التنسيقات المدعومة:",
+      "title": "إنشاء مشروع جديد"
+    }
+  },
+  "partners": "الشراكة",
+  "projects": "المشاريع",
+  "settings": "الإعدادات",
+  "subscription": "الاشتراك",
+  "integrations": "التكاملات",
+  "integrationsDescription": "قم بربط الخدمات الخارجية بمساحة العمل الخاصة بك.",
+  "projectsConfig": "إعدادات المشاريع",
+  "configureProjects": "إعداد المشاريع",
+  "common": {
+    "active": "نشيط",
+    "inactive": "غير نشط",
+    "comingSoon": "قريباً",
+    "cancel": "يلغي",
+    "confirm": "يتأكد"
+  },
+  "amocrm": {
+    "description": "أتمتة المبيعات وإدارة العملاء المحتملين من خلال تكامل AmoCRM.",
+    "connectedTo": "متصل ب",
+    "disconnect": "قطع الاتصال",
+    "reconnect": "أعد الاتصال",
+    "tokenExpired": "انتهت صلاحية الرمز المميز",
+    "connectAmoCRM": "ربط اموCRM",
+    "disconnectWarningTitle": "قطع التكامل؟",
+    "disconnectWarningMessage": "سيؤدي هذا إلى إيقاف كافة عمليات المزامنة. يمكنك إعادة الاتصال لاحقًا.",
+    "disconnectSuccess": "تم قطع الاتصال بنجاح",
+    "disconnectError": "فشل في قطع الاتصال",
+    "settingsLoadError": "فشل تحميل الإعدادات",
+    "authError": "فشلت المصادقة",
+    "saveSuccess": "تم حفظ الإعدادات بنجاح",
+    "saveError": "فشل في حفظ الإعدادات",
+    "pipeline": "خط أنابيب",
+    "status": "حالة",
+    "responsible": "المستخدم المسؤول",
+    "selectPipeline": "حدد خط الأنابيب",
+    "selectStatus": "اختر الحالة",
+    "selectUser": "حدد المستخدم",
+    "notConnected": "غير متصل",
+    "connectInAdmin": "الاتصال في لوحة الإدارة",
+    "connectInAdminDescription": "تحتاج إلى توصيل AmoCRM في لوحة الإدارة أولاً.",
+    "goToAdmin": "انتقل إلى لوحة الإدارة",
+    "confirm": "يتأكد"
+  },
+  "bitrix24": {
+    "description": "إدارة علاقات العملاء والمهام وإدارة المشاريع في مكان واحد.",
+    "connectedTo": "متصل ب",
+    "disconnect": "قطع الاتصال",
+    "installApp": "تثبيت التطبيق",
+    "howToConnect": "كيفية الاتصال:",
+    "step1": "افتح سوق Bitrix24",
+    "step2": "قم بتثبيت تطبيق \"Gridix\".",
+    "step3": "أدخل الرمز هنا",
+    "enterCode": "أدخل رمز الاتصال",
+    "connect": "يتصل",
+    "checking": "جارٍ التحقق...",
+    "disconnectWarningTitle": "افصل Bitrix24؟",
+    "disconnectWarningMessage": "سيؤدي هذا إلى إزالة الاتصال وإيقاف المزامنة.",
+    "disconnectSuccess": "تم قطع الاتصال بنجاح",
+    "disconnectError": "فشل في قطع الاتصال",
+    "connectError": "فشل الاتصال",
+    "invalidCode": "رمز غير صالح أو منتهي الصلاحية",
+    "settingsLoadError": "فشل تحميل الإعدادات",
+    "category": "فئة الصفقة",
+    "stage": "مرحلة الصفقة",
+    "selectCategory": "اختر الفئة",
+    "selectStage": "اختر المرحلة",
+    "notConnected": "غير متصل",
+    "connectInAdmin": "الاتصال في لوحة الإدارة",
+    "connectInAdminDescription": "تحتاج إلى توصيل Bitrix24 في لوحة الإدارة أولاً.",
+    "marketplaceHint": "للاتصال، قم بتثبيت تطبيق Gridix من Bitrix24 Marketplace في بوابتك الإلكترونية.",
+    "attached": "تم الاتصال",
+    "attachError": "فشل في الاتصال",
+    "detached": "تم قطع الاتصال",
+    "detachError": "فشل في قطع الاتصال",
+    "configureProjectDesc": "اختر مسار المبيعات (القمع) في Bitrix24 لهذا المشروع.",
+    "funnel": "القمع",
+    "selectFunnel": "اختر القمع",
+    "selectFunnelDesc": "اختر قمعًا لمزامنة المراحل.",
+    "statusesSynced": "مراحل تمت مزامنتها",
+    "funnelSynced": "تمت مزامنة القمع",
+    "syncError": "فشل في مزامنة القمع"
+  },
+  "widgets": "الودجات",
+  "documentation": "التوثيق",
+  "subscriptionPage": {
+    "title": "اشتراكاتك",
+    "description": "اختر الخطة المناسبة لعملك.",
+    "refresh": "تحديث",
+    "projects": {
+      "emptyTitle": "لا توجد مشاريع",
+      "emptyDescription": "أنشئ أول مشروع لك في قسم \"المشاريع\" لتفعيل الاشتراك وفتح جميع الإمكانيات.",
+      "tariff": "الخطة",
+      "expiresAt": "ينتهي",
+      "notSelected": "غير محدد",
+      "status": {
+        "active": "مفعل",
+        "expired": "منتهي",
+        "inactive": "غير مفعل"
+      },
+      "buttons": {
+        "extend": "تمديد",
+        "activate": "تفعيل"
+      }
+    },
+    "durations": {
+      "1": "شهر واحد",
+      "3": "3 أشهر",
+      "6": "6 أشهر",
+      "12": "12 شهرًا"
+    },
+    "hints": {
+      "6": "💰 توفير جيد عند الدفع لمدة 6 أشهر.",
+      "12": "👍 اختيار رائع! الخطة الأكثر شيوعًا.",
+      "36": "🔥 توفير كبير! خصم 50٪ على كامل الفترة."
+    },
+    "pricing": {
+      "availablePlansTitle": "الخطط المتاحة",
+      "availablePlansDescription": "اختر الخطة الأنسب لك.",
+      "usdPerMonth": "دولار / شهر",
+      "perProject": "لكل مشروع",
+      "billedEvery": "الدفع مرة كل",
+      "monthsShort": "شهر",
+      "monthsShortPlural": "أشهر",
+      "savings": "توفير",
+      "choosePlan": "اختيار {{name}}",
+      "planContent": {
+        "basic": {
+          "description": "الخطة الأساسية للمشاريع الصغيرة بإمكانات محدودة",
+          "features": {
+            "1": "إدارة المشاريع",
+            "2": "كتالوج تفاعلي - حتى 500 وحدة",
+            "3": "لوحة شطرنج تفاعلية",
+            "4": "تخصيص الألوان مع ذكر GRIDIX",
+            "5": "تحليلات الطلب",
+            "6": "تسعير ديناميكي",
+            "7": "وحدة CRM مدمجة",
+            "8": "ودجت لوحة الشطرنج لموقعك",
+            "9": "إدارة التقسيط / الرهن العقاري",
+            "10": "عروض PDF",
+            "11": "اختيار العملة",
+            "12": "اختيار اللغة",
+            "13": "حقول مخصصة",
+            "14": "إدارة الأدوار والصلاحيات"
+          }
+        },
+        "pro": {
+          "description": "خطة احترافية مع تكاملات CRM ودعم White Label بدون علامة المنصة",
+          "features": {
+            "1": "كل ما هو متاح في Basic +",
+            "2": "كتالوج تفاعلي - عدد غير محدود من الوحدات",
+            "3": "تكاملات مع AmoCRM / Bitrix24 وغيرها",
+            "4": "تعديلات جماعية",
+            "5": "White Label بدون ذكر GRIDIX",
+            "6": "نطاق مخصص (مثل sales.company.com)",
+            "7": "وحدة CRM موسعة",
+            "8": "تحليلات متقدمة",
+            "9": "وحدة شبكة الوكلاء / حساب الشركاء",
+            "10": "حاسبة الرهن العقاري (قريباً)",
+            "11": "الحجز عبر الإنترنت (قريباً)",
+            "12": "وحدة تصدير البيانات إلى بوابات العقارات (قريباً)",
+            "13": "دعم فني ذو أولوية"
+          }
+        }
+      }
+    },
+    "history": {
+      "title": "سجل الطلبات",
+      "filters": {
+        "all": "الكل",
+        "paid": "مدفوعة",
+        "pending": "قيد المعالجة"
+      },
+      "table": {
+        "date": "التاريخ / المعرف",
+        "projects": "المشاريع",
+        "tariff": "الخطة",
+        "method": "الطريقة",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "paid": "مدفوعة",
+        "pending": "قيد المعالجة",
+        "cancelled": "ملغاة"
+      },
+      "methodLabels": {
+        "invoice": "فاتورة",
+        "card": "البطاقة المصرفية",
+        "manual": "يدوي",
+        "unknown": "مجهول"
+      },
+      "unknownProject": "غير محدد",
+      "projectsCount": "{{count}} مشروع(ات)",
+      "downloadInvoice": "تنزيل الفاتورة",
+      "empty": "لا توجد طلبات"
+    },
+    "checkout": {
+      "title": "إتمام الاشتراك",
+      "selectPlan": "اختر الخطة",
+      "selectProjects": "اختر المشاريع",
+      "projectsSelected": "{{count}} محدد",
+      "projectsHint": "يتم احتساب الاشتراك لكل مشروع على حدة. يتم حساب التكلفة الإجمالية كالتالي: سعر الخطة × عدد المشاريع.",
+      "noProjects": "لا توجد لديك مشاريع بعد. أنشئ مشروعًا قبل الدفع.",
+      "payerType": {
+        "individual": "فرد",
+        "company": "شركة"
+      },
+      "fields": {
+        "contactName": "الاسم الكامل / جهة الاتصال",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "companyName": "اسم الشركة",
+        "taxId": "الرقم الضريبي",
+        "address": "العنوان القانوني"
+      },
+      "placeholders": {
+        "contactName": "محمد أحمد",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "شركة مثال"
+      },
+      "errors": {
+        "enterName": "أدخل الاسم",
+        "enterEmail": "أدخل البريد الإلكتروني",
+        "invalidEmail": "بريد إلكتروني غير صالح",
+        "enterPhone": "أدخل رقم الهاتف",
+        "shortPhone": "رقم الهاتف قصير جدًا",
+        "enterCompanyName": "أدخل اسم الشركة",
+        "selectAtLeastOneProject": "يرجى اختيار مشروع واحد على الأقل للدفع.",
+        "selectPlan": "يرجى اختيار الخطة",
+        "noProjectsSelected": "يرجى اختيار مشروع واحد على الأقل"
+      },
+      "summary": {
+        "totalToPay": "المبلغ المستحق",
+        "plan": "الخطة",
+        "projects": "المشاريع:",
+        "payer": "المدفوع بواسطة:"
+      },
+      "methods": {
+        "card": {
+          "title": "بطاقة بنكية",
+          "description": "Visa, Mastercard, Apple Pay",
+          "unavailable": "غير متاح"
+        },
+        "invoice": {
+          "title": "فاتورة",
+          "description": "توليد PDF (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "الإجمالي:",
+        "next": "التالي",
+        "processing": "جاري المعالجة..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "تم طلب الفاتورة بنجاح. يمكنك تنزيلها من سجل الطلبات.",
+      "invoiceRequestedMultiple": "تم طلب فواتير لـ {{count}} مشروع(ات)"
+    },
+    "error": "حدث خطأ أثناء تحميل الاشتراكات"
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "المشرف الفائق",
+      "users": "المستخدمين",
+      "subscriptions": "الاشتراكات",
+      "projects": "المشاريع",
+      "stats": "التحليلات",
+      "partners": "الشركاء",
+      "partnerPayouts": "الدفعات",
+      "settings": "إعدادات"
+    },
+    "projectsManagement": {
+      "title": "إدارة المشاريع",
+      "loading": "تحميل...",
+      "emptyValue": "—",
+      "confirmDelete": "هل أنت متأكد أنك تريد حذف هذا المشروع؟",
+      "toast": {
+        "errorTitle": "خطأ",
+        "successTitle": "نجاح",
+        "loadProjectsError": "فشل في تحميل المشاريع",
+        "projectPublished": "تم نشر المشروع",
+        "projectHidden": "المشروع مخفي",
+        "updateVisibilityError": "فشل في تغيير رؤية المشروع",
+        "projectAddedToFeatured": "تمت إضافة المشروع إلى المميز",
+        "projectRemovedFromFeatured": "تمت إزالة المشروع من المميز",
+        "updateStatusError": "فشل في تغيير حالة المشروع",
+        "projectDeleted": "تم حذف المشروع",
+        "deleteProjectError": "فشل في حذف المشروع"
+      },
+      "table": {
+        "name": "اسم",
+        "owner": "مالك",
+        "views": "وجهات النظر",
+        "status": "حالة",
+        "createdAt": "تم الإنشاء في",
+        "actions": "الإجراءات"
+      },
+      "badges": {
+        "public": "عام",
+        "featured": "مميز"
+      },
+      "actions": {
+        "hide": "يخفي",
+        "publishShort": "حانة.",
+        "feature": "الفذ."
+      }
+    },
+    "partnersManagement": {
+      "title": "إدارة الشركاء",
+      "description": "إدارة برنامج الشركاء وحالات الشركاء",
+      "toast": {
+        "errorTitle": "خطأ",
+        "successTitle": "نجاح",
+        "loadPartnersError": "فشل تحميل قائمة الشركاء",
+        "partnerSuspended": "الشريك موقوف",
+        "partnerActivated": "تم تفعيل الشريك",
+        "updatePartnerStatusError": "فشل تحديث حالة الشريك"
+      },
+      "stats": {
+        "totalPartners": "مجموع الشركاء",
+        "activeCount": "{{عدد}} نشط",
+        "totalEarnings": "إجمالي الأرباح",
+        "earnedByPartners": "حصل عليها الشركاء",
+        "paidOut": "دفعت",
+        "withdrawnByPartners": "تم سحبها من قبل الشركاء",
+        "suspended": "معلق",
+        "inactivePartners": "شركاء غير نشطين"
+      },
+      "filters": {
+        "title": "المرشحات",
+        "search": "يبحث",
+        "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني أو الرمز...",
+        "status": "حالة",
+        "allStatuses": "جميع الحالات"
+      },
+      "table": {
+        "title": "الشركاء",
+        "count": "{{filtered}} من {{total}} من الشركاء",
+        "partner": "شريك",
+        "code": "شفرة",
+        "status": "حالة",
+        "earned": "حصل",
+        "withdrawn": "انسحبت",
+        "registeredAt": "تاريخ التسجيل",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "active": "نشيط",
+        "suspended": "معلق",
+        "inactive": "غير نشط"
+      },
+      "actions": {
+        "suspend": "تعليق",
+        "activate": "فعل"
+      },
+      "dialog": {
+        "suspendTitle": "تعليق الشريك",
+        "activateTitle": "تفعيل الشريك",
+        "suspendDescription": "هل أنت متأكد أنك تريد تعليق هذا الشريك؟ ولن يحصلوا على عمولات جديدة.",
+        "activateDescription": "هل أنت متأكد أنك تريد تفعيل هذا الشريك؟ سوف يحصلون على العمولات مرة أخرى.",
+        "codeLabel": "شفرة",
+        "processing": "يعالج..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "إدارة المدفوعات",
+      "description": "مراجعة ومعالجة طلبات دفع تعويضات الشريك",
+      "toast": {
+        "loadPayoutsError": "فشل تحميل قائمة العوائد",
+        "payoutApproved": "تمت الموافقة على الدفع",
+        "payoutRejected": "تم رفض الدفع",
+        "payoutMarkedAsPaid": "تم وضع علامة على الدفع على أنه مدفوع",
+        "updatePayoutStatusError": "فشل في تحديث حالة الدفع"
+      },
+      "status": {
+        "pending": "في انتظار المراجعة",
+        "approved": "موافقة",
+        "paid": "مدفوع",
+        "rejected": "مرفوض",
+        "unknown": "مجهول"
+      },
+      "stats": {
+        "pendingReview": "في انتظار المراجعة",
+        "pendingAmount": "${{amount}} للدفع",
+        "waitingPayment": "في انتظار الدفع",
+        "completedPayouts": "الدفعات المكتملة",
+        "rejectedRequests": "الطلبات المرفوضة"
+      },
+      "filters": {
+        "title": "المرشحات",
+        "search": "يبحث",
+        "searchPlaceholder": "البحث حسب الشريك...",
+        "status": "حالة",
+        "allStatuses": "جميع الحالات"
+      },
+      "table": {
+        "title": "طلبات الدفع",
+        "count": "{{filtered}} من {{total}} من الطلبات",
+        "partner": "شريك",
+        "amount": "كمية",
+        "status": "حالة",
+        "paymentMethod": "طريقة الدفع",
+        "contactInfo": "معلومات الاتصال",
+        "requestedAt": "تاريخ الطلب",
+        "actions": "الإجراءات"
+      },
+      "emptyPaymentMethod": "غير محدد",
+      "emptyContactInfo": "غير محدد",
+      "actions": {
+        "approve": "يعتمد",
+        "reject": "يرفض",
+        "markPaid": "وضع علامة على أنه مدفوع"
+      },
+      "dialog": {
+        "approveTitle": "الموافقة على الدفع",
+        "rejectTitle": "رفض الدفع",
+        "markPaidTitle": "وضع علامة على أنه مدفوع",
+        "approveDescription": "هل أنت متأكد أنك تريد الموافقة على هذا العائد؟",
+        "rejectDescription": "هل أنت متأكد أنك تريد رفض هذا العائد؟",
+        "markPaidDescription": "هل أنت متأكد من أن هذا الدفع قد اكتمل؟",
+        "codeLabel": "شفرة",
+        "amountLabel": "كمية",
+        "methodLabel": "طريقة",
+        "contactInfoLabel": "معلومات الاتصال:",
+        "noteLabel": "ملاحظة (اختياري)",
+        "notePlaceholder": "أضف ملاحظة لهذا الإجراء...",
+        "processing": "يعالج..."
+      }
+    },
+    "usersManagement": {
+      "title": "إدارة المستخدمين",
+      "loading": "تحميل...",
+      "creating": "جارٍ الإنشاء...",
+      "searchPlaceholder": "البحث عن طريق البريد الإلكتروني أو الاسم أو الشركة...",
+      "toast": {
+        "errorTitle": "خطأ",
+        "successTitle": "نجاح",
+        "loadUsersError": "فشل تحميل المستخدمين",
+        "userBanned": "تم حظر المستخدم",
+        "banUserError": "فشل في حظر المستخدم",
+        "userUnbanned": "المستخدم غير محظور",
+        "unbanUserError": "فشل في إلغاء حظر المستخدم",
+        "emailPasswordRequired": "البريد الإلكتروني وكلمة المرور مطلوبة",
+        "userCreated": "تم إنشاء المستخدم",
+        "createUserError": "فشل في إنشاء المستخدم",
+        "impersonateUserError": "فشل تسجيل الدخول باسم هذا المستخدم"
+      },
+      "actions": {
+        "addUser": "إضافة مستخدم",
+        "createUser": "إنشاء مستخدم",
+        "ban": "حظر",
+        "unban": "إلغاء الحظر",
+        "loginAs": "تسجيل الدخول"
+      },
+      "dialogs": {
+        "createTitle": "إضافة مستخدم جديد",
+        "banTitle": "حظر المستخدم",
+        "banTarget": "أنت على وشك الحظر:"
+      },
+      "fields": {
+        "password": "كلمة المرور",
+        "fullName": "الاسم الكامل",
+        "company": "شركة",
+        "phone": "هاتف",
+        "banReason": "سبب الحظر"
+      },
+      "placeholders": {
+        "fullName": "جون سميث",
+        "company": "اكمي ذ م م",
+        "banReason": "حدد السبب..."
+      },
+      "table": {
+        "name": "اسم",
+        "company": "شركة",
+        "status": "حالة",
+        "registeredAt": "تاريخ التسجيل",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "active": "نشيط",
+        "banned": "محظور"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "إدارة الاشتراكات",
+      "loading": "تحميل...",
+      "pendingCount": "{{count}} طلب (طلبات) فاتورة في انتظار المعالجة",
+      "planOption": "{{name}} - ${{price}}/الشهر",
+      "toast": {
+        "errorTitle": "خطأ",
+        "successTitle": "نجاح",
+        "loadSubscriptionsError": "فشل تحميل الاشتراكات",
+        "fillRequiredFields": "املأ جميع الحقول المطلوبة",
+        "subscriptionCreated": "تم إنشاء الاشتراك",
+        "createSubscriptionError": "فشل في إنشاء الاشتراك",
+        "invoiceGenerated": "تم إنشاء فاتورة PDF وإرسالها",
+        "generateInvoiceError": "فشل في إنشاء الفاتورة",
+        "paymentConfirmed": "تم تأكيد الدفع وتم تفعيل الاشتراك",
+        "activateSubscriptionError": "فشل في تفعيل الاشتراك",
+        "subscriptionCancelled": "تم إلغاء الاشتراك",
+        "cancelSubscriptionError": "فشل في إلغاء الاشتراك",
+        "subscriptionUpdated": "تم تحديث الاشتراك",
+        "updateSubscriptionError": "فشل تحديث الاشتراك"
+      },
+      "actions": {
+        "create": "إنشاء الاشتراك",
+        "saveChanges": "حفظ التغييرات",
+        "editTitle": "تحرير الاشتراك",
+        "edit": "يحرر",
+        "cancel": "يلغي"
+      },
+      "dialogs": {
+        "createTitle": "إنشاء اشتراك جديد",
+        "editTitle": "تحرير الاشتراك",
+        "labels": {
+          "user": "مستخدم",
+          "project": "مشروع",
+          "currentPlan": "الخطة الحالية",
+          "currentStatus": "الوضع الحالي",
+          "endsAt": "ينتهي عند"
+        }
+      },
+      "fields": {
+        "userEmail": "البريد الإلكتروني للمستخدم",
+        "project": "مشروع",
+        "plan": "يخطط",
+        "durationMonths": "المدة (أشهر)",
+        "invoiceNumber": "رقم الفاتورة",
+        "invoiceUrl": "عنوان URL للفاتورة",
+        "tariffPlan": "التعريفة (الخطة)",
+        "status": "حالة",
+        "infiniteSubscription": "الاشتراك اللانهائي (حتى 2099)",
+        "customEndDate": "أو قم بتعيين تاريخ الانتهاء يدويًا"
+      },
+      "placeholders": {
+        "selectProject": "حدد المشروع",
+        "selectPlan": "اختر الخطة"
+      },
+      "hints": {
+        "endDateAuto": "سيتم حساب تاريخ الانتهاء تلقائيًا من تاريخ البدء الحالي",
+        "customDateOverrides": "إذا تم توفير التاريخ، فسيتم استخدامه بدلاً من حساب المدة",
+        "applyWarning": "تنطبق التغييرات على الفور. كن حذرًا عند تغيير الحالة وتاريخ الانتهاء."
+      },
+      "status": {
+        "active": "نشيط",
+        "trial": "محاكمة",
+        "trialing": "محاكمة",
+        "pendingPayment": "في انتظار الدفع",
+        "expired": "منتهي الصلاحية",
+        "cancelled": "تم الإلغاء",
+        "trialExpired": "انتهت الفترة التجريبية"
+      },
+      "pendingRequests": {
+        "title": "طلبات الفاتورة",
+        "table": {
+          "user": "مستخدم",
+          "project": "مشروع",
+          "plan": "يخطط",
+          "amount": "كمية",
+          "requestedAt": "تم الطلب عند",
+          "actions": "الإجراءات"
+        },
+        "actions": {
+          "generatePdf": "توليد قوات الدفاع الشعبي",
+          "view": "منظر",
+          "viewPdf": "عرض قوات الدفاع الشعبي",
+          "download": "تحميل",
+          "confirmPayment": "تأكيد الدفع",
+          "confirmAndActivate": "تأكيد الدفع والتفعيل"
+        },
+        "dialog": {
+          "title": "تأكيد الدفع",
+          "invoiceLabel": "فاتورة",
+          "warning": "تأكد من استلام الدفع قبل تأكيد تفعيل الاشتراك.",
+          "labels": {
+            "project": "مشروع",
+            "user": "مستخدم",
+            "plan": "يخطط",
+            "amount": "كمية",
+            "invoiceNumber": "رقم الفاتورة"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "جميع الاشتراكات",
+        "table": {
+          "user": "مستخدم",
+          "project": "مشروع",
+          "plan": "يخطط",
+          "status": "حالة",
+          "endDate": "تاريخ الانتهاء",
+          "invoice": "فاتورة",
+          "actions": "الإجراءات"
+        }
+      }
+    }
+  }
+}

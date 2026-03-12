@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@gridix/utils/api";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export const useSuperAdmin = () => {
   const { user } = useAuth();

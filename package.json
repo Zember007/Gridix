@@ -15,6 +15,7 @@
     "dev:main": "pnpm --filter @gridix/main dev",
     "dev:agent": "pnpm --filter @gridix/agent-cabinet dev",
     "dev:auth": "pnpm --filter @gridix/auth dev",
+    "dev:superadmin": "pnpm --filter @gridix/superadmin dev",
     "prepare": "husky",
     "translate": "node scripts/translate.mjs",
     "translate:dry-run": "node scripts/translate.mjs --dry-run"

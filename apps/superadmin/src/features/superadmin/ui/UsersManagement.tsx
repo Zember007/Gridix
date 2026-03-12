@@ -31,7 +31,7 @@ import {
 import { Label } from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@gridix/utils/react";
 
 interface UserProfile {
   id: string;
