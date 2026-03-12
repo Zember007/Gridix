@@ -13,7 +13,6 @@ import {
   Save,
   Trash2,
   Image as ImageIcon,
-  Edit3,
   X,
   Plus,
   Check,
@@ -28,6 +27,7 @@ import PolygonCustomizationSettings, {
 } from "@/components/visualization/PolygonCustomizationSettings";
 import type { BuildingImageEditorProps } from "../model/types";
 import { useBuildingEditorData } from "../hooks/useBuildingEditorData";
+import { useMemo, useState, useEffect } from "react";
 
 const BuildingImageEditor = ({
   projectId,
@@ -39,6 +39,117 @@ const BuildingImageEditor = ({
     currentImageUrl,
     onImageUpdate,
   });
+
+  const floorInputRange = useMemo(() => {
+    if (loader.isObjectProject) {
+      const objectNumbers =
+        loader.apartmentNumbers.length > 0
+          ? loader.apartmentNumbers
+          : Array.from({ length: 20 }, (_, i) => i + 1);
+      const sortedNumbers = [...objectNumbers].sort((a, b) => a - b);
+      const min = sortedNumbers[0] ?? 1;
+      const max = sortedNumbers[sortedNumbers.length - 1] ?? 20;
+      return {
+        min,
+        max,
+        allowed: new Set(sortedNumbers),
+      };
+    }
+
+    const configuredMax = Math.max(loader.floors, 0);
+    const existingMax =
+      loader.buildingFloors.length > 0
+        ? Math.max(...loader.buildingFloors.map((f) => f.floor_number))
+        : 0;
+    const max = Math.max(configuredMax, existingMax);
+
+    return {
+      min: 0,
+      max,
+      allowed: null as Set<number> | null,
+    };
+  }, [
+    loader.isObjectProject,
+    loader.apartmentNumbers,
+    loader.floors,
+    loader.buildingFloors,
+  ]);
+
+  const [floorInputValue, setFloorInputValue] = useState(
+    String(floor.selectedFloor),
+  );
+  const [floorInputError, setFloorInputError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFloorInputValue(String(floor.selectedFloor));
+    setFloorInputError(null);
+  }, [floor.selectedFloor]);
+
+  const parsedFloorInput = Number(floorInputValue);
+  const floorInputIsInteger =
+    floorInputValue.trim() !== "" && Number.isInteger(parsedFloorInput);
+  const floorInRange =
+    floorInputIsInteger &&
+    parsedFloorInput >= floorInputRange.min &&
+    parsedFloorInput <= floorInputRange.max &&
+    (!floorInputRange.allowed || floorInputRange.allowed.has(parsedFloorInput));
+  const floorInputInvalid =
+    (floorInputValue.trim() !== "" && !floorInRange) ||
+    floorInputError !== null;
+  const floorInputInvalidText = loader.isObjectProject
+    ? "Invalid object number"
+    : "Invalid floor number";
+
+  const handleFloorInputChange = (value: string) => {
+    const trimmedValue = value.trim();
+
+    if (trimmedValue === "") {
+      setFloorInputValue(value);
+      setFloorInputError(null);
+      return;
+    }
+
+    const nextNumber = Number(trimmedValue);
+    if (!Number.isFinite(nextNumber) || !Number.isInteger(nextNumber)) {
+      setFloorInputValue(value);
+      setFloorInputError(floorInputInvalidText);
+      return;
+    }
+
+    if (nextNumber < floorInputRange.min || nextNumber > floorInputRange.max) {
+      setFloorInputError(floorInputInvalidText);
+      return;
+    }
+
+    setFloorInputValue(value);
+    if (floorInputRange.allowed && !floorInputRange.allowed.has(nextNumber)) {
+      setFloorInputError(floorInputInvalidText);
+      return;
+    }
+
+    setFloorInputError(null);
+  };
+
+  const applyFloorInputSelection = () => {
+    if (!floorInRange || floorInputError) {
+      setFloorInputError(floorInputInvalidText);
+      return;
+    }
+
+    const floorNumber = parsedFloorInput;
+    const existingFloor = loader.buildingFloors.find(
+      (floorItem) => floorItem.floor_number === floorNumber,
+    );
+
+    floor.setSelectedFloor(floorNumber);
+
+    if (existingFloor) {
+      floor.requestStartEditingFloor(existingFloor.id);
+      return;
+    }
+
+    floor.startCreatingNewFloor();
+  };
 
   return (
     <div className="space-y-4">
@@ -232,63 +343,54 @@ const BuildingImageEditor = ({
                 : loader.t("buildingImage.floors.title")}
             </CardTitle>
             <CardDescription>
-              {loader.isObjectProject
-                ? loader.t("buildingImage.object.polygonsDescription")
-                : loader.t("buildingImage.floors.description")}
+              <span>
+                {loader.isObjectProject
+                  ? loader.t("buildingImage.object.polygonsDescription")
+                  : loader.t("buildingImage.floors.description")}
+              </span>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                {loader.isObjectProject
+                  ? `Allowed range: ${floorInputRange.min}-${floorInputRange.max}`
+                  : `Allowed floor range: ${floorInputRange.min}-${floorInputRange.max}`}
+              </span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="floor-select" className="text-sm font-medium">
-                  {loader.isObjectProject
-                    ? loader.t("buildingImage.object.number")
-                    : loader.t("buildingImage.floors.floor")}
-                </Label>
-                <select
-                  id="floor-select"
-                  value={floor.selectedFloor}
-                  onChange={(e) =>
-                    floor.setSelectedFloor(Number(e.target.value))
-                  }
-                  className="min-w-[80px] rounded border px-2 py-1 text-sm"
-                  disabled={floor.isEditing}
-                >
-                  {loader.isObjectProject
-                    ? loader.apartmentNumbers.length > 0
-                      ? loader.apartmentNumbers.map((num) => (
-                          <option key={num} value={num}>
-                            {num}
-                          </option>
-                        ))
-                      : Array.from({ length: 20 }, (_, i) => i + 1).map(
-                          (num) => (
-                            <option key={num} value={num}>
-                              {num}
-                            </option>
-                          ),
-                        )
-                    : Array.from(
-                        {
-                          length:
-                            Math.max(
-                              loader.floors,
-                              loader.buildingFloors.length > 0
-                                ? Math.max(
-                                    ...loader.buildingFloors.map(
-                                      (f) => f.floor_number,
-                                    ),
-                                  )
-                                : 0,
-                            ) + 3,
-                        },
-                        (_, i) => i,
-                      ).map((floorNum) => (
-                        <option key={floorNum} value={floorNum}>
-                          {floorNum}
-                        </option>
-                      ))}
-                </select>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="floor-select" className="text-sm font-medium">
+                    {loader.isObjectProject
+                      ? loader.t("buildingImage.object.number")
+                      : loader.t("buildingImage.floors.floor")}
+                  </Label>
+                  <Input
+                    id="floor-select"
+                    type="number"
+                    inputMode="numeric"
+                    min={floorInputRange.min}
+                    max={floorInputRange.max}
+                    step={1}
+                    value={floorInputValue}
+                    onChange={(e) => handleFloorInputChange(e.target.value)}
+                    onBlur={applyFloorInputSelection}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyFloorInputSelection();
+                      }
+                    }}
+                    className={`h-8 w-[92px] ${
+                      floorInputInvalid ? "border-destructive" : ""
+                    }`}
+                    disabled={floor.isEditing}
+                  />
+                </div>
+                {floorInputInvalid && (
+                  <p className="text-xs text-destructive">
+                    {floorInputInvalidText}
+                  </p>
+                )}
               </div>
 
               {!floor.isEditing && (
@@ -424,57 +526,6 @@ const BuildingImageEditor = ({
                 getStyleById={floor.getStyleById}
               />
             </div>
-
-            {loader.buildingFloors.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">
-                  {loader.isObjectProject
-                    ? loader.t("buildingImage.object.configured")
-                    : loader.t("buildingImage.floors.configured")}
-                </h4>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-                  {loader.buildingFloors.map((floorItem) => (
-                    <div
-                      key={floorItem.id}
-                      className="flex items-center justify-between rounded bg-muted/50 p-2 text-sm"
-                    >
-                      <span>
-                        {loader.isObjectProject
-                          ? loader.t("buildingImage.object.objectNumber", {
-                              number: floorItem.floor_number,
-                            })
-                          : loader.t("buildingImage.floors.floorNumber", {
-                              floor: floorItem.floor_number,
-                            })}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            floor.requestStartEditingFloor(floorItem.id)
-                          }
-                          className="h-6 w-6 p-0"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            floor.handleDeleteFloorPolygon(floorItem.id)
-                          }
-                          className="h-6 w-6 p-0"
-                          disabled={floor.isEditing}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}
