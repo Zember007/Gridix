@@ -116,7 +116,16 @@ export function useFloorPolygonEditor({
     [startEditingFloor],
   );
 
-  const startCreatingNewFloor = () => {
+  const startCreatingNewFloor = (targetFloor: number = selectedFloor) => {
+    const existingFloor = buildingFloorsRef.current.find(
+      (floor) => floor.floor_number === targetFloor,
+    );
+    if (existingFloor) {
+      startEditingFloor(existingFloor.id);
+      return;
+    }
+
+    setSelectedFloor(targetFloor);
     editingFloorIdRef.current = null;
     isCreatingNewFloorRef.current = true;
     setIsCreatingNewFloor(true);

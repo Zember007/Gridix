@@ -193,7 +193,7 @@ const BuildingImageEditor = ({
       return;
     }
 
-    floor.startCreatingNewFloor();
+    floor.startCreatingNewFloor(floorNumber);
   };
 
   return (
@@ -442,7 +442,9 @@ const BuildingImageEditor = ({
 
               {!floor.isEditing && (
                 <Button
-                  onClick={floor.startCreatingNewFloor}
+                  onClick={() => {
+                    void applyFloorInputSelection();
+                  }}
                   size="sm"
                   variant="outline"
                   className="h-8"
