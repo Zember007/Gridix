@@ -62,6 +62,21 @@
     "deleted": "החזית נמחקה",
     "deleteError": "שגיאה במחיקת חזית"
   },
+  "guided": {
+    "toggle": "הצע את הקומה הבאה",
+    "progress": {
+      "floorRange": "טווח רצפה:",
+      "configured": "מוגדר:",
+      "missing": "חָסֵר:",
+      "missingFloors": "חסרות קומות:",
+      "allConfigured": "כל הקומות מוגדרות"
+    },
+    "helper": {
+      "savedAndNext": "קומה {{קומה}} נשמרה. הקומה הבאה החסרה: {{nextFloor}}",
+      "goNext": "לך לקומה הבאה",
+      "stayHere": "הישאר כאן"
+    }
+  },
   "title": "בניית תמונה",
   "upload": "העלה תמונה",
   "uploadError": "שגיאה בהעלאת תמונה",

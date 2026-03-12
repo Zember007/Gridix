@@ -564,26 +564,27 @@ const BuildingImageEditor = ({
             <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 <div className="text-sm text-muted-foreground">
-                  Floor range:{" "}
+                  {loader.t("buildingImage.guided.progress.floorRange")}{" "}
                   <span className="font-medium text-foreground">
                     {floorRangeLabel}
                   </span>
                 </div>
                 <div>
-                  Configured:{" "}
+                  {loader.t("buildingImage.guided.progress.configured")}{" "}
                   <span className="font-medium">
                     {configuredCount} / {totalFloorsCount}
                   </span>
                 </div>
                 <div>
-                  Missing: <span className="font-medium">{missingCount}</span>
+                  {loader.t("buildingImage.guided.progress.missing")}{" "}
+                  <span className="font-medium">{missingCount}</span>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                   <Label
                     htmlFor="guided-mode-toggle"
                     className="whitespace-nowrap text-sm font-medium"
                   >
-                    Suggest next missing floor after save
+                    {loader.t("buildingImage.guided.toggle")}
                   </Label>
                   <Switch
                     id="guided-mode-toggle"
@@ -594,12 +595,14 @@ const BuildingImageEditor = ({
               </div>
               {hasCompletedAllFloors ? (
                 <p className="text-sm font-medium text-emerald-600">
-                  All floors are configured
+                  {loader.t("buildingImage.guided.progress.allConfigured")}
                 </p>
               ) : (
                 <>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="shrink-0">Missing floors:</span>
+                    <span className="shrink-0">
+                      {loader.t("buildingImage.guided.progress.missingFloors")}
+                    </span>
                     {missingFloors.length > 0 && (
                       <div className="flex-1 overflow-x-auto pb-1">
                         <div className="flex min-w-max gap-2">
@@ -819,8 +822,10 @@ const BuildingImageEditor = ({
                   <div className="pointer-events-none absolute inset-0 z-30">
                     <div className="pointer-events-auto absolute left-1/2 top-4 w-[calc(100%-2rem)] max-w-[360px] -translate-x-1/2 rounded-lg border border-primary/30 bg-background/95 p-3 shadow-lg">
                       <p className="text-sm font-medium">
-                        Floor {postSaveGuidance.savedFloor} saved. Next missing
-                        floor: {postSaveGuidance.nextFloor}
+                        {loader.t("buildingImage.guided.helper.savedAndNext", {
+                          floor: postSaveGuidance.savedFloor,
+                          nextFloor: postSaveGuidance.nextFloor,
+                        })}
                       </p>
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <Button
@@ -830,7 +835,7 @@ const BuildingImageEditor = ({
                             void selectFloorNumber(postSaveGuidance.nextFloor!);
                           }}
                         >
-                          Go to next floor
+                          {loader.t("buildingImage.guided.helper.goNext")}
                         </Button>
                         <Button
                           type="button"
@@ -838,7 +843,7 @@ const BuildingImageEditor = ({
                           variant="outline"
                           onClick={() => setPostSaveGuidance(null)}
                         >
-                          Stay here
+                          {loader.t("buildingImage.guided.helper.stayHere")}
                         </Button>
                       </div>
                     </div>

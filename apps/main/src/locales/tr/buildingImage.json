@@ -62,6 +62,21 @@
     "deleted": "Cephe silindi",
     "deleteError": "Cephe silinirken hata oluştu"
   },
+  "guided": {
+    "toggle": "Sonraki katı öner",
+    "progress": {
+      "floorRange": "Zemin aralığı:",
+      "configured": "Yapılandırılmış:",
+      "missing": "Eksik:",
+      "missingFloors": "Eksik katlar:",
+      "allConfigured": "Tüm katlar yapılandırıldı"
+    },
+    "helper": {
+      "savedAndNext": "{{kat}}. kat kaydedildi. Sonraki eksik kat: {{nextFloor}}",
+      "goNext": "Sonraki kata git",
+      "stayHere": "Burada kal"
+    }
+  },
   "title": "Bina Resmi",
   "upload": "Resim Yükle",
   "uploadError": "Resim yüklenirken hata oluştu",

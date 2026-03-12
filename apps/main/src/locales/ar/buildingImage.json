@@ -62,6 +62,21 @@
     "deleted": "تم حذف الواجهة",
     "deleteError": "خطأ في حذف الواجهة"
   },
+  "guided": {
+    "toggle": "اقترح الطابق التالي",
+    "progress": {
+      "floorRange": "نطاق الأرضية:",
+      "configured": "تكوين:",
+      "missing": "مفتقد:",
+      "missingFloors": "الطوابق المفقودة:",
+      "allConfigured": "تم تكوين جميع الطوابق"
+    },
+    "helper": {
+      "savedAndNext": "تم حفظ الطابق {{الطابق}}. الطابق المفقود التالي: {{nextFloor}}",
+      "goNext": "اذهب إلى الطابق التالي",
+      "stayHere": "ابق هنا"
+    }
+  },
   "title": "صورة المبنى",
   "upload": "تحميل صورة",
   "uploadError": "خطأ في تحميل الصورة",

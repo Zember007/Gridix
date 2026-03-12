@@ -62,6 +62,21 @@
     "deleted": "Facade deleted",
     "deleteError": "Error deleting facade"
   },
+  "guided": {
+    "toggle": "Suggest next floor",
+    "progress": {
+      "floorRange": "Floor range:",
+      "configured": "Configured:",
+      "missing": "Missing:",
+      "missingFloors": "Missing floors:",
+      "allConfigured": "All floors are configured"
+    },
+    "helper": {
+      "savedAndNext": "Floor {{floor}} saved. Next missing floor: {{nextFloor}}",
+      "goNext": "Go to next floor",
+      "stayHere": "Stay here"
+    }
+  },
   "title": "Building Image",
   "upload": "Upload Image",
   "uploadError": "Error uploading image",
