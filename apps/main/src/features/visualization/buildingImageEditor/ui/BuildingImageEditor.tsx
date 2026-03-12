@@ -8,6 +8,7 @@ import {
 } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
+import { Switch } from "@gridix/ui";
 import {
   Upload,
   Save,
@@ -86,6 +87,11 @@ const BuildingImageEditor = ({
     String(floor.selectedFloor),
   );
   const [floorInputError, setFloorInputError] = useState<string | null>(null);
+  const [guidedModeEnabled, setGuidedModeEnabled] = useState(true);
+  const [postSaveGuidance, setPostSaveGuidance] = useState<{
+    savedFloor: number;
+    nextFloor: number | null;
+  } | null>(null);
 
   useEffect(() => {
     setFloorInputValue(String(floor.selectedFloor));
@@ -136,6 +142,57 @@ const BuildingImageEditor = ({
         min: floorInputRange.min,
         max: floorInputRange.max,
       });
+  const allFloorsInRange = useMemo(() => {
+    if (floorInputRange.max < floorInputRange.min) {
+      return [];
+    }
+    if (floorInputRange.allowed) {
+      return Array.from(floorInputRange.allowed).sort((a, b) => a - b);
+    }
+    return Array.from(
+      { length: floorInputRange.max - floorInputRange.min + 1 },
+      (_, index) => floorInputRange.min + index,
+    );
+  }, [floorInputRange]);
+  const allFloorsSet = useMemo(
+    () => new Set(allFloorsInRange),
+    [allFloorsInRange],
+  );
+  const configuredFloors = useMemo(() => {
+    const uniqueFloors = Array.from(
+      new Set(
+        loader.buildingFloors
+          .map((floorItem) => floorItem.floor_number)
+          .filter((floorNumber) => allFloorsSet.has(floorNumber)),
+      ),
+    );
+    return uniqueFloors.sort((a, b) => a - b);
+  }, [allFloorsSet, loader.buildingFloors]);
+  const configuredFloorsSet = useMemo(
+    () => new Set(configuredFloors),
+    [configuredFloors],
+  );
+  const missingFloors = useMemo(
+    () =>
+      allFloorsInRange.filter(
+        (floorNumber) => !configuredFloorsSet.has(floorNumber),
+      ),
+    [allFloorsInRange, configuredFloorsSet],
+  );
+  const configuredCount = configuredFloors.length;
+  const missingCount = missingFloors.length;
+  const totalFloorsCount = allFloorsInRange.length;
+  const hasCompletedAllFloors = totalFloorsCount > 0 && missingCount === 0;
+  const floorRangeLabel =
+    totalFloorsCount > 0
+      ? `${allFloorsInRange[0]}-${allFloorsInRange[totalFloorsCount - 1]}`
+      : `${floorInputRange.min}-${floorInputRange.max}`;
+
+  useEffect(() => {
+    if (!guidedModeEnabled || hasCompletedAllFloors) {
+      setPostSaveGuidance(null);
+    }
+  }, [guidedModeEnabled, hasCompletedAllFloors]);
 
   const handleFloorInputChange = (value: string) => {
     const trimmedValue = value.trim();
@@ -167,13 +224,7 @@ const BuildingImageEditor = ({
     setFloorInputError(null);
   };
 
-  const applyFloorInputSelection = async () => {
-    if (!floorInRange || floorInputError) {
-      setFloorInputError(floorInputInvalidText);
-      return;
-    }
-
-    const floorNumber = parsedFloorInput;
+  const selectFloorNumber = async (floorNumber: number) => {
     const existingFloor = loader.buildingFloors.find(
       (floorItem) => floorItem.floor_number === floorNumber,
     );
@@ -197,6 +248,9 @@ const BuildingImageEditor = ({
       return;
     }
 
+    setFloorInputValue(String(floorNumber));
+    setFloorInputError(null);
+    setPostSaveGuidance(null);
     floor.setSelectedFloor(floorNumber);
 
     if (existingFloor) {
@@ -205,6 +259,37 @@ const BuildingImageEditor = ({
     }
 
     floor.startCreatingNewFloor(floorNumber);
+  };
+
+  const applyFloorInputSelection = async () => {
+    if (!floorInRange || floorInputError) {
+      setFloorInputError(floorInputInvalidText);
+      return;
+    }
+    await selectFloorNumber(parsedFloorInput);
+  };
+
+  const handlePolygonSaveWithGuidance = async () => {
+    const savedFloor = floor.selectedFloor;
+    const expectedMissingAfterSave = missingFloors.filter(
+      (floorNumber) => floorNumber !== savedFloor,
+    );
+    const nextMissingFloor =
+      expectedMissingAfterSave.find(
+        (floorNumber) => floorNumber > savedFloor,
+      ) ??
+      expectedMissingAfterSave[0] ??
+      null;
+    const saved = await floor.handlePolygonSave();
+    if (!saved) return;
+    if (!guidedModeEnabled || nextMissingFloor === null) {
+      setPostSaveGuidance(null);
+      return;
+    }
+    setPostSaveGuidance({
+      savedFloor,
+      nextFloor: nextMissingFloor,
+    });
   };
 
   return (
@@ -476,6 +561,70 @@ const BuildingImageEditor = ({
               )}
             </div>
 
+            <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <div className="text-sm text-muted-foreground">
+                  Floor range:{" "}
+                  <span className="font-medium text-foreground">
+                    {floorRangeLabel}
+                  </span>
+                </div>
+                <div>
+                  Configured:{" "}
+                  <span className="font-medium">
+                    {configuredCount} / {totalFloorsCount}
+                  </span>
+                </div>
+                <div>
+                  Missing: <span className="font-medium">{missingCount}</span>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <Label
+                    htmlFor="guided-mode-toggle"
+                    className="whitespace-nowrap text-sm font-medium"
+                  >
+                    Suggest next missing floor after save
+                  </Label>
+                  <Switch
+                    id="guided-mode-toggle"
+                    checked={guidedModeEnabled}
+                    onCheckedChange={setGuidedModeEnabled}
+                  />
+                </div>
+              </div>
+              {hasCompletedAllFloors ? (
+                <p className="text-sm font-medium text-emerald-600">
+                  All floors are configured
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="shrink-0">Missing floors:</span>
+                    {missingFloors.length > 0 && (
+                      <div className="flex-1 overflow-x-auto pb-1">
+                        <div className="flex min-w-max gap-2">
+                          {missingFloors.map((missingFloor) => (
+                            <Button
+                              key={missingFloor}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => {
+                                void selectFloorNumber(missingFloor);
+                              }}
+                            >
+                              {missingFloor}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Canvas with all polygons */}
             <div
               ref={viewerWrapRef}
@@ -553,7 +702,9 @@ const BuildingImageEditor = ({
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      onClick={floor.handlePolygonSave}
+                      onClick={() => {
+                        void handlePolygonSaveWithGuidance();
+                      }}
                       size="sm"
                       className="h-8"
                       disabled={
@@ -573,6 +724,7 @@ const BuildingImageEditor = ({
                             floor.editingFloorId!,
                           );
                           if (deleted) {
+                            setPostSaveGuidance(null);
                             floor.resetEditing();
                           }
                         }}
@@ -620,6 +772,7 @@ const BuildingImageEditor = ({
                       const persisted =
                         await floor.persistCurrentPolygonBeforeFloorSwitch();
                       if (!persisted) return;
+                      setPostSaveGuidance(null);
                       floor.setSelectedFloor(floorData.floor_number);
                       floor.requestStartEditingFloor(floorData.id);
                     })();
@@ -659,6 +812,38 @@ const BuildingImageEditor = ({
                   </div>
                 </div>
               )}
+              {guidedModeEnabled &&
+                !hasCompletedAllFloors &&
+                postSaveGuidance &&
+                postSaveGuidance.nextFloor !== null && (
+                  <div className="pointer-events-none absolute inset-0 z-30">
+                    <div className="pointer-events-auto absolute left-1/2 top-4 w-[calc(100%-2rem)] max-w-[360px] -translate-x-1/2 rounded-lg border border-primary/30 bg-background/95 p-3 shadow-lg">
+                      <p className="text-sm font-medium">
+                        Floor {postSaveGuidance.savedFloor} saved. Next missing
+                        floor: {postSaveGuidance.nextFloor}
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            void selectFloorNumber(postSaveGuidance.nextFloor!);
+                          }}
+                        >
+                          Go to next floor
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPostSaveGuidance(null)}
+                        >
+                          Stay here
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
             </div>
           </CardContent>
         </Card>

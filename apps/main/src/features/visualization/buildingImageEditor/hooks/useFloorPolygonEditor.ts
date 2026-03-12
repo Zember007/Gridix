@@ -328,7 +328,7 @@ export function useFloorPolygonEditor({
   );
 
   const handlePolygonSave = useCallback(async () => {
-    await saveCurrentPolygon();
+    return await saveCurrentPolygon();
   }, [saveCurrentPolygon]);
 
   const persistCurrentPolygonBeforeFloorSwitch = useCallback(async () => {
