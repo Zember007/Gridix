@@ -136,6 +136,7 @@ const ControlledPolygonAnnotator = forwardRef<
       drawingEnabled,
       mode = "edit",
       onClickAnnotationId,
+      onHoverAnnotationId,
       getStyleById,
       className,
     },
@@ -163,6 +164,7 @@ const ControlledPolygonAnnotator = forwardRef<
       pointPercent: Point;
       pointPx: { x: number; y: number };
     } | null>(null);
+    const prevHoverIdRef = useRef<string | null>(null);
 
     currentShapeRef.current = currentShape;
 
@@ -251,6 +253,15 @@ const ControlledPolygonAnnotator = forwardRef<
         return null;
       },
       [currentShape, shapes],
+    );
+
+    const emitHoverId = useCallback(
+      (id: string | null) => {
+        if (prevHoverIdRef.current === id) return;
+        prevHoverIdRef.current = id;
+        onHoverAnnotationId?.(id);
+      },
+      [onHoverAnnotationId],
     );
 
     const getEdgeInsertionCandidate = useCallback(
@@ -467,6 +478,13 @@ const ControlledPolygonAnnotator = forwardRef<
               style={{ touchAction: mode === "edit" ? "none" : "auto" }}
               onClick={handleCanvasClick}
               onMouseMove={(event) => {
+                const percentPoint = toPercentPoint(
+                  event.clientX,
+                  event.clientY,
+                );
+                emitHoverId(
+                  percentPoint ? findClickedShapeId(percentPoint) : null,
+                );
                 if (
                   mode !== "edit" ||
                   !currentShape ||
@@ -485,7 +503,10 @@ const ControlledPolygonAnnotator = forwardRef<
                 });
                 setInsertPreview(candidate);
               }}
-              onMouseLeave={() => setInsertPreview(null)}
+              onMouseLeave={() => {
+                setInsertPreview(null);
+                emitHoverId(null);
+              }}
             >
               {renderedShapes.map((shape) => {
                 if (!shape.points || shape.points.length < 3) return null;

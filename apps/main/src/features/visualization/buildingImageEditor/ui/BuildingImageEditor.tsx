@@ -27,7 +27,7 @@ import PolygonCustomizationSettings, {
 } from "@/components/visualization/PolygonCustomizationSettings";
 import type { BuildingImageEditorProps } from "../model/types";
 import { useBuildingEditorData } from "../hooks/useBuildingEditorData";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 
 const BuildingImageEditor = ({
   projectId,
@@ -39,6 +39,13 @@ const BuildingImageEditor = ({
     currentImageUrl,
     onImageUpdate,
   });
+  const viewerWrapRef = useRef<HTMLDivElement | null>(null);
+  const lastMousePosRef = useRef({ x: 0, y: 0 });
+  const [hoveredFloorId, setHoveredFloorId] = useState<string | null>(null);
+  const [hoverPopupPos, setHoverPopupPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const floorInputRange = useMemo(() => {
     if (loader.isObjectProject) {
@@ -84,6 +91,25 @@ const BuildingImageEditor = ({
     setFloorInputValue(String(floor.selectedFloor));
     setFloorInputError(null);
   }, [floor.selectedFloor]);
+
+  const hoveredFloor = useMemo(
+    () =>
+      hoveredFloorId
+        ? (loader.buildingFloors.find(
+            (floorItem) => floorItem.id === hoveredFloorId,
+          ) ?? null)
+        : null,
+    [hoveredFloorId, loader.buildingFloors],
+  );
+
+  const updateMousePos = useCallback((e: React.MouseEvent) => {
+    const rect = viewerWrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    lastMousePosRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  }, []);
 
   const parsedFloorInput = Number(floorInputValue);
   const floorInputIsInteger =
@@ -430,7 +456,15 @@ const BuildingImageEditor = ({
             </div>
 
             {/* Canvas with all polygons */}
-            <div className="rounded-lg border bg-muted/30 p-4">
+            <div
+              ref={viewerWrapRef}
+              className="relative rounded-lg border bg-muted/30 p-4"
+              onMouseMove={updateMousePos}
+              onMouseLeave={() => {
+                setHoveredFloorId(null);
+                setHoverPopupPos(null);
+              }}
+            >
               <div className="mb-4 flex items-center justify-between">
                 <h4 className="text-sm font-medium">
                   {floor.isCreatingNewFloor
@@ -570,10 +604,42 @@ const BuildingImageEditor = ({
                     })();
                   }
                 }}
+                onHoverAnnotationId={(id) => {
+                  if (floor.isEditing) {
+                    setHoveredFloorId(null);
+                    setHoverPopupPos(null);
+                    return;
+                  }
+                  if (!id) {
+                    setHoveredFloorId(null);
+                    setHoverPopupPos(null);
+                    return;
+                  }
+                  setHoveredFloorId(id);
+                  setHoverPopupPos(lastMousePosRef.current);
+                }}
                 mode={floor.isEditing ? "edit" : "view"}
                 drawingEnabled={floor.isPolygonCreationEnabled}
                 getStyleById={floor.getStyleById}
               />
+              {!floor.isEditing && hoveredFloor && hoverPopupPos && (
+                <div
+                  className="pointer-events-none absolute z-20 w-[80px] overflow-hidden rounded-2xl border border-white/70 shadow-xl"
+                  style={{
+                    left: hoverPopupPos.x + 12,
+                    top: hoverPopupPos.y + 12,
+                  }}
+                >
+                  <div className="bg-gradient-to-b from-[#4E8DFF] to-[#3B82F6] px-3 py-2 text-center text-4xl font-semibold leading-none text-white">
+                    {hoveredFloor.floor_number}
+                  </div>
+                  <div className="bg-[#3A3A3D] px-3 py-2 text-center text-base font-medium leading-none text-white">
+                    {loader.isObjectProject
+                      ? loader.t("buildingImage.object.number")
+                      : loader.t("buildingImage.floors.floor")}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
