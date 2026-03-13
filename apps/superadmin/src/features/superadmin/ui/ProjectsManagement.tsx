@@ -13,7 +13,7 @@ import {
 import { Eye, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { toast } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@gridix/utils/react";
 
 interface Project {
   id: string;

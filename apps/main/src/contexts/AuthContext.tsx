@@ -124,7 +124,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       loadingProfileRef.current.add(userId);
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
       try {
         await processPendingReferralAfterAuth();
 
@@ -139,8 +138,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           .eq("id", userId)
           .single();
 
-        // Race the request against a proper timeout Promise.
-        // NOTE: throwing inside setTimeout does NOT reject the awaiting Promise.
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(
             () => reject(new Error("Query timeout")),
@@ -148,7 +145,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           );
         });
 
-        // Define the expected Supabase response type
         const { data, error } = await Promise.race([
           queryPromise as unknown as Promise<{
             data: UserProfile | null;

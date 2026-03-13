@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@gridix/utils/react";
 
 interface PartnerWithUser {
   id: string;

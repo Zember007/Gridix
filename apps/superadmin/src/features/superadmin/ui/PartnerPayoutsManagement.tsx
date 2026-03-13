@@ -43,10 +43,19 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import type { PartnerPayout } from "@gridix/partner-program";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@gridix/utils/react";
 
-interface PayoutWithPartner extends PartnerPayout {
+interface PartnerPayoutBase {
+  id: string;
+  partner_id: string;
+  amount: number;
+  status: "pending" | "approved" | "paid" | "rejected";
+  payment_method: string | null;
+  contact_info?: string | null;
+  requested_at: string;
+}
+
+interface PayoutWithPartner extends PartnerPayoutBase {
   contact_info?: string;
   partner_profiles: {
     id: string;

@@ -502,10 +502,10 @@ export function SystemSettings() {
         const { error } = await supabase
           .from("commission_tiers")
           .update({
-            min_projects: tier.min_projects,
+            min_projects: tier.min_projects ?? 0,
             max_projects:
               tier.max_projects === undefined ? null : tier.max_projects,
-            commission_percentage: tier.commission_percentage,
+            commission_percentage: tier.commission_percentage ?? 20,
             link_type: "managed",
             is_active: tier.is_active ?? true,
             updated_at: new Date().toISOString(),

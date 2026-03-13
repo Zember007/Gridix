@@ -18,7 +18,6 @@ import {
 import { UsertourBlockingGate } from "@gridix/utils/integrations";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const SuperAdminPage = lazy(() => import("@/pages/SuperAdminPage"));
 
 export default function App() {
   return (
@@ -37,19 +36,6 @@ export default function App() {
                       </Suspense>
                     </ProtectedRoute>
                   </EmbedProviders>
-                }
-              />
-
-              <Route
-                path="/:lang/superadmin"
-                element={
-                  <AdminProviders>
-                    <ProtectedRoute>
-                      <Suspense fallback={<FullPageLoaderView />}>
-                        <SuperAdminPage />
-                      </Suspense>
-                    </ProtectedRoute>
-                  </AdminProviders>
                 }
               />
 

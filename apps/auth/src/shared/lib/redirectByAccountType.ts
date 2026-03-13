@@ -24,6 +24,25 @@ const VALID_ACCOUNT_TYPES = new Set([
   "partner",
 ]);
 
+async function hasSuperAdminRole(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "superadmin")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to resolve superadmin role:", error);
+    return false;
+  }
+
+  return Boolean(data);
+}
+
 /**
  * Resolves account_type from user_profiles, then redirects to the correct app
  * with session tokens in hash.
@@ -41,6 +60,7 @@ export async function redirectToAppByAccountType(
   if (!userId) throw new Error("No session user");
 
   const langFromUrl = lang ?? (window.location.pathname.split("/")[1] || "en");
+  const isSuperAdmin = await hasSuperAdminRole(supabase, userId);
 
   const { data: profile } = await supabase
     .from("user_profiles")
@@ -112,6 +132,10 @@ export async function redirectToAppByAccountType(
     "https://agent.gridix.live",
   );
   const mainApp = getEnv("VITE_MAIN_APP_URL", "https://app.gridix.live");
+  const superadminApp = getEnv(
+    "VITE_SUPERADMIN_APP_URL",
+    "https://superadmin.gridix.live",
+  );
   const partnersApp = getEnv(
     "VITE_PARTNERS_APP_URL",
     "https://partner.gridix.live",
@@ -127,12 +151,22 @@ export async function redirectToAppByAccountType(
   if (redirectToUrl) {
     try {
       const u = new URL(redirectToUrl);
-      const allow = new Set([
-        new URL(agentCabinet).origin,
-        new URL(mainApp).origin,
-        new URL(partnersApp).origin,
-      ]);
+      const allow = new Set(
+        isSuperAdmin
+          ? [new URL(superadminApp).origin]
+          : [
+              new URL(agentCabinet).origin,
+              new URL(mainApp).origin,
+              new URL(partnersApp).origin,
+            ],
+      );
       if (allow.has(u.origin)) {
+        if (isSuperAdmin) {
+          const base = `${u.origin}${u.pathname}${u.search}`;
+          window.location.replace(`${base}#${hash}`);
+          return;
+        }
+
         const isAgentTarget = u.origin === new URL(agentCabinet).origin;
         const isMainTarget = u.origin === new URL(mainApp).origin;
         const isPartnerTarget = u.origin === new URL(partnersApp).origin;
@@ -153,7 +187,9 @@ export async function redirectToAppByAccountType(
   }
 
   let targetBase: string;
-  if (accountType === "agent") {
+  if (isSuperAdmin) {
+    targetBase = superadminApp;
+  } else if (accountType === "agent") {
     targetBase = agentCabinet;
   } else if (accountType === "partner") {
     targetBase = partnersApp;

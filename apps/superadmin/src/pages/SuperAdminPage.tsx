@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSuperAdmin } from "@/hooks/useSuperAdmin";
-import { SimplifiedSidebar } from "@/shared/ui/sidebar-component";
-import { UsersManagement } from "@/components/superadmin/UsersManagement";
-import { SubscriptionsManagement } from "@/components/superadmin/SubscriptionsManagement";
-import { ProjectsManagement } from "@/components/superadmin/ProjectsManagement";
-import { SystemSettings } from "@/components/superadmin/SystemSettings";
-import { PartnersManagement } from "@/components/superadmin/PartnersManagement";
-import { PartnerPayoutsManagement } from "@/components/superadmin/PartnerPayoutsManagement";
-import { EmailTemplatesManagement } from "@/components/superadmin/EmailTemplatesManagement";
+import { useSuperAdmin } from "@/features/superadmin/model/useSuperAdmin";
+import { UsersManagement } from "@/features/superadmin/ui/UsersManagement";
+import { SubscriptionsManagement } from "@/features/superadmin/ui/SubscriptionsManagement";
+import { ProjectsManagement } from "@/features/superadmin/ui/ProjectsManagement";
+import { SystemSettings } from "@/features/superadmin/ui/SystemSettings";
+import { PartnersManagement } from "@/features/superadmin/ui/PartnersManagement";
+import { PartnerPayoutsManagement } from "@/features/superadmin/ui/PartnerPayoutsManagement";
+import { EmailTemplatesManagement } from "@/features/superadmin/ui/EmailTemplatesManagement";
 import {
-  Loader2,
   Users,
   CreditCard,
   FolderKanban,
@@ -20,14 +18,12 @@ import {
   DollarSign,
   Mail,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@gridix/ui";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { SimplifiedSidebar, useIsMobile } from "@gridix/ui";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
-import { Button } from "@gridix/ui";
-import { Menu } from "lucide-react";
-import { Sheet, SheetContent } from "@gridix/ui";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { toast } from "sonner";
+import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 
 const SuperAdminPage = () => {
   const { isSuperAdmin, loading } = useSuperAdmin();
@@ -35,23 +31,17 @@ const SuperAdminPage = () => {
   const navigate = useNavigate();
   const { navigate: navigateWithLanguage } = useLanguageNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "users";
-  const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const isMobile = useIsMobile();
+  const activeTab = searchParams.get("tab") || "users";
 
   useEffect(() => {
     if (!loading && !isSuperAdmin) {
       navigate("/");
     }
   }, [isSuperAdmin, loading, navigate]);
-
-  // Sync tab with URL
-  useEffect(() => {
-    setSearchParams({ tab: activeTab });
-  }, [activeTab, setSearchParams]);
 
   // Apply theme
   useEffect(() => {
@@ -60,6 +50,10 @@ const SuperAdminPage = () => {
       document.documentElement.style.setProperty(key, value);
     });
   }, []);
+
+  const handleSectionChange = (tab: string) => {
+    setSearchParams({ tab });
+  };
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
@@ -120,11 +114,7 @@ const SuperAdminPage = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <FullPageLoaderView />;
   }
 
   if (!isSuperAdmin) {
@@ -155,14 +145,14 @@ const SuperAdminPage = () => {
   const sidebarProps = {
     navItems: menuItems,
     activeSection: activeTab,
-    onSectionChange: setActiveTab,
-    userEmail: user?.email,
+    onSectionChange: handleSectionChange,
+    userEmail: user?.email ?? "",
     isCollapsed,
     onToggleCollapse: () => setIsCollapsed(!isCollapsed),
     mobileOpen: isMobileOpen,
     onMobileOpenChange: setIsMobileOpen,
     title: "SuperAdmin",
-    isMobile,
+    isMobile: isMobile ?? false,
     onMobileClose: () => setIsMobileOpen(false),
     showSupportButton: true,
     onSignOut: handleSignOut,
