@@ -14,7 +14,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   template: Template | null;
-  onSave: (id: number, content: string, lang: string) => void;
+  onSave: (id: number, lang: string) => void;
   isLoading: boolean;
   t: (key: string) => string;
 };
@@ -46,10 +46,7 @@ export const TemplateEditorModal: React.FC<Props> = ({
             {t("partners.generalConditions.cancel")}
           </Button>
           <Button
-            onClick={() =>
-              template &&
-              onSave(template.id, template.content_html || "", template.lang)
-            }
+            onClick={() => template && onSave(template.id, template.lang)}
             className="flex items-center gap-2"
             disabled={isLoading || !template}
           >

@@ -31,7 +31,6 @@ type ContractTemplate = {
   name: string;
   lang: string | null;
   storage_path: string;
-  content_html: string | null;
   url: string | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -794,6 +793,9 @@ export default function AgentApplicationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step !== "contracts") {
+      return;
+    }
     if (!developerId) {
       toast.error(t("agentApplication.invalidLinkMissingDeveloperId"));
       return;
