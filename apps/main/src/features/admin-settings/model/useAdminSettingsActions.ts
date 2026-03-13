@@ -11,12 +11,11 @@ import { toast } from "sonner";
 import type { TablesInsert } from "@gridix/types/database";
 
 import { supabase } from "@/shared/api/supabase";
-import type { AdminSettingsForm, CompanySettings } from "./types";
+import type { CompanySettings } from "./types";
 
 type UseAdminSettingsActionsParams = {
   userProfile: SupabaseUser;
   t: (key: string, vars?: Record<string, unknown>) => string;
-  settings: AdminSettingsForm;
   companySettings: CompanySettings;
   setCompanySettings: Dispatch<SetStateAction<CompanySettings>>;
   getSystemDomain: () => string;
@@ -25,7 +24,6 @@ type UseAdminSettingsActionsParams = {
 export const useAdminSettingsActions = ({
   userProfile,
   t,
-  settings,
   companySettings,
   setCompanySettings,
   getSystemDomain,
@@ -84,8 +82,7 @@ export const useAdminSettingsActions = ({
       const nowIso = new Date().toISOString();
       const companyData: TablesInsert<"company_settings"> = {
         user_id: userProfile.id,
-        company_name:
-          companySettings.company_name || settings.company_name || "",
+        company_name: companySettings.company_name || "",
         tax_id: companySettings.tax_id ?? null,
         address: companySettings.address ?? null,
         phone: companySettings.phone ?? null,
@@ -194,7 +191,7 @@ export const useAdminSettingsActions = ({
 
       const companyData: TablesInsert<"company_settings"> = {
         user_id: userProfile.id,
-        company_name: companySettings.company_name,
+        company_name: companySettings.company_name || "",
         tax_id: companySettings.tax_id,
         address: companySettings.address,
         phone: companySettings.phone,

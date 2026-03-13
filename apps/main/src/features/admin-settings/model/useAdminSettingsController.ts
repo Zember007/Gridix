@@ -20,11 +20,9 @@ export const useAdminSettingsController = ({
     });
   }, []);
   const {
-    settings,
     companySettings,
     setCompanySettings,
     handleCompanyInputChange,
-    handleInputChange,
     getSystemDomain,
   } = useAdminSettingsProfileCompany(userProfile);
   const {
@@ -42,7 +40,6 @@ export const useAdminSettingsController = ({
   } = useAdminSettingsActions({
     userProfile,
     t,
-    settings,
     companySettings,
     setCompanySettings,
     getSystemDomain,
@@ -53,7 +50,6 @@ export const useAdminSettingsController = ({
     isManagerMode,
     tab,
     setTab,
-    settings,
     companySettings,
     uploadingLogo,
     logoInputRef,
@@ -62,7 +58,6 @@ export const useAdminSettingsController = ({
     saving,
     onProfileReady,
     onNotificationReady,
-    handleInputChange,
     handleCompanyInputChange,
     getSystemDomain,
     handleLogoFileChange,

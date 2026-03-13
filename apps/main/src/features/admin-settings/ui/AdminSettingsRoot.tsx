@@ -60,7 +60,6 @@ export const AdminSettingsRoot = ({
     isManagerMode,
     tab,
     setTab,
-    settings,
     companySettings,
     uploadingLogo,
     logoInputRef,
@@ -69,7 +68,6 @@ export const AdminSettingsRoot = ({
     saving,
     onProfileReady,
     onNotificationReady,
-    handleInputChange,
     handleCompanyInputChange,
     getSystemDomain,
     handleLogoFileChange,
@@ -242,9 +240,9 @@ export const AdminSettingsRoot = ({
             </CardHeader>
             <CardContent className="space-y-4">
               <AdminSettingsCompanyTab
-                settingsCompanyName={settings.company_name}
+                settingsCompanyName={companySettings.company_name || ""}
                 onBrandNameChange={(value) =>
-                  handleInputChange("company_name", value)
+                  handleCompanyInputChange("company_name", value)
                 }
                 companySettings={companySettings}
                 onCompanyFieldChange={handleCompanyInputChange}
