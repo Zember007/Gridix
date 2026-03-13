@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProjectDomainSettings } from "../model/useProjectDomainSettings";
 import { DomainAddForm } from "./DomainAddForm";
 import { DomainList } from "./DomainList";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface ProjectDomainSettingsProps {
   projectId: string;
@@ -105,8 +106,8 @@ export function ProjectDomainSettings({
           <Label>{t("domains.connectedDomains")}</Label>
 
           {isWaitingForEditorData || loading ? (
-            <div className="py-4 text-center text-muted-foreground">
-              {t("project.loading")}
+            <div className="flex min-h-32 items-center justify-center py-4">
+              <LoadingProgress />
             </div>
           ) : domains.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
