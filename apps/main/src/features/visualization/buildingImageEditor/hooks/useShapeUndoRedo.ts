@@ -12,14 +12,18 @@ interface UseShapeUndoRedoReturn {
   redoStackRef: React.MutableRefObject<Shape[]>;
 }
 
+const HISTORY_MERGE_WINDOW_MS = 120;
+
 export function useShapeUndoRedo(isEditing: boolean): UseShapeUndoRedoReturn {
   const [currentShape, setCurrentShape] = useState<Shape | null>(null);
   const undoStackRef = useRef<Shape[]>([]);
   const redoStackRef = useRef<Shape[]>([]);
+  const lastHistoryPushTsRef = useRef(0);
 
   const resetStacks = useCallback(() => {
     undoStackRef.current = [];
     redoStackRef.current = [];
+    lastHistoryPushTsRef.current = 0;
   }, []);
 
   const handleCurrentShapeUpdate = useCallback((shape: Shape | null) => {
@@ -28,7 +32,16 @@ export function useShapeUndoRedo(isEditing: boolean): UseShapeUndoRedoReturn {
         const prevPts = JSON.stringify(prev.points);
         const nextPts = JSON.stringify(shape.points);
         if (prevPts !== nextPts) {
-          undoStackRef.current = [...undoStackRef.current, prev];
+          const now = Date.now();
+          const shouldMergeIntoPreviousStep =
+            undoStackRef.current.length > 0 &&
+            now - lastHistoryPushTsRef.current < HISTORY_MERGE_WINDOW_MS;
+
+          if (!shouldMergeIntoPreviousStep) {
+            undoStackRef.current = [...undoStackRef.current, prev];
+          }
+
+          lastHistoryPushTsRef.current = now;
           redoStackRef.current = [];
         }
       }
@@ -47,6 +60,7 @@ export function useShapeUndoRedo(isEditing: boolean): UseShapeUndoRedoReturn {
       }
       return prev;
     });
+    lastHistoryPushTsRef.current = 0;
   }, []);
 
   const handleRedo = useCallback(() => {
@@ -60,6 +74,7 @@ export function useShapeUndoRedo(isEditing: boolean): UseShapeUndoRedoReturn {
       }
       return next;
     });
+    lastHistoryPushTsRef.current = 0;
   }, []);
 
   useEffect(() => {

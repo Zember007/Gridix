@@ -101,7 +101,7 @@ export function useFloorPolygonEditor({
           color: floor.color || "#3b82f6",
         };
         lastSavedPointsRef.current = JSON.stringify(editingShape.points);
-        setSelectedVertexIndex(null);
+        setSelectedVertexIndex(floor.polygon.length > 0 ? 0 : null);
         setCurrentShape(editingShape);
       }
     },
@@ -116,7 +116,16 @@ export function useFloorPolygonEditor({
     [startEditingFloor],
   );
 
-  const startCreatingNewFloor = () => {
+  const startCreatingNewFloor = (targetFloor: number = selectedFloor) => {
+    const existingFloor = buildingFloorsRef.current.find(
+      (floor) => floor.floor_number === targetFloor,
+    );
+    if (existingFloor) {
+      startEditingFloor(existingFloor.id);
+      return;
+    }
+
+    setSelectedFloor(targetFloor);
     editingFloorIdRef.current = null;
     isCreatingNewFloorRef.current = true;
     setIsCreatingNewFloor(true);
@@ -185,7 +194,8 @@ export function useFloorPolygonEditor({
   const handleCurrentShapeUpdate = useCallback(
     (shape: Shape | null) => {
       setSelectedVertexIndex((prev) => {
-        if (shape === null || prev === null) return prev;
+        if (shape === null) return null;
+        if (prev === null) return shape.points.length > 0 ? 0 : null;
         return prev >= shape.points.length ? null : prev;
       });
       handleCurrentShapeUpdateBase(shape);
@@ -318,10 +328,25 @@ export function useFloorPolygonEditor({
   );
 
   const handlePolygonSave = useCallback(async () => {
-    await saveCurrentPolygon();
+    return await saveCurrentPolygon();
   }, [saveCurrentPolygon]);
 
+  const persistCurrentPolygonBeforeFloorSwitch = useCallback(async () => {
+    if (!isEditing || !currentShape) return true;
+
+    if (isCreatingNewFloor && currentShape.points.length === 0) {
+      return true;
+    }
+
+    return await saveCurrentPolygon({
+      silent: true,
+      keepEditingState: false,
+      reloadData: true,
+    });
+  }, [currentShape, isCreatingNewFloor, isEditing, saveCurrentPolygon]);
+
   const pointCount = currentShape?.points.length ?? 0;
+  const isPolygonCreationEnabled = isCreatingNewFloor && !currentShape;
   const normalizedSelectedVertexIndex =
     selectedVertexIndex !== null &&
     selectedVertexIndex >= 0 &&
@@ -361,10 +386,8 @@ export function useFloorPolygonEditor({
     }
 
     if (!shapeToEdit || shapeToEdit.points.length <= 3) return;
-    const deleteIndex =
-      normalizedSelectedVertexIndex !== null
-        ? normalizedSelectedVertexIndex
-        : shapeToEdit.points.length - 1;
+    if (normalizedSelectedVertexIndex === null) return;
+    const deleteIndex = normalizedSelectedVertexIndex;
     const nextPoints = shapeToEdit.points.filter(
       (_, idx) => idx !== deleteIndex,
     );
@@ -446,9 +469,11 @@ export function useFloorPolygonEditor({
       await api.deleteFloorPolygon(floorId);
       await loadBuildingData();
       toast.success(t("buildingImage.polygon.deleteSuccess"));
+      return true;
     } catch (error) {
       console.error("Error deleting polygon:", error);
       toast.error(t("buildingImage.polygon.deleteError"));
+      return false;
     }
   };
 
@@ -471,6 +496,7 @@ export function useFloorPolygonEditor({
     isEditing,
     editingFloorId,
     isCreatingNewFloor,
+    isPolygonCreationEnabled,
     polygonAnnotatorRef,
 
     currentShape,
@@ -484,12 +510,14 @@ export function useFloorPolygonEditor({
     selectNextVertex,
     handleDeletePoint,
     selectedVertexIndex,
+    setSelectedVertexIndex,
     undoStackRef,
     redoStackRef,
 
     getStyleById,
     requestStartEditingFloor,
     startCreatingNewFloor,
+    persistCurrentPolygonBeforeFloorSwitch,
     handlePolygonSave,
     handlePolygonCancel,
     handleDeleteFloorPolygon,

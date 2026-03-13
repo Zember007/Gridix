@@ -4,20 +4,24 @@
   "settings": "Settings facade",
   "floors": {
     "addNew": "Add Floor",
+    "allowedRange": "Allowed floor range: {{min}}-{{max}}",
     "canvas": "Drawing Canvas",
     "configured": "Configured floors:",
     "creatingNew": "Creating floor {{floor}}",
     "description": "Select a floor and mark its area on the building image",
     "edit": "Edit",
+    "delete": "Delete floor",
     "floor": "Floor:",
     "floorNumber": "Floor {{floor}}",
     "title": "Floor Configuration"
   },
   "object": {
     "addNew": "Add Object",
+    "allowedRange": "Allowed range: {{min}}-{{max}}",
     "configured": "Configured Objects",
     "creating": "Creating polygon for object #{{number}}",
     "number": "Object Number",
+    "delete": "Delete object",
     "objectNumber": "Object #{{number}}",
     "plan": "Objects Plan",
     "polygonsDescription": "Mark areas on the plan for each object (villas, townhouses)",
@@ -57,6 +61,21 @@
     "deleteConfirm": "Delete facade \"{{name}}\" and all its polygons?",
     "deleted": "Facade deleted",
     "deleteError": "Error deleting facade"
+  },
+  "guided": {
+    "toggle": "Suggest next floor",
+    "progress": {
+      "floorRange": "Floor range:",
+      "configured": "Configured:",
+      "missing": "Missing:",
+      "missingFloors": "Missing floors:",
+      "allConfigured": "All floors are configured"
+    },
+    "helper": {
+      "savedAndNext": "Floor {{floor}} saved. Next missing floor: {{nextFloor}}",
+      "goNext": "Go to next floor",
+      "stayHere": "Stay here"
+    }
   },
   "title": "Building Image",
   "upload": "Upload Image",
