@@ -22,8 +22,10 @@ import {
   Upload,
   Plus,
   Trash2,
-  Edit3,
-  Settings,
+  Undo2,
+  Redo2,
+  ChevronLeft,
+  ChevronRight,
   X,
   Copy,
   RefreshCw,
@@ -145,8 +147,40 @@ const FloorPlanEditor = ({
   // Новые состояния для работы с PolygonAnnotator
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [currentShape, setCurrentShape] = useState<Shape | null>(null);
+  const [selectedVertexIndex, setSelectedVertexIndex] = useState<number | null>(
+    null,
+  );
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
+  const undoStackRef = useRef<Shape[]>([]);
+  const redoStackRef = useRef<Shape[]>([]);
+  const isApplyingHistoryRef = useRef(false);
+  const historyGestureActiveRef = useRef(false);
+  const historyGestureTimerRef = useRef<number | null>(null);
+  const lastPolygonClickRef = useRef<{ id: string; ts: number } | null>(null);
+
+  const cloneShape = useCallback((shape: Shape): Shape => {
+    return {
+      ...shape,
+      points: shape.points.map((point) => ({ ...point })),
+    };
+  }, []);
+
+  const resetHistoryGesture = useCallback(() => {
+    historyGestureActiveRef.current = false;
+    if (historyGestureTimerRef.current !== null) {
+      window.clearTimeout(historyGestureTimerRef.current);
+      historyGestureTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (historyGestureTimerRef.current !== null) {
+        window.clearTimeout(historyGestureTimerRef.current);
+      }
+    };
+  }, []);
 
   const { user } = useAuth();
   const { project } = useProjectInEditorScope(projectId);
@@ -569,7 +603,69 @@ const FloorPlanEditor = ({
     }
   };
 
-  const startEditingApartment = (apartmentId: string | null) => {
+  const persistCurrentPolygonBeforeApartmentSwitch = async () => {
+    if (!editingApartment || editingApartment === "new" || !currentShape) {
+      return true;
+    }
+
+    let shapeToSave = currentShape;
+    if (polygonAnnotatorRef.current) {
+      const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
+      if (actualShape) {
+        shapeToSave = actualShape;
+      }
+    }
+
+    if (shapeToSave.points.length < 3) {
+      return true;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("apartments")
+        .update({
+          polygon: shapeToSave.points as unknown as Json,
+        })
+        .eq("id", editingApartment);
+
+      if (error) throw error;
+
+      setApartments((prev) =>
+        prev.map((apt) =>
+          apt.id === editingApartment
+            ? { ...apt, polygon: shapeToSave.points as Point[] }
+            : apt,
+        ),
+      );
+
+      setShapes((prev) =>
+        prev.map((shape) =>
+          shape.id === editingApartment
+            ? {
+                ...shape,
+                points: shapeToSave.points,
+              }
+            : shape,
+        ),
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Error auto-saving apartment polygon before switch:",
+        error,
+      );
+      toast.error(t("floorPlan.apartments.saveError"));
+      return false;
+    }
+  };
+
+  const startEditingApartment = async (apartmentId: string | null) => {
+    if (editingApartment !== apartmentId) {
+      const persisted = await persistCurrentPolygonBeforeApartmentSwitch();
+      if (!persisted) return;
+    }
+
     if (apartmentId === "new") {
       setIsCreatingNew(true);
       setEditingApartment("new");
@@ -582,15 +678,12 @@ const FloorPlanEditor = ({
       });
       setCustomFieldsData({});
 
-      // Создаем новый пустой shape для нового апартамента
-      const newShape: Shape = {
-        id: `new-apartment-${Date.now()}`,
-        type: "polygon",
-        points: [],
-        color: getStatusColor("available"),
-        isSelected: true,
-      };
-      setCurrentShape(newShape);
+      // Для controlled-режима стартуем с null: первый клик создаст базовый полигон
+      setCurrentShape(null);
+      undoStackRef.current = [];
+      redoStackRef.current = [];
+      resetHistoryGesture();
+      setSelectedVertexIndex(null);
     } else if (apartmentId) {
       const apartment = apartments.find((apt) => apt.id === apartmentId);
       if (apartment) {
@@ -629,6 +722,10 @@ const FloorPlanEditor = ({
           isSelected: true,
         };
         setCurrentShape(editingShape);
+        undoStackRef.current = [];
+        redoStackRef.current = [];
+        resetHistoryGesture();
+        setSelectedVertexIndex(apartment.polygon.length > 0 ? 0 : null);
       }
     }
   };
@@ -715,11 +812,157 @@ const FloorPlanEditor = ({
   };
 
   const handleCurrentShapeUpdate = (shape: Shape | null) => {
+    setCurrentShape((prevShape) => {
+      const prevPoints = prevShape ? JSON.stringify(prevShape.points) : "";
+      const nextPoints = shape ? JSON.stringify(shape.points) : "";
+
+      if (
+        !isApplyingHistoryRef.current &&
+        prevShape &&
+        shape &&
+        prevShape.id === shape.id &&
+        prevPoints !== nextPoints
+      ) {
+        if (!historyGestureActiveRef.current) {
+          undoStackRef.current.push(cloneShape(prevShape));
+        }
+        redoStackRef.current = [];
+        historyGestureActiveRef.current = true;
+        if (historyGestureTimerRef.current !== null) {
+          window.clearTimeout(historyGestureTimerRef.current);
+        }
+        historyGestureTimerRef.current = window.setTimeout(() => {
+          historyGestureActiveRef.current = false;
+          historyGestureTimerRef.current = null;
+        }, 180);
+      }
+      return shape;
+    });
+
+    setSelectedVertexIndex((prev) => {
+      if (!shape || shape.points.length === 0) return null;
+      if (prev === null) return 0;
+      return prev >= shape.points.length ? shape.points.length - 1 : prev;
+    });
+  };
+
+  const applyHistoryShape = (shape: Shape | null) => {
+    isApplyingHistoryRef.current = true;
     setCurrentShape(shape);
+    setSelectedVertexIndex((prev) => {
+      if (!shape || shape.points.length === 0) return null;
+      if (prev === null) return 0;
+      return prev >= shape.points.length ? shape.points.length - 1 : prev;
+    });
+    queueMicrotask(() => {
+      isApplyingHistoryRef.current = false;
+    });
+  };
+
+  const handleUndo = () => {
+    const previous = undoStackRef.current.pop();
+    if (!previous) return;
+    resetHistoryGesture();
+    if (currentShape) {
+      redoStackRef.current.push(cloneShape(currentShape));
+    }
+    applyHistoryShape(cloneShape(previous));
+  };
+
+  const handleRedo = () => {
+    const next = redoStackRef.current.pop();
+    if (!next) return;
+    resetHistoryGesture();
+    if (currentShape) {
+      undoStackRef.current.push(cloneShape(currentShape));
+    }
+    applyHistoryShape(cloneShape(next));
+  };
+
+  const handleDeletePoint = async () => {
+    if (selectedVertexIndex === null || !currentShape) return;
+
+    let shapeToEdit = currentShape;
+    if (polygonAnnotatorRef.current) {
+      const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
+      if (actualShape) {
+        shapeToEdit = actualShape;
+      }
+    }
+
+    if (shapeToEdit.points.length <= 3) return;
+
+    const nextPoints = shapeToEdit.points.filter(
+      (_, index) => index !== selectedVertexIndex,
+    );
+
+    setSelectedVertexIndex(
+      nextPoints.length > 0
+        ? Math.min(selectedVertexIndex, nextPoints.length - 1)
+        : null,
+    );
+
+    handleCurrentShapeUpdate({
+      ...shapeToEdit,
+      points: nextPoints,
+    });
+  };
+
+  const pointCount = currentShape?.points.length ?? 0;
+  const normalizedSelectedVertexIndex =
+    selectedVertexIndex !== null &&
+    selectedVertexIndex >= 0 &&
+    selectedVertexIndex < pointCount
+      ? selectedVertexIndex
+      : pointCount > 0
+        ? pointCount - 1
+        : null;
+  const selectedVertexDisplayIndex =
+    normalizedSelectedVertexIndex !== null
+      ? normalizedSelectedVertexIndex + 1
+      : 0;
+
+  const canSelectVertex = pointCount > 0;
+  const selectPrevVertex = () => {
+    if (!canSelectVertex) return;
+    setSelectedVertexIndex((prev) => {
+      const current =
+        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
+      return current === 0 ? pointCount - 1 : current - 1;
+    });
+  };
+
+  const selectNextVertex = () => {
+    if (!canSelectVertex) return;
+    setSelectedVertexIndex((prev) => {
+      const current =
+        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
+      return (current + 1) % pointCount;
+    });
   };
 
   const handlePolygonCancel = () => {
     resetEditing();
+  };
+
+  const handlePolygonAnnotationClick = (id: string) => {
+    if (editingApartment) {
+      if (editingApartment !== id) {
+        void startEditingApartment(id);
+      }
+      return;
+    }
+
+    const now = Date.now();
+    const prev = lastPolygonClickRef.current;
+    const isDoubleClick = prev && prev.id === id && now - prev.ts <= 320;
+
+    lastPolygonClickRef.current = { id, ts: now };
+
+    if (isDoubleClick) {
+      void startEditingApartment(id);
+      lastPolygonClickRef.current = null;
+    }
   };
 
   const deleteApartment = async (apartmentId: string) => {
@@ -743,6 +986,10 @@ const FloorPlanEditor = ({
     setEditingApartment(null);
     setIsCreatingNew(false);
     setCurrentShape(null);
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    resetHistoryGesture();
+    setSelectedVertexIndex(null);
     setApartmentData({
       number: "",
       rooms: 1,
@@ -1229,7 +1476,9 @@ const FloorPlanEditor = ({
             <CardContent>
               <div className="space-y-4">
                 <Button
-                  onClick={() => startEditingApartment("new")}
+                  onClick={() => {
+                    void startEditingApartment("new");
+                  }}
                   disabled={!!editingApartment}
                   size="sm"
                   className="w-full"
@@ -1248,7 +1497,9 @@ const FloorPlanEditor = ({
                           ? "border-primary bg-primary/10"
                           : ""
                       }`}
-                      onClick={() => startEditingApartment(apartment.id)}
+                      onClick={() => {
+                        void startEditingApartment(apartment.id);
+                      }}
                     >
                       <div className="mb-1 flex items-center justify-between">
                         <span className="text-sm font-medium">
@@ -1337,6 +1588,58 @@ const FloorPlanEditor = ({
                 {(editingApartment || currentShape) && (
                   <div className="flex items-center gap-2">
                     <Button
+                      onClick={handleUndo}
+                      variant="outline"
+                      size="sm"
+                      disabled={undoStackRef.current.length === 0}
+                      title="Undo (Ctrl+Z)"
+                    >
+                      <Undo2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={handleRedo}
+                      variant="outline"
+                      size="sm"
+                      disabled={redoStackRef.current.length === 0}
+                      title="Redo (Ctrl+Shift+Z)"
+                    >
+                      <Redo2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={selectPrevVertex}
+                      variant="outline"
+                      size="sm"
+                      disabled={!canSelectVertex}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="min-w-[56px] text-center text-xs text-muted-foreground">
+                      {selectedVertexDisplayIndex}/{pointCount}
+                    </span>
+                    <Button
+                      onClick={selectNextVertex}
+                      variant="outline"
+                      size="sm"
+                      disabled={!canSelectVertex}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        void handleDeletePoint();
+                      }}
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        !currentShape ||
+                        selectedVertexIndex === null ||
+                        currentShape.points.length <= 3
+                      }
+                      title="Delete point"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
                       onClick={handlePolygonSave}
                       size="sm"
                       disabled={
@@ -1362,11 +1665,17 @@ const FloorPlanEditor = ({
               {imageUrl ? (
                 <PolygonAnnotator
                   ref={polygonAnnotatorRef}
+                  engine="controlled"
                   imageUrl={imageUrl}
                   shapes={shapes}
                   currentShape={currentShape}
+                  selectedVertexIndex={selectedVertexIndex}
+                  onSelectVertexIndex={setSelectedVertexIndex}
                   onCurrentShapeUpdate={handleCurrentShapeUpdate}
-                  drawingEnabled={!!editingApartment}
+                  onClickAnnotationId={handlePolygonAnnotationClick}
+                  drawingEnabled={
+                    !!editingApartment && isCreatingNew && !currentShape
+                  }
                 />
               ) : (
                 <div className="flex h-[600px] items-center justify-center rounded-lg border-2 border-dashed border-muted">
