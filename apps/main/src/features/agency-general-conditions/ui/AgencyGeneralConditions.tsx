@@ -18,13 +18,9 @@ import {
   Upload,
   FileEdit,
   ExternalLink,
-  Printer,
   Link as LinkIcon,
   MoreVertical,
   File as FileIcon,
-  GripVertical,
-  Braces,
-  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@gridix/ui";
@@ -42,17 +38,10 @@ import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
-import mammoth from "mammoth";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
-// Vite: import worker as URL
-import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { FunctionsError } from "@supabase/supabase-js";
+import type { Template } from "../model/types";
+import { DocxNativeEditorModal } from "./DocxNativeEditorModal";
 
-GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
-
-// Available variables for the contract (labelKey = partners.generalConditions.contractVars*)
 const CONTRACT_VARIABLE_KEYS: Array<{ key: string; labelKey: string }> = [
   { key: "{{agent.full_name}}", labelKey: "contractVarsAgentFullName" },
   { key: "{{agent.person_type}}", labelKey: "contractVarsAgentPersonType" },
@@ -154,83 +143,6 @@ const CONTRACT_VARIABLE_KEYS: Array<{ key: string; labelKey: string }> = [
   { key: "{{date_text}}", labelKey: "contractVarsDateText" },
   { key: "{{{sign_image}}}", labelKey: "contractVarsSignImage" },
 ];
-
-type Template = {
-  id: number;
-  name: string;
-  lang: string;
-  content_html: string | null;
-  storage_path: string;
-  created_at: string;
-  updated_at: string;
-  url: string | null;
-  date: string;
-};
-
-const escapeHtml = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
-async function extractPdfToHtml(arrayBuffer: ArrayBuffer): Promise<string> {
-  const pdf = await getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-  const pages: string[] = [];
-
-  // Group text items into lines by Y coordinate, then join by X order.
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const items = (textContent.items as Array<any>)
-      .map((it) => {
-        const str = String(it.str ?? "").trimEnd();
-        const t = Array.isArray(it.transform) ? it.transform : null;
-        // transform: [a, b, c, d, e, f] where e=x, f=y
-        const x = t ? Number(t[4]) : 0;
-        const y = t ? Number(t[5]) : 0;
-        return { str, x, y };
-      })
-      .filter((it) => it.str.length > 0);
-
-    // Sort by y desc, then x asc
-    items.sort((a, b) => b.y - a.y || a.x - b.x);
-
-    const lines: Array<{
-      y: number;
-      parts: Array<{ x: number; str: string }>;
-    }> = [];
-    const yTolerance = 2.5;
-
-    for (const it of items) {
-      const last = lines[lines.length - 1];
-      if (!last || Math.abs(last.y - it.y) > yTolerance) {
-        lines.push({ y: it.y, parts: [{ x: it.x, str: it.str }] });
-      } else {
-        last.parts.push({ x: it.x, str: it.str });
-      }
-    }
-
-    const htmlLines = lines
-      .map((ln) => {
-        ln.parts.sort((a, b) => a.x - b.x);
-        // Join with spaces; collapse multi-spaces later
-        const text = ln.parts
-          .map((p) => p.str)
-          .join(" ")
-          .replace(/\s{2,}/g, " ")
-          .trim();
-        return text ? `<p>${escapeHtml(text)}</p>` : `<p><br/></p>`;
-      })
-      .join("");
-
-    pages.push(htmlLines || `<p><br/></p>`);
-  }
-
-  // Separate pages
-  return pages.join("<hr/>");
-}
 
 type TFunction = (key: string) => string;
 
@@ -338,217 +250,6 @@ const GoogleDocsImportModal: React.FC<{
   );
 };
 
-const TemplateEditorModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  template: Template | null;
-  onSave: (id: number, content: string, lang: string) => void;
-  isLoading: boolean;
-  t: TFunction;
-}> = ({ isOpen, onClose, template, onSave, isLoading, t }) => {
-  const [content, setContent] = useState("");
-  const [lang, setLang] = useState<string>("RU");
-  const quillRef = useRef<ReactQuill>(null);
-
-  useEffect(() => {
-    if (isOpen && template?.content_html) {
-      setContent(template.content_html);
-    } else if (isOpen) {
-      setContent("");
-    }
-    if (isOpen && template?.lang) setLang(template.lang);
-  }, [isOpen, template]);
-
-  // Setup drag & drop handlers on Quill editor
-  useEffect(() => {
-    if (!isOpen || !quillRef.current) return;
-
-    const quill = quillRef.current.getEditor();
-    const editorElement = quill.root;
-
-    const syncContentFromQuill = () => {
-      // Keep React state in sync after programmatic edits (insertText via API)
-      // This fixes "variables visible but not saved/exported".
-      setContent(quill.root.innerHTML);
-    };
-
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      const variable = e.dataTransfer?.getData("text/plain");
-      if (variable) {
-        const range = quill.getSelection(true);
-        const index = range ? range.index : quill.getLength();
-        quill.insertText(index, variable, {
-          bold: true,
-          color: "var(--admin-primary)",
-        });
-        quill.setSelection({ index: index + variable.length, length: 0 });
-        // Quill API edits don't always propagate to controlled ReactQuill value automatically
-        requestAnimationFrame(syncContentFromQuill);
-      }
-    };
-
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = "copy";
-      }
-    };
-
-    editorElement.addEventListener("drop", handleDrop);
-    editorElement.addEventListener("dragover", handleDragOver);
-
-    return () => {
-      editorElement.removeEventListener("drop", handleDrop);
-      editorElement.removeEventListener("dragover", handleDragOver);
-    };
-  }, [isOpen]);
-
-  const insertVariable = (variable: string) => {
-    const quill = quillRef.current?.getEditor();
-    if (!quill) return;
-
-    const range = quill.getSelection(true);
-    const index = range ? range.index : quill.getLength();
-    quill.insertText(index, variable, {
-      bold: true,
-      color: "var(--admin-primary)",
-    });
-    quill.setSelection({ index: index + variable.length, length: 0 } as any);
-    requestAnimationFrame(() => setContent(quill.root.innerHTML));
-  };
-
-  const handleSave = () => {
-    if (template) {
-      onSave(template.id, content, lang);
-    }
-    onClose();
-  };
-
-  const handleDragStart = (e: React.DragEvent, variable: string) => {
-    e.dataTransfer.setData("text/plain", variable);
-    e.dataTransfer.effectAllowed = "copy";
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="flex h-[85vh] max-w-6xl flex-col bg-[#F0F2F5] p-0">
-        <DialogHeader className="px-6 pb-0 pt-6">
-          <div className="flex items-center justify-between gap-4">
-            <DialogTitle>
-              {t("partners.generalConditions.editorTitle")}:{" "}
-              {template?.name || t("partners.generalConditions.newTemplate")}
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500">
-                {t("partners.generalConditions.language")}
-              </span>
-              <select
-                value={lang}
-                onChange={(e) => setLang(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-700"
-              >
-                <option value="RU">RU</option>
-                <option value="EN">EN</option>
-              </select>
-            </div>
-          </div>
-        </DialogHeader>
-        <div className="flex flex-1 overflow-hidden">
-          {/* Editor Canvas */}
-          <div className="flex flex-1 justify-center p-8">
-            <div className="relative flex h-full w-[210mm] flex-col overflow-hidden bg-white p-8 shadow-lg">
-              {isLoading ? (
-                <div className="flex flex-1 items-center justify-center text-sm text-slate-400">
-                  {t("partners.generalConditions.loadingDocument")}
-                </div>
-              ) : (
-                <ReactQuill
-                  ref={quillRef}
-                  theme="snow"
-                  value={content}
-                  onChange={setContent}
-                  modules={{
-                    toolbar: [
-                      [{ header: [1, 2, 3, false] }],
-                      ["bold", "italic", "underline", "strike"],
-                      [{ list: "ordered" }, { list: "bullet" }],
-                      [{ align: [] }],
-                      ["clean"],
-                    ],
-                  }}
-                  placeholder={t(
-                    "partners.generalConditions.editorPlaceholder",
-                  )}
-                  className="flex min-h-0 w-full flex-1 flex-col [&_.ql-container]:min-h-0 [&_.ql-container]:flex-1 [&_.ql-container]:overflow-hidden [&_.ql-container]:border-0 [&_.ql-editor]:w-full [&_.ql-editor]:max-w-full [&_.ql-editor]:overflow-y-auto [&_.ql-editor]:overflow-x-hidden [&_.ql-editor]:whitespace-normal [&_.ql-editor]:break-words [&_.ql-editor]:p-0 [&_.ql-editor]:[overflow-wrap:anywhere] [&_.ql-editor_img]:h-auto [&_.ql-editor_img]:max-w-full [&_.ql-editor_pre]:whitespace-pre-wrap [&_.ql-editor_table]:w-full [&_.ql-editor_table]:max-w-full [&_.ql-editor_table]:table-fixed [&_.ql-editor_td]:break-words [&_.ql-editor_th]:break-words [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-20 [&_.ql-toolbar]:mb-3 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-slate-200 [&_.ql-toolbar]:bg-white [&_.ql-toolbar]:px-0 [&_.ql-toolbar]:pb-3"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar Variables */}
-          <div className="z-10 flex w-72 flex-col border-l border-slate-200 bg-white p-0 shadow-xl">
-            <div className="border-b border-slate-100 bg-slate-50 p-4">
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                <Braces size={16} className="text-[var(--admin-primary)]" />
-                {t("partners.generalConditions.variables")}
-              </div>
-              <p className="mt-1 text-[10px] text-slate-500">
-                {t("partners.generalConditions.variablesHint")}
-              </p>
-            </div>
-
-            <div className="flex-1 space-y-2 overflow-y-auto p-3">
-              {CONTRACT_VARIABLE_KEYS.map((v) => (
-                <button
-                  key={v.key}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, v.key)}
-                  onClick={() => insertVariable(v.key)}
-                  className="group relative w-full cursor-grab overflow-hidden rounded-xl border border-slate-200 bg-white p-3 text-left transition-all hover:border-[var(--admin-primary)] hover:shadow-md active:cursor-grabbing"
-                >
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 opacity-0 group-hover:opacity-100">
-                    <GripVertical size={14} />
-                  </div>
-                  <div className="absolute bottom-0 left-0 top-0 w-1 bg-slate-200 transition-colors group-hover:bg-[var(--admin-primary)]"></div>
-                  <div className="text-xs font-bold text-slate-700 group-hover:text-[var(--admin-primary)]">
-                    {t(`partners.generalConditions.${v.labelKey}`)}
-                  </div>
-                  <div className="mt-1 w-fit rounded bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">
-                    {v.key}
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <div className="border-t border-slate-200 bg-slate-50 p-4">
-              <div className="mb-2 flex items-center justify-center gap-1 text-center text-[10px] text-slate-400">
-                <GripVertical size={12} />{" "}
-                {t("partners.generalConditions.dragDropHint")}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="shrink-0 border-t border-slate-200 bg-white p-4">
-          <Button variant="ghost" onClick={onClose}>
-            {t("partners.generalConditions.cancel")}
-          </Button>
-          <Button
-            onClick={handleSave}
-            className="flex items-center gap-2"
-            disabled={isLoading}
-          >
-            <Save size={18} /> {t("partners.generalConditions.saveAndClose")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 export const AgencyGeneralConditions: React.FC = () => {
   const { t } = useLanguage();
 
@@ -599,7 +300,6 @@ export const AgencyGeneralConditions: React.FC = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [isEditorLoading, setIsEditorLoading] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
   const [isGoogleImportOpen, setIsGoogleImportOpen] = useState(false);
 
@@ -849,7 +549,7 @@ export const AgencyGeneralConditions: React.FC = () => {
     try {
       for (const file of Array.from(files)) {
         const lower = file.name.toLowerCase();
-        if (!lower.endsWith(".docx") && !lower.endsWith(".pdf")) {
+        if (!lower.endsWith(".docx")) {
           toast.error(t("partners.generalConditions.onlyDocxPdf"));
           continue;
         }
@@ -989,36 +689,40 @@ export const AgencyGeneralConditions: React.FC = () => {
     }
   };
 
-  const handleTemplateSave = async (
-    id: number,
-    content: string,
-    lang: string,
-  ) => {
+  const handleTemplateSave = async ({
+    template,
+    file,
+    lang,
+  }: {
+    template: Template;
+    file: File;
+    lang: string;
+  }) => {
     if (!developerId) return;
-    const template = templates.find((t) => t.id === id);
-    if (!template) {
-      toast.error(t("partners.generalConditions.templateNotFound"));
-      return;
-    }
     try {
+      const forcedDocx = new File([await file.arrayBuffer()], template.name, {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const fd = new FormData();
+      fd.set("action", "upload_developer_contract");
+      fd.set("developer_user_id", developerId);
+      fd.set("lang", lang);
+      fd.set("file", forcedDocx);
       const { data, error } = await supabase.functions.invoke("agent-program", {
-        body: {
-          action: "save_contract_template",
-          developer_user_id: developerId,
-          id,
-          content_html: content,
-          name: template.name,
-          lang,
-        },
+        body: fd,
       });
       if (error) throw error;
       if (!data?.success)
-        throw new Error(data?.error || "Failed to save template");
+        throw new Error((data?.error as string) || "Upload failed");
       toast.success(t("partners.generalConditions.templateUpdated"));
       await loadTemplates();
     } catch (e) {
       console.error("Failed to save template", e);
-      toast.error(t("partners.generalConditions.errorSaveTemplate"));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : t("partners.generalConditions.errorSaveTemplate"),
+      );
     }
   };
 
@@ -1043,10 +747,7 @@ export const AgencyGeneralConditions: React.FC = () => {
     }
   };
 
-  const handleDownload = async (
-    template: Template,
-    format?: "docx" | "pdf",
-  ) => {
+  const handleDownload = async (template: Template) => {
     if (!developerId) return;
     try {
       const { data, error } = await supabase.functions.invoke("agent-program", {
@@ -1054,7 +755,7 @@ export const AgencyGeneralConditions: React.FC = () => {
           action: "get_contract_template_download_url",
           developer_user_id: developerId,
           id: template.id,
-          format,
+          format: "docx",
         },
       });
       if (error) throw error;
@@ -1133,88 +834,26 @@ export const AgencyGeneralConditions: React.FC = () => {
   };
 
   const openTemplateEditor = async (template: Template) => {
-    setEditingTemplate(template);
-    setIsEditorLoading(true);
-    try {
-      if (!developerId)
-        throw new Error(t("partners.generalConditions.errorDeveloperUnknown"));
-
-      // If we already have editable HTML saved, use it as the source of truth.
-      if (template.content_html) {
-        setEditingTemplate((prev) =>
-          prev ? { ...prev, content_html: template.content_html } : prev,
-        );
-        return;
-      }
-
-      const lower = template.name.toLowerCase();
-      if (lower.endsWith(".docx")) {
-        // Fetch fresh DOCX and convert to HTML for editing.
-        const { data: urlData, error: urlErr } =
-          await supabase.functions.invoke("agent-program", {
-            body: {
-              action: "get_contract_template_download_url",
-              developer_user_id: developerId,
-              id: template.id,
-              format: "docx",
-            },
-          });
-        if (urlErr) throw urlErr;
-        const url = String(urlData?.url ?? "");
-        if (!url)
-          throw new Error(t("partners.generalConditions.templateNotFound"));
-
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok)
-          throw new Error(t("partners.generalConditions.errorDownload"));
-        const arrayBuffer = await response.arrayBuffer();
-        const result = await mammoth.convertToHtml({ arrayBuffer });
-        setEditingTemplate((prev) =>
-          prev ? { ...prev, content_html: result.value } : prev,
-        );
-      } else if (lower.endsWith(".pdf")) {
-        const { data: urlData, error: urlErr } =
-          await supabase.functions.invoke("agent-program", {
-            body: {
-              action: "get_contract_template_download_url",
-              developer_user_id: developerId,
-              id: template.id,
-              format: "pdf",
-            },
-          });
-        if (urlErr) throw urlErr;
-        const url = String(urlData?.url ?? "");
-        if (!url)
-          throw new Error(t("partners.generalConditions.templateNotFound"));
-
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok)
-          throw new Error(t("partners.generalConditions.errorDownload"));
-        const arrayBuffer = await response.arrayBuffer();
-        const html = await extractPdfToHtml(arrayBuffer);
-        setEditingTemplate((prev) =>
-          prev ? { ...prev, content_html: html } : prev,
-        );
-      } else {
-        throw new Error(t("partners.generalConditions.onlyDocxPdf"));
-      }
-    } catch (e) {
-      console.error("Failed to open template editor", e);
-      toast.error(t("partners.generalConditions.errorOpenTemplate"));
-    } finally {
-      setIsEditorLoading(false);
+    if (!template.name.toLowerCase().endsWith(".docx")) {
+      toast.error(t("partners.generalConditions.onlyDocxPdf"));
+      return;
     }
+    setEditingTemplate(template);
   };
 
   return (
     <div className="space-y-6 duration-500 animate-in fade-in">
-      <TemplateEditorModal
+      <DocxNativeEditorModal
         isOpen={!!editingTemplate}
         onClose={() => setEditingTemplate(null)}
         template={editingTemplate}
         onSave={handleTemplateSave}
-        isLoading={isEditorLoading}
+        isLoading={false}
         t={t}
+        variables={CONTRACT_VARIABLE_KEYS.map((v) => ({
+          key: v.key,
+          label: t(`partners.generalConditions.${v.labelKey}`),
+        }))}
       />
 
       <GoogleDocsImportModal
@@ -1722,9 +1361,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                             {menuOpenId === tmpl.id && (
                               <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-xl border border-slate-100 bg-white py-1 shadow-xl animate-in fade-in zoom-in-95">
                                 <button
-                                  onClick={() =>
-                                    void handleDownload(tmpl, "docx")
-                                  }
+                                  onClick={() => void handleDownload(tmpl)}
                                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
                                 >
                                   <Download
@@ -1732,15 +1369,6 @@ export const AgencyGeneralConditions: React.FC = () => {
                                     className="text-[var(--admin-primary)]"
                                   />{" "}
                                   {t("partners.generalConditions.downloadDocx")}
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    void handleDownload(tmpl, "pdf")
-                                  }
-                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
-                                >
-                                  <Printer size={14} className="text-red-500" />{" "}
-                                  {t("partners.generalConditions.downloadPdf")}
                                 </button>
                                 <div className="my-1 h-px bg-slate-100"></div>
                                 <button
@@ -1766,7 +1394,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept=".docx,.pdf"
+                accept=".docx"
                 onChange={handleUploadContracts}
               />
 

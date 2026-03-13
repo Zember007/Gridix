@@ -1,0 +1,720 @@
+{
+  "analytics": {
+    "title": "אנליטיקס",
+    "loading": "טוען ניתוח...",
+    "filters": "מסננים",
+    "period": "תְקוּפָה",
+    "periods": {
+      "7days": "7 ימים",
+      "30days": "30 ימים",
+      "90days": "90 ימים",
+      "all": "כל הזמן"
+    },
+    "dateFrom": "תאריך מ",
+    "dateTo": "תאריך ל",
+    "project": "פּרוֹיֶקט",
+    "allProjects": "כל הפרויקטים",
+    "totalViews": "סך כל הצפיות",
+    "totalLeads": "סך כל הפניות",
+    "conversionRate": "שיעור המרה",
+    "totalApartments": "סך הכל דירות",
+    "projectViews": "צפיות בפרויקט",
+    "projectViewsDescription": "צפיות בדינמיקה לפי ימים",
+    "leads": "לידים",
+    "leadsDescription": "מוביל דינמיקה לפי ימים",
+    "topProjects": "פרויקטים מובילים",
+    "topProjectsDescription": "10 הפרויקטים המובילים לפי צפיות",
+    "views": "צפיות",
+    "topApartments": "דירות מובילות לפי נוף",
+    "topApartmentsDescription": "10 הדירות המובילות לפי מספר הצפיות",
+    "apartment": "דִירָה",
+    "apartmentsStats": "סטטיסטיקת דירות",
+    "apartmentsStatsDescription": "חלוקת הדירות לפי סטטוס",
+    "apartments": {
+      "available": "זָמִין",
+      "sold": "נמכר",
+      "reserved": "שָׁמוּר"
+    },
+    "projectsTable": "סטטיסטיקה מפורטת לפי פרויקטים",
+    "projectsTableDescription": "מידע מפורט לכל פרויקט",
+    "conversion": "הֲמָרָה",
+    "noData": "אין נתונים"
+  },
+  "analyticsComingSoon": "תכונת Analytics תתווסף מאוחר יותר",
+  "analyticsDescription": "סטטיסטיקה על פרויקטים ודירות",
+  "back": "בְּחֲזָרָה",
+  "dashboard": "לוח המחוונים לניהול",
+  "dashboardDescription": "ניהול פרויקטים והגדרות",
+  "leads": "לידים",
+  "crm": "CRM",
+  "agent_network": "רשת סוכנים",
+  "contacts": "אנשי קשר",
+  "contactsPage": {
+    "title": "אנשי קשר",
+    "description": "לקוחות מלידים והסוכנים/שותפים שלך.",
+    "searchPlaceholder": "חיפוש לפי שם, טלפון או אימייל...",
+    "filterAll": "הכל",
+    "filterClients": "לקוחות",
+    "filterAgents": "סוכנים",
+    "tableContact": "איש קשר",
+    "tableType": "סוג",
+    "tablePhone": "טלפון",
+    "tableEmail": "אימייל",
+    "tableDetails": "פרטים",
+    "tableDate": "תאריך",
+    "loading": "טוען...",
+    "noContacts": "לא נמצאו אנשי קשר",
+    "typeAgent": "סוכן",
+    "typeClient": "לקוח",
+    "detailsLeads": "{{count}} לידים",
+    "noName": "ללא שם",
+    "exportBtn": "ייצוא",
+    "toastNothingToExportTitle": "אין מה לייצא",
+    "toastNothingToExportDesc": "אין אנשי קשר לייצוא.",
+    "toastExportDoneTitle": "הייצוא הושלם",
+    "toastExportDoneDesc": "אנשי הקשר יוצאו ל-CSV."
+  },
+  "project": {
+    "create": {
+      "description": "בחר כיצד ליצור את הפרויקט",
+      "googleSheets": "Google Sheets:",
+      "import": {
+        "benefit": {
+          "fresh": "הנתונים תמיד מעודכנים",
+          "noReupload": "אין צורך להעלות את הקובץ מחדש",
+          "sync": "סנכרון אוטומטי כאשר הנתונים משתנים"
+        },
+        "benefitsTitle": "יתרונות היבוא באמצעות קישור:",
+        "byLink": "ייבוא ​​באמצעות קישור",
+        "description": "העלה קובץ אקסל עם נתוני דירה ליצירת פרויקט באופן אוטומטי",
+        "processing": "מעבד...",
+        "template": "הורד תבנית",
+        "demo": "הורד דמו",
+        "title": "ייבוא ​​מאקסל",
+        "uploadButton": "העלה קובץ אקסל",
+        "uploadTab": "העלה קובץ",
+        "urlTab": "לפי קישור"
+      },
+      "infoText": "כל פורמט קישור, המרה אוטומטית וסנכרון",
+      "layout": {
+        "different": {
+          "help": "תצטרך להגדיר כל קומה בנפרד"
+        },
+        "question": "האם הפריסה זהה בכל הקומות?",
+        "same": {
+          "help": "ניתן לסמן דירות פעם אחת ולחול על כל הקומות באופן אוטומטי"
+        },
+        "title": "פריסת קומה"
+      },
+      "manual": {
+        "description": "צור פרויקט מאפס והגדר הכל בעצמך",
+        "start": "התחל יצירה ידנית",
+        "title": "הגדרה ידנית"
+      },
+      "requiredData": {
+        "title": "נתונים נדרשים:",
+        "fields": "מספרי דירות, קומות, חדרים, אזור, מחיר, סטטוס"
+      },
+      "supportedFormats": "פורמטים נתמכים:",
+      "title": "צור פרויקט חדש"
+    }
+  },
+  "partners": "שׁוּתָפוּת",
+  "projects": "פרויקטים",
+  "settings": "הגדרות",
+  "subscription": "מִנוּי",
+  "integrations": "אינטגרציות",
+  "integrationsDescription": "חבר שירותים חיצוניים לסביבת העבודה שלך.",
+  "projectsConfig": "תצורת פרויקטים",
+  "configureProjects": "הגדר פרויקטים",
+  "common": {
+    "active": "פָּעִיל",
+    "inactive": "לֹא פָּעִיל",
+    "comingSoon": "בקרוב",
+    "cancel": "לְבַטֵל",
+    "confirm": "לְאַשֵׁר"
+  },
+  "amocrm": {
+    "description": "אוטומציה של מכירות וניהול לידים עם שילוב AmoCRM.",
+    "connectedTo": "מחובר ל",
+    "disconnect": "לְנַתֵק",
+    "reconnect": "התחבר מחדש",
+    "tokenExpired": "פג תוקף האסימון",
+    "connectAmoCRM": "חבר את AmoCRM",
+    "disconnectWarningTitle": "לנתק אינטגרציה?",
+    "disconnectWarningMessage": "זה יעצור את כל תהליכי הסנכרון. אתה יכול להתחבר מחדש מאוחר יותר.",
+    "disconnectSuccess": "התנתק בהצלחה",
+    "disconnectError": "הניתוק נכשל",
+    "settingsLoadError": "טעינת ההגדרות נכשלה",
+    "authError": "האימות נכשל",
+    "saveSuccess": "ההגדרות נשמרו בהצלחה",
+    "saveError": "שמירת ההגדרות נכשלה",
+    "pipeline": "צינור",
+    "status": "סטָטוּס",
+    "responsible": "משתמש אחראי",
+    "selectPipeline": "בחר צינור",
+    "selectStatus": "בחר סטטוס",
+    "selectUser": "בחר משתמש",
+    "notConnected": "לא מחובר",
+    "connectInAdmin": "התחבר בלוח הניהול",
+    "connectInAdminDescription": "תחילה עליך לחבר את AmoCRM בלוח הניהול.",
+    "goToAdmin": "עבור ללוח הניהול",
+    "confirm": "לְאַשֵׁר"
+  },
+  "bitrix24": {
+    "description": "CRM, משימות וניהול פרויקטים במקום אחד.",
+    "connectedTo": "מחובר ל",
+    "disconnect": "לְנַתֵק",
+    "installApp": "התקן אפליקציה",
+    "howToConnect": "איך להתחבר:",
+    "step1": "פתח את Bitrix24 Marketplace",
+    "step2": "התקן את אפליקציית 'Gridix'",
+    "step3": "הזן קוד כאן",
+    "enterCode": "הזן קוד חיבור",
+    "connect": "לְחַבֵּר",
+    "checking": "בודק...",
+    "disconnectWarningTitle": "לנתק את Bitrix24?",
+    "disconnectWarningMessage": "פעולה זו תסיר את החיבור ותפסיק את הסנכרון.",
+    "disconnectSuccess": "התנתק בהצלחה",
+    "disconnectError": "הניתוק נכשל",
+    "connectError": "החיבור נכשל",
+    "invalidCode": "קוד לא חוקי או שפג תוקפו",
+    "settingsLoadError": "טעינת ההגדרות נכשלה",
+    "category": "קטגוריית העסקה",
+    "stage": "שלב העסקה",
+    "selectCategory": "בחר קטגוריה",
+    "selectStage": "בחר שלב",
+    "notConnected": "לא מחובר",
+    "connectInAdmin": "התחבר בלוח הניהול",
+    "connectInAdminDescription": "תחילה עליך לחבר את Bitrix24 בלוח הניהול.",
+    "marketplaceHint": "כדי להתחבר, התקן את אפליקציית Gridix מ-Bitrix24 Marketplace בפורטל שלך.",
+    "attached": "מְחוּבָּר",
+    "attachError": "החיבור נכשל",
+    "detached": "מְנוּתָק",
+    "detachError": "הניתוק נכשל",
+    "configureProjectDesc": "בחר במשפך Bitrix24 עבור פרויקט זה.",
+    "funnel": "מַשׁפֵּך",
+    "selectFunnel": "בחר משפך",
+    "selectFunnelDesc": "בחר משפך לסנכרון שלבים.",
+    "statusesSynced": "שלבים מסונכרנים",
+    "funnelSynced": "המשפך מסונכרן",
+    "syncError": "סנכרון המשפך נכשל"
+  },
+  "widgets": "ווידג'טים",
+  "documentation": "תיעוד",
+  "subscriptionPage": {
+    "title": "המנויים שלך",
+    "description": "בחר תוכנית שמתאימה לעסק שלך.",
+    "refresh": "לְרַעֲנֵן",
+    "projects": {
+      "emptyTitle": "אין פרויקטים",
+      "emptyDescription": "צור את הפרויקט הראשון שלך בקטע \"פרויקטים\" כדי להפעיל מנוי ולבטל את הנעילה של כל התכונות.",
+      "tariff": "לְתַכְנֵן",
+      "expiresAt": "פג תוקף",
+      "notSelected": "לא נבחר",
+      "status": {
+        "active": "פָּעִיל",
+        "expired": "פג תוקף",
+        "inactive": "לא פעיל"
+      },
+      "buttons": {
+        "extend": "לְהַאֲרִיך",
+        "activate": "לְהַפְעִיל"
+      }
+    },
+    "durations": {
+      "1": "1 חודש",
+      "3": "3 חודשים",
+      "6": "6 חודשים",
+      "12": "12 חודשים"
+    },
+    "hints": {
+      "6": "💰 חיסכון טוב בתשלום עבור 6 חודשים.",
+      "12": "👍 בחירה מצוינת! התוכנית הפופולרית ביותר.",
+      "36": "🔥 סופר חיסכון! 50% הנחה לכל התקופה."
+    },
+    "pricing": {
+      "availablePlansTitle": "תוכניות זמינות",
+      "availablePlansDescription": "בחר את התוכנית המתאימה לך ביותר.",
+      "usdPerMonth": "דולר לחודש",
+      "perProject": "לכל פרויקט",
+      "billedEvery": "מחויב כל",
+      "monthsShort": "חוֹדֶשׁ",
+      "monthsShortPlural": "חודשים",
+      "savings": "חיסכון",
+      "choosePlan": "בחר {{name}}",
+      "planContent": {
+        "basic": {
+          "description": "תוכנית בסיסית לפרויקטים קטנים עם פונקציונליות מוגבלת",
+          "features": {
+            "1": "ניהול פרויקטים",
+            "2": "קטלוג אינטראקטיבי - עד 500 יחידות",
+            "3": "לוח שחמט אינטראקטיבי",
+            "4": "מיתוג לפי סכמת הצבעים שלכם עם אזכור GRIDIX",
+            "5": "אנליטיקת ביקוש",
+            "6": "תמחור דינמי",
+            "7": "מודול CRM מובנה",
+            "8": "ווידג'ט לוח השחמט לאתר שלכם",
+            "9": "ניהול תשלומים / משכנתאות",
+            "10": "מצגות PDF",
+            "11": "בחירת מטבע",
+            "12": "בחירת שפה",
+            "13": "שדות מותאמים אישית",
+            "14": "ניהול תפקידים והרשאות"
+          }
+        },
+        "pro": {
+          "description": "תוכנית מקצועית עם אינטגרציות CRM ותמיכת White Label ללא מיתוג GRIDIX",
+          "features": {
+            "1": "הכול כלול מ-Basic +",
+            "2": "קטלוג אינטראקטיבי - ללא הגבלת יחידות",
+            "3": "אינטגרציות עם AmoCRM / Bitrix24 ואחרים",
+            "4": "שינויים מרוכזים",
+            "5": "White Label ללא אזכור GRIDIX",
+            "6": "דומיין מותאם אישית (למשל sales.company.com)",
+            "7": "מודול CRM מורחב",
+            "8": "אנליטיקה מתקדמת",
+            "9": "מודול רשת סוכנויות / חשבון שותפים",
+            "10": "מחשבון משכנתא (בקרוב)",
+            "11": "הזמנה מקוונת (בקרוב)",
+            "12": "מודול ייצוא נתונים לפורטלי נדל\"ן (בקרוב)",
+            "13": "תמיכה בעדיפות גבוהה"
+          }
+        }
+      }
+    },
+    "history": {
+      "title": "היסטוריית הזמנות",
+      "filters": {
+        "all": "כֹּל",
+        "paid": "בתשלום",
+        "pending": "בתהליך"
+      },
+      "table": {
+        "date": "תאריך / תעודת זהות",
+        "projects": "פרויקטים",
+        "tariff": "לְתַכְנֵן",
+        "method": "שִׁיטָה",
+        "amount": "סְכוּם",
+        "status": "סטָטוּס",
+        "actions": "פעולות"
+      },
+      "status": {
+        "paid": "בתשלום",
+        "pending": "בתהליך",
+        "cancelled": "בּוּטלָה"
+      },
+      "methodLabels": {
+        "invoice": "חֶשׁבּוֹנִית",
+        "card": "כרטיס בנק",
+        "manual": "יָדָנִי",
+        "unknown": "לֹא יְדוּעַ"
+      },
+      "unknownProject": "לא צוין",
+      "projectsCount": "{{count}} פרויקטים",
+      "downloadInvoice": "הורד חשבונית",
+      "empty": "לא נמצאו הזמנות"
+    },
+    "checkout": {
+      "title": "קופה",
+      "selectPlan": "בחר תוכנית",
+      "selectProjects": "בחר פרויקטים",
+      "projectsSelected": "נבחרו {{count}}",
+      "projectsHint": "מנוי מחויב לפי פרויקט. העלות הכוללת מחושבת כך: מחיר תכנית × מספר פרויקטים.",
+      "noProjects": "אין לך עדיין פרויקטים. צור פרויקט לפני התשלום.",
+      "payerType": {
+        "individual": "אִישִׁי",
+        "company": "חֶברָה"
+      },
+      "fields": {
+        "contactName": "שם מלא / איש קשר",
+        "email": "אֶלֶקטרוֹנִי",
+        "phone": "טֵלֵפוֹן",
+        "companyName": "שם החברה",
+        "taxId": "מזהה מס",
+        "address": "כתובת חוקית"
+      },
+      "placeholders": {
+        "contactName": "ג'ון סמית'",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "ACME LLC"
+      },
+      "errors": {
+        "enterName": "הזן שם",
+        "enterEmail": "הזן אימייל",
+        "invalidEmail": "אימייל לא חוקי",
+        "enterPhone": "הזן טלפון",
+        "shortPhone": "מספר הטלפון קצר מדי",
+        "enterCompanyName": "הזן את שם החברה",
+        "selectAtLeastOneProject": "אנא בחר לפחות פרויקט אחד לתשלום.",
+        "selectPlan": "אנא בחר תוכנית",
+        "noProjectsSelected": "אנא בחר פרויקט אחד לפחות"
+      },
+      "summary": {
+        "totalToPay": "סך הכל לשלם",
+        "plan": "לְתַכְנֵן",
+        "projects": "פרויקטים:",
+        "payer": "משלם:"
+      },
+      "methods": {
+        "card": {
+          "title": "כרטיס בנק",
+          "description": "ויזה, מאסטרקארד, אפל פיי",
+          "unavailable": "לא זמין"
+        },
+        "invoice": {
+          "title": "חֶשׁבּוֹנִית",
+          "description": "יצירת PDF (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "סַך הַכֹּל:",
+        "next": "הַבָּא",
+        "processing": "מעבד..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "התקבלה בקשה לחשבונית בהצלחה. אתה יכול להוריד אותו בהיסטוריית ההזמנות.",
+      "invoiceRequestedMultiple": "התבקשו חשבוניות עבור {{count}} פרויקטים"
+    },
+    "error": "שגיאה בטעינת מנויים"
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "סופר אדמין",
+      "users": "משתמשים",
+      "subscriptions": "מנויים",
+      "projects": "פרויקטים",
+      "stats": "אנליטיקס",
+      "partners": "שותפים",
+      "partnerPayouts": "תשלומים",
+      "settings": "הגדרות"
+    },
+    "projectsManagement": {
+      "title": "ניהול פרויקטים",
+      "loading": "טְעִינָה...",
+      "emptyValue": "—",
+      "confirmDelete": "האם אתה בטוח שברצונך למחוק את הפרויקט הזה?",
+      "toast": {
+        "errorTitle": "שְׁגִיאָה",
+        "successTitle": "הַצלָחָה",
+        "loadProjectsError": "טעינת הפרויקטים נכשלה",
+        "projectPublished": "הפרויקט פורסם",
+        "projectHidden": "הפרויקט מוסתר",
+        "updateVisibilityError": "שינוי נראות הפרויקט נכשל",
+        "projectAddedToFeatured": "פרויקט נוסף למוצגים",
+        "projectRemovedFromFeatured": "הפרויקט הוסר מהמוצגים",
+        "updateStatusError": "שינוי סטטוס הפרויקט נכשל",
+        "projectDeleted": "הפרויקט נמחק",
+        "deleteProjectError": "מחיקת הפרויקט נכשלה"
+      },
+      "table": {
+        "name": "שֵׁם",
+        "owner": "בַּעַל",
+        "views": "צפיות",
+        "status": "סטָטוּס",
+        "createdAt": "נוצר ב-",
+        "actions": "פעולות"
+      },
+      "badges": {
+        "public": "פּוּמְבֵּי",
+        "featured": "מוּבלָט"
+      },
+      "actions": {
+        "hide": "לְהַסתִיר",
+        "publishShort": "פָּאבּ.",
+        "feature": "מַעֲלָל."
+      }
+    },
+    "partnersManagement": {
+      "title": "ניהול שותפים",
+      "description": "ניהול תוכנית שותפים וסטטוסים של שותפים",
+      "toast": {
+        "errorTitle": "שְׁגִיאָה",
+        "successTitle": "הַצלָחָה",
+        "loadPartnersError": "טעינת רשימת השותפים נכשלה",
+        "partnerSuspended": "השותף הושעה",
+        "partnerActivated": "השותף הופעל",
+        "updatePartnerStatusError": "עדכון סטטוס השותף נכשל"
+      },
+      "stats": {
+        "totalPartners": "סך הכל שותפים",
+        "activeCount": "{{count}} פעילים",
+        "totalEarnings": "סך הרווחים",
+        "earnedByPartners": "הרווח על ידי שותפים",
+        "paidOut": "שולם",
+        "withdrawnByPartners": "נסוג על ידי שותפים",
+        "suspended": "מוּשׁהֶה",
+        "inactivePartners": "שותפים לא פעילים"
+      },
+      "filters": {
+        "title": "מסננים",
+        "search": "לְחַפֵּשׂ",
+        "searchPlaceholder": "חפש לפי שם, מייל או קוד...",
+        "status": "סטָטוּס",
+        "allStatuses": "כל הסטטוסים"
+      },
+      "table": {
+        "title": "שותפים",
+        "count": "{{filtered}} מתוך {{total}} שותפים",
+        "partner": "שׁוּתָף",
+        "code": "קוד",
+        "status": "סטָטוּס",
+        "earned": "הרווח",
+        "withdrawn": "נסוג",
+        "registeredAt": "תאריך רישום",
+        "actions": "פעולות"
+      },
+      "status": {
+        "active": "פָּעִיל",
+        "suspended": "מוּשׁהֶה",
+        "inactive": "לֹא פָּעִיל"
+      },
+      "actions": {
+        "suspend": "לְהַשְׁעוֹת",
+        "activate": "לְהַפְעִיל"
+      },
+      "dialog": {
+        "suspendTitle": "השעיית שותף",
+        "activateTitle": "הפעל שותף",
+        "suspendDescription": "האם אתה בטוח שברצונך להשעות את השותף הזה? הם לא יקבלו עמלות חדשות.",
+        "activateDescription": "האם אתה בטוח שברצונך להפעיל את השותף הזה? הם יקבלו שוב עמלות.",
+        "codeLabel": "קוד",
+        "processing": "מעבד..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "ניהול תשלומים",
+      "description": "בדוק ועבד בקשות לתשלום של שותפים",
+      "toast": {
+        "loadPayoutsError": "טעינת רשימת התשלומים נכשלה",
+        "payoutApproved": "התשלום אושר",
+        "payoutRejected": "התשלום נדחה",
+        "payoutMarkedAsPaid": "התשלום סומן כשולם",
+        "updatePayoutStatusError": "עדכון סטטוס התשלום נכשל"
+      },
+      "status": {
+        "pending": "ממתין לסקירה",
+        "approved": "מְאוּשָׁר",
+        "paid": "בתשלום",
+        "rejected": "נִדחֶה",
+        "unknown": "לֹא יְדוּעַ"
+      },
+      "stats": {
+        "pendingReview": "ממתין לסקירה",
+        "pendingAmount": "${{amount}} לתשלום",
+        "waitingPayment": "מחכה לתשלום",
+        "completedPayouts": "תשלומים שהושלמו",
+        "rejectedRequests": "בקשות שנדחו"
+      },
+      "filters": {
+        "title": "מסננים",
+        "search": "לְחַפֵּשׂ",
+        "searchPlaceholder": "חפש לפי שותף...",
+        "status": "סטָטוּס",
+        "allStatuses": "כל הסטטוסים"
+      },
+      "table": {
+        "title": "בקשות תשלום",
+        "count": "{{filtered}} מתוך {{total}} בקשות",
+        "partner": "שׁוּתָף",
+        "amount": "סְכוּם",
+        "status": "סטָטוּס",
+        "paymentMethod": "אמצעי תשלום",
+        "contactInfo": "פרטי התקשרות",
+        "requestedAt": "תאריך בקשה",
+        "actions": "פעולות"
+      },
+      "emptyPaymentMethod": "לא צוין",
+      "emptyContactInfo": "לא צוין",
+      "actions": {
+        "approve": "לְאַשֵׁר",
+        "reject": "לִדחוֹת",
+        "markPaid": "סמן כשולם"
+      },
+      "dialog": {
+        "approveTitle": "אשר תשלום",
+        "rejectTitle": "דחה תשלום",
+        "markPaidTitle": "סמן כשולם",
+        "approveDescription": "האם אתה בטוח שברצונך לאשר את התשלום הזה?",
+        "rejectDescription": "האם אתה בטוח שברצונך לדחות את התשלום הזה?",
+        "markPaidDescription": "האם אתה בטוח שהתשלום הזה הושלם?",
+        "codeLabel": "קוד",
+        "amountLabel": "סְכוּם",
+        "methodLabel": "שִׁיטָה",
+        "contactInfoLabel": "פרטי התקשרות:",
+        "noteLabel": "הערה (אופציונלי)",
+        "notePlaceholder": "הוסף הערה לפעולה זו...",
+        "processing": "מעבד..."
+      }
+    },
+    "usersManagement": {
+      "title": "ניהול משתמשים",
+      "loading": "טְעִינָה...",
+      "creating": "יוצר...",
+      "searchPlaceholder": "חפש באימייל, שם או חברה...",
+      "toast": {
+        "errorTitle": "שְׁגִיאָה",
+        "successTitle": "הַצלָחָה",
+        "loadUsersError": "טעינת המשתמשים נכשלה",
+        "userBanned": "המשתמש נאסר",
+        "banUserError": "חסימת המשתמש נכשלה",
+        "userUnbanned": "בוטלה החסימה של המשתמש",
+        "unbanUserError": "ביטול החסימה של המשתמש נכשל",
+        "emailPasswordRequired": "יש צורך באימייל וסיסמה",
+        "userCreated": "המשתמש נוצר",
+        "createUserError": "יצירת המשתמש נכשלה",
+        "impersonateUserError": "הכניסה כמשתמש זה נכשלה"
+      },
+      "actions": {
+        "addUser": "הוסף משתמש",
+        "createUser": "צור משתמש",
+        "ban": "לֶאֱסוֹר",
+        "unban": "בטל חסימה",
+        "loginAs": "היכנס"
+      },
+      "dialogs": {
+        "createTitle": "הוסף משתמש חדש",
+        "banTitle": "חסום משתמש",
+        "banTarget": "אתה עומד לחסום:"
+      },
+      "fields": {
+        "password": "סִיסמָה",
+        "fullName": "שם מלא",
+        "company": "חֶברָה",
+        "phone": "טֵלֵפוֹן",
+        "banReason": "סיבה לאסור"
+      },
+      "placeholders": {
+        "fullName": "ג'ון סמית'",
+        "company": "ACME LLC",
+        "banReason": "ציין את הסיבה..."
+      },
+      "table": {
+        "name": "שֵׁם",
+        "company": "חֶברָה",
+        "status": "סטָטוּס",
+        "registeredAt": "תאריך רישום",
+        "actions": "פעולות"
+      },
+      "status": {
+        "active": "פָּעִיל",
+        "banned": "אָסוּר"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "ניהול מנויים",
+      "loading": "טְעִינָה...",
+      "pendingCount": "{{count}} בקשות חשבוניות ממתינות לעיבוד",
+      "planOption": "{{name}} - ${{price}} לחודש",
+      "toast": {
+        "errorTitle": "שְׁגִיאָה",
+        "successTitle": "הַצלָחָה",
+        "loadSubscriptionsError": "טעינת המנויים נכשלה",
+        "fillRequiredFields": "מלא את כל השדות הנדרשים",
+        "subscriptionCreated": "נוצר מנוי",
+        "createSubscriptionError": "יצירת המנוי נכשלה",
+        "invoiceGenerated": "חשבונית PDF נוצרה ונשלחה",
+        "generateInvoiceError": "יצירת החשבונית נכשלה",
+        "paymentConfirmed": "התשלום אושר, המנוי הופעל",
+        "activateSubscriptionError": "הפעלת המנוי נכשלה",
+        "subscriptionCancelled": "המנוי בוטל",
+        "cancelSubscriptionError": "ביטול המנוי נכשל",
+        "subscriptionUpdated": "המנוי עודכן",
+        "updateSubscriptionError": "עדכון המנוי נכשל"
+      },
+      "actions": {
+        "create": "צור מנוי",
+        "saveChanges": "שמור שינויים",
+        "editTitle": "ערוך מנוי",
+        "edit": "לַעֲרוֹך",
+        "cancel": "לְבַטֵל"
+      },
+      "dialogs": {
+        "createTitle": "צור מנוי חדש",
+        "editTitle": "ערוך מנוי",
+        "labels": {
+          "user": "מִשׁתַמֵשׁ",
+          "project": "פּרוֹיֶקט",
+          "currentPlan": "תוכנית נוכחית",
+          "currentStatus": "מצב נוכחי",
+          "endsAt": "מסתיים ב"
+        }
+      },
+      "fields": {
+        "userEmail": "דוא\"ל משתמש",
+        "project": "פּרוֹיֶקט",
+        "plan": "לְתַכְנֵן",
+        "durationMonths": "משך זמן (חודשים)",
+        "invoiceNumber": "מספר חשבונית",
+        "invoiceUrl": "כתובת אתר של חשבונית",
+        "tariffPlan": "תעריף (תוכנית)",
+        "status": "סטָטוּס",
+        "infiniteSubscription": "מנוי אינסופי (עד 2099)",
+        "customEndDate": "או הגדר את תאריך הסיום באופן ידני"
+      },
+      "placeholders": {
+        "selectProject": "בחר פרויקט",
+        "selectPlan": "בחר תוכנית"
+      },
+      "hints": {
+        "endDateAuto": "תאריך הסיום יחושב אוטומטית מתאריך ההתחלה הנוכחי",
+        "customDateOverrides": "אם יצוין תאריך, הוא ישמש במקום חישוב משך הזמן",
+        "applyWarning": "שינויים יחולו באופן מיידי. היזהר בעת שינוי סטטוס ותאריך סיום."
+      },
+      "status": {
+        "active": "פָּעִיל",
+        "trial": "מִשׁפָּט",
+        "trialing": "משפט",
+        "pendingPayment": "ממתין לתשלום",
+        "expired": "פג תוקף",
+        "cancelled": "בּוּטלָה",
+        "trialExpired": "פג תוקף הניסיון"
+      },
+      "pendingRequests": {
+        "title": "בקשות לחשבונית",
+        "table": {
+          "user": "מִשׁתַמֵשׁ",
+          "project": "פּרוֹיֶקט",
+          "plan": "לְתַכְנֵן",
+          "amount": "סְכוּם",
+          "requestedAt": "התבקש ב",
+          "actions": "פעולות"
+        },
+        "actions": {
+          "generatePdf": "צור PDF",
+          "view": "נוֹף",
+          "viewPdf": "הצג PDF",
+          "download": "הורד",
+          "confirmPayment": "אשר תשלום",
+          "confirmAndActivate": "אשר תשלום והפעל"
+        },
+        "dialog": {
+          "title": "אשר תשלום",
+          "invoiceLabel": "חֶשׁבּוֹנִית",
+          "warning": "ודא שהתשלום התקבל לפני אישור הפעלת המנוי.",
+          "labels": {
+            "project": "פּרוֹיֶקט",
+            "user": "מִשׁתַמֵשׁ",
+            "plan": "לְתַכְנֵן",
+            "amount": "סְכוּם",
+            "invoiceNumber": "מספר חשבונית"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "כל המנויים",
+        "table": {
+          "user": "מִשׁתַמֵשׁ",
+          "project": "פּרוֹיֶקט",
+          "plan": "לְתַכְנֵן",
+          "status": "סטָטוּס",
+          "endDate": "תאריך סיום",
+          "invoice": "חֶשׁבּוֹנִית",
+          "actions": "פעולות"
+        }
+      }
+    }
+  }
+}

@@ -1,44 +1,38 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@gridix/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useSuperAdmin = () => {
   const { user } = useAuth();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkSuperAdmin = async () => {
-      if (!user) {
-        setIsSuperAdmin(false);
-        setLoading(false);
-        return;
+  const { data, isLoading } = useQuery({
+    queryKey: ["superadmin-role", user?.id],
+    enabled: Boolean(user?.id),
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+    queryFn: async () => {
+      if (!user?.id) {
+        return false;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "superadmin")
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "superadmin")
+        .maybeSingle();
 
-        if (error) {
-          console.error("Error checking superadmin role:", error);
-          setIsSuperAdmin(false);
-        } else {
-          setIsSuperAdmin(!!data);
-        }
-      } catch (error) {
-        console.error("Error in checkSuperAdmin:", error);
-        setIsSuperAdmin(false);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error("Error checking superadmin role:", error);
+        return false;
       }
-    };
 
-    checkSuperAdmin();
-  }, [user]);
+      return Boolean(data);
+    },
+  });
 
-  return { isSuperAdmin, loading };
+  return {
+    isSuperAdmin: data ?? false,
+    loading: Boolean(user) && isLoading,
+  };
 };

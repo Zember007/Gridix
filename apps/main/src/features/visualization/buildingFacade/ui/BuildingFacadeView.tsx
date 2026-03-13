@@ -803,6 +803,15 @@ const BuildingFacadeView = ({
     handleFloorHover(floorNumber);
   };
 
+  const activateFloor = useCallback(
+    (floorNumber: number) => {
+      // Keep visual state single-sourced: one active floor at a time.
+      setHoveredFloor(floorNumber);
+      handleFloorHover(floorNumber);
+    },
+    [handleFloorHover],
+  );
+
   // Автоматическое позиционирование мобильного переключателя этажей так,
   // чтобы он по возможности не перекрывал полигоны.
   // Приоритет: сверху слева → сверху справа → другие доступные места.
@@ -985,6 +994,7 @@ const BuildingFacadeView = ({
 
       const floorNumber = currentFloor.floor_number;
       setSelectedFloor((prev) => (prev === floorNumber ? prev : floorNumber));
+      setHoveredFloor((prev) => (prev === floorNumber ? prev : floorNumber));
     };
 
     // Initialize and then keep selected floor in sync
@@ -1279,8 +1289,8 @@ const BuildingFacadeView = ({
                     opts={{
                       align: "center",
                       loop: floorsWithPolygon.length > 3,
-                      dragFree: true,
-                      skipSnaps: true,
+                      dragFree: false,
+                      skipSnaps: false,
                       containScroll: "trimSnaps",
                     }}
                     setApi={setCarouselApi}
@@ -1310,7 +1320,7 @@ const BuildingFacadeView = ({
                                   swipeGuardRef.current.moved = false;
                                   return;
                                 }
-                                handleSVGFloorHover(floor.floor_number);
+                                activateFloor(floor.floor_number);
                               }}
                             >
                               {floor.floor_number}

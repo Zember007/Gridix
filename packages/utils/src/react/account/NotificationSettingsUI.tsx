@@ -1,4 +1,4 @@
-import { Input, Label, Switch } from "@gridix/ui";
+import { Switch } from "@gridix/ui";
 
 export interface NotificationSettingsUIProps {
   loading: boolean;
@@ -76,7 +76,7 @@ export function NotificationSettingsUI(props: NotificationSettingsUIProps) {
         </div>
       </div>
 
-      <div className="space-y-3">
+      {/*   <div className="space-y-3">
         <div className="text-muted-foreground text-sm font-semibold">
           {props.t("adminSettings.notificationIntegrations")}
         </div>
@@ -123,7 +123,7 @@ export function NotificationSettingsUI(props: NotificationSettingsUIProps) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="space-y-3">
         <div className="text-muted-foreground text-sm font-semibold">
