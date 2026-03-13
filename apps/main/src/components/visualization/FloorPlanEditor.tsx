@@ -553,7 +553,6 @@ const FloorPlanEditor = ({
             const targetApts = targetApartmentsByKey.get(key);
 
             if (!targetApts || targetApts.length === 0) {
-              const [area, rooms] = key.split("_");
               continue;
             }
 
@@ -603,18 +602,18 @@ const FloorPlanEditor = ({
     }
   };
 
+  const getActualCurrentShape = async (fallback: Shape) => {
+    if (!polygonAnnotatorRef.current) return fallback;
+    const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
+    return actualShape ?? fallback;
+  };
+
   const persistCurrentPolygonBeforeApartmentSwitch = async () => {
     if (!editingApartment || editingApartment === "new" || !currentShape) {
       return true;
     }
 
-    let shapeToSave = currentShape;
-    if (polygonAnnotatorRef.current) {
-      const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
-      if (actualShape) {
-        shapeToSave = actualShape;
-      }
-    }
+    const shapeToSave = await getActualCurrentShape(currentShape);
 
     if (shapeToSave.points.length < 3) {
       return true;
@@ -738,13 +737,7 @@ const FloorPlanEditor = ({
 
     try {
       // Получаем актуальные координаты из аннотатора
-      let shapeToSave = currentShape;
-      if (polygonAnnotatorRef.current) {
-        const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
-        if (actualShape) {
-          shapeToSave = actualShape;
-        }
-      }
+      const shapeToSave = await getActualCurrentShape(currentShape);
 
       if (shapeToSave.points.length < 3) {
         toast.error("Полигон должен содержать минимум 3 точки");
@@ -882,13 +875,7 @@ const FloorPlanEditor = ({
   const handleDeletePoint = async () => {
     if (selectedVertexIndex === null || !currentShape) return;
 
-    let shapeToEdit = currentShape;
-    if (polygonAnnotatorRef.current) {
-      const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
-      if (actualShape) {
-        shapeToEdit = actualShape;
-      }
-    }
+    const shapeToEdit = await getActualCurrentShape(currentShape);
 
     if (shapeToEdit.points.length <= 3) return;
 
@@ -909,18 +896,14 @@ const FloorPlanEditor = ({
   };
 
   const pointCount = currentShape?.points.length ?? 0;
-  const normalizedSelectedVertexIndex =
+  const selectedVertexDisplayIndex =
     selectedVertexIndex !== null &&
     selectedVertexIndex >= 0 &&
     selectedVertexIndex < pointCount
-      ? selectedVertexIndex
+      ? selectedVertexIndex + 1
       : pointCount > 0
-        ? pointCount - 1
-        : null;
-  const selectedVertexDisplayIndex =
-    normalizedSelectedVertexIndex !== null
-      ? normalizedSelectedVertexIndex + 1
-      : 0;
+        ? pointCount
+        : 0;
 
   const canSelectVertex = pointCount > 0;
   const selectPrevVertex = () => {
@@ -1301,7 +1284,7 @@ const FloorPlanEditor = ({
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Right sidebar - Apartment Details */}
           {editingApartment && (
-            <Card className="lg:col-span-3">
+            <Card className="order-last lg:col-span-3">
               <CardHeader>
                 <CardTitle className="text-md">
                   {t("floorPlan.apartments.parameters")}
@@ -1577,7 +1560,7 @@ const FloorPlanEditor = ({
           {/* Center - Polygon Editor */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3">
                 <CardTitle className="text-md">
                   {isCreatingNew
                     ? t("floorPlan.apartments.newApartment")
@@ -1586,7 +1569,7 @@ const FloorPlanEditor = ({
                       : t("floorPlan.title")}
                 </CardTitle>
                 {(editingApartment || currentShape) && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       onClick={handleUndo}
                       variant="outline"
