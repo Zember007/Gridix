@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Badge,
   Button,
@@ -468,6 +469,11 @@ const ProjectList = ({
       null | "render" | "video" | "presentation"
     >(null);
     const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+    const [previewMedia, setPreviewMedia] = useState<{
+      kind: "image" | "video";
+      url: string;
+      title: string;
+    } | null>(null);
 
     const safeFilename = (value: string, fallback: string) => {
       const cleaned = value
@@ -653,6 +659,18 @@ const ProjectList = ({
                   alt={`${t("projectList.media.renders")} ${i + 1}`}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewMedia({
+                      kind: "image",
+                      url,
+                      title: `${t("projectList.media.renders")} ${i + 1}`,
+                    })
+                  }
+                  className="absolute inset-0 z-[1]"
+                  title={t("projectList.media.renders")}
+                />
               </div>
             ))}
           </div>
@@ -703,11 +721,16 @@ const ProjectList = ({
                 >
                   <Trash2 size={14} />
                 </button>
-                <a
-                  href={vid.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block space-y-2"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewMedia({
+                      kind: "video",
+                      url: vid.url,
+                      title: vid.title,
+                    })
+                  }
+                  className="block w-full space-y-2 text-left"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-black">
                     {vid.thumbnail ? (
@@ -730,7 +753,7 @@ const ProjectList = ({
                   <div className="truncate text-xs font-bold text-slate-700 group-hover:text-blue-600">
                     {vid.title}
                   </div>
-                </a>
+                </button>
               </div>
             ))}
           </div>
@@ -812,6 +835,45 @@ const ProjectList = ({
             ))}
           </div>
         </div>
+
+        {previewMedia &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black/80 p-4"
+              style={{ zIndex: 120 }}
+              onClick={() => setPreviewMedia(null)}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewMedia(null)}
+                className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-white/30"
+                title="Close preview"
+              >
+                <X size={20} />
+              </button>
+              <div
+                className="max-h-[90vh] w-auto max-w-[calc(100vw-2rem)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {previewMedia.kind === "video" ? (
+                  <video
+                    src={previewMedia.url}
+                    controls
+                    autoPlay
+                    className="block max-h-[90vh] w-auto max-w-full rounded-xl"
+                  />
+                ) : (
+                  <img
+                    src={previewMedia.url}
+                    alt={previewMedia.title}
+                    className="block max-h-[90vh] w-auto max-w-full rounded-xl object-contain"
+                  />
+                )}
+              </div>
+            </div>,
+            document.body,
+          )}
       </div>
     );
   };
