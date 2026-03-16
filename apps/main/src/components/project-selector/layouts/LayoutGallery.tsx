@@ -194,7 +194,7 @@ export const LayoutGallery = ({
         </div>
 
         {/* Layout cards grid */}
-        <div className={`flex flex-wrap gap-4 md:gap-6`}>
+        <div className={`flex flex-wrap gap-4`}>
           {(() => {
             // Group apartments by layout depending on type
             const layoutGroups: { [key: string]: Apartment[] } = {};
