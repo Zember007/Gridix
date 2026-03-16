@@ -757,7 +757,7 @@ const ProjectList = ({
     const projectFilenamePrefix = safeFilename(project.name, "project");
 
     return (
-      <div className="space-y-8 p-6">
+      <div className="space-y-6 p-4">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
