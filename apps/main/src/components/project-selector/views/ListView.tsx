@@ -188,7 +188,7 @@ export const ListView = ({
   ]);
 
   return (
-    <div className="container mx-auto flex grow py-8 md:px-6">
+    <div className="container mx-auto flex grow py-2 md:px-6">
       <div
         className={`${project?.has_commercial || project?.has_parking ? "space-y-6" : "space-y-1"} flex w-full flex-col`}
       >
@@ -238,7 +238,7 @@ export const ListView = ({
           >
             <TabsList
               wrap={false}
-              className="no-scrollbar h-auto w-full max-w-full items-stretch rounded-2xl border border-gray-200 bg-gray-100/80 p-1"
+              className="no-scrollbar h-auto w-full max-w-full items-stretch rounded-xl border border-gray-200 bg-gray-100/80 p-1"
             >
               {[
                 { value: "all" as const, label: t("project.allTypes") },
@@ -265,7 +265,7 @@ export const ListView = ({
               ].map((tab) => (
                 <TabsTrigger
                   key={tab.value}
-                  className="min-h-11 flex-none rounded-xl px-4 py-2 text-sm md:min-w-0 md:flex-1"
+                  className="min-h-9 flex-none rounded-lg px-3 py-1.5 text-sm md:min-w-0 md:flex-1"
                   value={tab.value}
                 >
                   {tab.label}
@@ -275,8 +275,8 @@ export const ListView = ({
           </Tabs>
         )}
 
-        <div className="max-h-[calc(100vh-400px)] min-h-[600px] grow">
-          <div className="max-h-full space-y-4 overflow-y-auto">
+        <div className="grow pt-4">
+          <div className="space-y-4">
             {listViewMode === "list" ? (
               // Desktop table layout
               <>
