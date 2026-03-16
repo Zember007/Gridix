@@ -160,6 +160,24 @@ const ProjectList = ({
   });
 
   const mapApiProjectToShared = (p: any): SharedProject => {
+    const media = p?.media
+      ? {
+          ...p.media,
+          videos: Array.isArray(p.media.videos)
+            ? p.media.videos.map(
+                (video: {
+                  url: string;
+                  title: string;
+                  thumbnail?: string;
+                  sizeBytes?: number;
+                }) => ({
+                  ...video,
+                }),
+              )
+            : p.media.videos,
+        }
+      : undefined;
+
     const partnershipSettings = p?.partnershipSettings
       ? {
           isEnabled: Boolean(p.partnershipSettings.isEnabled),
@@ -194,7 +212,7 @@ const ProjectList = ({
       minPrice: p?.minPrice ? Number(p.minPrice) : undefined,
       yield: p?.yield ? Number(p.yield) : undefined,
       stats: p?.stats ?? undefined,
-      media: p?.media ?? undefined,
+      media,
       constructionProgress: p?.constructionProgress ?? undefined,
       partnershipSettings,
       partnershipStatus: "active",
@@ -484,6 +502,24 @@ const ProjectList = ({
       return cleaned || fallback;
     };
 
+    const formatBytes = (value?: number) => {
+      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        return null;
+      }
+
+      const units = ["B", "KB", "MB", "GB", "TB"] as const;
+      let size = value;
+      let unitIndex = 0;
+
+      while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+      }
+
+      const fractionDigits = size >= 100 || unitIndex === 0 ? 0 : 1;
+      return `${size.toFixed(fractionDigits)} ${units[unitIndex]}`;
+    };
+
     const extensionFromUrl = (url: string, fallback: string) => {
       const sanitizedFallback = fallback.startsWith(".")
         ? fallback
@@ -752,6 +788,9 @@ const ProjectList = ({
                   </div>
                   <div className="truncate text-xs font-bold text-slate-700 group-hover:text-blue-600">
                     {vid.title}
+                    {formatBytes(vid.sizeBytes)
+                      ? ` (${formatBytes(vid.sizeBytes)})`
+                      : ""}
                   </div>
                 </button>
               </div>

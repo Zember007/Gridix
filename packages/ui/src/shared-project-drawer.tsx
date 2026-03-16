@@ -32,7 +32,12 @@ import { resolveConstructionUpdateLocale } from "./construction-update-localizat
 
 export interface ProjectMedia {
   renders?: string[];
-  videos?: Array<{ url: string; title: string; thumbnail?: string }>;
+  videos?: Array<{
+    url: string;
+    title: string;
+    thumbnail?: string;
+    sizeBytes?: number;
+  }>;
   presentations?: Array<{
     id: string;
     title: string;
@@ -261,6 +266,24 @@ function safeFilename(name: string, maxLength = 80): string {
       .trim()
       .slice(0, maxLength) || "file"
   );
+}
+
+function formatBytes(value?: number): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  const units = ["B", "KB", "MB", "GB", "TB"] as const;
+  let size = value;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  const fractionDigits = size >= 100 || unitIndex === 0 ? 0 : 1;
+  return `${size.toFixed(fractionDigits)} ${units[unitIndex]}`;
 }
 
 /** Get file extension from URL or default (e.g. for images) */
@@ -529,6 +552,9 @@ const MediaTab: React.FC<{
                 </div>
                 <div className="absolute bottom-2 left-2 max-w-[90%] truncate text-xs font-bold text-white drop-shadow">
                   {vid.title}
+                  {formatBytes(vid.sizeBytes)
+                    ? ` (${formatBytes(vid.sizeBytes)})`
+                    : ""}
                 </div>
               </button>
             ))}
