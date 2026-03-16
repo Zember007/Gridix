@@ -33,5 +33,13 @@
     "refresh": "לְרַעֲנֵן",
     "connectButton": "חבר את Bitrix24",
     "missingParams": "חסרים פרמטרים של Bitrix (domain/member_id). פתח את הדף הזה מאפליקציית Gridix בתוך Bitrix24."
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "קישור לעסקה מס' {{dealId}}",
+    "linkExistingDeal": "קישור לעסקה קיימת",
+    "linkDeal": "קישור לעסקה",
+    "createDealInBitrix": "צור עסקה ב-Bitrix",
+    "createDeal": "צור עסקה",
+    "syncHint": "נתוני דירה (מחיר/מספר/פרויקט/כתובת וכו') ייכתבו לעסקת Bitrix, וייווצר ליד מקומי ב-Gridix לסנכרון."
   }
 }

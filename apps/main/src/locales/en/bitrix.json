@@ -33,5 +33,13 @@
     "refresh": "Refresh",
     "connectButton": "Connect Bitrix24",
     "missingParams": "Bitrix parameters are missing (domain/member_id). Open this page from the Gridix app inside Bitrix24."
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "Link to deal #{{dealId}}",
+    "linkExistingDeal": "Link to an existing deal",
+    "linkDeal": "Link to deal",
+    "createDealInBitrix": "Create deal in Bitrix",
+    "createDeal": "Create deal",
+    "syncHint": "Apartment data (price/number/project/address, etc.) will be written to the Bitrix deal, and a local lead will be created in Gridix for synchronization."
   }
 }

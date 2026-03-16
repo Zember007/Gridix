@@ -33,5 +33,13 @@
     "refresh": "Обновить",
     "connectButton": "Подключить Bitrix24",
     "missingParams": "Нет параметров Bitrix (domain/member_id). Откройте страницу из приложения Gridix в Bitrix24."
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "Привязать к сделке #{{dealId}}",
+    "linkExistingDeal": "Привязать к существующей сделке",
+    "linkDeal": "Привязать к сделке",
+    "createDealInBitrix": "Создать сделку в Bitrix",
+    "createDeal": "Создать сделку",
+    "syncHint": "В Bitrix сделку будут записаны данные квартиры (цена/номер/проект/адрес и т.д.), а в Gridix создастся локальный лид для синхронизации."
   }
 }

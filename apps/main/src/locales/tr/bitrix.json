@@ -33,5 +33,13 @@
     "refresh": "Yenile",
     "connectButton": "Bitrix24'ü bağlayın",
     "missingParams": "Bitrix parametreleri eksik (domain/member_id). Bu sayfayı Bitrix24 içindeki Gridix uygulamasından açın."
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "#{{dealId}} numaralı anlaşmanın bağlantısı",
+    "linkExistingDeal": "Mevcut bir anlaşmaya bağlantı",
+    "linkDeal": "Anlaşmaya bağlantı",
+    "createDealInBitrix": "Bitrix'te anlaşma oluştur",
+    "createDeal": "Anlaşma oluştur",
+    "syncHint": "Bitrix anlaşmasına daire verileri (fiyat/numara/proje/adres vb.) yazılacak ve senkronizasyon için Gridix'te yerel bir müşteri adayı oluşturulacak."
   }
 }

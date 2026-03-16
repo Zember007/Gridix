@@ -33,5 +33,13 @@
     "refresh": "ينعش",
     "connectButton": "ربط Bitrix24",
     "missingParams": "معلمات Bitrix مفقودة (المجال/معرف_العضو). افتح هذه الصفحة من تطبيق Gridix داخل Bitrix24."
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "رابط الصفقة رقم {{dealId}}",
+    "linkExistingDeal": "الارتباط بصفقة موجودة",
+    "linkDeal": "رابط التعامل",
+    "createDealInBitrix": "إنشاء صفقة في Bitrix",
+    "createDeal": "إنشاء صفقة",
+    "syncHint": "ستتم كتابة بيانات الشقة (السعر/الرقم/المشروع/العنوان، وما إلى ذلك) في صفقة Bitrix، وسيتم إنشاء عميل متوقع محلي في Gridix للمزامنة."
   }
 }
