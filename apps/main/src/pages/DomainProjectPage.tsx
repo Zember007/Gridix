@@ -64,7 +64,7 @@ export default function DomainProjectPage() {
 
   // If project found via custom domain, render the project directly
   return (
-    <div className="h-[100dvh] overflow-hidden bg-background">
+    <div className="min-h-screen bg-background">
       <ProjectApartmentSelector projectId={project.id} />
     </div>
   );

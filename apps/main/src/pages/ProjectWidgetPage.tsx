@@ -52,9 +52,9 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
+    <div className="min-h-screen bg-background">
       {isBitrixCrm && (
-        <div className="shrink-0 p-3">
+        <div className="p-3">
           <BitrixCrmTopBar
             projects={projects}
             loading={projectsLoading}
@@ -63,9 +63,7 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
           />
         </div>
       )}
-      <div className="min-h-0 flex-1">
-        <ProjectApartmentSelector projectId={projectIdentifier} />
-      </div>
+      <ProjectApartmentSelector projectId={projectIdentifier} />
     </div>
   );
 };

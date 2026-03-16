@@ -26,7 +26,6 @@ import { useWidgetScroll } from "./hooks/useWidgetScroll";
 import { useFieldHelpers } from "./hooks/useFieldHelpers";
 import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
 import { persistAgentAttribution } from "@/shared/lib/agent-attribution";
-import { cn } from "@gridix/utils/lib";
 import { useSubscriptionStatus } from "./hooks/useSubscriptionStatus";
 import { useFacadeData } from "./hooks/useFacadeData";
 import { useUrlState } from "./hooks/useUrlState";
@@ -360,10 +359,7 @@ const ProjectApartmentSelector = ({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        "relative flex select-none flex-col overflow-hidden bg-white",
-        isWidget ? "h-full" : "h-[100dvh]",
-      )}
+      className="relative flex min-h-screen select-none flex-col bg-white"
     >
       <LoaderView color={themeColor} loading={isInitialLoading} />
       <SubscriptionAlert
