@@ -49,6 +49,8 @@
     "linksPlaceholder": "Paste one link per line",
     "linksHint": "You can attach YouTube links along with files",
     "invalidLink": "One or more links are invalid",
+    "download": "Download",
+    "downloadAll": "Download all",
     "uploading": "Uploading...",
     "loading": "Loading...",
     "uploadSuccess": "Materials uploaded",

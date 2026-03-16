@@ -13,6 +13,7 @@ import {
 import {
   Building,
   Building2,
+  Download,
   Edit3,
   Eye,
   FileText,
@@ -468,6 +469,65 @@ const ProjectList = ({
     >(null);
     const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
 
+    const safeFilename = (value: string, fallback: string) => {
+      const cleaned = value
+        .replace(/[<>:"/\\|?*]/g, "_")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+      return cleaned || fallback;
+    };
+
+    const extensionFromUrl = (url: string, fallback: string) => {
+      const sanitizedFallback = fallback.startsWith(".")
+        ? fallback
+        : `.${fallback}`;
+      try {
+        const normalized = new URL(url, window.location.origin);
+        const lastSegment = normalized.pathname.split("/").pop() ?? "";
+        const lastDot = lastSegment.lastIndexOf(".");
+        if (lastDot > 0) return lastSegment.slice(lastDot);
+      } catch {
+        return sanitizedFallback;
+      }
+      return sanitizedFallback;
+    };
+
+    const triggerDownload = (href: string, filename: string) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = filename;
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };
+
+    const downloadByUrl = async (url: string, filename: string) => {
+      try {
+        const normalized = new URL(url, window.location.origin);
+        const response = await fetch(normalized.toString(), {
+          mode: "cors",
+          credentials: "omit",
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        triggerDownload(objectUrl, filename);
+
+        // Give the browser time to start the download before cleanup.
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      } catch {
+        try {
+          const normalized = new URL(url, window.location.origin);
+          triggerDownload(normalized.toString(), filename);
+        } catch {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
+      }
+    };
+
     const uploadFiles = async (
       kind: "render" | "video" | "presentation",
       files: FileList | null,
@@ -536,6 +596,7 @@ const ProjectList = ({
     const renders = project.media?.renders ?? [];
     const videos = project.media?.videos ?? [];
     const docs = project.media?.presentations ?? [];
+    const projectFilenamePrefix = safeFilename(project.name, "project");
 
     return (
       <div className="space-y-8 p-6">
@@ -565,6 +626,19 @@ const ProjectList = ({
                 key={`${url}-${i}`}
                 className="group relative aspect-video overflow-hidden rounded-lg border border-slate-200"
               >
+                <button
+                  type="button"
+                  onClick={() =>
+                    void downloadByUrl(
+                      url,
+                      `${projectFilenamePrefix}-render-${i + 1}${extensionFromUrl(url, ".jpg")}`,
+                    )
+                  }
+                  className="absolute right-10 top-2 z-10 rounded-md bg-white/90 p-1 text-slate-700 shadow-sm transition hover:bg-white"
+                  title={t("projectList.media.download")}
+                >
+                  <Download size={14} />
+                </button>
                 <button
                   type="button"
                   onClick={() => void handleDeleteMedia(url)}
@@ -607,6 +681,19 @@ const ProjectList = ({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {videos.map((vid, i) => (
               <div key={`${vid.url}-${i}`} className="group relative">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void downloadByUrl(
+                      vid.url,
+                      `${projectFilenamePrefix}-video-${i + 1}-${safeFilename(vid.title, "video")}${extensionFromUrl(vid.url, ".mp4")}`,
+                    )
+                  }
+                  className="absolute right-10 top-2 z-10 rounded-md bg-white/90 p-1 text-slate-700 shadow-sm transition hover:bg-white"
+                  title={t("projectList.media.download")}
+                >
+                  <Download size={14} />
+                </button>
                 <button
                   type="button"
                   onClick={() => void handleDeleteMedia(vid.url)}
@@ -697,6 +784,21 @@ const ProjectList = ({
                     </div>
                   </div>
                 </a>
+                <button
+                  type="button"
+                  onClick={() =>
+                    doc.url &&
+                    void downloadByUrl(
+                      doc.url,
+                      `${projectFilenamePrefix}-${safeFilename(doc.title, "document")}${extensionFromUrl(doc.url, ".pdf")}`,
+                    )
+                  }
+                  disabled={!doc.url}
+                  className="ml-2 rounded-md p-1 text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  title={t("projectList.media.download")}
+                >
+                  <Download size={16} />
+                </button>
                 <button
                   type="button"
                   onClick={() => doc.url && void handleDeleteMedia(doc.url)}
