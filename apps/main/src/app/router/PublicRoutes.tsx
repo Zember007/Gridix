@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
+import { EmbedProviders } from "@/app/providers";
 
 // Lazy load pages
 const ApartmentDetailsPage = lazy(() => import("@/pages/ApartmentDetailsPage"));
@@ -52,8 +53,22 @@ export function PublicRoutes() {
       <Route path="agent/apply" element={<AgentApplicationPage />} />
 
       {/* Bitrix routes */}
-      <Route path="connect/bitrix24" element={<BitrixInstallPage />} />
-      <Route path="bitrix" element={<BitrixPage />} />
+      <Route
+        path="connect/bitrix24"
+        element={
+          <EmbedProviders>
+            <BitrixInstallPage />
+          </EmbedProviders>
+        }
+      />
+      <Route
+        path="bitrix"
+        element={
+          <EmbedProviders>
+            <BitrixPage />
+          </EmbedProviders>
+        }
+      />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

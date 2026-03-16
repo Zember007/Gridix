@@ -1,0 +1,37 @@
+{
+  "errors": {
+    "installStatusCheck": "Yükleme durumu kontrol edilemedi",
+    "connectionGeneric": "Bağlantı hatası",
+    "claimInstall": "Kurulum bağlantısı kurulamadı",
+    "claimGeneric": "Bağlantı hatası"
+  },
+  "topBar": {
+    "catalog": "Katalog",
+    "currentDeal": "Mevcut anlaşma"
+  },
+  "install": {
+    "title": "Gridix - Bitrix24 Bağlantısı",
+    "paramsTitle": "Parametreler",
+    "entrypointDescription": "Bu sayfa Bitrix24 bağlantı giriş noktasıdır. Etki alanı ve member_id parametreleriyle açın.",
+    "bindTitle": "Gridix hesabına bağlantı",
+    "claimedSuccess": "Tamamlamak. Entegrasyon hesabınıza bağlıdır.",
+    "needsInstallPrimary": "Önce Bitrix24 pazarından Gridix uygulamasını yükleyin. Kurulumdan sonra tamamlama sayfasına yönlendirileceksiniz.",
+    "needsInstallSecondary": "Uygulama zaten yüklüyse yeniden yükleyin veya bu sayfayı yenileyin.",
+    "loginHint": "Gridix'te oturum açın veya kaydolun; bağlantı otomatik olarak tamamlanacaktır.",
+    "loginButton": "Gridix'te oturum açın",
+    "claimHint": "Bu Bitrix kurulumunu {{email}} hesabına bağlamak için aşağıdaki düğmeye tıklayın.",
+    "claimButton": "Bitrix kurulumunu hesaba bağlayın",
+    "toast": {
+      "connected": "Bitrix, Gridix hesabınıza bağlı",
+      "missingInstallParams": "Eksik yükleme parametreleri (domain/member_id)",
+      "loginFirst": "Lütfen önce Gridix'te oturum açın",
+      "claimFailed": "Kurulum bağlantısı kurulamadı"
+    }
+  },
+  "page": {
+    "title": "Gridix - Bitrix",
+    "refresh": "Yenile",
+    "connectButton": "Bitrix24'ü bağlayın",
+    "missingParams": "Bitrix parametreleri eksik (domain/member_id). Bu sayfayı Bitrix24 içindeki Gridix uygulamasından açın."
+  }
+}

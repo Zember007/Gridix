@@ -1,0 +1,37 @@
+{
+  "errors": {
+    "installStatusCheck": "בדיקת סטטוס ההתקנה נכשלה",
+    "connectionGeneric": "שגיאת חיבור",
+    "claimInstall": "קישור ההתקנה נכשל",
+    "claimGeneric": "שגיאת קישור"
+  },
+  "topBar": {
+    "catalog": "קָטָלוֹג",
+    "currentDeal": "עסקה נוכחית"
+  },
+  "install": {
+    "title": "Gridix - חיבור Bitrix24",
+    "paramsTitle": "פרמטרים",
+    "entrypointDescription": "דף זה הוא נקודת הכניסה לחיבור Bitrix24. פתח אותו עם פרמטרים של domain ו-member_id.",
+    "bindTitle": "קישור לחשבון Gridix",
+    "claimedSuccess": "נַעֲשָׂה. האינטגרציה מקושרת לחשבון שלך.",
+    "needsInstallPrimary": "התקן תחילה את אפליקציית Gridix משוק Bitrix24. לאחר ההתקנה תופנה לדף ההשלמה.",
+    "needsInstallSecondary": "אם האפליקציה כבר מותקנת, התקן אותה מחדש או רענן דף זה.",
+    "loginHint": "היכנס או הירשם ב-Gridix - הקישור יושלם באופן אוטומטי.",
+    "loginButton": "היכנס ל-Gridix",
+    "claimHint": "לחץ על הלחצן למטה כדי לקשר את התקנת Bitrix לחשבון {{email}}.",
+    "claimButton": "קשר את התקנת Bitrix לחשבון",
+    "toast": {
+      "connected": "Bitrix מקושרת לחשבון Gridix שלך",
+      "missingInstallParams": "חסרים פרמטרים של התקנה (domain/member_id)",
+      "loginFirst": "אנא היכנס ל-Gridix תחילה",
+      "claimFailed": "קישור ההתקנה נכשל"
+    }
+  },
+  "page": {
+    "title": "גרידיקס - ביטריקס",
+    "refresh": "לְרַעֲנֵן",
+    "connectButton": "חבר את Bitrix24",
+    "missingParams": "חסרים פרמטרים של Bitrix (domain/member_id). פתח את הדף הזה מאפליקציית Gridix בתוך Bitrix24."
+  }
+}

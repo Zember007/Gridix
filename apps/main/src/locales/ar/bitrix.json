@@ -1,0 +1,37 @@
+{
+  "errors": {
+    "installStatusCheck": "فشل في التحقق من حالة التثبيت",
+    "connectionGeneric": "خطأ في الاتصال",
+    "claimInstall": "فشل ربط التثبيت",
+    "claimGeneric": "خطأ في الربط"
+  },
+  "topBar": {
+    "catalog": "كتالوج",
+    "currentDeal": "الصفقة الحالية"
+  },
+  "install": {
+    "title": "Gridix - اتصال Bitrix24",
+    "paramsTitle": "حدود",
+    "entrypointDescription": "هذه الصفحة هي نقطة دخول اتصال Bitrix24. افتحه باستخدام معلمات المجال و member_id.",
+    "bindTitle": "رابط حساب Gridix",
+    "claimedSuccess": "منتهي. التكامل مرتبط بحسابك.",
+    "needsInstallPrimary": "قم بتثبيت تطبيق Gridix من سوق Bitrix24 أولاً. بعد التثبيت سيتم إعادة توجيهك إلى صفحة الإكمال.",
+    "needsInstallSecondary": "إذا كان التطبيق مثبتًا بالفعل، فأعد تثبيته أو قم بتحديث هذه الصفحة.",
+    "loginHint": "قم بتسجيل الدخول أو التسجيل في Gridix - سيتم إكمال الارتباط تلقائيًا.",
+    "loginButton": "تسجيل الدخول إلى Gridix",
+    "claimHint": "انقر فوق الزر أدناه لربط تثبيت Bitrix هذا بالحساب {{email}}.",
+    "claimButton": "ربط تثبيت Bitrix بالحساب",
+    "toast": {
+      "connected": "يتم ربط Bitrix بحساب Gridix الخاص بك",
+      "missingInstallParams": "معلمات التثبيت مفقودة (المجال/معرف_العضو)",
+      "loginFirst": "يرجى تسجيل الدخول إلى Gridix أولاً",
+      "claimFailed": "فشل ربط التثبيت"
+    }
+  },
+  "page": {
+    "title": "غريديكس - بيتريكس",
+    "refresh": "ينعش",
+    "connectButton": "ربط Bitrix24",
+    "missingParams": "معلمات Bitrix مفقودة (المجال/معرف_العضو). افتح هذه الصفحة من تطبيق Gridix داخل Bitrix24."
+  }
+}

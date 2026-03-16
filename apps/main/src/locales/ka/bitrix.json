@@ -1,0 +1,37 @@
+{
+  "errors": {
+    "installStatusCheck": "ინსტალაციის სტატუსის შემოწმება ვერ მოხერხდა",
+    "connectionGeneric": "კავშირის შეცდომა",
+    "claimInstall": "ინსტალაციის დაკავშირება ვერ მოხერხდა",
+    "claimGeneric": "დაკავშირების შეცდომა"
+  },
+  "topBar": {
+    "catalog": "კატალოგი",
+    "currentDeal": "მიმდინარე გარიგება"
+  },
+  "install": {
+    "title": "Gridix - Bitrix24 კავშირი",
+    "paramsTitle": "პარამეტრები",
+    "entrypointDescription": "ეს გვერდი არის Bitrix24 კავშირის შესვლის წერტილი. გახსენით ის domain და Member_id პარამეტრებით.",
+    "bindTitle": "ბმული Gridix-ის ანგარიშთან",
+    "claimedSuccess": "შესრულებულია. ინტეგრაცია დაკავშირებულია თქვენს ანგარიშთან.",
+    "needsInstallPrimary": "ჯერ დააინსტალირეთ Gridix აპი Bitrix24 ბაზრიდან. ინსტალაციის შემდეგ თქვენ გადამისამართდებით დასრულების გვერდზე.",
+    "needsInstallSecondary": "თუ აპლიკაცია უკვე დაინსტალირებულია, ხელახლა დააინსტალირეთ ან განაახლეთ ეს გვერდი.",
+    "loginHint": "შედით ან დარეგისტრირდით Gridix-ში - დაკავშირება ავტომატურად დასრულდება.",
+    "loginButton": "შედით Gridix-ში",
+    "claimHint": "დააწკაპუნეთ ქვემოთ მოცემულ ღილაკზე, რომ დააკავშიროთ ეს Bitrix ინსტალაცია ანგარიშთან {{email}}.",
+    "claimButton": "დააკავშირეთ Bitrix-ის ინსტალაცია ანგარიშთან",
+    "toast": {
+      "connected": "Bitrix დაკავშირებულია თქვენს Gridix ანგარიშთან",
+      "missingInstallParams": "აკლია ინსტალაციის პარამეტრები (დომენი/member_id)",
+      "loginFirst": "გთხოვთ, ჯერ შეხვიდეთ Gridix-ში",
+      "claimFailed": "ინსტალაციის დაკავშირება ვერ მოხერხდა"
+    }
+  },
+  "page": {
+    "title": "გრიდიქსი - ბიტრიქსი",
+    "refresh": "განაახლეთ",
+    "connectButton": "დააკავშირეთ Bitrix24",
+    "missingParams": "Bitrix-ის პარამეტრები აკლია (დომენი/წევრის_ID). გახსენით ეს გვერდი Gridix აპიდან Bitrix24-ში."
+  }
+}
