@@ -44,6 +44,10 @@ import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { DeveloperConstructionTab } from "./DeveloperConstructionTab";
+import {
+  type PendingVideoUpload,
+  VideoUploadDialog,
+} from "./VideoUploadDialog";
 
 const ProjectUnitsChessEditorTab = lazy(
   () => import("@/components/projects/ProjectUnitsChessEditorTab"),
@@ -487,6 +491,10 @@ const ProjectList = ({
       null | "render" | "video" | "presentation"
     >(null);
     const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+    const [videoUploadDialogOpen, setVideoUploadDialogOpen] = useState(false);
+    const [pendingVideoUploads, setPendingVideoUploads] = useState<
+      PendingVideoUpload[]
+    >([]);
     const [previewMedia, setPreviewMedia] = useState<{
       kind: "image" | "video";
       url: string;
@@ -570,6 +578,29 @@ const ProjectList = ({
       }
     };
 
+    const resetPendingVideoUploads = () => {
+      setPendingVideoUploads((current) => {
+        current.forEach((item) => {
+          URL.revokeObjectURL(item.filePreviewUrl);
+          if (item.thumbnailPreviewUrl) {
+            URL.revokeObjectURL(item.thumbnailPreviewUrl);
+          }
+        });
+        return [];
+      });
+    };
+
+    useEffect(() => {
+      return () => {
+        pendingVideoUploads.forEach((item) => {
+          URL.revokeObjectURL(item.filePreviewUrl);
+          if (item.thumbnailPreviewUrl) {
+            URL.revokeObjectURL(item.thumbnailPreviewUrl);
+          }
+        });
+      };
+    }, [pendingVideoUploads]);
+
     const uploadFiles = async (
       kind: "render" | "video" | "presentation",
       files: FileList | null,
@@ -588,7 +619,7 @@ const ProjectList = ({
           form.set("project_id", project.id);
           form.set("kind", kind);
           form.set("file", file);
-          if (kind === "presentation" || kind === "video") {
+          if (kind === "presentation") {
             form.set("title", file.name.replace(/\.[^/.]+$/, ""));
           }
 
@@ -603,6 +634,91 @@ const ProjectList = ({
         await loadDrawerProject(project.id);
       } catch (e) {
         console.error("Failed to upload media", e);
+        toast.error(t("projectList.media.uploadError"));
+      } finally {
+        setUploading(null);
+      }
+    };
+
+    const handleVideoSelection = (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+
+      const selected = Array.from(files).map((file, index) => ({
+        id: `${file.name}-${file.lastModified}-${index}`,
+        file,
+        filePreviewUrl: URL.createObjectURL(file),
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        thumbnailFile: null,
+        thumbnailPreviewUrl: null,
+      }));
+
+      setPendingVideoUploads(selected);
+      setVideoUploadDialogOpen(true);
+    };
+
+    const updatePendingVideoTitle = (id: string, title: string) => {
+      setPendingVideoUploads((current) =>
+        current.map((item) => (item.id === id ? { ...item, title } : item)),
+      );
+    };
+
+    const updatePendingVideoThumbnail = (id: string, file: File | null) => {
+      setPendingVideoUploads((current) =>
+        current.map((item) => {
+          if (item.id !== id) return item;
+          if (item.thumbnailPreviewUrl) {
+            URL.revokeObjectURL(item.thumbnailPreviewUrl);
+          }
+          return {
+            ...item,
+            thumbnailFile: file,
+            thumbnailPreviewUrl: file ? URL.createObjectURL(file) : null,
+          };
+        }),
+      );
+    };
+
+    const handleCloseVideoUploadDialog = (open: boolean) => {
+      setVideoUploadDialogOpen(open);
+      if (!open && uploading !== "video") {
+        resetPendingVideoUploads();
+      }
+    };
+
+    const uploadPendingVideos = async () => {
+      if (pendingVideoUploads.length === 0) return;
+      if (!user) {
+        toast.error(t("projectList.authRequired"));
+        return;
+      }
+
+      setUploading("video");
+      try {
+        for (const item of pendingVideoUploads) {
+          const form = new FormData();
+          form.set("action", "upload_media_item");
+          form.set("project_id", project.id);
+          form.set("kind", "video");
+          form.set("file", item.file);
+          form.set("title", item.title.trim() || item.file.name);
+          if (item.thumbnailFile) {
+            form.set("thumbnail", item.thumbnailFile);
+          }
+
+          const { data, error: invokeErr } = await supabase.functions.invoke(
+            "project-drawer",
+            { body: form },
+          );
+          if (invokeErr) throw invokeErr;
+          if (data?.error) throw new Error(String(data.error));
+        }
+
+        toast.success(t("projectList.media.uploadSuccess"));
+        setVideoUploadDialogOpen(false);
+        resetPendingVideoUploads();
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to upload videos", e);
         toast.error(t("projectList.media.uploadError"));
       } finally {
         setUploading(null);
@@ -728,7 +844,10 @@ const ProjectList = ({
                 accept="video/*"
                 multiple
                 disabled={uploading !== null}
-                onChange={(e) => void uploadFiles("video", e.target.files)}
+                onChange={(e) => {
+                  handleVideoSelection(e.target.files);
+                  e.currentTarget.value = "";
+                }}
               />
             </label>
           </div>
@@ -776,9 +895,13 @@ const ProjectList = ({
                         className="h-full w-full object-cover opacity-80"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-white/50">
-                        NO PREVIEW
-                      </div>
+                      <video
+                        src={vid.url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-cover opacity-80"
+                      />
                     )}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
@@ -913,6 +1036,16 @@ const ProjectList = ({
             </div>,
             document.body,
           )}
+
+        <VideoUploadDialog
+          open={videoUploadDialogOpen}
+          uploading={uploading === "video"}
+          items={pendingVideoUploads}
+          onOpenChange={handleCloseVideoUploadDialog}
+          onTitleChange={updatePendingVideoTitle}
+          onThumbnailChange={updatePendingVideoThumbnail}
+          onSubmit={() => void uploadPendingVideos()}
+        />
       </div>
     );
   };

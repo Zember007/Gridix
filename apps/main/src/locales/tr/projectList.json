@@ -49,6 +49,17 @@
     "linksPlaceholder": "Her satira bir baglanti yapistirin",
     "linksHint": "Dosyalarla birlikte YouTube baglantilari ekleyebilirsiniz",
     "invalidLink": "Bir veya daha fazla baglanti gecersiz",
+    "videoUploadDialog": {
+      "title": "Yükleme Öncesi Videoları Ayarla",
+      "description": "Her video için bir başlık belirleyin ve isterseniz bir küçük resim yükleyin.",
+      "fileLabel": "Dosya",
+      "videoTitleLabel": "Video başlığı",
+      "thumbnailLabel": "Küçük resim",
+      "uploadThumbnail": "Görsel yükle",
+      "removeThumbnail": "Kaldır",
+      "cancel": "İptal",
+      "submit": "Videoları yükle"
+    },
     "uploading": "Yükleniyor...",
     "loading": "Yükleniyor...",
     "uploadSuccess": "Materyaller yüklendi",

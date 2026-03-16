@@ -541,9 +541,13 @@ const MediaTab: React.FC<{
                     }}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-900">
-                    <PlayCircle size={36} className="text-white/20" />
-                  </div>
+                  <video
+                    src={vid.url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
+                  />
                 )}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">

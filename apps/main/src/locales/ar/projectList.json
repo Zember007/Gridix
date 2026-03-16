@@ -49,6 +49,17 @@
     "linksPlaceholder": "الصق رابطا واحدا في كل سطر",
     "linksHint": "يمكنك ارفاق روابط YouTube مع الملفات",
     "invalidLink": "يوجد رابط واحد او اكثر غير صالح",
+    "videoUploadDialog": {
+      "title": "إعداد الفيديوهات قبل الرفع",
+      "description": "حدد عنوانا لكل فيديو وارفع صورة thumbnail عند الحاجة.",
+      "fileLabel": "الملف",
+      "videoTitleLabel": "عنوان الفيديو",
+      "thumbnailLabel": "Thumbnail",
+      "uploadThumbnail": "رفع صورة",
+      "removeThumbnail": "إزالة",
+      "cancel": "إلغاء",
+      "submit": "رفع الفيديوهات"
+    },
     "uploading": "جارٍ التحميل...",
     "loading": "جارٍ التحميل...",
     "uploadSuccess": "تم تحميل الملفات",
