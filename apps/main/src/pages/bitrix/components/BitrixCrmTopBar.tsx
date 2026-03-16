@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import {
   Select,
@@ -38,8 +39,11 @@ export function BitrixCrmTopBar({
   dealId,
   activeProjectId,
 }: BitrixCrmTopBarProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { lang } = useParams();
+  const langSegment = lang ?? "ru";
 
   const dealIdResolved = useMemo(() => {
     const fromUrl = toPositiveInt(
@@ -53,7 +57,10 @@ export function BitrixCrmTopBar({
   const onValueChange = (next: string) => {
     const sp = buildCrmSearchParams(location.search, dealIdResolved);
     if (next === "catalog") {
-      navigate({ pathname: "/embed/bitrix", search: `?${sp.toString()}` });
+      navigate({
+        pathname: `/${langSegment}/bitrix`,
+        search: `?${sp.toString()}`,
+      });
       return;
     }
 
@@ -75,10 +82,12 @@ export function BitrixCrmTopBar({
           disabled={!!loading}
         >
           <SelectTrigger className="h-9">
-            <SelectValue placeholder="Каталог объектов" />
+            <SelectValue placeholder={t("bitrix.topBar.catalog")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="catalog">Каталог объектов</SelectItem>
+            <SelectItem value="catalog">
+              {t("bitrix.topBar.catalog")}
+            </SelectItem>
             {projects.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name}
@@ -90,7 +99,7 @@ export function BitrixCrmTopBar({
 
       {dealIdResolved ? (
         <div className="shrink-0 rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">
-          Сейчас открыта сделка{" "}
+          {t("bitrix.topBar.currentDeal")}{" "}
           <span className="font-mono text-foreground">{dealIdResolved}</span>
         </div>
       ) : null}

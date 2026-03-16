@@ -13,6 +13,10 @@ const InvitationHandlerPage = lazy(
 );
 const AgentProjectsPage = lazy(() => import("@/pages/AgentProjectsPage"));
 const AgentApplicationPage = lazy(() => import("@/pages/AgentApplicationPage"));
+const BitrixInstallPage = lazy(
+  () => import("@/pages/bitrix/BitrixInstallPage"),
+);
+const BitrixPage = lazy(() => import("@/pages/bitrix/BitrixPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 export function PublicRoutes() {
@@ -46,6 +50,10 @@ export function PublicRoutes() {
       {/* Agent routes */}
       <Route path="projects/agent/:agentId" element={<AgentProjectsPage />} />
       <Route path="agent/apply" element={<AgentApplicationPage />} />
+
+      {/* Bitrix routes */}
+      <Route path="connect/bitrix24" element={<BitrixInstallPage />} />
+      <Route path="bitrix" element={<BitrixPage />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

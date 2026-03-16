@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 
@@ -25,6 +26,11 @@ function normalizeDomain(raw: string | null | undefined): string {
     .replace(/\/+$/, "");
 }
 
+function getLocaleSegmentByDomain(domain: string): "en" | "ru" {
+  const d = normalizeDomain(domain).toLowerCase();
+  return d.endsWith(".com") ? "en" : "ru";
+}
+
 /**
  * Унифицированная логика подключения Bitrix24.
  * Используется в BitrixPage и BitrixInstallPage.
@@ -33,6 +39,7 @@ export function useBitrixConnect(
   domain: string | null | undefined,
   memberId: string | null | undefined,
 ): UseBitrixConnectResult {
+  const { t } = useTranslation();
   const normDomain = domain ? normalizeDomain(domain) : "";
   const normMemberId = memberId ? String(memberId).trim() : "";
 
@@ -71,7 +78,7 @@ export function useBitrixConnect(
 
         if (statusErr) {
           setStatus("error");
-          setError("Не удалось проверить статус установки");
+          setError(t("bitrix.errors.installStatusCheck"));
           return;
         }
 
@@ -97,7 +104,7 @@ export function useBitrixConnect(
 
         if (statusErr) {
           setStatus("error");
-          setError("Не удалось проверить статус установки");
+          setError(t("bitrix.errors.installStatusCheck"));
           return;
         }
 
@@ -107,9 +114,11 @@ export function useBitrixConnect(
     } catch (e) {
       console.error(e);
       setStatus("error");
-      setError(e instanceof Error ? e.message : "Ошибка подключения");
+      setError(
+        e instanceof Error ? e.message : t("bitrix.errors.connectionGeneric"),
+      );
     }
-  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user]);
+  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user, t]);
 
   useEffect(() => {
     void checkStatus();
@@ -141,7 +150,7 @@ export function useBitrixConnect(
       if (claimErr) {
         const msg =
           (claimErr as { message?: string })?.message ??
-          "Не удалось привязать установку";
+          t("bitrix.errors.claimInstall");
         setError(msg);
         return false;
       }
@@ -151,24 +160,28 @@ export function useBitrixConnect(
       return true;
     } catch (e) {
       console.error(e);
-      setError(e instanceof Error ? e.message : "Ошибка привязки");
+      setError(
+        e instanceof Error ? e.message : t("bitrix.errors.claimGeneric"),
+      );
       return false;
     }
-  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user]);
+  }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user, t]);
 
   const buildAuthUrl = useCallback((): string => {
-    const redirect = `/embed/connect/bitrix24?domain=${encodeURIComponent(normDomain)}&member_id=${encodeURIComponent(normMemberId)}`;
+    const localeSegment = getLocaleSegmentByDomain(normDomain);
+    const redirect = `/${localeSegment}/connect/bitrix24?domain=${encodeURIComponent(normDomain)}&member_id=${encodeURIComponent(normMemberId)}`;
     const sp = new URLSearchParams();
     sp.set("redirect", redirect);
     sp.set("bitrix_install", "1");
     sp.set("bitrix_domain", normDomain);
     sp.set("bitrix_member_id", normMemberId);
-    return `/ru/auth?${sp.toString()}`;
+    return `/${localeSegment}/auth?${sp.toString()}`;
   }, [isSessionLoading, normDomain, normMemberId, sessionQuery?.user]);
 
+  const localeSegment = getLocaleSegmentByDomain(normDomain);
   const connectUrl =
     normDomain && normMemberId
-      ? `/embed/connect/bitrix24?domain=${encodeURIComponent(normDomain)}&member_id=${encodeURIComponent(normMemberId)}`
+      ? `/${localeSegment}/connect/bitrix24?domain=${encodeURIComponent(normDomain)}&member_id=${encodeURIComponent(normMemberId)}`
       : null;
 
   return { status, user, error, claimInstall, buildAuthUrl, connectUrl };

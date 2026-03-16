@@ -1,0 +1,37 @@
+{
+  "errors": {
+    "installStatusCheck": "Не удалось проверить статус установки",
+    "connectionGeneric": "Ошибка подключения",
+    "claimInstall": "Не удалось привязать установку",
+    "claimGeneric": "Ошибка привязки"
+  },
+  "topBar": {
+    "catalog": "Каталог объектов",
+    "currentDeal": "Сейчас открыта сделка"
+  },
+  "install": {
+    "title": "Gridix - Подключение Bitrix24",
+    "paramsTitle": "Параметры",
+    "entrypointDescription": "Эта страница - точка входа для подключения Bitrix24. Перейдите сюда с параметрами domain и member_id.",
+    "bindTitle": "Привязка к аккаунту Gridix",
+    "claimedSuccess": "Готово. Интеграция привязана к вашему аккаунту.",
+    "needsInstallPrimary": "Сначала установите приложение Gridix из маркетплейса Bitrix24. После установки вы попадёте на страницу завершения.",
+    "needsInstallSecondary": "Если вы уже установили - переустановите приложение или обновите страницу.",
+    "loginHint": "Войдите или зарегистрируйтесь в Gridix - привязка выполнится автоматически.",
+    "loginButton": "Войти в Gridix",
+    "claimHint": "Нажмите кнопку ниже, чтобы привязать установку Bitrix к аккаунту {{email}}.",
+    "claimButton": "Привязать установку Bitrix к аккаунту",
+    "toast": {
+      "connected": "Bitrix подключен к аккаунту Gridix",
+      "missingInstallParams": "Нет параметров установки (domain/member_id)",
+      "loginFirst": "Сначала войдите в Gridix",
+      "claimFailed": "Не удалось привязать установку"
+    }
+  },
+  "page": {
+    "title": "Gridix - Bitrix",
+    "refresh": "Обновить",
+    "connectButton": "Подключить Bitrix24",
+    "missingParams": "Нет параметров Bitrix (domain/member_id). Откройте страницу из приложения Gridix в Bitrix24."
+  }
+}

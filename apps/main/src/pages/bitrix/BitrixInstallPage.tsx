@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 import { useBitrixConnect } from "@/pages/bitrix/hooks/useBitrixConnect";
 
 export default function BitrixInstallPage() {
+  const { t } = useTranslation();
   const qp = useMemo(() => new URLSearchParams(window.location.search), []);
   const domain = qp.get("domain") ?? qp.get("DOMAIN") ?? "";
   const memberId = qp.get("member_id") ?? qp.get("memberId") ?? "";
@@ -45,9 +47,9 @@ export default function BitrixInstallPage() {
     claimAttemptedRef.current = true;
     void (async () => {
       const ok = await claimInstall();
-      if (ok) toast.success("Bitrix подключен к аккаунту Gridix");
+      if (ok) toast.success(t("bitrix.install.toast.connected"));
     })();
-  }, [status, user, claimInstall]);
+  }, [status, user, claimInstall, t]);
 
   // BX24.installFinish() — завершаем установку в Bitrix сразу после отображения claimed
   useEffect(() => {
@@ -76,16 +78,16 @@ export default function BitrixInstallPage() {
 
   const handleClaim = async () => {
     if (!domain || !memberId) {
-      toast.error("Нет параметров установки (domain/member_id)");
+      toast.error(t("bitrix.install.toast.missingInstallParams"));
       return;
     }
     if (!user) {
-      toast.error("Сначала войдите в Gridix");
+      toast.error(t("bitrix.install.toast.loginFirst"));
       return;
     }
     const ok = await claimInstall();
-    if (ok) toast.success("Bitrix подключен к аккаунту Gridix");
-    else toast.error(error ?? "Не удалось привязать установку");
+    if (ok) toast.success(t("bitrix.install.toast.connected"));
+    else toast.error(error ?? t("bitrix.install.toast.claimFailed"));
   };
 
   const handleLogin = () => {
@@ -102,13 +104,15 @@ export default function BitrixInstallPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
-              Gridix • Подключение Bitrix24
+              {t("bitrix.install.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {domain && memberId ? (
               <div className="rounded-md border p-2">
-                <div className="font-medium">Параметры</div>
+                <div className="font-medium">
+                  {t("bitrix.install.paramsTitle")}
+                </div>
                 <div className="text-muted-foreground">
                   domain: <span className="font-mono">{domain}</span>
                 </div>
@@ -118,8 +122,7 @@ export default function BitrixInstallPage() {
               </div>
             ) : (
               <div className="text-muted-foreground">
-                Эта страница — точка входа для подключения Bitrix24. Перейдите
-                сюда с параметрами domain и member_id.
+                {t("bitrix.install.entrypointDescription")}
               </div>
             )}
           </CardContent>
@@ -128,14 +131,14 @@ export default function BitrixInstallPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
-              Привязка к аккаунту Gridix
+              {t("bitrix.install.bindTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="min-h-[120px] space-y-3">
             {claimed ? (
               <div className="space-y-3">
                 <div className="text-sm font-medium text-green-600">
-                  Готово. Интеграция привязана к вашему аккаунту.
+                  {t("bitrix.install.claimedSuccess")}
                 </div>
               </div>
             ) : loading ? (
@@ -145,12 +148,10 @@ export default function BitrixInstallPage() {
             ) : needsInstall ? (
               <div className="space-y-3">
                 <div className="text-sm text-muted-foreground">
-                  Сначала установите приложение Gridix из маркетплейса Bitrix24.
-                  После установки вы попадёте на страницу завершения.
+                  {t("bitrix.install.needsInstallPrimary")}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Если вы уже установили — переустановите приложение или
-                  обновите страницу.
+                  {t("bitrix.install.needsInstallSecondary")}
                 </div>
               </div>
             ) : (
@@ -161,29 +162,29 @@ export default function BitrixInstallPage() {
                 {!user ? (
                   <>
                     <div className="text-sm text-muted-foreground">
-                      Войдите или зарегистрируйтесь в Gridix — привязка
-                      выполнится автоматически.
+                      {t("bitrix.install.loginHint")}
                     </div>
                     <Button
                       onClick={handleLogin}
                       className="w-full"
                       disabled={!domain || !memberId}
                     >
-                      Войти в Gridix
+                      {t("bitrix.install.loginButton")}
                     </Button>
                   </>
                 ) : (
                   <>
                     <div className="text-sm text-muted-foreground">
-                      Нажмите кнопку ниже, чтобы привязать установку Bitrix к
-                      аккаунту {user.email ?? ""}.
+                      {t("bitrix.install.claimHint", {
+                        email: user.email ?? "",
+                      })}
                     </div>
                     <Button
                       onClick={handleClaim}
                       className="w-full"
                       disabled={!domain || !memberId}
                     >
-                      Привязать установку Bitrix к аккаунту
+                      {t("bitrix.install.claimButton")}
                     </Button>
                   </>
                 )}
