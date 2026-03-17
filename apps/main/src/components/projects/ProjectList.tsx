@@ -495,6 +495,10 @@ const ProjectList = ({
     const [pendingVideoUploads, setPendingVideoUploads] = useState<
       PendingVideoUpload[]
     >([]);
+    const [videoLinksInput, setVideoLinksInput] = useState("");
+    const [videoLinksError, setVideoLinksError] = useState<string | null>(null);
+    const [addingVideoLinks, setAddingVideoLinks] = useState(false);
+    const [videoLinksExpanded, setVideoLinksExpanded] = useState(false);
     const [previewMedia, setPreviewMedia] = useState<{
       kind: "image" | "video";
       url: string;
@@ -541,6 +545,45 @@ const ProjectList = ({
         return sanitizedFallback;
       }
       return sanitizedFallback;
+    };
+
+    const isExternalVideoUrl = (url: string) => {
+      try {
+        const parsed = new URL(url, window.location.origin);
+        const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+        return (
+          host.includes("youtube.com") ||
+          host === "youtu.be" ||
+          host.includes("vimeo.com") ||
+          host.includes("dailymotion.com") ||
+          host.includes("rutube.ru") ||
+          host.includes("vkvideo.ru")
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    const parseVideoLinks = (input: string): string[] | null => {
+      const links = input
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (links.length === 0) return [];
+
+      const normalized: string[] = [];
+      for (const link of links) {
+        try {
+          const parsed = new URL(link);
+          if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            return null;
+          }
+          normalized.push(parsed.toString());
+        } catch {
+          return null;
+        }
+      }
+      return normalized;
     };
 
     const triggerDownload = (href: string, filename: string) => {
@@ -725,6 +768,48 @@ const ProjectList = ({
       }
     };
 
+    const addVideoLinks = async () => {
+      const links = parseVideoLinks(videoLinksInput);
+      if (!links) {
+        setVideoLinksError(t("projectList.media.invalidLink"));
+        return;
+      }
+      if (links.length === 0) return;
+      if (!user) {
+        toast.error(t("projectList.authRequired"));
+        return;
+      }
+
+      setVideoLinksError(null);
+      setAddingVideoLinks(true);
+      try {
+        for (const link of links) {
+          const form = new FormData();
+          form.set("action", "upload_media_item");
+          form.set("project_id", project.id);
+          form.set("kind", "video");
+          form.set("url", link);
+
+          const { data, error: invokeErr } = await supabase.functions.invoke(
+            "project-drawer",
+            { body: form },
+          );
+          if (invokeErr) throw invokeErr;
+          if (data?.error) throw new Error(String(data.error));
+        }
+
+        toast.success(t("projectList.media.uploadSuccess"));
+        setVideoLinksInput("");
+        setVideoLinksExpanded(false);
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to add video links", e);
+        toast.error(t("projectList.media.uploadError"));
+      } finally {
+        setAddingVideoLinks(false);
+      }
+    };
+
     const handleDeleteMedia = async (url: string) => {
       if (!url || deletingUrl) return;
       setDeletingUrl(url);
@@ -834,23 +919,67 @@ const ProjectList = ({
               <PlayCircle size={16} /> {t("projectList.media.videos")} (
               {videos.length})
             </h4>
-            <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
-              {uploading === "video"
-                ? t("projectList.media.uploading")
-                : t("projectList.media.add")}
-              <input
-                type="file"
-                className="hidden"
-                accept="video/*"
-                multiple
-                disabled={uploading !== null}
-                onChange={(e) => {
-                  handleVideoSelection(e.target.files);
-                  e.currentTarget.value = "";
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
+                onClick={() => {
+                  setVideoLinksExpanded((prev) => !prev);
+                  setVideoLinksError(null);
                 }}
-              />
-            </label>
+              >
+                <Globe size={13} />
+                {t("projectList.media.linksLabel")}
+              </button>
+              <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
+                {uploading === "video"
+                  ? t("projectList.media.uploading")
+                  : t("projectList.media.add")}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="video/*"
+                  multiple
+                  disabled={uploading !== null}
+                  onChange={(e) => {
+                    handleVideoSelection(e.target.files);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+            </div>
           </div>
+          {videoLinksExpanded && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <label className="mb-2 block text-xs font-bold text-slate-600">
+                {t("projectList.media.linksLabel")}
+              </label>
+              <textarea
+                value={videoLinksInput}
+                onChange={(e) => {
+                  setVideoLinksInput(e.target.value);
+                  if (videoLinksError) setVideoLinksError(null);
+                }}
+                placeholder={t("projectList.media.linksPlaceholder")}
+                className="min-h-[88px] w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
+              />
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-[11px] text-slate-500">
+                  {videoLinksError ?? t("projectList.media.linksHint")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void addVideoLinks()}
+                  disabled={addingVideoLinks || uploading !== null}
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {addingVideoLinks
+                    ? t("projectList.media.uploading")
+                    : t("projectList.media.add")}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {videos.map((vid, i) => (
               <div key={`${vid.url}-${i}`} className="group relative">
@@ -878,13 +1007,17 @@ const ProjectList = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    if (isExternalVideoUrl(vid.url)) {
+                      window.open(vid.url, "_blank", "noopener,noreferrer");
+                      return;
+                    }
                     setPreviewMedia({
                       kind: "video",
                       url: vid.url,
                       title: vid.title,
-                    })
-                  }
+                    });
+                  }}
                   className="block w-full space-y-2 text-left"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-black">
@@ -894,6 +1027,15 @@ const ProjectList = ({
                         alt={vid.title}
                         className="h-full w-full object-cover opacity-80"
                       />
+                    ) : isExternalVideoUrl(vid.url) ? (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                        <div className="text-center text-white/80">
+                          <Globe size={24} className="mx-auto mb-2" />
+                          <div className="text-xs font-bold uppercase">
+                            {t("projectList.media.linksLabel")}
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <video
                         src={vid.url}

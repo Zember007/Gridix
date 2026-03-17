@@ -322,6 +322,9 @@ const MediaTab: React.FC<{
   t: (key: string, params?: Record<string, unknown>) => string;
 }> = ({ project, isConnected, onConnect, t }) => {
   const [zipping, setZipping] = useState(false);
+  const [brokenVideoThumbnails, setBrokenVideoThumbnails] = useState<
+    Record<string, boolean>
+  >({});
   const media = project.media;
 
   // Derived values — safe to use before early returns in hooks
@@ -457,6 +460,18 @@ const MediaTab: React.FC<{
     (videos?.length ?? 0) +
     (presentations?.filter((d) => d.url).length ?? 0);
   const canDownloadAll = downloadAllItemCount > 0;
+  const hasRenderableMedia =
+    (renders?.length ?? 0) > 0 ||
+    (videos?.length ?? 0) > 0 ||
+    (presentations?.length ?? 0) > 0;
+
+  if (!hasRenderableMedia) {
+    return (
+      <div className="p-10 text-center text-slate-400">
+        {t("drawer.media.noMaterials")}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-6">
@@ -523,45 +538,49 @@ const MediaTab: React.FC<{
             {t("drawer.media.videos")}
           </h5>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {videos.map((vid, i) => (
-              <button
-                type="button"
-                key={`video-${i}`}
-                onClick={() => handleDownloadVideo(vid)}
-                className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-slate-900 text-left focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2 focus:outline-none"
-              >
-                {vid.thumbnail ? (
-                  <img
-                    src={vid.thumbnail}
-                    alt={vid.title}
-                    className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display =
-                        "none";
-                    }}
-                  />
-                ) : (
-                  <video
-                    src={vid.url}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
-                  />
-                )}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
-                    <Download size={18} className="text-white" />
+            {videos.map((vid, i) => {
+              const sizeLabel = formatBytes(vid.sizeBytes);
+              return (
+                <div key={`video-${i}`} className="group space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadVideo(vid)}
+                    className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-slate-900 text-left focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2 focus:outline-none"
+                  >
+                    {vid.thumbnail && !brokenVideoThumbnails[vid.url] ? (
+                      <img
+                        src={vid.thumbnail}
+                        alt={vid.title}
+                        className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
+                        onError={() => {
+                          setBrokenVideoThumbnails((prev) => ({
+                            ...prev,
+                            [vid.url]: true,
+                          }));
+                        }}
+                      />
+                    ) : (
+                      <video
+                        src={vid.url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-60"
+                      />
+                    )}
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
+                        <Download size={18} className="text-white" />
+                      </div>
+                    </div>
+                  </button>
+                  <div className="truncate text-xs font-bold text-slate-700">
+                    {vid.title}
+                    {sizeLabel ? ` (${sizeLabel})` : ""}
                   </div>
                 </div>
-                <div className="absolute bottom-2 left-2 max-w-[90%] truncate text-xs font-bold text-white drop-shadow">
-                  {vid.title}
-                  {formatBytes(vid.sizeBytes)
-                    ? ` (${formatBytes(vid.sizeBytes)})`
-                    : ""}
-                </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
