@@ -34,8 +34,6 @@ import { SubscriptionAlert } from "./SubscriptionAlert";
 import { ProjectHeader } from "./ProjectHeader";
 import Spinner from "@/shared/ui/Spinner.tsx";
 // Section components
-import { FacadeSection } from "./sections/FacadeSection";
-import { FloorPlanSection } from "./sections/FloorPlanSection";
 import { SidePanelWrapper } from "./sections/SidePanelWrapper";
 import { ApartmentDetailsSheet } from "./sections/ApartmentDetailsSheet";
 import { ProjectErrorBoundary } from "./sections/ProjectErrorBoundary";
@@ -47,6 +45,16 @@ const InteractiveProjectsMap = lazy(
 const FavoritesTab = lazy(() => import("../FavoritesTab"));
 const ListView = lazy(() =>
   import("./views/ListView").then((module) => ({ default: module.ListView })),
+);
+const FacadeSection = lazy(() =>
+  import("./sections/FacadeSection").then((module) => ({
+    default: module.FacadeSection,
+  })),
+);
+const FloorPlanSection = lazy(() =>
+  import("./sections/FloorPlanSection").then((module) => ({
+    default: module.FloorPlanSection,
+  })),
 );
 
 interface ProjectApartmentSelectorProps {
@@ -192,10 +200,6 @@ const ProjectApartmentSelector = ({
 
   const themeColor = project?.theme_color ?? "#000000";
 
-  const facadeDataLoaded =
-    !shouldLoadFacadeData ||
-    (floorsAllLoaded && settingsLoaded && facadesLoaded);
-
   const visibleFields = useMemo(
     () =>
       fieldSettings
@@ -235,11 +239,8 @@ const ProjectApartmentSelector = ({
   }, [filters.filteredApartments]);
 
   const isInitialLoading = useMemo(
-    () =>
-      !apartmentsLoaded ||
-      !project ||
-      (viewMode === "facade" && !facadeDataLoaded),
-    [apartmentsLoaded, project, viewMode, facadeDataLoaded],
+    () => !apartmentsLoaded || !project,
+    [apartmentsLoaded, project],
   );
   const showContent = apartmentsLoaded;
 
@@ -463,49 +464,55 @@ const ProjectApartmentSelector = ({
                       ) : (
                         <div className="relative h-full min-w-0 flex-1">
                           {viewMode === "facade" ? (
-                            <FacadeSection
-                              project={project as Project}
-                              themeColor={themeColor}
-                              imageUrl={activeFacadeImageUrl}
-                              filtersRef={filtersRef}
-                              buildingImageLoaded={buildingImageLoaded}
-                              buildingImageNaturalSize={
-                                buildingImageNaturalSize
-                              }
-                              visibleFields={visibleFields}
-                              buildingFloors={buildingFloors}
-                              facadeSettings={facadeSettings}
-                              loading={floorsAllLoading || settingsLoading}
-                              facades={facades.map((f) => ({
-                                id: f.id,
-                                name: f.name,
-                              }))}
-                              activeFacadeIndex={ui.activeFacadeIndex}
-                              onFacadeChange={ui.setActiveFacadeIndex}
-                              onFloorSelect={openFloorPreview}
-                              onApartmentSelect={openApartmentPreview}
-                              filters={filters}
-                              setViewMode={setViewMode}
-                              preloadedLayoutPhotosByRooms={
-                                preloadedLayoutPhotosByRooms
-                              }
-                              isMobile={isMobile ?? false}
-                            />
+                            <Suspense fallback={loaderBlock}>
+                              <FacadeSection
+                                project={project as Project}
+                                themeColor={themeColor}
+                                imageUrl={activeFacadeImageUrl}
+                                filtersRef={filtersRef}
+                                buildingImageLoaded={buildingImageLoaded}
+                                buildingImageNaturalSize={
+                                  buildingImageNaturalSize
+                                }
+                                visibleFields={visibleFields}
+                                buildingFloors={buildingFloors}
+                                facadeSettings={facadeSettings}
+                                loading={floorsAllLoading || settingsLoading}
+                                facades={facades.map((f) => ({
+                                  id: f.id,
+                                  name: f.name,
+                                }))}
+                                activeFacadeIndex={ui.activeFacadeIndex}
+                                onFacadeChange={ui.setActiveFacadeIndex}
+                                onFloorSelect={openFloorPreview}
+                                onApartmentSelect={openApartmentPreview}
+                                filters={filters}
+                                setViewMode={setViewMode}
+                                preloadedLayoutPhotosByRooms={
+                                  preloadedLayoutPhotosByRooms
+                                }
+                                isMobile={isMobile ?? false}
+                              />
+                            </Suspense>
                           ) : (
-                            <FloorPlanSection
-                              project={project as Project}
-                              filteredApartments={filters.filteredApartments}
-                              allApartments={apartments}
-                              selectedFloorForPlan={selectedFloorForPlan}
-                              setSelectedFloorForPlan={setSelectedFloorForPlan}
-                              onApartmentSelect={openApartmentPreview}
-                              visibleFields={visibleFields}
-                              getUniqueFloors={filters.getUniqueFloors}
-                              themeColor={themeColor}
-                              showOnlyAvailable={filters.showOnlyAvailable}
-                              isMobile={isMobile ?? false}
-                              selectedCurrency={filters.selectedCurrency}
-                            />
+                            <Suspense fallback={loaderBlock}>
+                              <FloorPlanSection
+                                project={project as Project}
+                                filteredApartments={filters.filteredApartments}
+                                allApartments={apartments}
+                                selectedFloorForPlan={selectedFloorForPlan}
+                                setSelectedFloorForPlan={
+                                  setSelectedFloorForPlan
+                                }
+                                onApartmentSelect={openApartmentPreview}
+                                visibleFields={visibleFields}
+                                getUniqueFloors={filters.getUniqueFloors}
+                                themeColor={themeColor}
+                                showOnlyAvailable={filters.showOnlyAvailable}
+                                isMobile={isMobile ?? false}
+                                selectedCurrency={filters.selectedCurrency}
+                              />
+                            </Suspense>
                           )}
                         </div>
                       )}

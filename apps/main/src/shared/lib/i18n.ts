@@ -2,12 +2,15 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { addSharedResources, DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 
-// Импорт всех JSON файлов переводов
-// Используем относительный путь от текущего файла (src/shared/lib/i18n.ts -> src/locales)
-const localeModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  "../../locales/*/*.json",
-  { eager: true },
-);
+const SUPPORTED_LANGUAGES = ["ru", "en", "ka", "ar", "he", "tr"] as const;
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+
+const eagerLocaleModules = import.meta.glob<{
+  default: Record<string, unknown>;
+}>("../../locales/en/*.json", { eager: true });
+const lazyLocaleModules = import.meta.glob<{
+  default: Record<string, unknown>;
+}>("../../locales/*/*.json");
 
 // Отладочная информация
 // Функция для преобразования вложенных объектов в плоскую структуру с точечными ключами
@@ -40,44 +43,87 @@ function flattenTranslations(
   return flattened;
 }
 
-// Собираем все переводы в формат resources для i18next
 const resources: Record<string, { translation: Record<string, string> }> = {};
+const loadedLanguages = new Set<string>();
 
-Object.entries(localeModules).forEach(([path, mod]) => {
-  // Извлекаем язык и имя файла из пути: /locales/ru/common.json -> ru, common
+function parseLocalePath(path: string): {
+  language: SupportedLanguage;
+  fileBase: string;
+} | null {
   const match = path.match(/\/locales\/(ru|en|ka|ar|he|tr)\/(.+)\.json$/);
-  if (!match) {
-    console.warn("[i18n] Не удалось распарсить путь:", path);
-    return;
+  if (!match || !match[1] || !match[2]) {
+    return null;
   }
 
-  const lng = match[1];
-  const fileBase = match[2];
+  return {
+    language: match[1] as SupportedLanguage,
+    fileBase: match[2],
+  };
+}
 
-  if (!lng || !fileBase) {
-    console.warn("[i18n] Неверный формат пути:", path);
-    return;
+function addModuleToResources(
+  path: string,
+  mod: { default: Record<string, unknown> },
+) {
+  const parsed = parseLocalePath(path);
+  if (!parsed) return;
+
+  const { language, fileBase } = parsed;
+  const flat = flattenTranslations(mod.default ?? {}, fileBase);
+
+  if (!resources[language]) {
+    resources[language] = { translation: {} };
   }
 
-  const data = (mod as { default: Record<string, unknown> }).default ?? {};
+  Object.assign(resources[language].translation, flat);
+}
 
-  // Преобразуем JSON в плоскую структуру с префиксом из имени файла
-  const flat = flattenTranslations(data, fileBase);
-
-  // Инициализируем язык, если его еще нет
-  if (!resources[lng]) {
-    resources[lng] = { translation: {} };
-  }
-
-  // Добавляем переводы в общий namespace translation
-  Object.assign(resources[lng].translation, flat);
+Object.entries(eagerLocaleModules).forEach(([path, mod]) => {
+  addModuleToResources(path, mod as { default: Record<string, unknown> });
 });
+
+loadedLanguages.add("en");
+
+async function ensureLanguageResources(language: string): Promise<void> {
+  if (!SUPPORTED_LANGUAGES.includes(language as SupportedLanguage)) return;
+  if (loadedLanguages.has(language)) return;
+
+  const entries = Object.entries(lazyLocaleModules).filter(([path]) =>
+    path.includes(`/locales/${language}/`),
+  );
+
+  if (!entries.length) {
+    loadedLanguages.add(language);
+    return;
+  }
+
+  const loaded = await Promise.all(entries.map(([, load]) => load()));
+  for (let i = 0; i < entries.length; i += 1) {
+    const [path] = entries[i] ?? [];
+    const mod = loaded[i];
+    if (!path || !mod) continue;
+    addModuleToResources(path, mod);
+  }
+
+  loadedLanguages.add(language);
+}
+
+function detectInitialLanguage(): SupportedLanguage {
+  if (typeof window === "undefined") {
+    return DEFAULT_LANGUAGE as SupportedLanguage;
+  }
+
+  const match = window.location.pathname.match(
+    /^\/(ru|en|ka|ar|he|tr)(?:\/|$)/,
+  );
+  return (match?.[1] as SupportedLanguage | undefined) ?? "en";
+}
 
 // Инициализация i18next
 void i18n.use(initReactI18next).init({
   resources,
-  lng: DEFAULT_LANGUAGE,
-  fallbackLng: ["en", "ru"],
+  lng: "en",
+  fallbackLng: ["en"],
 
   interpolation: {
     escapeValue: false, // React уже экранирует
@@ -97,5 +143,16 @@ void i18n.use(initReactI18next).init({
 });
 
 addSharedResources(i18n);
+
+const initialLanguage = detectInitialLanguage();
+void ensureLanguageResources(initialLanguage).then(() => {
+  if (i18n.language !== initialLanguage) {
+    void i18n.changeLanguage(initialLanguage);
+  }
+});
+
+i18n.on("languageChanged", (language) => {
+  void ensureLanguageResources(language);
+});
 
 export default i18n;
