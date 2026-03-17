@@ -22,10 +22,9 @@ import {
   Upload,
   Plus,
   Trash2,
+  SquarePen,
   Undo2,
   Redo2,
-  ChevronLeft,
-  ChevronRight,
   X,
   Copy,
   RefreshCw,
@@ -40,7 +39,6 @@ import {
   deleteApartmentPhoto,
 } from "@/features/projectEditor/api/projectEditorApi";
 import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
-import PolygonCustomizationSettings from "./PolygonCustomizationSettings";
 import { TooltipProvider } from "@gridix/ui";
 import PolygonAnnotator, {
   PolygonAnnotatorRef,
@@ -143,6 +141,9 @@ const FloorPlanEditor = ({
   >([]);
   const [newFloorDialogOpen, setNewFloorDialogOpen] = useState(false);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(0);
+  const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(
+    null,
+  );
 
   // Новые состояния для работы с PolygonAnnotator
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -157,7 +158,14 @@ const FloorPlanEditor = ({
   const isApplyingHistoryRef = useRef(false);
   const historyGestureActiveRef = useRef(false);
   const historyGestureTimerRef = useRef<number | null>(null);
-  const lastPolygonClickRef = useRef<{ id: string; ts: number } | null>(null);
+  const formPanelAnchorRef = useRef<HTMLDivElement | null>(null);
+  const isApartmentFormOpen = editingApartment !== null;
+  const canStartDrawingFromImage =
+    isApartmentFormOpen &&
+    ((isCreatingNew && !currentShape) ||
+      (!isCreatingNew &&
+        !!editingApartment &&
+        (currentShape?.points.length ?? 0) === 0));
 
   const cloneShape = useCallback((shape: Shape): Shape => {
     return {
@@ -165,6 +173,19 @@ const FloorPlanEditor = ({
       points: shape.points.map((point) => ({ ...point })),
     };
   }, []);
+
+  const ensureFloorSelected = useCallback(() => {
+    const floorIsNumber = Number.isInteger(floorNumber);
+    const hasFloorInProject =
+      allFloors.length === 0 || allFloors.includes(floorNumber);
+
+    if (floorIsNumber && hasFloorInProject) {
+      return true;
+    }
+
+    toast.error("Сначала выберите этаж");
+    return false;
+  }, [allFloors, floorNumber]);
 
   const resetHistoryGesture = useCallback(() => {
     historyGestureActiveRef.current = false;
@@ -181,6 +202,16 @@ const FloorPlanEditor = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isApartmentFormOpen) return;
+    window.requestAnimationFrame(() => {
+      formPanelAnchorRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [isApartmentFormOpen]);
 
   const { user } = useAuth();
   const { project } = useProjectInEditorScope(projectId);
@@ -247,9 +278,9 @@ const FloorPlanEditor = ({
         .order("floor_number");
 
       if (buildingFloorsData && buildingFloorsData.length > 0) {
-        const existingFloors = buildingFloorsData
-          .map((f) => f.floor_number)
-          .sort((a, b) => a - b);
+        const existingFloors = Array.from(
+          new Set(buildingFloorsData.map((f) => f.floor_number)),
+        ).sort((a, b) => a - b);
         setAllFloors(existingFloors);
       } else if (project) {
         // Fallback to project.floors if no building floors exist
@@ -660,6 +691,10 @@ const FloorPlanEditor = ({
   };
 
   const startEditingApartment = async (apartmentId: string | null) => {
+    if (!ensureFloorSelected()) {
+      return;
+    }
+
     if (editingApartment !== apartmentId) {
       const persisted = await persistCurrentPolygonBeforeApartmentSwitch();
       if (!persisted) return;
@@ -668,6 +703,7 @@ const FloorPlanEditor = ({
     if (apartmentId === "new") {
       setIsCreatingNew(true);
       setEditingApartment("new");
+      setSelectedApartmentId("new");
       setApartmentData({
         number: "",
         rooms: 1,
@@ -688,6 +724,7 @@ const FloorPlanEditor = ({
       if (apartment) {
         setIsCreatingNew(false);
         setEditingApartment(apartmentId);
+        setSelectedApartmentId(apartmentId);
         setApartmentData({
           number: apartment.apartment_number,
           rooms: apartment.rooms,
@@ -720,7 +757,9 @@ const FloorPlanEditor = ({
           color: getStatusColor(apartment.status),
           isSelected: true,
         };
-        setCurrentShape(editingShape);
+        // Для квартиры без полигона оставляем currentShape = null,
+        // чтобы первый клик по изображению запустил создание полигона.
+        setCurrentShape(apartment.polygon.length > 0 ? editingShape : null);
         undoStackRef.current = [];
         redoStackRef.current = [];
         resetHistoryGesture();
@@ -730,21 +769,23 @@ const FloorPlanEditor = ({
   };
 
   const handlePolygonSave = async () => {
-    if (!currentShape || !apartmentData.number) {
+    if (!ensureFloorSelected()) {
+      return;
+    }
+
+    if (!apartmentData.number) {
       toast.error(t("floorPlan.apartments.fillAllFields"));
       return;
     }
 
     try {
-      // Получаем актуальные координаты из аннотатора
-      const shapeToSave = await getActualCurrentShape(currentShape);
-
-      if (shapeToSave.points.length < 3) {
-        toast.error("Полигон должен содержать минимум 3 точки");
-        return;
+      // Разрешаем сохранение квартиры без полигона.
+      // Если shape неполный (<3 точек), сохраняем как пустой полигон.
+      let points: Point[] = [];
+      if (currentShape) {
+        const shapeToSave = await getActualCurrentShape(currentShape);
+        points = shapeToSave.points.length >= 3 ? shapeToSave.points : [];
       }
-
-      const points = shapeToSave.points;
 
       if (isCreatingNew) {
         const { data, error } = await supabase
@@ -895,37 +936,24 @@ const FloorPlanEditor = ({
     });
   };
 
-  const pointCount = currentShape?.points.length ?? 0;
-  const selectedVertexDisplayIndex =
-    selectedVertexIndex !== null &&
-    selectedVertexIndex >= 0 &&
-    selectedVertexIndex < pointCount
-      ? selectedVertexIndex + 1
-      : pointCount > 0
-        ? pointCount
-        : 0;
-
-  const canSelectVertex = pointCount > 0;
-  const selectPrevVertex = () => {
-    if (!canSelectVertex) return;
-    setSelectedVertexIndex((prev) => {
-      const current =
-        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
-      return current === 0 ? pointCount - 1 : current - 1;
-    });
-  };
-
-  const selectNextVertex = () => {
-    if (!canSelectVertex) return;
-    setSelectedVertexIndex((prev) => {
-      const current =
-        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
-      return (current + 1) % pointCount;
-    });
-  };
-
   const handlePolygonCancel = () => {
     resetEditing();
+  };
+
+  const handleDeletePolygon = () => {
+    if (!editingApartment || editingApartment === "new") return;
+    setCurrentShape(null);
+    setSelectedVertexIndex(null);
+    setShapes((prev) =>
+      prev.map((shape) =>
+        shape.id === editingApartment ? { ...shape, points: [] } : shape,
+      ),
+    );
+    setApartments((prev) =>
+      prev.map((apt) =>
+        apt.id === editingApartment ? { ...apt, polygon: [] } : apt,
+      ),
+    );
   };
 
   const handlePolygonAnnotationClick = (id: string) => {
@@ -935,17 +963,7 @@ const FloorPlanEditor = ({
       }
       return;
     }
-
-    const now = Date.now();
-    const prev = lastPolygonClickRef.current;
-    const isDoubleClick = prev && prev.id === id && now - prev.ts <= 320;
-
-    lastPolygonClickRef.current = { id, ts: now };
-
-    if (isDoubleClick) {
-      void startEditingApartment(id);
-      lastPolygonClickRef.current = null;
-    }
+    setSelectedApartmentId(id);
   };
 
   const deleteApartment = async (apartmentId: string) => {
@@ -1008,10 +1026,6 @@ const FloorPlanEditor = ({
       default:
         return "#22c55e";
     }
-  };
-
-  const handleSettingsChange = (newSettings: PolygonSettings) => {
-    setPolygonSettings(newSettings);
   };
 
   const openSyncDialog = (sourceApartment: Apartment) => {
@@ -1283,171 +1297,177 @@ const FloorPlanEditor = ({
         {/* Main content grid */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Right sidebar - Apartment Details */}
-          {editingApartment && (
-            <Card className="order-last lg:col-span-3">
-              <CardHeader>
-                <CardTitle className="text-md">
-                  {t("floorPlan.apartments.parameters")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="apt-number">
-                    {t("floorPlan.apartments.number")}
-                  </Label>
-                  <Input
-                    id="apt-number"
-                    value={apartmentData.number}
-                    onChange={(e) =>
-                      setApartmentData((prev) => ({
-                        ...prev,
-                        number: e.target.value,
-                      }))
-                    }
-                    placeholder={t("floorPlan.apartments.numberPlaceholder")}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apt-rooms">
-                    {t("floorPlan.apartments.rooms")}
-                  </Label>
-                  <Select
-                    value={apartmentData.rooms.toString()}
-                    onValueChange={(value) =>
-                      setApartmentData((prev) => ({ ...prev, rooms: value }))
-                    }
-                  >
-                    <SelectTrigger id="apt-rooms" className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">{t("apartment.studio")}</SelectItem>
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="apt-area">
-                    {t("floorPlan.apartments.area")}
-                  </Label>
-                  <Input
-                    id="apt-area"
-                    type="number"
-                    value={apartmentData.area}
-                    onChange={(e) =>
-                      setApartmentData((prev) => ({
-                        ...prev,
-                        area: parseFloat(e.target.value) || 0,
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apt-price">
-                    {t("floorPlan.apartments.price")}
-                  </Label>
-                  <Input
-                    id="apt-price"
-                    type="number"
-                    value={apartmentData.price}
-                    onChange={(e) =>
-                      setApartmentData((prev) => ({
-                        ...prev,
-                        price: parseFloat(e.target.value) || 0,
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apt-status">
-                    {t("floorPlan.apartments.status")}
-                  </Label>
-                  <Select
-                    value={apartmentData.status}
-                    onValueChange={(value: "available" | "sold" | "reserved") =>
-                      setApartmentData((prev) => ({ ...prev, status: value }))
-                    }
-                  >
-                    <SelectTrigger id="apt-status" className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="available">
-                        {t("floorPlan.apartments.available")}
-                      </SelectItem>
-                      <SelectItem value="reserved">
-                        {t("floorPlan.apartments.reserved")}
-                      </SelectItem>
-                      <SelectItem value="sold">
-                        {t("floorPlan.apartments.sold")}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <ApartmentCustomFields
-                  {...(editingApartment !== "new" && editingApartment
-                    ? { apartmentId: editingApartment }
-                    : {})}
-                  projectId={projectId}
-                  customFieldsData={customFieldsData}
-                  onCustomFieldsChange={setCustomFieldsData}
-                />
-
-                {/* Секция фото */}
-                {editingApartment && editingApartment !== "new" && (
-                  <div className="space-y-2 border-t pt-4">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      <Label className="text-sm font-medium">
-                        {t("floorPlan.apartments.photos")}
-                      </Label>
-                    </div>
+          {isApartmentFormOpen && (
+            <div ref={formPanelAnchorRef} className="order-last lg:col-span-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-md">
+                    {t("floorPlan.apartments.parameters")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="apt-number">
+                      {t("floorPlan.apartments.number")}
+                    </Label>
                     <Input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleApartmentPhotoUpload}
-                      disabled={uploadingPhotos}
-                      className="text-xs"
+                      id="apt-number"
+                      value={apartmentData.number}
+                      onChange={(e) =>
+                        setApartmentData((prev) => ({
+                          ...prev,
+                          number: e.target.value,
+                        }))
+                      }
+                      placeholder={t("floorPlan.apartments.numberPlaceholder")}
+                      className="mt-1"
                     />
-                    {apartmentPhotos.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {apartmentPhotos.map((photo) => (
-                          <div key={photo.id} className="group relative">
-                            <img
-                              src={photo.image_url}
-                              alt="Apartment"
-                              className="h-20 w-full rounded object-cover"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="absolute right-1 top-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
-                              onClick={() =>
-                                handleDeleteApartmentPhoto(
-                                  photo.id,
-                                  photo.image_url,
-                                )
-                              }
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div>
+                    <Label htmlFor="apt-rooms">
+                      {t("floorPlan.apartments.rooms")}
+                    </Label>
+                    <Select
+                      value={apartmentData.rooms.toString()}
+                      onValueChange={(value) =>
+                        setApartmentData((prev) => ({ ...prev, rooms: value }))
+                      }
+                    >
+                      <SelectTrigger id="apt-rooms" className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">
+                          {t("apartment.studio")}
+                        </SelectItem>
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="apt-area">
+                      {t("floorPlan.apartments.area")}
+                    </Label>
+                    <Input
+                      id="apt-area"
+                      type="number"
+                      value={apartmentData.area}
+                      onChange={(e) =>
+                        setApartmentData((prev) => ({
+                          ...prev,
+                          area: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="apt-price">
+                      {t("floorPlan.apartments.price")}
+                    </Label>
+                    <Input
+                      id="apt-price"
+                      type="number"
+                      value={apartmentData.price}
+                      onChange={(e) =>
+                        setApartmentData((prev) => ({
+                          ...prev,
+                          price: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="apt-status">
+                      {t("floorPlan.apartments.status")}
+                    </Label>
+                    <Select
+                      value={apartmentData.status}
+                      onValueChange={(
+                        value: "available" | "sold" | "reserved",
+                      ) =>
+                        setApartmentData((prev) => ({ ...prev, status: value }))
+                      }
+                    >
+                      <SelectTrigger id="apt-status" className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="available">
+                          {t("floorPlan.apartments.available")}
+                        </SelectItem>
+                        <SelectItem value="reserved">
+                          {t("floorPlan.apartments.reserved")}
+                        </SelectItem>
+                        <SelectItem value="sold">
+                          {t("floorPlan.apartments.sold")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <ApartmentCustomFields
+                    {...(editingApartment !== "new" && editingApartment
+                      ? { apartmentId: editingApartment }
+                      : {})}
+                    projectId={projectId}
+                    customFieldsData={customFieldsData}
+                    onCustomFieldsChange={setCustomFieldsData}
+                  />
+
+                  {/* Секция фото */}
+                  {editingApartment && editingApartment !== "new" && (
+                    <div className="space-y-2 border-t pt-4">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        <Label className="text-sm font-medium">
+                          {t("floorPlan.apartments.photos")}
+                        </Label>
+                      </div>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleApartmentPhotoUpload}
+                        disabled={uploadingPhotos}
+                        className="text-xs"
+                      />
+                      {apartmentPhotos.length > 0 && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {apartmentPhotos.map((photo) => (
+                            <div key={photo.id} className="group relative">
+                              <img
+                                src={photo.image_url}
+                                alt="Apartment"
+                                className="h-20 w-full rounded object-cover"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute right-1 top-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
+                                onClick={() =>
+                                  handleDeleteApartmentPhoto(
+                                    photo.id,
+                                    photo.image_url,
+                                  )
+                                }
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
           {/* Left sidebar - Apartments list */}
           <Card className="lg:col-span-1">
@@ -1462,7 +1482,7 @@ const FloorPlanEditor = ({
                   onClick={() => {
                     void startEditingApartment("new");
                   }}
-                  disabled={!!editingApartment}
+                  disabled={isApartmentFormOpen}
                   size="sm"
                   className="w-full"
                 >
@@ -1476,12 +1496,13 @@ const FloorPlanEditor = ({
                     <div
                       key={apartment.id}
                       className={`cursor-pointer rounded border p-2 transition-colors hover:bg-muted/50 ${
-                        editingApartment === apartment.id
+                        editingApartment === apartment.id ||
+                        selectedApartmentId === apartment.id
                           ? "border-primary bg-primary/10"
                           : ""
                       }`}
                       onClick={() => {
-                        void startEditingApartment(apartment.id);
+                        setSelectedApartmentId(apartment.id);
                       }}
                     >
                       <div className="mb-1 flex items-center justify-between">
@@ -1515,9 +1536,25 @@ const FloorPlanEditor = ({
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setSelectedApartmentId(apartment.id);
+                            void startEditingApartment(apartment.id);
+                          }}
+                          className="h-6 px-2"
+                          title={
+                            t("floorPlan.apartments.editAction") ||
+                            "Редактировать"
+                          }
+                        >
+                          <SquarePen className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleDuplicateApartment(apartment);
                           }}
-                          disabled={!!editingApartment}
+                          disabled={isApartmentFormOpen}
                           className="h-6 px-2"
                           title="Дублировать"
                         >
@@ -1530,9 +1567,12 @@ const FloorPlanEditor = ({
                             e.stopPropagation();
                             openSyncDialog(apartment);
                           }}
-                          disabled={!!editingApartment}
+                          disabled={isApartmentFormOpen}
                           className="h-6 px-2"
-                          title="Синхронизировать"
+                          title={
+                            t("floorPlan.apartments.syncAction") ||
+                            "Синхронизировать"
+                          }
                         >
                           <RefreshCw className="h-3 w-3" />
                         </Button>
@@ -1543,7 +1583,7 @@ const FloorPlanEditor = ({
                             e.stopPropagation();
                             deleteApartment(apartment.id);
                           }}
-                          disabled={!!editingApartment}
+                          disabled={isApartmentFormOpen}
                           className="h-6 px-2"
                           title="Удалить"
                         >
@@ -1564,11 +1604,11 @@ const FloorPlanEditor = ({
                 <CardTitle className="text-md">
                   {isCreatingNew
                     ? t("floorPlan.apartments.newApartment")
-                    : editingApartment
+                    : isApartmentFormOpen
                       ? `${t("floorPlan.apartments.editApartment", { number: apartmentData.number })}`
                       : t("floorPlan.title")}
                 </CardTitle>
-                {(editingApartment || currentShape) && (
+                {isApartmentFormOpen && (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
                       onClick={handleUndo}
@@ -1589,25 +1629,6 @@ const FloorPlanEditor = ({
                       <Redo2 className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      onClick={selectPrevVertex}
-                      variant="outline"
-                      size="sm"
-                      disabled={!canSelectVertex}
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5" />
-                    </Button>
-                    <span className="min-w-[56px] text-center text-xs text-muted-foreground">
-                      {selectedVertexDisplayIndex}/{pointCount}
-                    </span>
-                    <Button
-                      onClick={selectNextVertex}
-                      variant="outline"
-                      size="sm"
-                      disabled={!canSelectVertex}
-                    >
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
                       onClick={() => {
                         void handleDeletePoint();
                       }}
@@ -1618,9 +1639,27 @@ const FloorPlanEditor = ({
                         selectedVertexIndex === null ||
                         currentShape.points.length <= 3
                       }
-                      title="Delete point"
+                      title={
+                        t("floorPlan.apartments.deletePoint") || "Удалить point"
+                      }
                     >
                       <Trash2 className="h-3.5 w-3.5" />
+                      {t("floorPlan.apartments.deletePoint") || "Удалить point"}
+                    </Button>
+                    <Button
+                      onClick={handleDeletePolygon}
+                      variant="outline"
+                      size="sm"
+                      disabled={!editingApartment || editingApartment === "new"}
+                      title={
+                        t("floorPlan.apartments.deletePolygon") ||
+                        "Удалить полигон"
+                      }
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {t("floorPlan.apartments.deletePolygon") ||
+                        "Удалить полигон"}
                     </Button>
                     <Button
                       onClick={handlePolygonSave}
@@ -1628,17 +1667,17 @@ const FloorPlanEditor = ({
                       disabled={
                         isCreatingNew && currentShape?.points.length === 0
                       }
+                      title={t("buildingImage.polygon.save")}
                     >
-                      <Save className="mr-1 h-3 w-3" />
-                      {t("buildingImage.polygon.save")}
+                      <Save className="h-3 w-3" />
                     </Button>
                     <Button
                       onClick={handlePolygonCancel}
                       variant="outline"
                       size="sm"
+                      title={t("buildingImage.polygon.cancel")}
                     >
-                      <X className="mr-1 h-3 w-3" />
-                      {t("buildingImage.polygon.cancel")}
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
                 )}
@@ -1656,9 +1695,7 @@ const FloorPlanEditor = ({
                   onSelectVertexIndex={setSelectedVertexIndex}
                   onCurrentShapeUpdate={handleCurrentShapeUpdate}
                   onClickAnnotationId={handlePolygonAnnotationClick}
-                  drawingEnabled={
-                    !!editingApartment && isCreatingNew && !currentShape
-                  }
+                  drawingEnabled={canStartDrawingFromImage}
                 />
               ) : (
                 <div className="flex h-[600px] items-center justify-center rounded-lg border-2 border-dashed border-muted">
