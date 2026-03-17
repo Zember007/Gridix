@@ -23,13 +23,13 @@ import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Building2, User, Download, CreditCard } from "lucide-react";
+import { CONTRACT_FLAT_VARIABLE_ALIASES } from "@/features/agency-general-conditions/model/constants";
 
 type Step = "details" | "signature" | "contracts" | "success";
 
 type ContractTemplate = {
   id: number;
   name: string;
-  lang: string | null;
   storage_path: string;
   url: string | null;
   created_at?: string | null;
@@ -267,10 +267,6 @@ export default function AgentApplicationPage() {
   >(null);
 
   // Contract selection state
-  const [selectedLangs, setSelectedLangs] = useState<string[]>([]);
-  const [selectedTemplateByLang, setSelectedTemplateByLang] = useState<
-    Record<string, string>
-  >({});
   const [acceptedAgreements, setAcceptedAgreements] = useState(false);
   const [fullscreenTemplatePath, setFullscreenTemplatePath] = useState<
     string | null
@@ -329,32 +325,6 @@ export default function AgentApplicationPage() {
         setProgramSettings(
           (data?.program_settings ?? null) as ProgramSettings | null,
         );
-
-        // Initialize selection: pick 1 template per lang and preselect all langs
-        const langs = Array.from(
-          new Set(
-            nextTemplates
-              .map((t) =>
-                typeof t.lang === "string" && t.lang ? t.lang : null,
-              )
-              .filter((x): x is string => !!x),
-          ),
-        ).sort();
-        setSelectedLangs(langs);
-
-        const byLang: Record<string, ContractTemplate[]> = {};
-        for (const t of nextTemplates) {
-          const l = typeof t.lang === "string" && t.lang ? t.lang : null;
-          if (!l) continue;
-          if (!byLang[l]) byLang[l] = [];
-          byLang[l]!.push(t);
-        }
-        const defaultSelection: Record<string, string> = {};
-        for (const l of langs) {
-          const first = byLang[l]?.[0];
-          if (first?.storage_path) defaultSelection[l] = first.storage_path;
-        }
-        setSelectedTemplateByLang(defaultSelection);
       } catch (e: any) {
         console.error("Error loading contract templates:", e);
         setTemplates([]);
@@ -494,23 +464,7 @@ export default function AgentApplicationPage() {
     }
   };
 
-  const availableLangs = useMemo(() => {
-    const langs = new Set<string>();
-    for (const t of templates) {
-      if (typeof t.lang === "string" && t.lang) langs.add(t.lang);
-    }
-    return Array.from(langs).sort();
-  }, [templates]);
-
-  const selectedTemplates = useMemo(() => {
-    const selectedPaths = selectedLangs
-      .map((l) => selectedTemplateByLang[l])
-      .filter((p): p is string => typeof p === "string" && !!p);
-    const mapByPath = new Map(templates.map((t) => [t.storage_path, t]));
-    return selectedPaths
-      .map((p) => mapByPath.get(p))
-      .filter((t): t is ContractTemplate => !!t);
-  }, [selectedLangs, selectedTemplateByLang, templates]);
+  const selectedTemplates = useMemo(() => templates, [templates]);
   const fullscreenTemplate = useMemo(
     () =>
       selectedTemplates.find(
@@ -615,6 +569,19 @@ export default function AgentApplicationPage() {
     const agentSignatureImage = finalSignatureDataUrl ?? "";
     const developerSignatureImage = developerAssets?.signature_url ?? "";
     const developerStampImage = developerAssets?.stamp_url ?? "";
+    const legacyAliasValues: Record<string, unknown> = {
+      date_text: todayStr,
+      commission_rate: String(program.default_commission_rate ?? ""),
+    };
+
+    const legacyAliases = CONTRACT_FLAT_VARIABLE_ALIASES.reduce<
+      Record<string, unknown>
+    >((acc, alias) => {
+      if (alias in legacyAliasValues) {
+        acc[alias] = legacyAliasValues[alias];
+      }
+      return acc;
+    }, {});
 
     return {
       agent,
@@ -627,31 +594,7 @@ export default function AgentApplicationPage() {
         developer_stamp: developerStampImage,
       },
       date: { today: todayStr },
-
-      // Backward-compatible aliases
-      partner_id: "",
-      partner_name: agent.full_name,
-      company_name: agent.company_name,
-      tax_id: agent.tax_id,
-      address: agent.legal_address,
-      date_text: todayStr,
-      commission_rate: String(program.default_commission_rate ?? ""),
-      sign_image: agentSignatureImage,
-
-      agent_signature: agentSignatureImage,
-      developer_signature: developerSignatureImage,
-      developer_stamp: developerStampImage,
-
-      // Program aliases (to keep templates simpler if needed)
-      default_commission_rate: program.default_commission_rate,
-      payout_terms: program.payout_terms,
-      products_description: program.products_description,
-      territory: program.territory,
-      exclusivity: program.exclusivity,
-      agreement_effective_date: program.agreement_effective_date,
-      agreement_end_date: program.agreement_end_date,
-      force_majeure_weeks: program.force_majeure_weeks,
-      originals_count: program.originals_count,
+      ...legacyAliases,
     } satisfies Record<string, unknown>;
   }, [
     developerId,
@@ -817,7 +760,7 @@ export default function AgentApplicationPage() {
     }
 
     if (selectedTemplates.length === 0) {
-      toast.error(t("agentApplication.selectContractLanguage"));
+      toast.error(t("agentApplication.noContractsFound"));
       return;
     }
 
@@ -1678,89 +1621,18 @@ export default function AgentApplicationPage() {
                             <div className="text-lg font-black text-slate-900">
                               {t("agentApplication.contractsTitle")}
                             </div>
-                            <div className="text-sm text-slate-500">
-                              {t("agentApplication.contractsMultiLanguageHint")}
-                            </div>
                           </div>
 
                           <div className="flex flex-wrap gap-2">
-                            {availableLangs.length === 0 ? (
+                            {selectedTemplates.length === 0 ? (
                               <div className="text-sm text-slate-500">
                                 {templatesLoading
                                   ? t("agentApplication.loadingContracts")
                                   : t("agentApplication.noContractsFound")}
                               </div>
-                            ) : (
-                              availableLangs.map((l) => {
-                                const active = selectedLangs.includes(l);
-                                return (
-                                  <button
-                                    key={l}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedLangs((prev) => {
-                                        if (prev.includes(l))
-                                          return prev.filter((x) => x !== l);
-                                        return [...prev, l];
-                                      });
-                                    }}
-                                    className={[
-                                      "rounded-xl border px-3 py-2 text-sm font-extrabold transition",
-                                      active
-                                        ? "border-slate-900 bg-slate-900 text-white"
-                                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
-                                    ].join(" ")}
-                                  >
-                                    {l}
-                                  </button>
-                                );
-                              })
-                            )}
+                            ) : null}
                           </div>
                         </div>
-
-                        {/* Template selector per language (if multiple templates exist) */}
-                        {selectedLangs.length > 0 && (
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {selectedLangs.map((l) => {
-                              const options = templates.filter(
-                                (t) => String(t.lang) === l,
-                              );
-                              if (options.length <= 1) return null;
-                              return (
-                                <div
-                                  key={l}
-                                  className="rounded-xl border border-slate-200 bg-white p-4"
-                                >
-                                  <div className="mb-2 text-xs font-bold uppercase text-slate-500">
-                                    {t("agentApplication.templateLabel", {
-                                      lang: l,
-                                    })}
-                                  </div>
-                                  <select
-                                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none"
-                                    value={selectedTemplateByLang[l] ?? ""}
-                                    onChange={(e) =>
-                                      setSelectedTemplateByLang((prev) => ({
-                                        ...prev,
-                                        [l]: e.target.value,
-                                      }))
-                                    }
-                                  >
-                                    {options.map((t) => (
-                                      <option
-                                        key={t.storage_path}
-                                        value={t.storage_path}
-                                      >
-                                        {t.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
 
                         {/* A4 previews row */}
                         <div className="overflow-x-auto rounded-2xl bg-slate-200 p-3 md:p-4">
@@ -1781,7 +1653,7 @@ export default function AgentApplicationPage() {
                                   previewByTemplatePath[template.storage_path]
                                     ?.loading ?? true
                                 }
-                                label={`${template.lang ?? "—"} · ${template.name}`}
+                                label={template.name}
                                 loadingText={t(
                                   "agentApplication.loadingContracts",
                                 )}
@@ -1810,46 +1682,81 @@ export default function AgentApplicationPage() {
                             if (!open) setFullscreenTemplatePath(null);
                           }}
                         >
-                          <DialogContent className="h-[96vh] w-[96vw] max-w-[1280px] overflow-y-auto p-4 md:p-6">
+                          <DialogContent className="h-[100dvh] w-screen max-w-none gap-0 overflow-hidden rounded-none border-0 p-0">
                             {fullscreenTemplate && (
-                              <div className="space-y-4">
-                                <div className="text-sm font-bold text-slate-700">
-                                  {`${fullscreenTemplate.lang ?? "—"} · ${fullscreenTemplate.name}`}
+                              <div className="flex h-full w-full flex-col bg-slate-950">
+                                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-white">
+                                  {fullscreenTemplate.name}
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="text-white hover:bg-white/10 hover:text-white"
+                                    onClick={() =>
+                                      setFullscreenTemplatePath(null)
+                                    }
+                                  >
+                                    Close
+                                  </Button>
                                 </div>
-                                <ContractPreview
-                                  template={fullscreenTemplate}
-                                  previewUrl={
+                                {(() => {
+                                  const preview =
                                     previewByTemplatePath[
                                       fullscreenTemplate.storage_path
-                                    ]?.url ?? null
+                                    ];
+                                  const previewUrl = preview?.url ?? null;
+                                  const previewMime = preview?.mime ?? null;
+                                  const isLoading = preview?.loading ?? true;
+                                  const embeddedUrl =
+                                    previewUrl &&
+                                    previewMime === "application/pdf"
+                                      ? previewUrl
+                                      : previewUrl
+                                        ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`
+                                        : null;
+
+                                  if (isLoading) {
+                                    return (
+                                      <div className="flex flex-1 items-center justify-center text-sm font-semibold text-slate-300">
+                                        {t("agentApplication.loadingContracts")}
+                                      </div>
+                                    );
                                   }
-                                  previewMime={
-                                    previewByTemplatePath[
-                                      fullscreenTemplate.storage_path
-                                    ]?.mime ?? null
+
+                                  if (embeddedUrl) {
+                                    return (
+                                      <iframe
+                                        title={fullscreenTemplate.name}
+                                        src={embeddedUrl}
+                                        className="h-full min-h-0 w-full flex-1 border-0 bg-white"
+                                      />
+                                    );
                                   }
-                                  isLoading={
-                                    previewByTemplatePath[
-                                      fullscreenTemplate.storage_path
-                                    ]?.loading ?? true
-                                  }
-                                  label={`${fullscreenTemplate.lang ?? "—"} · ${fullscreenTemplate.name}`}
-                                  loadingText={t(
-                                    "agentApplication.loadingContracts",
-                                  )}
-                                  contractText={t("agentApplication.contract")}
-                                  htmlVersionNotSetText={t(
-                                    "agentApplication.htmlVersionNotSet",
-                                  )}
-                                  pdfAvailableText={t(
-                                    "agentApplication.pdfAvailableAfterSubmit",
-                                  )}
-                                  openFileText={t("agentApplication.openFile", {
-                                    name: fullscreenTemplate.name,
-                                  })}
-                                  maxWidth={1100}
-                                  widthClassName="mx-auto w-full max-w-[1100px] shrink-0"
-                                />
+
+                                  return (
+                                    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center text-slate-300">
+                                      <div className="text-lg font-black text-white">
+                                        {t("agentApplication.contract")}
+                                      </div>
+                                      <div className="mt-2 text-sm text-slate-400">
+                                        {t(
+                                          "agentApplication.htmlVersionNotSet",
+                                        )}
+                                      </div>
+                                      {fullscreenTemplate.url && (
+                                        <a
+                                          href={fullscreenTemplate.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="mt-4 text-sm font-bold underline"
+                                        >
+                                          {t("agentApplication.openFile", {
+                                            name: fullscreenTemplate.name,
+                                          })}
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
                           </DialogContent>

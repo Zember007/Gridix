@@ -264,6 +264,28 @@ export interface ApartmentDetailsResult {
   thumbnails: Record<string, string | null>;
 }
 
+export interface PdfTemplateDataResult {
+  project: Tables<"projects"> | null;
+  apartment: Record<string, unknown> | null;
+  fieldSettings: Tables<"project_field_settings">[];
+  apartmentPhotos: {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+  }[];
+  layoutPhotos: {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+  }[];
+  floorPlan: { image_url: string | null } | null;
+  projectDomains: { domain: string; is_primary: boolean }[];
+  companyName: string | null;
+  companyLogoUrl: string | null;
+}
+
 export async function loadApartmentDetails(
   projectId: string,
   apartmentIdentifier: string,
@@ -289,6 +311,35 @@ export async function loadApartmentDetails(
     layoutPhotos: result.layoutPhotos ?? [],
     recommended: result.recommended ?? [],
     thumbnails: result.thumbnails ?? {},
+  };
+}
+
+export async function loadPdfTemplateData(
+  projectId: string,
+  apartmentIdentifier: string,
+  useId = false,
+): Promise<PdfTemplateDataResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "load-pdf-template",
+      projectId,
+      apartmentIdentifier,
+      useId,
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    project: result.project ?? null,
+    apartment: result.apartment ?? null,
+    fieldSettings: result.fieldSettings ?? [],
+    apartmentPhotos: result.apartmentPhotos ?? [],
+    layoutPhotos: result.layoutPhotos ?? [],
+    floorPlan: result.floorPlan ?? null,
+    projectDomains: result.projectDomains ?? [],
+    companyName: result.companyName ?? null,
+    companyLogoUrl: result.companyLogoUrl ?? null,
   };
 }
 

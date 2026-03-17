@@ -1,20 +1,29 @@
 import { useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProject } from "@/entities/project/queries/useProjects";
-import { useApartment } from "@/entities/apartment/queries/useApartment";
-import { useFields } from "@/hooks/useFields";
 import { formatPriceWithCurrency, convertPrice } from "@gridix/utils/lib";
 import { Language } from "@gridix/utils/lib";
 import { Loader } from "@gridix/ui";
 import { useState, useEffect } from "react";
-import { supabase } from "@gridix/utils/api";
 import { Apartment } from "@/entities/apartment/model/types";
 import { Badge } from "@gridix/ui";
+import type { Tables } from "@gridix/types/database";
+import { loadPdfTemplateData } from "@/features/projectSelector/api/projectSelectorApi";
 
 interface PDFTemplatePageProps {
   useId?: boolean;
   apartmentIdProp?: string;
   projectIdProp?: string;
+}
+
+interface PdfFieldSetting {
+  id: string;
+  field_name: string;
+  field_type: string;
+  field_label: string;
+  is_visible: boolean;
+  is_custom: boolean;
+  sort_order: number;
+  field_label_translations?: Partial<Record<Language, string>>;
 }
 
 const PDFTemplatePage = ({
@@ -37,17 +46,16 @@ const PDFTemplatePage = ({
     : apartmentNumber || apartmentId;
 
   const { t, language } = useLanguage();
-  const {
-    project,
-    loading: projectLoading,
-    error: projectError,
-  } = useProject(projectIdentifier || "");
-  const {
-    apartment,
-    loading: apartmentLoading,
-    error: apartmentError,
-  } = useApartment(projectIdentifier, apartmentIdentifier, { useId });
-  const { fields: fieldSettings } = useFields(project?.id || "");
+  const [project, setProject] = useState<Tables<"projects"> | null>(null);
+  const [apartment, setApartment] = useState<Apartment | null>(null);
+  const [fieldSettings, setFieldSettings] = useState<PdfFieldSetting[]>([]);
+  const [projectDomains, setProjectDomains] = useState<
+    { domain: string; is_primary: boolean }[]
+  >([]);
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [photos, setPhotos] = useState<
     Array<{
@@ -61,12 +69,70 @@ const PDFTemplatePage = ({
   const [floorPlan, setFloorPlan] = useState<{
     id: string;
     image_url: string;
-    description: string;
     floor_number: number;
   } | null>(null);
-  const [photosLoading, setPhotosLoading] = useState<boolean>(true);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!projectIdentifier || !apartmentIdentifier) {
+        setLoading(false);
+        setError(t("apartment.invalidId"));
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await loadPdfTemplateData(
+          projectIdentifier,
+          apartmentIdentifier,
+          useId,
+        );
+
+        setProject(result.project);
+        setApartment(result.apartment as Apartment | null);
+        setFieldSettings(
+          (result.fieldSettings ?? []) as unknown as PdfFieldSetting[],
+        );
+        setProjectDomains(result.projectDomains ?? []);
+        setCompanyName(result.companyName);
+        setCompanyLogoUrl(result.companyLogoUrl);
+
+        const layoutPhotos = (result.layoutPhotos ?? []).map((photo) => ({
+          ...photo,
+          type: "layout" as const,
+        }));
+        const apartmentPhotos = (result.apartmentPhotos ?? []).map((photo) => ({
+          ...photo,
+          type: "apartment" as const,
+        }));
+        setPhotos([...layoutPhotos, ...apartmentPhotos]);
+
+        if (
+          result.floorPlan?.image_url &&
+          result.apartment?.floor_number !== undefined
+        ) {
+          setFloorPlan({
+            id: `floor-plan-${String(result.apartment.floor_number)}`,
+            image_url: result.floorPlan.image_url,
+            floor_number: Number(result.apartment.floor_number),
+          });
+        } else {
+          setFloorPlan(null);
+        }
+      } catch (err) {
+        console.error("Error loading PDF template data:", err);
+        setError(err instanceof Error ? err.message : t("common.error"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [projectIdentifier, apartmentIdentifier, t, useId]);
 
   // Initialize currency from project if available
   useEffect(() => {
@@ -77,11 +143,25 @@ const PDFTemplatePage = ({
 
   // Generate QR code when data is ready
   useEffect(() => {
-    const updateQRCode = async () => {
+    const updateQRCode = () => {
       if (!project || !apartment) return;
 
       try {
-        const baseDomain = await getBaseDomain();
+        const currentHostname = window.location.hostname;
+        const isProjectDomain = projectDomains.some(
+          (pd) => pd.domain.toLowerCase() === currentHostname.toLowerCase(),
+        );
+        const primaryDomain = projectDomains.find(
+          (pd) => pd.is_primary,
+        )?.domain;
+        const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN
+          ? `https://${import.meta.env.VITE_SERVER_DOMAIN}`
+          : "https://app.gridix.live";
+        const baseDomain = isProjectDomain
+          ? window.location.origin
+          : primaryDomain
+            ? "https://" + primaryDomain
+            : fallbackDomain;
         const url = `${baseDomain}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}`;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
         setQrCodeUrl(qrUrl);
@@ -92,85 +172,7 @@ const PDFTemplatePage = ({
     };
 
     updateQRCode();
-  }, [project, apartment, language]);
-
-  // Load photos (layout + apartment + floor plan)
-  useEffect(() => {
-    const loadPhotos = async () => {
-      if (!apartment || !project?.id) return;
-      setPhotosLoading(true);
-      try {
-        const layoutType =
-          apartment.type === "apartment"
-            ? apartment.rooms == 0
-              ? "studio"
-              : apartment.rooms === "free_layout"
-                ? "free_layout"
-                : `${apartment.rooms}-room`
-            : apartment.type;
-
-        const [layoutRes, aptRes, floorPlanRes] = await Promise.all([
-          supabase
-            .from("layout_photos")
-            .select("*")
-            .eq("project_id", project.id)
-            .eq("layout_type", layoutType)
-            .order("order_index", { ascending: true }),
-          supabase
-            .from("apartment_photos")
-            .select("*")
-            .eq("apartment_id", apartment.id)
-            .order("order_index", { ascending: true }),
-          supabase
-            .from("floor_plans")
-            .select("image_url")
-            .eq("project_id", project.id)
-            .eq("floor_number", apartment.floor_number)
-            .maybeSingle(),
-        ]);
-
-        const layoutPhotos = (layoutRes.data || []).map((photo) => ({
-          id: photo.id as string,
-          image_url: photo.image_url as string,
-          description:
-            (photo as { description?: string | null }).description ?? null,
-          order_index: (photo as { order_index: number }).order_index,
-          type: "layout" as const,
-        }));
-
-        const apartmentPhotos = (aptRes.data || []).map((photo) => ({
-          id: photo.id as string,
-          image_url: photo.image_url as string,
-          description:
-            (photo as { description?: string | null }).description ?? null,
-          order_index: (photo as { order_index: number }).order_index,
-          type: "apartment" as const,
-        }));
-
-        // Set floor plan separately if available
-        if (floorPlanRes.data?.image_url) {
-          setFloorPlan({
-            id: `floor-plan-${apartment.floor_number}`,
-            image_url: floorPlanRes.data.image_url,
-            description: `${t("pdf.floorPlan")} ${apartment.floor_number} ${t("project.floor").toLowerCase()}`,
-            floor_number: apartment.floor_number,
-          });
-        } else {
-          setFloorPlan(null);
-        }
-
-        const combined = [...layoutPhotos, ...apartmentPhotos];
-        setPhotos(combined);
-      } catch (err) {
-        console.error("Error loading photos:", err);
-        setPhotos([]);
-      } finally {
-        setPhotosLoading(false);
-      }
-    };
-
-    loadPhotos();
-  }, [apartment, project?.id, t]);
+  }, [project, apartment, language, projectDomains]);
 
   const getFieldLabel = (field: {
     field_label: string;
@@ -239,42 +241,6 @@ const PDFTemplatePage = ({
     }
   };
 
-  const getBaseDomain = async () => {
-    if (!project && !projectId) return "";
-
-    // Получаем текущий домен
-    const currentHostname = window.location.hostname;
-
-    // Получаем домены проекта из project_domains
-    const { data: projectDomains } = await supabase
-      .from("project_domains")
-      .select("domain, is_primary, status")
-      .eq("project_id", project?.id || projectId || "")
-      .eq("status", "active");
-
-    // Проверяем, есть ли текущий домен среди доменов проекта
-    const isProjectDomain = projectDomains?.some(
-      (pd) => pd.domain.toLowerCase() === currentHostname.toLowerCase(),
-    );
-    // Определяем базовый домен
-    let baseDomain: string;
-    if (isProjectDomain) {
-      // Используем текущий домен
-      baseDomain = window.location.origin;
-    } else {
-      const primaryDomain = projectDomains?.find((pd) => pd.is_primary)?.domain;
-      if (primaryDomain) {
-        baseDomain = "https://" + primaryDomain;
-      } else {
-        baseDomain =
-          "https://" + import.meta.env.VITE_SERVER_DOMAIN ||
-          "https://app.gridix.live";
-      }
-    }
-
-    return baseDomain;
-  };
-
   const priceVisible = fieldSettings.find(
     (field) => field.field_name === "price",
   )?.is_visible;
@@ -284,10 +250,6 @@ const PDFTemplatePage = ({
   const numberVisible = fieldSettings.find(
     (field) => field.field_name === "number",
   )?.is_visible;
-
-  const loading = projectLoading || apartmentLoading || photosLoading;
-
-  if (!project) return null;
 
   if (loading) {
     return (
@@ -301,16 +263,14 @@ const PDFTemplatePage = ({
     );
   }
 
-  if (projectError || apartmentError) {
+  if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="mb-2 text-xl font-bold text-foreground">
             {t("common.error")}
           </h1>
-          <p className="text-muted-foreground">
-            {projectError || apartmentError}
-          </p>
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
     );
@@ -340,8 +300,15 @@ const PDFTemplatePage = ({
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {companyLogoUrl && (
+              <img
+                src={companyLogoUrl}
+                alt="Company logo"
+                className="h-10 w-10 rounded-md object-contain"
+              />
+            )}
             <span className="text-lg font-semibold text-gray-700">
-              S2 CAPITAL
+              {companyName || "Company"}
             </span>
           </div>
           <div className="flex items-center gap-8 text-right">
@@ -536,7 +503,7 @@ const PDFTemplatePage = ({
             </h3>
             <img
               src={floorPlan.image_url}
-              alt={floorPlan.description}
+              alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
               className="mx-auto h-full max-h-[400px] w-auto"
             />
           </>

@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AlertCircle, FileText, Upload } from "lucide-react";
+import { AlertCircle, FileText, Upload, ExternalLink } from "lucide-react";
 import {
   Button,
   Dialog,
@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from "@gridix/ui";
 import type { Template } from "../model/types";
-import PizZip from "pizzip";
 import { toast } from "sonner";
 
 type TFunction = (key: string) => string;
@@ -24,14 +23,9 @@ interface DocxNativeEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   template: Template | null;
-  onSave: (params: {
-    template: Template;
-    file: File;
-    lang: string;
-  }) => Promise<void>;
+  onSave: (params: { template: Template; file: File }) => Promise<void>;
   isLoading: boolean;
   t: TFunction;
-  variables: Array<{ key: string; label: string }>;
 }
 
 export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
@@ -41,49 +35,17 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
   onSave,
   isLoading,
   t,
-  variables,
 }) => {
-  const [lang, setLang] = useState("RU");
   const [loadingDoc, setLoadingDoc] = useState(false);
   const [saving, setSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [activeFile, setActiveFile] = useState<File | null>(null);
-  const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const regex = useMemo(() => /\{\{\{?\s*([a-zA-Z0-9_.-]+)\s*\}?\}\}/g, []);
-  const allVariables = useMemo(() => {
-    const map = new Map<string, { key: string; label: string }>();
-    for (const v of variables) {
-      map.set(v.key, v);
-    }
-    for (const v of detectedVariables) {
-      const key = `{{${v}}}`;
-      if (!map.has(key)) map.set(key, { key, label: v });
-    }
-    return Array.from(map.values());
-  }, [detectedVariables, variables]);
-
-  const parseVariablesFromDocx = useCallback(
-    async (file: File) => {
-      const binary = await file.arrayBuffer();
-      const zip = new PizZip(binary);
-      const xml =
-        zip.file("word/document.xml")?.asText() ||
-        zip.file("word/header1.xml")?.asText() ||
-        "";
-      const matched = Array.from(xml.matchAll(regex)).map((m) => m[1] || "");
-      const unique = Array.from(new Set(matched.filter(Boolean)));
-      setDetectedVariables(unique);
-    },
-    [regex],
-  );
 
   useEffect(() => {
     if (!isOpen || !template) return;
-    setLang(template.lang || "RU");
     setModalError(null);
     setActiveFile(null);
-    setDetectedVariables([]);
     if (inputRef.current) inputRef.current.value = "";
     if (!template.url) return;
     void (async () => {
@@ -98,7 +60,6 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
           type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         });
         setActiveFile(file);
-        await parseVariablesFromDocx(file);
       } catch (e) {
         console.error("Template download failed", e);
         setModalError(t("partners.generalConditions.errorDownload"));
@@ -106,7 +67,7 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
         setLoadingDoc(false);
       }
     })();
-  }, [isOpen, t, template, regex]);
+  }, [isOpen, t, template]);
 
   const handleSubmit = async () => {
     if (!template || !activeFile) return;
@@ -115,26 +76,13 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
       const file = new File([await activeFile.arrayBuffer()], template.name, {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
-      await onSave({ template, file, lang });
+      await onSave({ template, file });
       onClose();
     } catch (e) {
       console.error("Template save failed", e);
       setModalError(t("partners.generalConditions.errorSaveTemplate"));
     } finally {
       setSaving(false);
-    }
-  };
-
-  const insertVariable = (variable: string) => {
-    void copyVariable(variable);
-  };
-
-  const copyVariable = async (variable: string) => {
-    try {
-      await navigator.clipboard.writeText(variable);
-      toast.success("Переменная скопирована");
-    } catch {
-      toast.error("Не удалось скопировать переменную");
     }
   };
 
@@ -159,16 +107,6 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
                 <p className="text-xs text-slate-500">
                   {t("partners.generalConditions.wordDocument")}
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value)}
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700"
-                >
-                  <option value="RU">RU</option>
-                  <option value="EN">EN</option>
-                </select>
               </div>
             </div>
 
@@ -203,28 +141,75 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
                     <Upload size={14} className="mr-2" />
                     {t("partners.generalConditions.uploadFile")}
                   </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={async () => {
+                      const url = prompt(
+                        t(
+                          "partners.generalConditions.documentLinkPlaceholder",
+                        ) || "Google Doc link",
+                      );
+                      if (!url) return;
+                      const match = url.match(
+                        /docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/,
+                      );
+                      const docId = match?.[1];
+                      if (!docId) {
+                        toast.error(
+                          t(
+                            "partners.generalConditions.googleImportInvalidLink",
+                          ) || "Invalid link",
+                        );
+                        return;
+                      }
+                      setLoadingDoc(true);
+                      setModalError(null);
+                      try {
+                        const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=docx`;
+                        let res = await fetch(exportUrl, {
+                          mode: "cors",
+                          credentials: "omit",
+                        });
+                        if (!res.ok) {
+                          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(exportUrl)}`;
+                          res = await fetch(proxyUrl);
+                        }
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const arrayBuffer = await res.arrayBuffer();
+                        const file = new File(
+                          [arrayBuffer],
+                          activeFile?.name || template?.name || "imported.docx",
+                          {
+                            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                          },
+                        );
+                        setActiveFile(file);
+                      } catch (e) {
+                        console.error("Google Docs fetch failed", e);
+                        setModalError(
+                          t(
+                            "partners.generalConditions.googleImportComingSoon",
+                          ) || "Failed import",
+                        );
+                      } finally {
+                        setLoadingDoc(false);
+                      }
+                    }}
+                  >
+                    <ExternalLink size={14} className="mr-2" />
+                    {t("partners.generalConditions.importGoogleDocs")}
+                  </Button>
                 </div>
                 <input
                   ref={inputRef}
                   type="file"
                   accept=".docx"
                   className="hidden"
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const next = e.target.files?.[0] ?? null;
                     if (!next) return;
-                    setLoadingDoc(true);
-                    setModalError(null);
-                    try {
-                      setActiveFile(next);
-                      await parseVariablesFromDocx(next);
-                    } catch (error) {
-                      console.error("DOCX parse failed", error);
-                      setModalError(
-                        t("partners.generalConditions.errorOpenTemplate"),
-                      );
-                    } finally {
-                      setLoadingDoc(false);
-                    }
+                    setActiveFile(next);
                   }}
                 />
                 <p className="mt-4 text-xs text-slate-500">
@@ -238,54 +223,9 @@ export const DocxNativeEditorModal: React.FC<DocxNativeEditorModalProps> = ({
                     className="mt-2 inline-flex items-center text-xs font-semibold text-slate-500 underline hover:text-slate-700"
                   >
                     <FileText size={12} className="mr-1" />
-                    Скачать исходный DOCX
+                    {t("partners.generalConditions.downloadDocx")}
                   </a>
                 )}
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white">
-            <div className="border-b border-slate-100 bg-slate-50 p-3">
-              <div className="text-sm font-bold text-slate-900">
-                {t("partners.generalConditions.variables")}
-              </div>
-              <p className="mt-1 text-[11px] text-slate-500">
-                {t("partners.generalConditions.variablesHint")}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 p-3">
-              {allVariables.length === 0 ? (
-                <div className="text-xs text-slate-400">
-                  {t("partners.generalConditions.noTemplates")}
-                </div>
-              ) : (
-                allVariables.map((v) => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => {
-                      insertVariable(v.key);
-                    }}
-                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left transition-all hover:border-[var(--admin-primary)] hover:bg-[var(--admin-background-secondary)]"
-                  >
-                    <div className="text-[11px] font-bold text-slate-700">
-                      {v.label}
-                    </div>
-                    <div className="mt-0.5 font-mono text-[10px] text-slate-400">
-                      {v.key}
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-            <div className="border-t border-slate-100 p-3">
-              <div className="flex gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-background-secondary)] p-2 text-[11px] text-[var(--admin-text-secondary)]">
-                <AlertCircle
-                  size={14}
-                  className="mt-0.5 shrink-0 text-[var(--admin-info)]"
-                />
-                <p>Клик по переменной копирует ее в буфер обмена.</p>
               </div>
             </div>
           </div>

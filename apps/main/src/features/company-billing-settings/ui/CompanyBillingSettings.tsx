@@ -128,7 +128,7 @@ export function CompanyBillingSettings() {
                 onChange={(e) =>
                   handleInputChange("company_name", e.target.value)
                 }
-                placeholder="Например: S2 Capital"
+                placeholder="Например: Company Name"
               />
             </div>
 
