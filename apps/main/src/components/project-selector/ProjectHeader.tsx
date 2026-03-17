@@ -64,7 +64,11 @@ export const ProjectHeader = ({
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-US").format(Math.round(price));
   return (
-    <div ref={filtersRef} className="sticky top-0 z-40 bg-white">
+    <div
+      ref={filtersRef}
+      data-project-header
+      className="sticky top-0 z-40 bg-white"
+    >
       <div className="container mx-auto flex flex-col py-2 md:px-6 md:py-3">
         <div className={cn("flex items-center justify-between gap-4")}>
           {!isWidget && (

@@ -359,7 +359,7 @@ const ProjectApartmentSelector = ({
   return (
     <div
       ref={containerRef}
-      className="relative flex min-h-screen select-none flex-col bg-white"
+      className={`relative flex ${isWidget ? "h-full min-h-0 overflow-hidden" : "min-h-screen"} select-none flex-col bg-white`}
     >
       <LoaderView color={themeColor} loading={isInitialLoading} />
       <SubscriptionAlert
