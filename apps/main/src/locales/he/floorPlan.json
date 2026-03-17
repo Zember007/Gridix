@@ -6,7 +6,10 @@
     "available": "זָמִין",
     "deleteError": "שגיאה במחיקת דירה",
     "deleteSuccess": "הדירה נמחקה",
+    "deletePoint": "מחק נקודה",
+    "deletePolygon": "מחק מצולע",
     "editApartment": "ערוך מצולע - דירה מס' {{number}}",
+    "editAction": "לַעֲרוֹך",
     "fillAllFields": "מלא את כל השדות וצור מצולע (מינימום 3 נקודות)",
     "list": "דירות בקומה:",
     "loading": {
@@ -29,6 +32,7 @@
     "roomsShort": "חדרים",
     "saveError": "שגיאה בשמירת הדירה",
     "saveSuccess": "דירה ניצלה",
+    "syncAction": "סנכרון",
     "sold": "נמכר",
     "status": "סטָטוּס",
     "title": "ניהול דירה",

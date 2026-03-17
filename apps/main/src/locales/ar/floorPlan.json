@@ -6,7 +6,10 @@
     "available": "متاحة",
     "deleteError": "خطأ في حذف الشقة",
     "deleteSuccess": "تم حذف الشقة",
+    "deletePoint": "حذف النقطة",
+    "deletePolygon": "حذف المضلع",
     "editApartment": "تحرير المضلع - الشقة رقم {{number}}",
+    "editAction": "يحرر",
     "fillAllFields": "املأ جميع الحقول وأنشئ مضلع (الحد الأدنى 3 نقاط)",
     "list": "الشقق في الطابق:",
     "loading": {
@@ -29,6 +32,7 @@
     "roomsShort": "غرف",
     "saveError": "خطأ في حفظ الشقة",
     "saveSuccess": "تم حفظ الشقة",
+    "syncAction": "مزامنة",
     "sold": "مباعة",
     "status": "الحالة",
     "title": "إدارة الشقق",

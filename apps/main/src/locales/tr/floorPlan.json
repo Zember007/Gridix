@@ -6,7 +6,10 @@
     "available": "Mevcut",
     "deleteError": "Daire silinirken hata oluştu",
     "deleteSuccess": "Daire silindi",
+    "deletePoint": "Noktayı sil",
+    "deletePolygon": "Poligonu sil",
     "editApartment": "Poligonu Düzenle - Daire #{{number}}",
+    "editAction": "Düzenlemek",
     "fillAllFields": "Tüm alanları doldurun ve poligon oluşturun (minimum 3 nokta)",
     "list": "Kattaki daireler:",
     "loading": {
@@ -29,6 +32,7 @@
     "roomsShort": "odalar",
     "saveError": "Daire kaydedilirken hata oluştu",
     "saveSuccess": "Daire kaydedildi",
+    "syncAction": "Senkronizasyon",
     "sold": "Satılmış",
     "status": "Durum",
     "title": "Apartman Yönetimi",
