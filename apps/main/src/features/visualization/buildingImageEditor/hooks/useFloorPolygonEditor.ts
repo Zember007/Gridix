@@ -102,7 +102,9 @@ export function useFloorPolygonEditor({
         };
         lastSavedPointsRef.current = JSON.stringify(editingShape.points);
         setSelectedVertexIndex(floor.polygon.length > 0 ? 0 : null);
-        setCurrentShape(editingShape);
+        // Для этажей без полигона оставляем currentShape = null,
+        // чтобы клик по изображению запускал инициализацию полигона.
+        setCurrentShape(floor.polygon.length > 0 ? editingShape : null);
       }
     },
     [resetStacks, setCurrentShape],
@@ -346,7 +348,10 @@ export function useFloorPolygonEditor({
   }, [currentShape, isCreatingNewFloor, isEditing, saveCurrentPolygon]);
 
   const pointCount = currentShape?.points.length ?? 0;
-  const isPolygonCreationEnabled = isCreatingNewFloor && !currentShape;
+  const isPolygonCreationEnabled =
+    isEditing &&
+    ((isCreatingNewFloor && !currentShape) ||
+      (!isCreatingNewFloor && (currentShape?.points.length ?? 0) === 0));
   const normalizedSelectedVertexIndex =
     selectedVertexIndex !== null &&
     selectedVertexIndex >= 0 &&

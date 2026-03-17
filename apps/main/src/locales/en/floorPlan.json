@@ -6,7 +6,10 @@
     "available": "Available",
     "deleteError": "Error deleting apartment",
     "deleteSuccess": "Apartment deleted",
+    "deletePoint": "Delete point",
+    "deletePolygon": "Delete polygon",
     "editApartment": "Edit Polygon - Apartment #{{number}}",
+    "editAction": "Edit",
     "fillAllFields": "Fill all fields and create polygon (minimum 3 points)",
     "list": "Apartments on floor:",
     "loading": {
@@ -29,6 +32,7 @@
     "roomsShort": "rooms",
     "saveError": "Error saving apartment",
     "saveSuccess": "Apartment saved",
+    "syncAction": "Sync",
     "sold": "Sold",
     "status": "Status",
     "title": "Apartment Management",
