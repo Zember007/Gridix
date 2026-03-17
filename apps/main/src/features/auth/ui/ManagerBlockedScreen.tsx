@@ -4,8 +4,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gridix/ui";
-import { Button } from "@gridix/ui";
+} from "@gridix/ui/card";
+import { Button } from "@gridix/ui/button";
 import { UserX, LogOut } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";

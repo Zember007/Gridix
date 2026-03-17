@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@gridix/ui";
+} from "@gridix/ui/select";
 import { CrmProjectLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
 
 function toPositiveInt(v: string | null): number | null {

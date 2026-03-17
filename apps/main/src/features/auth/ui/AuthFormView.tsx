@@ -1,16 +1,16 @@
-import { Button } from "@gridix/ui";
+import { Button } from "@gridix/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Label } from "@gridix/ui";
-import { Checkbox } from "@gridix/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
-import { Alert, AlertDescription } from "@gridix/ui";
+} from "@gridix/ui/card";
+import { Input } from "@gridix/ui/input";
+import { Label } from "@gridix/ui/label";
+import { Checkbox } from "@gridix/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui/tabs";
+import { Alert, AlertDescription } from "@gridix/ui/alert";
 import {
   Eye,
   EyeOff,

@@ -9,15 +9,25 @@ import {
   EmbedProviders,
   LanguageProviders,
 } from "@/app/providers";
-import {
-  AdminRoutes,
-  DomainRoutes,
-  EmbedRoutes,
-  PublicRoutes,
-} from "@/app/router";
+import { PublicRoutes } from "@/app/router/PublicRoutes";
 import { UsertourBlockingGate } from "@gridix/utils/integrations";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const AdminRoutes = lazy(() =>
+  import("@/app/router/AdminRoutes").then((module) => ({
+    default: module.AdminRoutes,
+  })),
+);
+const EmbedRoutes = lazy(() =>
+  import("@/app/router/EmbedRoutes").then((module) => ({
+    default: module.EmbedRoutes,
+  })),
+);
+const DomainRoutes = lazy(() =>
+  import("@/app/router/DomainRoutes").then((module) => ({
+    default: module.DomainRoutes,
+  })),
+);
 
 export default function App() {
   return (
@@ -54,9 +64,7 @@ export default function App() {
                 path="/:lang/*"
                 element={
                   <LanguageProviders>
-                    <Suspense fallback={<FullPageLoaderView />}>
-                      <PublicRoutes />
-                    </Suspense>
+                    <PublicRoutes />
                   </LanguageProviders>
                 }
               />

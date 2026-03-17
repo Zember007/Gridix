@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader } from "@gridix/ui";
+import { Loader } from "@gridix/ui/loader";
 import { cn } from "@gridix/utils/lib";
 
 interface LoaderViewProps {
