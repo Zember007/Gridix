@@ -160,7 +160,6 @@ const FloorPlanEditor = ({
   const isApplyingHistoryRef = useRef(false);
   const historyGestureActiveRef = useRef(false);
   const historyGestureTimerRef = useRef<number | null>(null);
-  const lastPolygonClickRef = useRef<{ id: string; ts: number } | null>(null);
   const isApartmentFormOpen = editingApartment !== null;
   const canStartDrawingFromImage =
     isApartmentFormOpen &&
@@ -984,24 +983,13 @@ const FloorPlanEditor = ({
       }
       return;
     }
-
-    const now = Date.now();
-    const previous = lastPolygonClickRef.current;
-    const isDoubleClick =
-      previous !== null && previous.id === id && now - previous.ts <= 320;
-
-    lastPolygonClickRef.current = { id, ts: now };
     setSelectedApartmentId(id);
-
-    if (isDoubleClick) {
-      void (async () => {
-        const opened = await startEditingApartment(id);
-        if (opened) {
-          setActiveTab("plan");
-        }
-      })();
-      lastPolygonClickRef.current = null;
-    }
+    void (async () => {
+      const opened = await startEditingApartment(id);
+      if (opened) {
+        setActiveTab("plan");
+      }
+    })();
   };
 
   const deleteApartment = async (apartmentId: string) => {
@@ -1387,13 +1375,15 @@ const FloorPlanEditor = ({
                               : ""
                           }`}
                           onClick={() => {
-                            setSelectedApartmentId(apartment.id);
-                            if (
-                              isApartmentFormOpen &&
-                              editingApartment !== apartment.id
-                            ) {
-                              void startEditingApartment(apartment.id);
-                            }
+                            void (async () => {
+                              setSelectedApartmentId(apartment.id);
+                              const opened = await startEditingApartment(
+                                apartment.id,
+                              );
+                              if (opened) {
+                                setActiveTab("plan");
+                              }
+                            })();
                           }}
                         >
                           <div className="mb-1 flex items-center justify-between">
