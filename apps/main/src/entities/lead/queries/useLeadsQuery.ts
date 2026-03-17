@@ -8,7 +8,14 @@ import { getManagerProjectIds } from "@/hooks/useManagerProjectIds";
 const generateFiltersKey = (filters?: LeadFilters) =>
   JSON.stringify(filters || {}, Object.keys(filters || {}).sort());
 
-export const useLeadsQuery = (filters?: LeadFilters) => {
+type UseLeadsQueryOptions = {
+  enabled?: boolean;
+};
+
+export const useLeadsQuery = (
+  filters?: LeadFilters,
+  options: UseLeadsQueryOptions = {},
+) => {
   const { userRole } = useUserRole();
   const { activeWorkspaceId } = useWorkspace();
   const { user } = useAuth();
@@ -17,7 +24,7 @@ export const useLeadsQuery = (filters?: LeadFilters) => {
 
   const query = useQuery({
     queryKey: ["leads", userRole.type, activeWorkspaceId, filtersKey],
-    enabled: userRole.type !== "loading",
+    enabled: userRole.type !== "loading" && (options.enabled ?? true),
     queryFn: async () => {
       if (userRole.type === "manager" && activeWorkspaceId) {
         const userId = user?.id;

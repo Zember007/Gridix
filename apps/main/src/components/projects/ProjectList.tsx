@@ -88,6 +88,7 @@ const ProjectList = ({
     null,
   );
   const [drawerLoading, setDrawerLoading] = useState(false);
+  const [shouldRenderLeadsStats, setShouldRenderLeadsStats] = useState(false);
 
   const isCrmMode = mode === "crm";
 
@@ -97,6 +98,37 @@ const ProjectList = ({
     Object.entries(themeVariables).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
+  }, []);
+
+  // Defer leads stats to idle time so expensive leads query
+  // does not block first meaningful render of project cards.
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let idleId: number | undefined;
+
+    const enableLeadsStats = () => setShouldRenderLeadsStats(true);
+
+    if (
+      typeof window !== "undefined" &&
+      typeof window.requestIdleCallback === "function"
+    ) {
+      idleId = window.requestIdleCallback(enableLeadsStats, { timeout: 1500 });
+    } else {
+      timeoutId = setTimeout(enableLeadsStats, 600);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (
+        idleId !== undefined &&
+        typeof window !== "undefined" &&
+        typeof window.cancelIdleCallback === "function"
+      ) {
+        window.cancelIdleCallback(idleId);
+      }
+    };
   }, []);
 
   // Удаляем старую функцию loadProjects, так как теперь используется хук
@@ -1403,7 +1435,11 @@ const ProjectList = ({
                       )}
 
                       {/* Leads Stats */}
-                      <LeadsStats projectId={project.id} />
+                      {shouldRenderLeadsStats ? (
+                        <LeadsStats projectId={project.id} />
+                      ) : (
+                        <div className="h-5" />
+                      )}
                     </div>
 
                     {/* Actions */}

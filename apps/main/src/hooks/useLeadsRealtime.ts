@@ -37,12 +37,12 @@ function patchReadAtInCache(
   return { data, found };
 }
 
-export function useLeadsRealtime() {
+export function useLeadsRealtime(enabled = true) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!enabled || !user?.id) return;
 
     const channel = supabase
       .channel(`admin-leads-realtime:${user.id}`)
@@ -126,5 +126,5 @@ export function useLeadsRealtime() {
         // ignore
       }
     };
-  }, [queryClient, user?.id]);
+  }, [enabled, queryClient, user?.id]);
 }

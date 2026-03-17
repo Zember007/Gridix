@@ -25,9 +25,12 @@ export const useAdminDashboardController = () => {
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
   const { amoWidget } = useAmoWidget();
-  const { leads: allLeadsForUnread } = useLeads();
+  const shouldEnableLeads = activeTab === "leads";
+  const { leads: allLeadsForUnread } = useLeads(undefined, {
+    enabled: shouldEnableLeads,
+  });
 
-  useLeadsRealtime();
+  useLeadsRealtime(shouldEnableLeads);
   useAdminDashboardInit(setActiveTab);
   useAdminDashboardTours({
     loading,
