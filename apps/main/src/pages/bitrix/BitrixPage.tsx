@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { useCurrentSession } from "@gridix/utils";
@@ -56,6 +57,7 @@ function normalizeDomain(raw: string | null | undefined): string {
 }
 
 export default function BitrixPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const qp = useMemo(() => new URLSearchParams(window.location.search), []);
   const initialDealId = useMemo(() => {
@@ -194,13 +196,13 @@ export default function BitrixPage() {
   return (
     <div className="min-h-screen space-y-4 bg-white p-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Gridix • Bitrix</h1>
+        <h1 className="text-xl font-semibold">{t("bitrix.page.title")}</h1>
         <Button
           variant="outline"
           size="sm"
           onClick={() => window.location.reload()}
         >
-          Обновить
+          {t("bitrix.page.refresh")}
         </Button>
       </div>
 
@@ -219,12 +221,11 @@ export default function BitrixPage() {
                 onClick={() => (window.location.href = connectUrl)}
                 className="w-full"
               >
-                Подключить Bitrix24
+                {t("bitrix.page.connectButton")}
               </Button>
             ) : (
               <div className="text-muted-foreground">
-                Нет параметров Bitrix (domain/member_id). Откройте страницу из
-                приложения Gridix в Bitrix24.
+                {t("bitrix.page.missingParams")}
               </div>
             )}
           </CardContent>

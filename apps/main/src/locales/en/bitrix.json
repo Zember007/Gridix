@@ -1,0 +1,45 @@
+{
+  "errors": {
+    "installStatusCheck": "Failed to check install status",
+    "connectionGeneric": "Connection error",
+    "claimInstall": "Failed to link installation",
+    "claimGeneric": "Linking error"
+  },
+  "topBar": {
+    "catalog": "Catalog",
+    "currentDeal": "Current deal"
+  },
+  "install": {
+    "title": "Gridix - Bitrix24 Connection",
+    "paramsTitle": "Parameters",
+    "entrypointDescription": "This page is the Bitrix24 connection entry point. Open it with domain and member_id parameters.",
+    "bindTitle": "Link to Gridix account",
+    "claimedSuccess": "Done. Integration is linked to your account.",
+    "needsInstallPrimary": "Install the Gridix app from the Bitrix24 marketplace first. After installation you will be redirected to the completion page.",
+    "needsInstallSecondary": "If the app is already installed, reinstall it or refresh this page.",
+    "loginHint": "Sign in or register in Gridix - linking will be completed automatically.",
+    "loginButton": "Sign in to Gridix",
+    "claimHint": "Click the button below to link this Bitrix installation to account {{email}}.",
+    "claimButton": "Link Bitrix installation to account",
+    "toast": {
+      "connected": "Bitrix is linked to your Gridix account",
+      "missingInstallParams": "Missing install parameters (domain/member_id)",
+      "loginFirst": "Please sign in to Gridix first",
+      "claimFailed": "Failed to link installation"
+    }
+  },
+  "page": {
+    "title": "Gridix - Bitrix",
+    "refresh": "Refresh",
+    "connectButton": "Connect Bitrix24",
+    "missingParams": "Bitrix parameters are missing (domain/member_id). Open this page from the Gridix app inside Bitrix24."
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "Link to deal #{{dealId}}",
+    "linkExistingDeal": "Link to an existing deal",
+    "linkDeal": "Link to deal",
+    "createDealInBitrix": "Create deal in Bitrix",
+    "createDeal": "Create deal",
+    "syncHint": "Apartment data (price/number/project/address, etc.) will be written to the Bitrix deal, and a local lead will be created in Gridix for synchronization."
+  }
+}

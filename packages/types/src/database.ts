@@ -194,7 +194,6 @@ export type Database = {
       };
       agent_contract_templates: {
         Row: {
-          content_html: string | null;
           created_at: string;
           developer_user_id: string;
           id: number;
@@ -204,7 +203,6 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
-          content_html?: string | null;
           created_at?: string;
           developer_user_id: string;
           id?: number;
@@ -214,7 +212,6 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
-          content_html?: string | null;
           created_at?: string;
           developer_user_id?: string;
           id?: number;

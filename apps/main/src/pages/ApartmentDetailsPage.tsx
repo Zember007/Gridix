@@ -1218,8 +1218,15 @@ const ApartmentDetailsPage = ({
                               {bitrixBusy
                                 ? "..."
                                 : bitrixDealId
-                                  ? `Привязать к сделке #${bitrixDealId}`
-                                  : "Привязать к существующей сделке"}
+                                  ? t(
+                                      "bitrix.apartmentDetails.linkDealWithId",
+                                      {
+                                        dealId: bitrixDealId,
+                                      },
+                                    )
+                                  : t(
+                                      "bitrix.apartmentDetails.linkExistingDeal",
+                                    )}
                             </Button>
                             <Button
                               variant="outline"
@@ -1227,12 +1234,14 @@ const ApartmentDetailsPage = ({
                               onClick={bitrixCreateDeal}
                               disabled={bitrixBusy}
                             >
-                              {bitrixBusy ? "..." : "Создать сделку в Bitrix"}
+                              {bitrixBusy
+                                ? "..."
+                                : t(
+                                    "bitrix.apartmentDetails.createDealInBitrix",
+                                  )}
                             </Button>
                             <div className="text-xs text-muted-foreground">
-                              В Bitrix сделку будут записаны данные квартиры
-                              (цена/номер/проект/адрес и т.д.), а в Gridix
-                              создастся локальный лид для синхронизации.
+                              {t("bitrix.apartmentDetails.syncHint")}
                             </div>
                           </div>
                         ) : (
@@ -1354,8 +1363,10 @@ const ApartmentDetailsPage = ({
                     {bitrixBusy
                       ? "..."
                       : bitrixDealId
-                        ? `Привязать к сделке #${bitrixDealId}`
-                        : "Привязать к сделке"}
+                        ? t("bitrix.apartmentDetails.linkDealWithId", {
+                            dealId: bitrixDealId,
+                          })
+                        : t("bitrix.apartmentDetails.linkDeal")}
                   </Button>
                   <Button
                     variant="outline"
@@ -1363,7 +1374,9 @@ const ApartmentDetailsPage = ({
                     onClick={bitrixCreateDeal}
                     disabled={bitrixBusy}
                   >
-                    {bitrixBusy ? "..." : "Создать сделку"}
+                    {bitrixBusy
+                      ? "..."
+                      : t("bitrix.apartmentDetails.createDeal")}
                   </Button>
                 </div>
               ) : (
