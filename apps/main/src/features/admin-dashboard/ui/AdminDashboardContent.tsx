@@ -1,14 +1,47 @@
+import { lazy, Suspense } from "react";
 import ProjectList from "@/components/projects/ProjectList";
-import { AdminSettingsRoot } from "@/features/admin-settings";
-import { AdminWidgets } from "@/features/admin-widgets";
-import { LeadsManager } from "@/features/admin-leads-manager";
-import { SubscriptionTab } from "@/features/admin-subscription";
-import PartnersPage from "@/pages/PartnersPage";
-import { AgencyPartnersPage } from "@/features/agency-partners-management";
-import { AdminAnalytics } from "@/features/admin-analytics";
-import { IntegrationsTab } from "@/features/admin-integrations";
-import { AdminContactsPanel as AdminContactsPage } from "@/features/admin-contacts";
+import { LoaderView } from "@/shared/ui/LoaderView";
 import type { UserRole } from "@/hooks/useUserRole";
+
+const AdminSettingsRoot = lazy(() =>
+  import("@/features/admin-settings").then((m) => ({
+    default: m.AdminSettingsRoot,
+  })),
+);
+const AdminWidgets = lazy(() =>
+  import("@/features/admin-widgets").then((m) => ({ default: m.AdminWidgets })),
+);
+const LeadsManager = lazy(() =>
+  import("@/features/admin-leads-manager").then((m) => ({
+    default: m.LeadsManager,
+  })),
+);
+const SubscriptionTab = lazy(() =>
+  import("@/features/admin-subscription").then((m) => ({
+    default: m.SubscriptionTab,
+  })),
+);
+const PartnersPage = lazy(() => import("@/pages/PartnersPage"));
+const AgencyPartnersPage = lazy(() =>
+  import("@/features/agency-partners-management").then((m) => ({
+    default: m.AgencyPartnersPage,
+  })),
+);
+const AdminAnalytics = lazy(() =>
+  import("@/features/admin-analytics").then((m) => ({
+    default: m.AdminAnalytics,
+  })),
+);
+const IntegrationsTab = lazy(() =>
+  import("@/features/admin-integrations").then((m) => ({
+    default: m.IntegrationsTab,
+  })),
+);
+const AdminContactsPage = lazy(() =>
+  import("@/features/admin-contacts").then((m) => ({
+    default: m.AdminContactsPanel,
+  })),
+);
 
 type AdminDashboardContentProps = {
   activeTab: string;
@@ -44,61 +77,65 @@ export const AdminDashboardContent = ({
         </div>
       )}
 
-      {activeTab === "leads" && <LeadsManager showProjectColumn={!isManager} />}
+      <Suspense fallback={<LoaderView />}>
+        {activeTab === "leads" && (
+          <LeadsManager showProjectColumn={!isManager} />
+        )}
 
-      {activeTab === "subscription" && userRole.type !== "manager" && (
-        <div className="h-full space-y-6">
-          <SubscriptionTab />
-        </div>
-      )}
-
-      {activeTab === "partners" && (
-        <div className="h-full space-y-6">
-          <PartnersPage />
-        </div>
-      )}
-
-      {activeTab === "agent_network" && (
-        <div className="space-y-6">
-          <AgencyPartnersPage />
-        </div>
-      )}
-
-      {activeTab === "contacts" && <AdminContactsPage />}
-
-      {activeTab === "widgets" && (
-        <div className="h-full space-y-6">
-          <AdminWidgets />
-        </div>
-      )}
-
-      {activeTab === "analytics" && (
-        <div className="h-full space-y-6">
-          <AdminAnalytics />
-        </div>
-      )}
-
-      {activeTab === "integrations" && userRole.type !== "manager" && (
-        <div className="space-y-6">
-          <IntegrationsTab />
-        </div>
-      )}
-
-      {activeTab === "settings" &&
-        userRole.type !== "manager" &&
-        developerId && (
-          <div className="space-y-6">
-            <AdminSettingsRoot
-              userProfile={user as never}
-              loading={loading}
-              developerId={developerId}
-              isManager={isManager}
-              {...(userRole.managerData
-                ? { managerData: userRole.managerData }
-                : {})}
-            />
+        {activeTab === "subscription" && userRole.type !== "manager" && (
+          <div className="h-full space-y-6">
+            <SubscriptionTab />
           </div>
         )}
+
+        {activeTab === "partners" && (
+          <div className="h-full space-y-6">
+            <PartnersPage />
+          </div>
+        )}
+
+        {activeTab === "agent_network" && (
+          <div className="space-y-6">
+            <AgencyPartnersPage />
+          </div>
+        )}
+
+        {activeTab === "contacts" && <AdminContactsPage />}
+
+        {activeTab === "widgets" && (
+          <div className="h-full space-y-6">
+            <AdminWidgets />
+          </div>
+        )}
+
+        {activeTab === "analytics" && (
+          <div className="h-full space-y-6">
+            <AdminAnalytics />
+          </div>
+        )}
+
+        {activeTab === "integrations" && userRole.type !== "manager" && (
+          <div className="space-y-6">
+            <IntegrationsTab />
+          </div>
+        )}
+
+        {activeTab === "settings" &&
+          userRole.type !== "manager" &&
+          developerId && (
+            <div className="space-y-6">
+              <AdminSettingsRoot
+                userProfile={user as never}
+                loading={loading}
+                developerId={developerId}
+                isManager={isManager}
+                {...(userRole.managerData
+                  ? { managerData: userRole.managerData }
+                  : {})}
+              />
+            </div>
+          )}
+      </Suspense>
     </div>
   );
 };
