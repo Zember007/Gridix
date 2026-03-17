@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Badge,
   Button,
@@ -13,6 +14,7 @@ import {
 import {
   Building,
   Building2,
+  Download,
   Edit3,
   Eye,
   FileText,
@@ -42,6 +44,10 @@ import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { DeveloperConstructionTab } from "./DeveloperConstructionTab";
+import {
+  type PendingVideoUpload,
+  VideoUploadDialog,
+} from "./VideoUploadDialog";
 
 const ProjectUnitsChessEditorTab = lazy(
   () => import("@/components/projects/ProjectUnitsChessEditorTab"),
@@ -158,6 +164,24 @@ const ProjectList = ({
   });
 
   const mapApiProjectToShared = (p: any): SharedProject => {
+    const media = p?.media
+      ? {
+          ...p.media,
+          videos: Array.isArray(p.media.videos)
+            ? p.media.videos.map(
+                (video: {
+                  url: string;
+                  title: string;
+                  thumbnail?: string;
+                  sizeBytes?: number;
+                }) => ({
+                  ...video,
+                }),
+              )
+            : p.media.videos,
+        }
+      : undefined;
+
     const partnershipSettings = p?.partnershipSettings
       ? {
           isEnabled: Boolean(p.partnershipSettings.isEnabled),
@@ -192,7 +216,7 @@ const ProjectList = ({
       minPrice: p?.minPrice ? Number(p.minPrice) : undefined,
       yield: p?.yield ? Number(p.yield) : undefined,
       stats: p?.stats ?? undefined,
-      media: p?.media ?? undefined,
+      media,
       constructionProgress: p?.constructionProgress ?? undefined,
       partnershipSettings,
       partnershipStatus: "active",
@@ -467,6 +491,158 @@ const ProjectList = ({
       null | "render" | "video" | "presentation"
     >(null);
     const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+    const [videoUploadDialogOpen, setVideoUploadDialogOpen] = useState(false);
+    const [pendingVideoUploads, setPendingVideoUploads] = useState<
+      PendingVideoUpload[]
+    >([]);
+    const [videoLinksInput, setVideoLinksInput] = useState("");
+    const [videoLinksError, setVideoLinksError] = useState<string | null>(null);
+    const [addingVideoLinks, setAddingVideoLinks] = useState(false);
+    const [videoLinksExpanded, setVideoLinksExpanded] = useState(false);
+    const [previewMedia, setPreviewMedia] = useState<{
+      kind: "image" | "video";
+      url: string;
+      title: string;
+    } | null>(null);
+
+    const safeFilename = (value: string, fallback: string) => {
+      const cleaned = value
+        .replace(/[<>:"/\\|?*]/g, "_")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+      return cleaned || fallback;
+    };
+
+    const formatBytes = (value?: number) => {
+      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        return null;
+      }
+
+      const units = ["B", "KB", "MB", "GB", "TB"] as const;
+      let size = value;
+      let unitIndex = 0;
+
+      while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+      }
+
+      const fractionDigits = size >= 100 || unitIndex === 0 ? 0 : 1;
+      return `${size.toFixed(fractionDigits)} ${units[unitIndex]}`;
+    };
+
+    const extensionFromUrl = (url: string, fallback: string) => {
+      const sanitizedFallback = fallback.startsWith(".")
+        ? fallback
+        : `.${fallback}`;
+      try {
+        const normalized = new URL(url, window.location.origin);
+        const lastSegment = normalized.pathname.split("/").pop() ?? "";
+        const lastDot = lastSegment.lastIndexOf(".");
+        if (lastDot > 0) return lastSegment.slice(lastDot);
+      } catch {
+        return sanitizedFallback;
+      }
+      return sanitizedFallback;
+    };
+
+    const isExternalVideoUrl = (url: string) => {
+      try {
+        const parsed = new URL(url, window.location.origin);
+        const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+        return (
+          host.includes("youtube.com") ||
+          host === "youtu.be" ||
+          host.includes("vimeo.com") ||
+          host.includes("dailymotion.com") ||
+          host.includes("rutube.ru") ||
+          host.includes("vkvideo.ru")
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    const parseVideoLinks = (input: string): string[] | null => {
+      const links = input
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (links.length === 0) return [];
+
+      const normalized: string[] = [];
+      for (const link of links) {
+        try {
+          const parsed = new URL(link);
+          if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            return null;
+          }
+          normalized.push(parsed.toString());
+        } catch {
+          return null;
+        }
+      }
+      return normalized;
+    };
+
+    const triggerDownload = (href: string, filename: string) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = filename;
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };
+
+    const downloadByUrl = async (url: string, filename: string) => {
+      try {
+        const normalized = new URL(url, window.location.origin);
+        const response = await fetch(normalized.toString(), {
+          mode: "cors",
+          credentials: "omit",
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        triggerDownload(objectUrl, filename);
+
+        // Give the browser time to start the download before cleanup.
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      } catch {
+        try {
+          const normalized = new URL(url, window.location.origin);
+          triggerDownload(normalized.toString(), filename);
+        } catch {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
+      }
+    };
+
+    const resetPendingVideoUploads = () => {
+      setPendingVideoUploads((current) => {
+        current.forEach((item) => {
+          URL.revokeObjectURL(item.filePreviewUrl);
+          if (item.thumbnailPreviewUrl) {
+            URL.revokeObjectURL(item.thumbnailPreviewUrl);
+          }
+        });
+        return [];
+      });
+    };
+
+    useEffect(() => {
+      return () => {
+        pendingVideoUploads.forEach((item) => {
+          URL.revokeObjectURL(item.filePreviewUrl);
+          if (item.thumbnailPreviewUrl) {
+            URL.revokeObjectURL(item.thumbnailPreviewUrl);
+          }
+        });
+      };
+    }, [pendingVideoUploads]);
 
     const uploadFiles = async (
       kind: "render" | "video" | "presentation",
@@ -486,7 +662,7 @@ const ProjectList = ({
           form.set("project_id", project.id);
           form.set("kind", kind);
           form.set("file", file);
-          if (kind === "presentation" || kind === "video") {
+          if (kind === "presentation") {
             form.set("title", file.name.replace(/\.[^/.]+$/, ""));
           }
 
@@ -504,6 +680,133 @@ const ProjectList = ({
         toast.error(t("projectList.media.uploadError"));
       } finally {
         setUploading(null);
+      }
+    };
+
+    const handleVideoSelection = (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+
+      const selected = Array.from(files).map((file, index) => ({
+        id: `${file.name}-${file.lastModified}-${index}`,
+        file,
+        filePreviewUrl: URL.createObjectURL(file),
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        thumbnailFile: null,
+        thumbnailPreviewUrl: null,
+      }));
+
+      setPendingVideoUploads(selected);
+      setVideoUploadDialogOpen(true);
+    };
+
+    const updatePendingVideoTitle = (id: string, title: string) => {
+      setPendingVideoUploads((current) =>
+        current.map((item) => (item.id === id ? { ...item, title } : item)),
+      );
+    };
+
+    const updatePendingVideoThumbnail = (id: string, file: File | null) => {
+      setPendingVideoUploads((current) =>
+        current.map((item) => {
+          if (item.id !== id) return item;
+          if (item.thumbnailPreviewUrl) {
+            URL.revokeObjectURL(item.thumbnailPreviewUrl);
+          }
+          return {
+            ...item,
+            thumbnailFile: file,
+            thumbnailPreviewUrl: file ? URL.createObjectURL(file) : null,
+          };
+        }),
+      );
+    };
+
+    const handleCloseVideoUploadDialog = (open: boolean) => {
+      setVideoUploadDialogOpen(open);
+      if (!open && uploading !== "video") {
+        resetPendingVideoUploads();
+      }
+    };
+
+    const uploadPendingVideos = async () => {
+      if (pendingVideoUploads.length === 0) return;
+      if (!user) {
+        toast.error(t("projectList.authRequired"));
+        return;
+      }
+
+      setUploading("video");
+      try {
+        for (const item of pendingVideoUploads) {
+          const form = new FormData();
+          form.set("action", "upload_media_item");
+          form.set("project_id", project.id);
+          form.set("kind", "video");
+          form.set("file", item.file);
+          form.set("title", item.title.trim() || item.file.name);
+          if (item.thumbnailFile) {
+            form.set("thumbnail", item.thumbnailFile);
+          }
+
+          const { data, error: invokeErr } = await supabase.functions.invoke(
+            "project-drawer",
+            { body: form },
+          );
+          if (invokeErr) throw invokeErr;
+          if (data?.error) throw new Error(String(data.error));
+        }
+
+        toast.success(t("projectList.media.uploadSuccess"));
+        setVideoUploadDialogOpen(false);
+        resetPendingVideoUploads();
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to upload videos", e);
+        toast.error(t("projectList.media.uploadError"));
+      } finally {
+        setUploading(null);
+      }
+    };
+
+    const addVideoLinks = async () => {
+      const links = parseVideoLinks(videoLinksInput);
+      if (!links) {
+        setVideoLinksError(t("projectList.media.invalidLink"));
+        return;
+      }
+      if (links.length === 0) return;
+      if (!user) {
+        toast.error(t("projectList.authRequired"));
+        return;
+      }
+
+      setVideoLinksError(null);
+      setAddingVideoLinks(true);
+      try {
+        for (const link of links) {
+          const form = new FormData();
+          form.set("action", "upload_media_item");
+          form.set("project_id", project.id);
+          form.set("kind", "video");
+          form.set("url", link);
+
+          const { data, error: invokeErr } = await supabase.functions.invoke(
+            "project-drawer",
+            { body: form },
+          );
+          if (invokeErr) throw invokeErr;
+          if (data?.error) throw new Error(String(data.error));
+        }
+
+        toast.success(t("projectList.media.uploadSuccess"));
+        setVideoLinksInput("");
+        setVideoLinksExpanded(false);
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to add video links", e);
+        toast.error(t("projectList.media.uploadError"));
+      } finally {
+        setAddingVideoLinks(false);
       }
     };
 
@@ -536,9 +839,10 @@ const ProjectList = ({
     const renders = project.media?.renders ?? [];
     const videos = project.media?.videos ?? [];
     const docs = project.media?.presentations ?? [];
+    const projectFilenamePrefix = safeFilename(project.name, "project");
 
     return (
-      <div className="space-y-8 p-6">
+      <div className="space-y-6 p-4">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
@@ -567,6 +871,19 @@ const ProjectList = ({
               >
                 <button
                   type="button"
+                  onClick={() =>
+                    void downloadByUrl(
+                      url,
+                      `${projectFilenamePrefix}-render-${i + 1}${extensionFromUrl(url, ".jpg")}`,
+                    )
+                  }
+                  className="absolute right-10 top-2 z-10 rounded-md bg-white/90 p-1 text-slate-700 shadow-sm transition hover:bg-white"
+                  title={t("projectList.media.download")}
+                >
+                  <Download size={14} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => void handleDeleteMedia(url)}
                   disabled={deletingUrl === url}
                   className="absolute right-2 top-2 z-10 rounded-md bg-white/90 p-1 text-red-600 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
@@ -579,6 +896,18 @@ const ProjectList = ({
                   alt={`${t("projectList.media.renders")} ${i + 1}`}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewMedia({
+                      kind: "image",
+                      url,
+                      title: `${t("projectList.media.renders")} ${i + 1}`,
+                    })
+                  }
+                  className="absolute inset-0 z-[1]"
+                  title={t("projectList.media.renders")}
+                />
               </div>
             ))}
           </div>
@@ -590,23 +919,83 @@ const ProjectList = ({
               <PlayCircle size={16} /> {t("projectList.media.videos")} (
               {videos.length})
             </h4>
-            <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
-              {uploading === "video"
-                ? t("projectList.media.uploading")
-                : t("projectList.media.add")}
-              <input
-                type="file"
-                className="hidden"
-                accept="video/*"
-                multiple
-                disabled={uploading !== null}
-                onChange={(e) => void uploadFiles("video", e.target.files)}
-              />
-            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
+                onClick={() => {
+                  setVideoLinksExpanded((prev) => !prev);
+                  setVideoLinksError(null);
+                }}
+              >
+                <Globe size={13} />
+                {t("projectList.media.linksLabel")}
+              </button>
+              <label className="cursor-pointer text-xs font-bold text-blue-600 hover:underline">
+                {uploading === "video"
+                  ? t("projectList.media.uploading")
+                  : t("projectList.media.add")}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="video/*"
+                  multiple
+                  disabled={uploading !== null}
+                  onChange={(e) => {
+                    handleVideoSelection(e.target.files);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+            </div>
           </div>
+          {videoLinksExpanded && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <label className="mb-2 block text-xs font-bold text-slate-600">
+                {t("projectList.media.linksLabel")}
+              </label>
+              <textarea
+                value={videoLinksInput}
+                onChange={(e) => {
+                  setVideoLinksInput(e.target.value);
+                  if (videoLinksError) setVideoLinksError(null);
+                }}
+                placeholder={t("projectList.media.linksPlaceholder")}
+                className="min-h-[88px] w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
+              />
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-[11px] text-slate-500">
+                  {videoLinksError ?? t("projectList.media.linksHint")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void addVideoLinks()}
+                  disabled={addingVideoLinks || uploading !== null}
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {addingVideoLinks
+                    ? t("projectList.media.uploading")
+                    : t("projectList.media.add")}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {videos.map((vid, i) => (
               <div key={`${vid.url}-${i}`} className="group relative">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void downloadByUrl(
+                      vid.url,
+                      `${projectFilenamePrefix}-video-${i + 1}-${safeFilename(vid.title, "video")}${extensionFromUrl(vid.url, ".mp4")}`,
+                    )
+                  }
+                  className="absolute right-10 top-2 z-10 rounded-md bg-white/90 p-1 text-slate-700 shadow-sm transition hover:bg-white"
+                  title={t("projectList.media.download")}
+                >
+                  <Download size={14} />
+                </button>
                 <button
                   type="button"
                   onClick={() => void handleDeleteMedia(vid.url)}
@@ -616,11 +1005,20 @@ const ProjectList = ({
                 >
                   <Trash2 size={14} />
                 </button>
-                <a
-                  href={vid.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block space-y-2"
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isExternalVideoUrl(vid.url)) {
+                      window.open(vid.url, "_blank", "noopener,noreferrer");
+                      return;
+                    }
+                    setPreviewMedia({
+                      kind: "video",
+                      url: vid.url,
+                      title: vid.title,
+                    });
+                  }}
+                  className="block w-full space-y-2 text-left"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-black">
                     {vid.thumbnail ? (
@@ -629,10 +1027,23 @@ const ProjectList = ({
                         alt={vid.title}
                         className="h-full w-full object-cover opacity-80"
                       />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-white/50">
-                        NO PREVIEW
+                    ) : isExternalVideoUrl(vid.url) ? (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                        <div className="text-center text-white/80">
+                          <Globe size={24} className="mx-auto mb-2" />
+                          <div className="text-xs font-bold uppercase">
+                            {t("projectList.media.linksLabel")}
+                          </div>
+                        </div>
                       </div>
+                    ) : (
+                      <video
+                        src={vid.url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-cover opacity-80"
+                      />
                     )}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white backdrop-blur-md">
@@ -642,8 +1053,11 @@ const ProjectList = ({
                   </div>
                   <div className="truncate text-xs font-bold text-slate-700 group-hover:text-blue-600">
                     {vid.title}
+                    {formatBytes(vid.sizeBytes)
+                      ? ` (${formatBytes(vid.sizeBytes)})`
+                      : ""}
                   </div>
-                </a>
+                </button>
               </div>
             ))}
           </div>
@@ -699,6 +1113,21 @@ const ProjectList = ({
                 </a>
                 <button
                   type="button"
+                  onClick={() =>
+                    doc.url &&
+                    void downloadByUrl(
+                      doc.url,
+                      `${projectFilenamePrefix}-${safeFilename(doc.title, "document")}${extensionFromUrl(doc.url, ".pdf")}`,
+                    )
+                  }
+                  disabled={!doc.url}
+                  className="ml-2 rounded-md p-1 text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  title={t("projectList.media.download")}
+                >
+                  <Download size={16} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => doc.url && void handleDeleteMedia(doc.url)}
                   disabled={!doc.url || deletingUrl === doc.url}
                   className="ml-3 rounded-md p-1 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -710,6 +1139,55 @@ const ProjectList = ({
             ))}
           </div>
         </div>
+
+        {previewMedia &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black/80 p-4"
+              style={{ zIndex: 120 }}
+              onClick={() => setPreviewMedia(null)}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewMedia(null)}
+                className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-white/30"
+                title="Close preview"
+              >
+                <X size={20} />
+              </button>
+              <div
+                className="max-h-[90vh] w-auto max-w-[calc(100vw-2rem)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {previewMedia.kind === "video" ? (
+                  <video
+                    src={previewMedia.url}
+                    controls
+                    autoPlay
+                    className="block max-h-[90vh] w-auto max-w-full rounded-xl"
+                  />
+                ) : (
+                  <img
+                    src={previewMedia.url}
+                    alt={previewMedia.title}
+                    className="block max-h-[90vh] w-auto max-w-full rounded-xl object-contain"
+                  />
+                )}
+              </div>
+            </div>,
+            document.body,
+          )}
+
+        <VideoUploadDialog
+          open={videoUploadDialogOpen}
+          uploading={uploading === "video"}
+          items={pendingVideoUploads}
+          onOpenChange={handleCloseVideoUploadDialog}
+          onTitleChange={updatePendingVideoTitle}
+          onThumbnailChange={updatePendingVideoThumbnail}
+          onSubmit={() => void uploadPendingVideos()}
+        />
       </div>
     );
   };
