@@ -160,6 +160,7 @@ const FloorPlanEditor = ({
   const isApplyingHistoryRef = useRef(false);
   const historyGestureActiveRef = useRef(false);
   const historyGestureTimerRef = useRef<number | null>(null);
+  const lastPolygonClickRef = useRef<{ id: string; ts: number } | null>(null);
   const isApartmentFormOpen = editingApartment !== null;
   const canStartDrawingFromImage =
     isApartmentFormOpen &&
@@ -694,7 +695,6 @@ const FloorPlanEditor = ({
     if (apartmentId === "new") {
       setIsCreatingNew(true);
       setEditingApartment("new");
-      setSelectedApartmentId("new");
       setApartmentData({
         number: "",
         rooms: 1,
@@ -936,6 +936,31 @@ const FloorPlanEditor = ({
     setActiveTab("plan");
   };
 
+  const handleTabChange = async (value: string) => {
+    const nextTab = value as "plan" | "edit";
+    if (nextTab === "plan") {
+      setActiveTab("plan");
+      return;
+    }
+
+    // Если выбран другой апартамент, всегда переключаем редактирование на него,
+    // даже когда форма уже открыта для предыдущего.
+    if (
+      selectedApartmentId &&
+      (!isApartmentFormOpen || editingApartment !== selectedApartmentId)
+    ) {
+      const opened = await startEditingApartment(selectedApartmentId);
+      if (opened) {
+        setActiveTab("edit");
+      }
+      return;
+    }
+
+    if (isApartmentFormOpen) {
+      setActiveTab("edit");
+    }
+  };
+
   const handleDeletePolygon = () => {
     if (!editingApartment || editingApartment === "new") return;
     setCurrentShape(null);
@@ -959,7 +984,24 @@ const FloorPlanEditor = ({
       }
       return;
     }
+
+    const now = Date.now();
+    const previous = lastPolygonClickRef.current;
+    const isDoubleClick =
+      previous !== null && previous.id === id && now - previous.ts <= 320;
+
+    lastPolygonClickRef.current = { id, ts: now };
     setSelectedApartmentId(id);
+
+    if (isDoubleClick) {
+      void (async () => {
+        const opened = await startEditingApartment(id);
+        if (opened) {
+          setActiveTab("plan");
+        }
+      })();
+      lastPolygonClickRef.current = null;
+    }
   };
 
   const deleteApartment = async (apartmentId: string) => {
@@ -1292,12 +1334,17 @@ const FloorPlanEditor = ({
 
         <Tabs
           value={activeTab}
-          onValueChange={(value) => setActiveTab(value as "plan" | "edit")}
+          onValueChange={(value) => {
+            void handleTabChange(value);
+          }}
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="plan">План</TabsTrigger>
-            <TabsTrigger value="edit" disabled={!isApartmentFormOpen}>
+            <TabsTrigger
+              value="edit"
+              disabled={!isApartmentFormOpen && !selectedApartmentId}
+            >
               Редактирование
             </TabsTrigger>
           </TabsList>
@@ -1341,6 +1388,12 @@ const FloorPlanEditor = ({
                           }`}
                           onClick={() => {
                             setSelectedApartmentId(apartment.id);
+                            if (
+                              isApartmentFormOpen &&
+                              editingApartment !== apartment.id
+                            ) {
+                              void startEditingApartment(apartment.id);
+                            }
                           }}
                         >
                           <div className="mb-1 flex items-center justify-between">
