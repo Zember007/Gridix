@@ -46,9 +46,13 @@ export interface LeadFilters {
   dateTo?: string;
 }
 
-export function useLeads(filters?: LeadFilters) {
+type UseLeadsOptions = {
+  enabled?: boolean;
+};
+
+export function useLeads(filters?: LeadFilters, options: UseLeadsOptions = {}) {
   const queryClient = useQueryClient();
-  const query = useLeadsQuery(filters);
+  const query = useLeadsQuery(filters, options);
 
   const { leads, isLoading, error } = query;
 
