@@ -3,7 +3,7 @@ import { Badge } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Tabs, TabsList, TabsTrigger } from "@gridix/ui";
 import { List, Grid, Building2, Heart, Share2 } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useInstallment } from "@/hooks/useInstallment";
 import { Apartment } from "@/entities/apartment/model/types";
@@ -90,6 +90,8 @@ export const ListView = ({
   fieldVisibility,
 }: ListViewProps) => {
   const { t } = useLanguage();
+  const listScrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const [listMaxHeight, setListMaxHeight] = useState<number | null>(null);
 
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -187,10 +189,32 @@ export const ListView = ({
     roomsVisible,
   ]);
 
+  useEffect(() => {
+    const updateLayoutMetrics = () => {
+      if (typeof window === "undefined") return;
+      const headerElement = document.querySelector<HTMLElement>(
+        "[data-project-header]",
+      );
+      const headerHeight = headerElement?.getBoundingClientRect().height ?? 0;
+
+      const availableHeight = Math.floor(
+        window.innerHeight - headerHeight - 24,
+      );
+      setListMaxHeight(availableHeight > 0 ? availableHeight : null);
+    };
+
+    updateLayoutMetrics();
+    window.addEventListener("resize", updateLayoutMetrics);
+
+    return () => {
+      window.removeEventListener("resize", updateLayoutMetrics);
+    };
+  }, []);
+
   return (
-    <div className="container mx-auto flex grow py-2 md:px-6">
+    <div className="container mx-auto flex grow py-3 md:px-6">
       <div
-        className={`${project?.has_commercial || project?.has_parking ? "space-y-6" : "space-y-1"} flex w-full flex-col`}
+        className={`${project?.has_commercial || project?.has_parking ? "space-y-3" : "space-y-1"} flex w-full flex-col`}
       >
         <div className="flex justify-between gap-[20px]">
           <h2
@@ -226,57 +250,68 @@ export const ListView = ({
           )}
         </div>
 
-        {/* Type selector tabs - only show if project has commercial or parking */}
-        {(project?.has_commercial || project?.has_parking) && (
-          <Tabs
-            value={selectedType}
-            onValueChange={(value) =>
-              setSelectedType(
-                value as "all" | "apartment" | "commercial" | "parking",
-              )
-            }
-          >
-            <TabsList
-              wrap={false}
-              className="no-scrollbar h-auto w-full max-w-full items-stretch rounded-xl border border-gray-200 bg-gray-100/80 p-1"
-            >
-              {[
-                { value: "all" as const, label: t("project.allTypes") },
-                {
-                  value: "apartment" as const,
-                  label: t("apartmentsManager.typeApartment"),
-                },
-                ...(project?.has_commercial
-                  ? [
-                      {
-                        value: "commercial" as const,
-                        label: t("apartmentsManager.typeCommercial"),
-                      },
-                    ]
-                  : []),
-                ...(project?.has_parking
-                  ? [
-                      {
-                        value: "parking" as const,
-                        label: t("apartmentsManager.typeParking"),
-                      },
-                    ]
-                  : []),
-              ].map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  className="min-h-9 flex-none rounded-lg px-3 py-1.5 text-sm md:min-w-0 md:flex-1"
-                  value={tab.value}
+        <div
+          ref={listScrollAreaRef}
+          className={cn(
+            "pr-1",
+            listMaxHeight && "overflow-y-auto overscroll-contain",
+          )}
+          style={
+            listMaxHeight ? { maxHeight: `${listMaxHeight}px` } : undefined
+          }
+        >
+          {/* Type selector tabs - only show if project has commercial or parking */}
+          {(project?.has_commercial || project?.has_parking) && (
+            <div className="sticky top-0 z-20 bg-white pb-2 pt-1">
+              <Tabs
+                value={selectedType}
+                onValueChange={(value) =>
+                  setSelectedType(
+                    value as "all" | "apartment" | "commercial" | "parking",
+                  )
+                }
+              >
+                <TabsList
+                  wrap={false}
+                  className="no-scrollbar h-auto w-full max-w-full items-stretch rounded-xl border border-gray-200 bg-gray-100/80 p-1"
                 >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        )}
+                  {[
+                    { value: "all" as const, label: t("project.allTypes") },
+                    {
+                      value: "apartment" as const,
+                      label: t("apartmentsManager.typeApartment"),
+                    },
+                    ...(project?.has_commercial
+                      ? [
+                          {
+                            value: "commercial" as const,
+                            label: t("apartmentsManager.typeCommercial"),
+                          },
+                        ]
+                      : []),
+                    ...(project?.has_parking
+                      ? [
+                          {
+                            value: "parking" as const,
+                            label: t("apartmentsManager.typeParking"),
+                          },
+                        ]
+                      : []),
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      className="min-h-9 flex-none rounded-lg px-3 py-1.5 text-sm md:min-w-0 md:flex-1"
+                      value={tab.value}
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
 
-        <div className="grow pt-4">
-          <div className="space-y-4">
+          <div className="pb-4 pt-2">
             {listViewMode === "list" ? (
               // Desktop table layout
               <>
