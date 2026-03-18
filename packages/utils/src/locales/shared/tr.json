@@ -70,7 +70,8 @@
     "no": "HAYIR"
   },
   "admin": {
-    "documentation": "Dokümantasyon"
+    "documentation": "Dokümantasyon",
+    "whatsNew": "Yenilikler"
   },
   "auth": {
     "signOut": "Oturumu Kapat"

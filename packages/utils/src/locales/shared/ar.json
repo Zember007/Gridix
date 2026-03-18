@@ -70,7 +70,8 @@
     "no": "لا"
   },
   "admin": {
-    "documentation": "التوثيق"
+    "documentation": "التوثيق",
+    "whatsNew": "ما الجديد"
   },
   "auth": {
     "signOut": "تسجيل الخروج"

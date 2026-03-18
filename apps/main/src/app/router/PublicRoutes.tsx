@@ -18,6 +18,7 @@ const BitrixInstallPage = lazy(
   () => import("@/pages/bitrix/BitrixInstallPage"),
 );
 const BitrixPage = lazy(() => import("@/pages/bitrix/BitrixPage"));
+const ChangelogPage = lazy(() => import("@gridix/ui/changelog-page"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 export function PublicRoutes() {
@@ -69,6 +70,8 @@ export function PublicRoutes() {
           </EmbedProviders>
         }
       />
+
+      <Route path="changelog" element={<ChangelogPage />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

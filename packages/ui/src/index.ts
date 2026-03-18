@@ -78,3 +78,4 @@ export * from "./wheel-picker";
 export * from "./shared-project-drawer";
 export * from "./range-input";
 export * from "./units-chessboard";
+export * from "./changelog-page";

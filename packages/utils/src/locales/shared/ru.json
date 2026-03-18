@@ -70,7 +70,8 @@
     "no": "Нет"
   },
   "admin": {
-    "documentation": "Документация"
+    "documentation": "Документация",
+    "whatsNew": "Что нового"
   },
   "auth": {
     "signOut": "Выйти"

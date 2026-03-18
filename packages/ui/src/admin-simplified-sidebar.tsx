@@ -25,7 +25,7 @@ import {
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { SidebarButton } from "./sidebar-button";
 import { Button } from "./button";
-import { Menu, MessageCircleQuestionMark } from "lucide-react";
+import { Menu, MessageCircleQuestionMark, Sparkles } from "lucide-react";
 import { Sheet, SheetContent } from "./sheet";
 import { createPortal } from "react-dom";
 
@@ -281,6 +281,21 @@ const ProfileFooterMenu = ({
             <span>{t("admin.documentation")}</span>
           </DropdownMenuItem>
         ) : null}
+
+        <DropdownMenuItem
+          className="flex cursor-pointer items-center gap-2"
+          style={{ color: ADMIN_THEME.sidebarText }}
+          onSelect={() => {
+            window.open(
+              `/${language}/changelog`,
+              "_blank",
+              "noopener,noreferrer",
+            );
+          }}
+        >
+          <Sparkles className="h-4 w-4" />
+          <span>{t("admin.whatsNew")}</span>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator
           style={{ backgroundColor: ADMIN_THEME.sidebarBorder }}

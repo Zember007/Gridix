@@ -70,7 +70,8 @@
     "no": "No"
   },
   "admin": {
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "whatsNew": "What's new"
   },
   "auth": {
     "signOut": "Sign Out"

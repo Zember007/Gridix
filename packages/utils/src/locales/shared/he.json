@@ -70,7 +70,8 @@
     "no": "לֹא"
   },
   "admin": {
-    "documentation": "תיעוד"
+    "documentation": "תיעוד",
+    "whatsNew": "מה חדש"
   },
   "auth": {
     "signOut": "התנתק"

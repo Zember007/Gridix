@@ -70,7 +70,8 @@
     "no": "არა"
   },
   "admin": {
-    "documentation": "დოკუმენტაცია"
+    "documentation": "დოკუმენტაცია",
+    "whatsNew": "რა არის ახალი"
   },
   "auth": {
     "signOut": "გასვლა"
