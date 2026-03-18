@@ -99,5 +99,6 @@
   "priceUpdateInvalidValue": "נא להזין ערך חוקי",
   "priceUpdateNegativeValue": "הערך חייב להיות חיובי",
   "priceUpdateSuccess": "המחירים עודכנו בהצלחה",
-  "priceUpdateError": "עדכון המחירים נכשל"
+  "priceUpdateError": "עדכון המחירים נכשל",
+  "clickOrDrop": "לחץ או גרור"
 }

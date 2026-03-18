@@ -99,5 +99,6 @@
   "priceUpdateInvalidValue": "الرجاء إدخال قيمة صالحة",
   "priceUpdateNegativeValue": "يجب أن تكون القيمة موجبة",
   "priceUpdateSuccess": "تم تحديث الأسعار بنجاح",
-  "priceUpdateError": "فشل في تحديث الأسعار"
+  "priceUpdateError": "فشل في تحديث الأسعار",
+  "clickOrDrop": "انقر أو اسحب"
 }

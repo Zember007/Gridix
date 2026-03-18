@@ -99,5 +99,6 @@
   "priceUpdateInvalidValue": "Please enter a valid value",
   "priceUpdateNegativeValue": "Value must be positive",
   "priceUpdateSuccess": "Prices updated successfully",
-  "priceUpdateError": "Failed to update prices"
+  "priceUpdateError": "Failed to update prices",
+  "clickOrDrop": "Click or drop"
 }

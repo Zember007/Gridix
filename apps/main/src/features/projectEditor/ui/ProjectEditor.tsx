@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  FileDropzone,
   Input,
   Label,
   Select,
@@ -18,15 +19,7 @@ import {
   Textarea,
   UploadProgressCard,
 } from "@gridix/ui";
-import {
-  ArrowLeft,
-  Building2,
-  FileText,
-  Image,
-  Save,
-  Upload,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Building2, FileText, Image, Save, X } from "lucide-react";
 import {
   ADMIN_THEME,
   CURRENCIES,
@@ -114,17 +107,10 @@ const ProjectPdfPresentationSection = memo(
       status: "uploading" | "complete";
     } | null>(null);
 
-    const inputRef = useRef<HTMLInputElement>(null);
     const pdfUploadAbortControllerRef = useRef<AbortController | null>(null);
     const uploadRequestIdRef = useRef(0);
     const removeRequestIdRef = useRef(0);
     const latestPdfUrlRef = useRef(pdfPresentationUrl);
-
-    const resetFileInput = useCallback(() => {
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
-    }, []);
 
     useEffect(() => {
       latestPdfUrlRef.current = pdfPresentationUrl;
@@ -138,8 +124,7 @@ const ProjectPdfPresentationSection = memo(
 
     const handleCancelPdfUpload = useCallback(() => {
       pdfUploadAbortControllerRef.current?.abort();
-      resetFileInput();
-    }, [resetFileInput]);
+    }, []);
 
     const handlePdfUpload = useCallback(
       async (file: File) => {
@@ -242,28 +227,17 @@ const ProjectPdfPresentationSection = memo(
           console.error("Error uploading PDF:", error);
           toast.error(t("projectEditor.pdfUploadError"));
         } finally {
-          if (uploadRequestIdRef.current !== requestId) {
-            return;
-          }
+          if (uploadRequestIdRef.current === requestId) {
+            if (pdfUploadAbortControllerRef.current === abortController) {
+              pdfUploadAbortControllerRef.current = null;
+            }
 
-          if (pdfUploadAbortControllerRef.current === abortController) {
-            pdfUploadAbortControllerRef.current = null;
+            setPdfUploadProgress(null);
+            setUploadingPdf(false);
           }
-
-          setPdfUploadProgress(null);
-          setUploadingPdf(false);
-          resetFileInput();
         }
       },
-      [
-        hasUser,
-        isNew,
-        onPdfUrlChange,
-        projectId,
-        removingPdf,
-        resetFileInput,
-        t,
-      ],
+      [hasUser, isNew, onPdfUrlChange, projectId, removingPdf, t],
     );
 
     const handleRemovePdf = useCallback(async () => {
@@ -346,9 +320,9 @@ const ProjectPdfPresentationSection = memo(
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+          <div className="overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 text-center">
             {pdfUploadProgress ? (
-              <div className="mx-auto max-w-md text-left">
+              <div className="mx-auto max-w-md p-6 text-left">
                 <UploadProgressCard
                   fileName={pdfUploadProgress.fileName}
                   fileSize={pdfUploadProgress.fileSize}
@@ -358,42 +332,24 @@ const ProjectPdfPresentationSection = memo(
                   onCancel={handleCancelPdfUpload}
                 />
               </div>
-            ) : (
-              <>
-                <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="mb-4 text-sm text-muted-foreground">
-                  {t("projectEditor.pdfPresentationDesc")}
-                </p>
-              </>
-            )}
-
-            <input
-              type="file"
-              ref={inputRef}
-              accept=".pdf"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                await handlePdfUpload(file);
-              }}
-              className="hidden"
-              id="pdf-upload-desktop"
-              disabled={isNew || uploadingPdf || removingPdf}
-            />
+            ) : null}
 
             {!uploadingPdf && (
-              <label htmlFor="pdf-upload-desktop">
-                <Button
-                  variant="outline"
-                  disabled={isNew || removingPdf}
-                  asChild
-                >
-                  <span>
-                    <Upload className="mr-2 h-4 w-4" />
-                    {t("projectEditor.uploadPdf")}
-                  </span>
-                </Button>
-              </label>
+              <FileDropzone
+                accept=".pdf,application/pdf"
+                disabled={isNew || removingPdf}
+                multiple={false}
+                heading={t("projectEditor.uploadPdf")}
+                description={t("projectEditor.pdfPresentationDesc")}
+                dropLabel={t("projectEditor.clickOrDrop")}
+                idleLabel={t("projectEditor.clickOrDrop")}
+                className="p-0"
+                onFilesSelected={async (files) => {
+                  const file = files[0];
+                  if (!file) return;
+                  await handlePdfUpload(file);
+                }}
+              />
             )}
 
             {isNew && (

@@ -20,6 +20,7 @@ export * from "./context-menu";
 export * from "./dialog";
 export * from "./drawer";
 export * from "./dropdown-menu";
+export * from "./file-dropzone";
 export * from "./faq";
 export * from "./form";
 export * from "./header-title";

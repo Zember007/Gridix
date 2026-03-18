@@ -99,5 +99,6 @@
   "priceUpdateInvalidValue": "Lütfen geçerli bir değer girin",
   "priceUpdateNegativeValue": "Değer pozitif olmalıdır",
   "priceUpdateSuccess": "Fiyatlar başarıyla güncellendi",
-  "priceUpdateError": "Fiyatlar güncellenemedi"
+  "priceUpdateError": "Fiyatlar güncellenemedi",
+  "clickOrDrop": "Tıkla veya bırak"
 }
