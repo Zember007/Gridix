@@ -157,7 +157,7 @@ export function ChangelogPage({
 }: {
   standalone?: boolean;
 }) {
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language } = useLanguage();
   const [zoneFilter, setZoneFilter] = useState<"all" | CodeZone>("all");
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
