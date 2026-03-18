@@ -65,7 +65,10 @@
     "uploading": "Yükleniyor...",
     "loading": "Yükleniyor...",
     "uploadSuccess": "Materyaller yüklendi",
-    "uploadError": "Materyaller yüklenemedi"
+    "uploadError": "Materyaller yüklenemedi",
+    "renderDropzoneDescription": "G?rsel y?kleyin",
+    "videoDropzoneDescription": "Video y?kleyin",
+    "presentationDropzoneDescription": "Belge y?kleyin"
   },
   "timeoutError": "Projelerin yüklenmesi çok uzun sürdü",
   "updated": "Güncellendi",

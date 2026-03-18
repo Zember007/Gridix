@@ -65,7 +65,10 @@
     "uploading": "טוען...",
     "loading": "טוען...",
     "uploadSuccess": "הקבצים נטענו",
-    "uploadError": "לא ניתן לטעון את הקבצים"
+    "uploadError": "לא ניתן לטעון את הקבצים",
+    "renderDropzoneDescription": "???? ??????",
+    "videoDropzoneDescription": "???? ???????",
+    "presentationDropzoneDescription": "???? ??????"
   },
   "timeoutError": "טעינת פרויקטים ארכה יותר מדי זמן",
   "updated": "מְעוּדכָּן",

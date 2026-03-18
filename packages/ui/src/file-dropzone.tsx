@@ -33,6 +33,7 @@ export interface FileDropzoneProps extends Omit<
   idleLabel?: React.ReactNode;
   dropLabel?: React.ReactNode;
   selectedFiles?: File[];
+  size?: "default" | "compact";
 }
 
 export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
@@ -49,12 +50,14 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
       idleLabel,
       dropLabel = "Drop it",
       selectedFiles = [],
+      size = "default",
       ...props
     },
     ref,
   ) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [isDragActive, setIsDragActive] = React.useState(false);
+    const isCompact = size === "compact";
 
     const handleFiles = React.useCallback(
       async (fileList: FileList | File[] | null) => {
@@ -148,12 +151,36 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
             style={gridBackgroundStyle}
           />
 
-          <div className="relative flex min-h-[220px] flex-col items-center justify-center px-6 py-8 md:min-h-[260px] md:px-10">
-            <div className="max-w-md space-y-2 text-center">
-              <p className="z-20 text-base font-semibold text-slate-800">
+          <div
+            className={cn(
+              "relative flex flex-col items-center justify-center",
+              isCompact
+                ? "min-h-[160px] px-4 py-5 md:min-h-[180px] md:px-6"
+                : "min-h-[220px] px-6 py-8 md:min-h-[260px] md:px-10",
+            )}
+          >
+            <div
+              className={cn(
+                "text-center",
+                isCompact ? "max-w-sm space-y-1.5" : "max-w-md space-y-2",
+              )}
+            >
+              <p
+                className={cn(
+                  "z-20 font-semibold text-slate-800",
+                  isCompact ? "text-sm" : "text-base",
+                )}
+              >
                 {heading}
               </p>
-              <p className="z-20 text-sm leading-6 text-slate-500 md:text-base">
+              <p
+                className={cn(
+                  "z-20 text-slate-500",
+                  isCompact
+                    ? "text-xs leading-5 md:text-sm"
+                    : "text-sm leading-6 md:text-base",
+                )}
+              >
                 {description}
               </p>
             </div>
@@ -194,7 +221,8 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
                 <>
                   <div
                     className={cn(
-                      "relative z-40 mx-auto mt-3 flex h-24 w-full max-w-[11rem] flex-col items-center justify-center rounded-2xl border bg-white/95 shadow-[0px_18px_40px_rgba(15,23,42,0.10)] transition-all duration-200 ease-out",
+                      "relative z-40 mx-auto mt-3 flex w-full flex-col items-center justify-center rounded-2xl border bg-white/95 shadow-[0px_18px_40px_rgba(15,23,42,0.10)] transition-all duration-200 ease-out",
+                      isCompact ? "h-20 max-w-[9rem]" : "h-24 max-w-[11rem]",
                       isDragActive
                         ? "border-sky-300 text-sky-600 shadow-[0px_24px_50px_rgba(14,165,233,0.14)]"
                         : "border-slate-200 text-slate-500",
@@ -203,11 +231,16 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
                   >
                     <Upload
                       className={cn(
-                        "h-5 w-5",
+                        isCompact ? "h-4 w-4" : "h-5 w-5",
                         isDragActive ? "text-sky-600" : "text-slate-500",
                       )}
                     />
-                    <span className="mt-2 text-xs font-medium tracking-[0.14em] uppercase">
+                    <span
+                      className={cn(
+                        "mt-2 font-medium tracking-[0.14em] uppercase",
+                        isCompact ? "text-[11px]" : "text-xs",
+                      )}
+                    >
                       {isDragActive
                         ? dropLabel
                         : (idleLabel ?? "Click or Drop")}
@@ -216,7 +249,8 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
 
                   <div
                     className={cn(
-                      "pointer-events-none absolute inset-0 z-30 mx-auto mt-3 flex h-24 w-full max-w-[11rem] items-center justify-center rounded-2xl border transition-opacity duration-200",
+                      "pointer-events-none absolute inset-0 z-30 mx-auto mt-3 flex w-full items-center justify-center rounded-2xl border transition-opacity duration-200",
+                      isCompact ? "h-20 max-w-[9rem]" : "h-24 max-w-[11rem]",
                       isDragActive
                         ? "border-dashed border-sky-400/80 bg-sky-50/20 opacity-100"
                         : "border-dashed border-sky-400/60 bg-transparent opacity-0",

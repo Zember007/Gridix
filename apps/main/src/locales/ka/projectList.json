@@ -65,7 +65,10 @@
     "uploading": "იტვირთება...",
     "loading": "იტვირთება...",
     "uploadSuccess": "მასალები ატვირთულია",
-    "uploadError": "მასალების ატვირთვა ვერ მოხერხდა"
+    "uploadError": "მასალების ატვირთვა ვერ მოხერხდა",
+    "renderDropzoneDescription": "???????? ????????",
+    "videoDropzoneDescription": "???????? ????????",
+    "presentationDropzoneDescription": "???????? ???????????"
   },
   "timeoutError": "პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა",
   "updated": "განახლებულია",
