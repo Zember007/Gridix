@@ -192,6 +192,93 @@ export default defineConfig(({ mode }) => {
         },
       },
       sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            const normalizedId = id.replace(/\\/g, "/");
+
+            if (normalizedId.includes("node_modules")) {
+              if (
+                normalizedId.includes("/@tanstack/") ||
+                normalizedId.includes("/@supabase/") ||
+                normalizedId.includes("/zod/")
+              ) {
+                return "vendor-data";
+              }
+
+              if (
+                normalizedId.includes("/i18next/") ||
+                normalizedId.includes("/react-i18next/") ||
+                normalizedId.includes("/next-themes/")
+              ) {
+                return "vendor-i18n";
+              }
+
+              if (
+                normalizedId.includes("/@radix-ui/") ||
+                normalizedId.includes("/lucide-react/") ||
+                normalizedId.includes("/sonner/") ||
+                normalizedId.includes("/class-variance-authority/") ||
+                normalizedId.includes("/tailwind-merge/") ||
+                normalizedId.includes("/cmdk/") ||
+                normalizedId.includes("/embla-carousel-react/")
+              ) {
+                return "vendor-ui";
+              }
+
+              if (
+                normalizedId.includes("/leaflet/") ||
+                normalizedId.includes("/react-leaflet/")
+              ) {
+                return "vendor-map";
+              }
+
+              if (
+                normalizedId.includes("/recharts/") ||
+                normalizedId.includes("/date-fns/")
+              ) {
+                return "vendor-analytics";
+              }
+
+              if (
+                normalizedId.includes("/pdfjs-dist/") ||
+                normalizedId.includes("/jspdf/") ||
+                normalizedId.includes("/pdf-lib/") ||
+                normalizedId.includes("/html2canvas/") ||
+                normalizedId.includes("/pizzip/") ||
+                normalizedId.includes("/mammoth/") ||
+                normalizedId.includes("/xlsx/") ||
+                normalizedId.includes("/html-docx-js-typescript/")
+              ) {
+                return "vendor-docs";
+              }
+
+              if (
+                normalizedId.includes("/framer-motion/") ||
+                normalizedId.includes("/@tsparticles/") ||
+                normalizedId.includes("/dotted-map/") ||
+                normalizedId.includes("/@paper-design/")
+              ) {
+                return "vendor-effects";
+              }
+            }
+
+            const localeMatch = normalizedId.match(
+              /\/src\/locales\/(ru|en|ka|ar|he|tr)\//,
+            );
+            if (localeMatch?.[1]) {
+              return `locale-${localeMatch[1]}`;
+            }
+
+            if (
+              normalizedId.includes("/src/components/visualization/") ||
+              normalizedId.includes("/src/features/visualization/")
+            ) {
+              return "app-visualization";
+            }
+          },
+        },
+      },
     },
   };
 });

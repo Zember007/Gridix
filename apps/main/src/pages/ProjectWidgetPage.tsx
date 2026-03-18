@@ -1,9 +1,14 @@
+import { lazy, Suspense, useMemo } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { ProjectApartmentSelector } from "@/components";
+import { ProjectApartmentSelector } from "@/components/project-selector";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useEffect, useMemo } from "react";
-import { BitrixCrmTopBar } from "@/pages/bitrix/components/BitrixCrmTopBar";
 import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
+
+const BitrixCrmTopBar = lazy(() =>
+  import("@/pages/bitrix/components/BitrixCrmTopBar").then((m) => ({
+    default: m.BitrixCrmTopBar,
+  })),
+);
 
 interface ProjectWidgetPageProps {
   useId?: boolean;
@@ -55,12 +60,14 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
     <div className="min-h-screen bg-background">
       {isBitrixCrm && (
         <div className="p-3">
-          <BitrixCrmTopBar
-            projects={projects}
-            loading={projectsLoading}
-            dealId={null}
-            activeProjectId={activeProjectId}
-          />
+          <Suspense fallback={null}>
+            <BitrixCrmTopBar
+              projects={projects}
+              loading={projectsLoading}
+              dealId={null}
+              activeProjectId={activeProjectId}
+            />
+          </Suspense>
         </div>
       )}
       <ProjectApartmentSelector projectId={projectIdentifier} />

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@gridix/ui";
-import { Toaster } from "@gridix/ui";
+import { TooltipProvider } from "@gridix/ui/tooltip";
+import { Toaster } from "@gridix/ui/sonner";
 import { Toaster as GridixToaster } from "@gridix/utils/lib";
 import { I18nextProvider } from "react-i18next";
 import { createAppQueryClient } from "@gridix/utils/api";

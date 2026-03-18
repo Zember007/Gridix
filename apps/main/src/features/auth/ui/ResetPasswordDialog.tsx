@@ -1,4 +1,6 @@
-import { Button, Input, Label } from "@gridix/ui";
+import { Button } from "@gridix/ui/button";
+import { Input } from "@gridix/ui/input";
+import { Label } from "@gridix/ui/label";
 
 interface ResetPasswordDialogProps {
   t: (key: string) => string;

@@ -5,10 +5,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Label } from "@gridix/ui";
-import { Button } from "@gridix/ui";
+} from "@gridix/ui/card";
+import { Input } from "@gridix/ui/input";
+import { Label } from "@gridix/ui/label";
+import { Button } from "@gridix/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/shared/api/supabase";
 import { fetchCurrentSession } from "@gridix/utils";
