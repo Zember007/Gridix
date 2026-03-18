@@ -40,6 +40,9 @@
     "presentations": "Sunumlar",
     "add": "Ekle",
     "attachFiles": "Gorsel, video veya belge ekleyin",
+    "renderDropzoneDescription": "Görsel yükleyin",
+    "videoDropzoneDescription": "Video yükleyin",
+    "presentationDropzoneDescription": "Belge yükleyin",
     "attachFilesHint": "Dosyalari buraya surukleyip birakin, secmek icin tiklayin veya bir YouTube baglantisi yapistirin",
     "selectedFilesCount": "{{count}} dosya secildi",
     "selectedLinksCount": "{{count}} baglanti eklendi",
@@ -65,10 +68,7 @@
     "uploading": "Yükleniyor...",
     "loading": "Yükleniyor...",
     "uploadSuccess": "Materyaller yüklendi",
-    "uploadError": "Materyaller yüklenemedi",
-    "renderDropzoneDescription": "G?rsel y?kleyin",
-    "videoDropzoneDescription": "Video y?kleyin",
-    "presentationDropzoneDescription": "Belge y?kleyin"
+    "uploadError": "Materyaller yüklenemedi"
   },
   "timeoutError": "Projelerin yüklenmesi çok uzun sürdü",
   "updated": "Güncellendi",

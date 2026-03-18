@@ -40,6 +40,9 @@
     "presentations": "Презентации",
     "add": "Добавить",
     "attachFiles": "Прикрепите изображения, видео или документы",
+    "renderDropzoneDescription": "Загрузите изображения",
+    "videoDropzoneDescription": "Загрузите видео",
+    "presentationDropzoneDescription": "Загрузите документы",
     "attachFilesHint": "Перетащите файлы сюда, нажмите для выбора или вставьте ссылку YouTube",
     "selectedFilesCount": "Выбрано файлов: {{count}}",
     "selectedLinksCount": "Добавлено ссылок: {{count}}",
@@ -65,10 +68,7 @@
     "uploading": "Загрузка...",
     "loading": "Загрузка...",
     "uploadSuccess": "Материалы загружены",
-    "uploadError": "Не удалось загрузить материалы",
-    "renderDropzoneDescription": "????????? ???????????",
-    "videoDropzoneDescription": "????????? ?????",
-    "presentationDropzoneDescription": "????????? ?????????"
+    "uploadError": "Не удалось загрузить материалы"
   },
   "timeoutError": "Загрузка проектов заняла слишком много времени",
   "updated": "Обновлен",

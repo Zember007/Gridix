@@ -40,6 +40,9 @@
     "presentations": "პრეზენტაციები",
     "add": "დამატება",
     "attachFiles": "დაამატეთ სურათები, ვიდეოები ან დოკუმენტები",
+    "renderDropzoneDescription": "ატვირთეთ სურათები",
+    "videoDropzoneDescription": "ატვირთეთ ვიდეოები",
+    "presentationDropzoneDescription": "ატვირთეთ დოკუმენტები",
     "attachFilesHint": "გადმოათრიეთ ფაილები აქ, დააჭირეთ ასარჩევად ან ჩასვით YouTube ბმული",
     "selectedFilesCount": "არჩეული ფაილები: {{count}}",
     "selectedLinksCount": "დამატებული ბმულები: {{count}}",
@@ -65,10 +68,7 @@
     "uploading": "იტვირთება...",
     "loading": "იტვირთება...",
     "uploadSuccess": "მასალები ატვირთულია",
-    "uploadError": "მასალების ატვირთვა ვერ მოხერხდა",
-    "renderDropzoneDescription": "???????? ????????",
-    "videoDropzoneDescription": "???????? ????????",
-    "presentationDropzoneDescription": "???????? ???????????"
+    "uploadError": "მასალების ატვირთვა ვერ მოხერხდა"
   },
   "timeoutError": "პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა",
   "updated": "განახლებულია",
