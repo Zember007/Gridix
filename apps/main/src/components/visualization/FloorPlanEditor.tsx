@@ -30,7 +30,6 @@ import { supabase } from "@gridix/utils/api";
 import {
   uploadFloorPlan,
   removeFloorPlan,
-  uploadApartmentPhoto,
   deleteApartmentPhoto,
 } from "@/features/projectEditor/api/projectEditorApi";
 import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
@@ -41,6 +40,7 @@ import PolygonAnnotator, {
 import { Shape } from "./polygon-editor/GeometryShapes";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
 import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
+import { useApartmentPhotosUpload } from "@/features/apartment-photos-management/model/useApartmentPhotosUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { useLanguage } from "@gridix/utils/react";
@@ -122,7 +122,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   const [apartmentPhotos, setApartmentPhotos] = useState<
     Tables<"apartment_photos">[]
   >([]);
-  const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncSourceApartment, setSyncSourceApartment] =
     useState<GlobalApartment | null>(null);
@@ -208,6 +207,23 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   const editorData = useProjectEditorDataContext();
   const { t } = useLanguage();
   const currencySymbol = getCurrencySymbolSafe(project?.currency ?? "USD");
+  const selectedApartmentForPhotos =
+    editingApartment && editingApartment !== "new" ? editingApartment : "";
+  const {
+    uploading: uploadingApartmentPhotos,
+    uploadProgresses: apartmentPhotoUploadProgresses,
+    handleCancelUpload: handleCancelApartmentPhotoUpload,
+    handleFilesSelected: handleApartmentPhotoFilesSelected,
+    resolveDroppedFiles: resolveApartmentPhotoDroppedFiles,
+  } = useApartmentPhotosUpload({
+    selectedApartment: selectedApartmentForPhotos,
+    photosLength: apartmentPhotos.length,
+    onAfterUpload: async () => {
+      if (selectedApartmentForPhotos) {
+        await loadApartmentPhotos(selectedApartmentForPhotos);
+      }
+    },
+  });
 
   useEffect(() => {
     if (editorData) {
@@ -539,39 +555,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
       setApartmentPhotos(data || []);
     } catch (error) {
       console.error("Error loading apartment photos:", error);
-    }
-  };
-
-  const handleApartmentPhotoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = event.target.files;
-    if (!files || !editingApartment || editingApartment === "new") return;
-    if (!user) {
-      toast.error(t("floorPlan.upload.authRequired"));
-      return;
-    }
-    setUploadingPhotos(true);
-    try {
-      const uploadPromises = Array.from(files).map(async (file_get, index) => {
-        const blob = await compressToWebP(file_get);
-        const file = new File([blob], `photo-${index}.webp`, {
-          type: "image/webp",
-        });
-        await uploadApartmentPhoto(
-          editingApartment,
-          apartmentPhotos.length + index,
-          file,
-        );
-      });
-      await Promise.all(uploadPromises);
-      toast.success(t("floorPlan.apartments.photoUploadSuccess"));
-      loadApartmentPhotos(editingApartment);
-    } catch (error) {
-      console.error("Error uploading apartment photos:", error);
-      toast.error(t("floorPlan.apartments.photoUploadError"));
-    } finally {
-      setUploadingPhotos(false);
     }
   };
 
@@ -1613,38 +1596,87 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                           {t("floorPlan.apartments.photos")}
                         </Label>
                       </div>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleApartmentPhotoUpload}
-                        disabled={uploadingPhotos}
-                        className="text-xs"
-                      />
+                      <div className="overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25">
+                        {apartmentPhotoUploadProgresses.length > 0 ? (
+                          <div className="space-y-3 p-4">
+                            {apartmentPhotoUploadProgresses.map(
+                              (uploadProgress) => (
+                                <UploadProgressCard
+                                  key={uploadProgress.id}
+                                  fileName={uploadProgress.fileName}
+                                  fileSize={uploadProgress.fileSize}
+                                  progress={uploadProgress.progress}
+                                  status={uploadProgress.status}
+                                  icon={
+                                    <ImageIcon className="h-8 w-8 text-sky-600" />
+                                  }
+                                  onCancel={() =>
+                                    handleCancelApartmentPhotoUpload(
+                                      uploadProgress.id,
+                                    )
+                                  }
+                                />
+                              ),
+                            )}
+                          </div>
+                        ) : null}
+
+                        {!uploadingApartmentPhotos && (
+                          <FileDropzone
+                            accept="image/*"
+                            multiple
+                            heading={t("photosManager.uploadPhotos")}
+                            description={t("photosManager.uploadMultiple")}
+                            idleLabel={t("projectEditor.clickOrDrop")}
+                            dropLabel={t("projectEditor.clickOrDrop")}
+                            resolveDroppedFiles={
+                              resolveApartmentPhotoDroppedFiles
+                            }
+                            onFilesSelected={handleApartmentPhotoFilesSelected}
+                          />
+                        )}
+                      </div>
                       {apartmentPhotos.length > 0 && (
-                        <div className="grid grid-cols-2 gap-2">
-                          {apartmentPhotos.map((photo) => (
-                            <div key={photo.id} className="group relative">
-                              <img
-                                src={photo.image_url}
-                                alt="Apartment"
-                                className="h-20 w-full rounded object-cover"
-                              />
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="absolute right-1 top-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
-                                onClick={() =>
-                                  handleDeleteApartmentPhoto(
-                                    photo.id,
-                                    photo.image_url,
-                                  )
-                                }
+                        <div className="space-y-3">
+                          <div className="text-xs text-muted-foreground">
+                            {apartmentPhotos.length} photo
+                            {apartmentPhotos.length === 1 ? "" : "s"}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                            {apartmentPhotos.map((photo, index) => (
+                              <div
+                                key={photo.id}
+                                className="group relative overflow-hidden rounded-xl border bg-muted/20"
                               >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
+                                <div className="aspect-[4/3] overflow-hidden bg-muted">
+                                  <img
+                                    src={photo.image_url}
+                                    alt={`Apartment photo ${index + 1}`}
+                                    className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                                  />
+                                </div>
+
+                                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent px-3 pb-2 pt-8 text-xs font-medium text-white">
+                                  Photo {index + 1}
+                                </div>
+
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  type="button"
+                                  className="absolute right-2 top-2 h-8 w-8 rounded-full p-0 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100"
+                                  onClick={() =>
+                                    handleDeleteApartmentPhoto(
+                                      photo.id,
+                                      photo.image_url,
+                                    )
+                                  }
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
