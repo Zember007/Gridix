@@ -36,6 +36,18 @@ const getSupabaseFunctionUrl = (functionName: string): string => {
   return `${supabaseUrl}/functions/v1/${functionName}`;
 };
 
+const getSupabaseStorageUrl = (): string => {
+  const supabaseUrl = (
+    import.meta.env.VITE_SUPABASE_URL as string | undefined
+  )?.replace(/\/$/, "");
+
+  if (!supabaseUrl) {
+    throw new Error("Supabase URL is not configured");
+  }
+
+  return `${supabaseUrl}/storage/v1`;
+};
+
 const getSupabaseAnonKey = (): string => {
   const anonKey =
     (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
@@ -52,6 +64,197 @@ const createAbortError = (): Error => {
   const error = new Error("Upload aborted");
   error.name = "AbortError";
   return error;
+};
+
+const getAuthHeaders = async (): Promise<{
+  anonKey: string;
+  authorization: string;
+}> => {
+  const anonKey = getSupabaseAnonKey();
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+
+  return {
+    anonKey,
+    authorization: `Bearer ${accessToken ?? anonKey}`,
+  };
+};
+
+const invokeFunctionUploadWithProgress = async <TResponse>(
+  form: FormData,
+  options: UploadWithProgressOptions = {},
+): Promise<TResponse> => {
+  const { anonKey, authorization } = await getAuthHeaders();
+
+  return await new Promise<TResponse>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const functionUrl = getSupabaseFunctionUrl(FUNCTION_NAME);
+
+    const cleanup = () => {
+      options.signal?.removeEventListener("abort", handleAbort);
+    };
+
+    const abortUpload = () => {
+      if (xhr.readyState !== XMLHttpRequest.DONE) {
+        xhr.abort();
+      }
+      cleanup();
+      reject(createAbortError());
+    };
+
+    if (options.signal?.aborted) {
+      reject(createAbortError());
+      return;
+    }
+
+    const handleAbort = () => {
+      abortUpload();
+    };
+
+    options.signal?.addEventListener("abort", handleAbort, { once: true });
+
+    xhr.open("POST", functionUrl);
+    xhr.responseType = "text";
+    xhr.setRequestHeader("apikey", anonKey);
+    xhr.setRequestHeader("Authorization", authorization);
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      const progress = (event.loaded / event.total) * 100;
+      options.onProgress?.(progress >= 100 ? 99 : progress);
+    };
+
+    xhr.onerror = () => {
+      cleanup();
+      reject(new Error("Failed to upload file"));
+    };
+
+    xhr.onabort = () => {
+      cleanup();
+      reject(createAbortError());
+    };
+
+    xhr.onload = () => {
+      cleanup();
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(new Error(xhr.responseText || "Failed to upload file"));
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(xhr.responseText) as TResponse & {
+          error?: string;
+        };
+
+        if (parsed.error) {
+          reject(new Error(parsed.error));
+          return;
+        }
+
+        options.onProgress?.(100);
+        resolve(parsed);
+      } catch (error) {
+        reject(error instanceof Error ? error : new Error("Invalid response"));
+      }
+    };
+
+    xhr.send(form);
+  });
+};
+
+const uploadStorageObjectWithProgress = async (
+  bucket: string,
+  objectPath: string,
+  file: File,
+  options: UploadWithProgressOptions = {},
+): Promise<void> => {
+  const { anonKey, authorization } = await getAuthHeaders();
+  const encodedPath = objectPath
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+
+  return await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const uploadUrl = `${getSupabaseStorageUrl()}/object/${encodeURIComponent(bucket)}/${encodedPath}`;
+    const form = new FormData();
+
+    form.append("cacheControl", "3600");
+    form.append("", file);
+
+    const cleanup = () => {
+      options.signal?.removeEventListener("abort", handleAbort);
+    };
+
+    const abortUpload = () => {
+      if (xhr.readyState !== XMLHttpRequest.DONE) {
+        xhr.abort();
+      }
+      cleanup();
+      reject(createAbortError());
+    };
+
+    if (options.signal?.aborted) {
+      reject(createAbortError());
+      return;
+    }
+
+    const handleAbort = () => {
+      abortUpload();
+    };
+
+    options.signal?.addEventListener("abort", handleAbort, { once: true });
+
+    xhr.open("POST", uploadUrl);
+    xhr.responseType = "text";
+    xhr.setRequestHeader("apikey", anonKey);
+    xhr.setRequestHeader("Authorization", authorization);
+    xhr.setRequestHeader("x-upsert", "false");
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      const progress = (event.loaded / event.total) * 100;
+      options.onProgress?.(progress >= 100 ? 99 : progress);
+    };
+
+    xhr.onerror = () => {
+      cleanup();
+      reject(new Error("Failed to upload file"));
+    };
+
+    xhr.onabort = () => {
+      cleanup();
+      reject(createAbortError());
+    };
+
+    xhr.onload = () => {
+      cleanup();
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(new Error(xhr.responseText || "Failed to upload file"));
+        return;
+      }
+
+      options.onProgress?.(100);
+      resolve();
+    };
+
+    xhr.send(form);
+  });
+};
+
+const createUniqueFileName = (
+  prefix: string,
+  extension: string,
+  scope?: string,
+): string => {
+  const randomPart =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+  return [prefix, scope, randomPart].filter(Boolean).join("-") + extension;
 };
 
 /**
@@ -91,86 +294,13 @@ export async function uploadProjectPdf(
   form.set("projectId", projectId);
   form.set("file", file);
 
-  const anonKey = getSupabaseAnonKey();
-  const { data } = await supabase.auth.getSession();
-  const accessToken = data.session?.access_token;
+  const response = await invokeFunctionUploadWithProgress<{
+    publicUrl?: string;
+  }>(form, options);
 
-  return await new Promise<{ publicUrl: string }>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const functionUrl = getSupabaseFunctionUrl(FUNCTION_NAME);
+  if (!response.publicUrl) throw new Error("No URL returned");
 
-    const abortUpload = () => {
-      if (xhr.readyState !== XMLHttpRequest.DONE) {
-        xhr.abort();
-      }
-      reject(createAbortError());
-    };
-
-    if (options.signal?.aborted) {
-      reject(createAbortError());
-      return;
-    }
-
-    const handleAbort = () => {
-      abortUpload();
-    };
-
-    options.signal?.addEventListener("abort", handleAbort, { once: true });
-
-    xhr.open("POST", functionUrl);
-    xhr.responseType = "text";
-    xhr.setRequestHeader("apikey", anonKey);
-    xhr.setRequestHeader("Authorization", `Bearer ${accessToken ?? anonKey}`);
-
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable) return;
-      const progress = (event.loaded / event.total) * 100;
-      options.onProgress?.(progress >= 100 ? 99 : progress);
-    };
-
-    xhr.onerror = () => {
-      options.signal?.removeEventListener("abort", handleAbort);
-      reject(new Error("Failed to upload PDF"));
-    };
-
-    xhr.onabort = () => {
-      options.signal?.removeEventListener("abort", handleAbort);
-      reject(createAbortError());
-    };
-
-    xhr.onload = () => {
-      options.signal?.removeEventListener("abort", handleAbort);
-
-      if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new Error(xhr.responseText || "Failed to upload PDF"));
-        return;
-      }
-
-      try {
-        const parsed = JSON.parse(xhr.responseText) as {
-          error?: string;
-          publicUrl?: string;
-        };
-
-        if (parsed.error) {
-          reject(new Error(parsed.error));
-          return;
-        }
-
-        if (!parsed.publicUrl) {
-          reject(new Error("No URL returned"));
-          return;
-        }
-
-        options.onProgress?.(100);
-        resolve({ publicUrl: parsed.publicUrl });
-      } catch (error) {
-        reject(error instanceof Error ? error : new Error("Invalid response"));
-      }
-    };
-
-    xhr.send(form);
-  });
+  return { publicUrl: response.publicUrl };
 }
 
 /**
@@ -220,6 +350,7 @@ export async function uploadApartmentPhoto(
   apartmentId: string,
   orderIndex: number,
   file: File,
+  options: UploadWithProgressOptions = {},
 ): Promise<{ publicUrl: string }> {
   const form = new FormData();
   form.set("action", "uploadApartmentPhoto");
@@ -227,15 +358,49 @@ export async function uploadApartmentPhoto(
   form.set("orderIndex", String(orderIndex));
   form.set("file", file);
 
-  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
-    body: form,
+  const response = await invokeFunctionUploadWithProgress<{
+    publicUrl?: string;
+  }>(form, options);
+
+  if (!response.publicUrl) throw new Error("No URL returned");
+
+  return { publicUrl: response.publicUrl };
+}
+
+export async function uploadLayoutPhoto(
+  projectId: string,
+  layoutType: string,
+  orderIndex: number,
+  file: File,
+  options: UploadWithProgressOptions = {},
+): Promise<{ publicUrl: string }> {
+  const fileName = createUniqueFileName(projectId, ".webp", layoutType);
+  const objectPath = `layouts/${fileName}`;
+
+  await uploadStorageObjectWithProgress(
+    "project-images",
+    objectPath,
+    file,
+    options,
+  );
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("project-images").getPublicUrl(objectPath);
+
+  const { error } = await supabase.from("layout_photos").insert({
+    project_id: projectId,
+    layout_type: layoutType,
+    image_url: publicUrl,
+    order_index: orderIndex,
   });
 
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  if (!data?.publicUrl) throw new Error("No URL returned");
+  if (error) {
+    await supabase.storage.from("project-images").remove([objectPath]);
+    throw error;
+  }
 
-  return { publicUrl: data.publicUrl };
+  return { publicUrl };
 }
 
 /**

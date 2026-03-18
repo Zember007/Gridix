@@ -1,31 +1,27 @@
-import { type RefObject } from "react";
-import { Button, Input, Label } from "@gridix/ui";
-import { Copy } from "lucide-react";
+import { Button, FileDropzone, Label, UploadProgressCard } from "@gridix/ui";
+import { Copy, Image as ImageIcon } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
+import type { PhotoUploadProgressItem } from "../model/useApartmentPhotosUpload";
 
 interface ApartmentPhotosUploadPanelProps {
   selectedApartment: string;
   uploading: boolean;
-  isDragOverUpload: boolean;
-  photoUploadInputRef: RefObject<HTMLInputElement>;
+  uploadProgresses: PhotoUploadProgressItem[];
   photosCount: number;
-  onPhotoUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  onUploadDrop: (event: React.DragEvent<HTMLDivElement>) => Promise<void>;
-  onUploadDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
-  onUploadDragLeave: (event: React.DragEvent<HTMLDivElement>) => void;
+  onCancelUpload: (uploadId: string) => void;
+  onFilesSelected: (files: File[]) => Promise<void>;
+  resolveDroppedFiles: (dataTransfer: DataTransfer) => Promise<File[]>;
   onDuplicatePhotos: () => Promise<void>;
 }
 
 const ApartmentPhotosUploadPanel = ({
   selectedApartment,
   uploading,
-  isDragOverUpload,
-  photoUploadInputRef,
+  uploadProgresses,
   photosCount,
-  onPhotoUpload,
-  onUploadDrop,
-  onUploadDragOver,
-  onUploadDragLeave,
+  onCancelUpload,
+  onFilesSelected,
+  resolveDroppedFiles,
   onDuplicatePhotos,
 }: ApartmentPhotosUploadPanelProps) => {
   const { t } = useLanguage();
@@ -35,29 +31,36 @@ const ApartmentPhotosUploadPanel = ({
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="photo-upload">{t("photosManager.uploadPhotos")}</Label>
-        <div
-          onDrop={onUploadDrop}
-          onDragOver={onUploadDragOver}
-          onDragLeave={onUploadDragLeave}
-          className={`mt-1 space-y-2 rounded-lg border-2 border-dashed p-3 transition-colors ${
-            isDragOverUpload
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/30"
-          } ${uploading ? "pointer-events-none opacity-60" : ""}`}
-        >
-          <Input
-            ref={photoUploadInputRef}
-            id="photo-upload"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={onPhotoUpload}
-            disabled={uploading}
-          />
-          <p className="text-xs text-muted-foreground">
-            Drag & drop files or folder with photos
-          </p>
+        <Label>{t("photosManager.uploadPhotos")}</Label>
+        <div className="mt-1 overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 text-center">
+          {uploadProgresses.length > 0 ? (
+            <div className="mx-auto max-w-md space-y-3 p-6 text-left">
+              {uploadProgresses.map((uploadProgress) => (
+                <UploadProgressCard
+                  key={uploadProgress.id}
+                  fileName={uploadProgress.fileName}
+                  fileSize={uploadProgress.fileSize}
+                  progress={uploadProgress.progress}
+                  status={uploadProgress.status}
+                  icon={<ImageIcon className="h-8 w-8 text-sky-600" />}
+                  onCancel={() => onCancelUpload(uploadProgress.id)}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {!uploading && (
+            <FileDropzone
+              accept="image/*"
+              multiple
+              heading={t("photosManager.uploadPhotos")}
+              description={t("photosManager.uploadMultiple")}
+              idleLabel={t("projectEditor.clickOrDrop")}
+              dropLabel={t("projectEditor.clickOrDrop")}
+              resolveDroppedFiles={resolveDroppedFiles}
+              onFilesSelected={onFilesSelected}
+            />
+          )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {t("photosManager.uploadMultiple")}

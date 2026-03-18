@@ -45,5 +45,6 @@
   },
   "uploadMultiple": "אתה יכול לבחור מספר קבצים בבת אחת",
   "uploadPhotos": "העלה תמונות",
-  "uploadSuccess": "הועלו תמונות"
+  "uploadSuccess": "הועלו תמונות",
+  "partialUploadError": "חלק מהקבצים לא הועלו"
 }

@@ -22,6 +22,9 @@ export interface FileDropzoneProps extends Omit<
   "onChange" | "onDrop"
 > {
   onFilesSelected?: (files: File[]) => void | Promise<void>;
+  resolveDroppedFiles?: (
+    dataTransfer: DataTransfer,
+  ) => File[] | null | undefined | Promise<File[] | null | undefined>;
   accept?: string;
   disabled?: boolean;
   multiple?: boolean;
@@ -37,6 +40,7 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
     {
       className,
       onFilesSelected,
+      resolveDroppedFiles,
       accept,
       disabled = false,
       multiple = false,
@@ -99,9 +103,12 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
         if (disabled) return;
 
         setIsDragActive(false);
-        await handleFiles(event.dataTransfer.files);
+        const resolvedFiles = resolveDroppedFiles
+          ? await resolveDroppedFiles(event.dataTransfer)
+          : event.dataTransfer.files;
+        await handleFiles(resolvedFiles ?? null);
       },
-      [disabled, handleFiles],
+      [disabled, handleFiles, resolveDroppedFiles],
     );
 
     return (
