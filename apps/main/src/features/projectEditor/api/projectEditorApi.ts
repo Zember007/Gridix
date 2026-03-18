@@ -325,6 +325,7 @@ export async function uploadFloorPlan(
   projectId: string,
   floorNumber: number,
   file: File,
+  options: UploadWithProgressOptions = {},
 ): Promise<{ publicUrl: string }> {
   const form = new FormData();
   form.set("action", "uploadFloorPlan");
@@ -332,15 +333,62 @@ export async function uploadFloorPlan(
   form.set("floorNumber", String(floorNumber));
   form.set("file", file);
 
-  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
-    body: form,
-  });
+  const response = await invokeFunctionUploadWithProgress<{
+    publicUrl?: string;
+  }>(form, options);
 
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  if (!data?.publicUrl) throw new Error("No URL returned");
+  if (!response.publicUrl) throw new Error("No URL returned");
 
-  return { publicUrl: data.publicUrl };
+  return { publicUrl: response.publicUrl };
+}
+
+const getStorageObjectPathFromPublicUrl = (
+  publicUrl: string,
+  bucket: string,
+): string | null => {
+  try {
+    const url = new URL(publicUrl);
+    const publicMarker = `/object/public/${bucket}/`;
+    const markerIndex = url.pathname.indexOf(publicMarker);
+
+    if (markerIndex === -1) {
+      return null;
+    }
+
+    const objectPath = url.pathname.slice(markerIndex + publicMarker.length);
+    return decodeURIComponent(objectPath);
+  } catch {
+    return null;
+  }
+};
+
+export async function removeFloorPlan(
+  projectId: string,
+  floorNumber: number,
+  imageUrl?: string | null,
+): Promise<void> {
+  const { error: dbError } = await supabase
+    .from("floor_plans")
+    .delete()
+    .eq("project_id", projectId)
+    .eq("floor_number", floorNumber);
+
+  if (dbError) throw dbError;
+
+  if (!imageUrl) return;
+
+  const objectPath = getStorageObjectPathFromPublicUrl(
+    imageUrl,
+    "project-images",
+  );
+
+  if (!objectPath) return;
+
+  const { error: storageError } = await supabase.storage
+    .from("project-images")
+    .remove([objectPath]);
+
+  if (storageError) throw storageError;
 }
 
 /**

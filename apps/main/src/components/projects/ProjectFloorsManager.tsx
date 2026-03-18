@@ -52,7 +52,6 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
   const [showSettings, setShowSettings] = useState(false);
   const [polygonSettings, setPolygonSettings] =
     useState<PolygonSettings | null>(null);
-  const [currentFloor, setCurrentFloor] = useState<number>(1);
 
   const { t } = useLanguage();
   const { project } = useProjectInEditorScope(projectId);
@@ -129,7 +128,6 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
                     <FloorPlanEditor
                       projectId={projectId}
                       floorNumber={floor}
-                      onFloorChange={setCurrentFloor}
                     />
                   </CardContent>
                 </CollapsibleContent>

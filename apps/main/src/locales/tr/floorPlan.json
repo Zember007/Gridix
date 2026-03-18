@@ -69,6 +69,9 @@
     "orClickToSelect": "veya dosyayı seçmek için tıklayın",
     "selectImage": "Resim Seç",
     "success": "Kat planı yüklendi",
-    "title": "Kat Planı Yükleme"
+    "title": "Kat Planı Yükleme",
+    "removeError": "Kat planı silinirken hata oluştu",
+    "removeImage": "Görseli kaldır",
+    "removeSuccess": "Kat planı kaldırıldı"
   }
 }

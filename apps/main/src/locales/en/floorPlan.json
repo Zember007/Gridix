@@ -69,6 +69,9 @@
     "orClickToSelect": "or click to select file",
     "selectImage": "Select Image",
     "success": "Floor plan uploaded",
-    "title": "Floor Plan Upload"
+    "title": "Floor Plan Upload",
+    "removeError": "Error removing floor plan",
+    "removeImage": "Remove Image",
+    "removeSuccess": "Floor plan removed"
   }
 }
