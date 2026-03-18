@@ -2,9 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   loadSelectorInitial,
-  loadSelectorSummary,
   type SelectorInitialResult,
-  type SelectorSummaryResult,
 } from "@/features/projectSelector/api/projectSelectorApi";
 import {
   type Apartment,
@@ -44,38 +42,23 @@ function requestIdle(cb: () => void, timeoutMs = 1500) {
 export const useProjectSelectorInitial = (
   projectId: string,
 ): UseProjectSelectorInitialResult => {
-  const summaryQuery = useQuery<SelectorSummaryResult>({
-    queryKey: ["project-selector", "summary", projectId],
-    queryFn: () => loadSelectorSummary(projectId),
+  const query = useQuery<SelectorInitialResult>({
+    queryKey: ["project-selector", "initial", projectId],
+    queryFn: () => loadSelectorInitial(projectId),
     enabled: !!projectId,
   });
 
-  const [shouldLoadFull, setShouldLoadFull] = useState(false);
-  useEffect(() => {
-    if (!summaryQuery.data?.project?.id) return;
-    requestIdle(() => setShouldLoadFull(true));
-  }, [summaryQuery.data?.project?.id]);
-
-  const fullQuery = useQuery<SelectorInitialResult>({
-    queryKey: ["project-selector", "full", projectId],
-    queryFn: () => loadSelectorInitial(projectId),
-    enabled: !!projectId && shouldLoadFull,
-  });
-
   const rawApartments = useMemo(
-    () => (fullQuery.data?.apartments ?? []).map(normalizeApartmentData),
-    [fullQuery.data?.apartments],
+    () => (query.data?.apartments ?? []).map(normalizeApartmentData),
+    [query.data?.apartments],
   );
   const fieldSettings = useMemo(
-    () =>
-      (summaryQuery.data?.fieldSettings as Array<Record<string, unknown>>) ??
-      [],
-    [summaryQuery.data?.fieldSettings],
+    () => (query.data?.fieldSettings as Array<Record<string, unknown>>) ?? [],
+    [query.data?.fieldSettings],
   );
   const customFields = useMemo(
-    () =>
-      (summaryQuery.data?.customFields as Array<Record<string, unknown>>) ?? [],
-    [summaryQuery.data?.customFields],
+    () => (query.data?.customFields as Array<Record<string, unknown>>) ?? [],
+    [query.data?.customFields],
   );
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -87,7 +70,7 @@ export const useProjectSelectorInitial = (
   }, [rawApartments]);
 
   const { incrementViewCount } = useProjectCRUD();
-  const resolvedProjectId = summaryQuery.data?.project?.id;
+  const resolvedProjectId = query.data?.project?.id;
 
   useEffect(() => {
     if (resolvedProjectId) {
@@ -98,15 +81,14 @@ export const useProjectSelectorInitial = (
   }, [resolvedProjectId, incrementViewCount]);
 
   return {
-    project: (summaryQuery.data?.project as Project) ?? null,
+    project: (query.data?.project as Project) ?? null,
     apartments,
     setApartments,
-    apartmentsLoaded: !!fullQuery.data && !fullQuery.isLoading,
+    apartmentsLoaded: !query.isLoading,
     preloadedLayoutPhotosByRooms:
-      (fullQuery.data?.layoutPhotosByRooms as Record<string, LayoutPhoto[]>) ??
-      {},
+      (query.data?.layoutPhotosByRooms as Record<string, LayoutPhoto[]>) ?? {},
     fieldSettings,
     customFields,
-    customDomain: summaryQuery.data?.customDomain ?? null,
+    customDomain: query.data?.customDomain ?? null,
   };
 };
