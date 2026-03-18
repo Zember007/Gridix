@@ -428,5 +428,25 @@
     "showPendingOnly": "عرض معلق فقط",
     "clickToFilter": "انقر للتصفية",
     "noPartners": "لا شركاء"
+  },
+  "changelog": {
+    "title": "ما هو الجديد",
+    "subtitle": "تحديثات النظام الأساسي وتاريخ التحسينات",
+    "loading": "جارٍ تحميل سجل التغيير...",
+    "errorLoading": "فشل تحميل سجل التغيير.",
+    "emptyZone": "لا توجد سجلات للمنطقة المحددة",
+    "showAll": "إظهار كافة التحديثات",
+    "task": "مهمة",
+    "openAttachment": "فتح المرفق",
+    "shownRecords": "عرض السجلات: {{count}}",
+    "roles": {
+      "developer": "المطور",
+      "agency": "وكالة",
+      "agent": "عامل",
+      "partner": "شريك",
+      "admin": "مسؤل",
+      "superadmin": "المشرف الفائق",
+      "all": "الجميع"
+    }
   }
 }

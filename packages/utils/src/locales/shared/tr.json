@@ -428,5 +428,25 @@
     "showPendingOnly": "Yalnızca bekleyenleri göster",
     "clickToFilter": "Filtrelemek için tıklayın",
     "noPartners": "Ortak yok"
+  },
+  "changelog": {
+    "title": "Ne var ne yok",
+    "subtitle": "Platform güncellemeleri ve iyileştirme geçmişi",
+    "loading": "Değişiklik günlüğü yükleniyor...",
+    "errorLoading": "Değişiklik günlüğü yüklenemedi.",
+    "emptyZone": "Seçilen bölge için kayıt yok",
+    "showAll": "Tüm güncellemeleri göster",
+    "task": "Görev",
+    "openAttachment": "Eki aç",
+    "shownRecords": "Kayıtlar gösteriliyor: {{count}}",
+    "roles": {
+      "developer": "Geliştirici",
+      "agency": "Ajans",
+      "agent": "Ajan",
+      "partner": "Ortak",
+      "admin": "Yönetici",
+      "superadmin": "Süper yönetici",
+      "all": "Tüm"
+    }
   }
 }
