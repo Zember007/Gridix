@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   Button,
   Card,
@@ -16,6 +16,7 @@ import {
   SelectValue,
   Switch,
   Textarea,
+  UploadProgressCard,
 } from "@gridix/ui";
 import {
   ArrowLeft,
@@ -87,6 +88,326 @@ const parseAvailableLanguages = (value: unknown): Language[] => {
   return filtered.length > 0 ? filtered : SUPPORTED_LANGUAGES;
 };
 
+interface ProjectPdfPresentationSectionProps {
+  projectId: string;
+  pdfPresentationUrl: string | null;
+  isNew: boolean;
+  hasUser: boolean;
+  onPdfUrlChange: (pdfUrl: string | null) => void;
+}
+
+const ProjectPdfPresentationSection = memo(
+  ({
+    projectId,
+    pdfPresentationUrl,
+    isNew,
+    hasUser,
+    onPdfUrlChange,
+  }: ProjectPdfPresentationSectionProps) => {
+    const { t } = useLanguage();
+    const [uploadingPdf, setUploadingPdf] = useState(false);
+    const [removingPdf, setRemovingPdf] = useState(false);
+    const [pdfUploadProgress, setPdfUploadProgress] = useState<{
+      fileName: string;
+      fileSize: number;
+      progress: number;
+      status: "uploading" | "complete";
+    } | null>(null);
+
+    const inputRef = useRef<HTMLInputElement>(null);
+    const pdfUploadAbortControllerRef = useRef<AbortController | null>(null);
+    const uploadRequestIdRef = useRef(0);
+    const removeRequestIdRef = useRef(0);
+    const latestPdfUrlRef = useRef(pdfPresentationUrl);
+
+    const resetFileInput = useCallback(() => {
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }, []);
+
+    useEffect(() => {
+      latestPdfUrlRef.current = pdfPresentationUrl;
+    }, [pdfPresentationUrl]);
+
+    useEffect(() => {
+      return () => {
+        pdfUploadAbortControllerRef.current?.abort();
+      };
+    }, []);
+
+    const handleCancelPdfUpload = useCallback(() => {
+      pdfUploadAbortControllerRef.current?.abort();
+      resetFileInput();
+    }, [resetFileInput]);
+
+    const handlePdfUpload = useCallback(
+      async (file: File) => {
+        if (!hasUser || isNew) {
+          toast.error(t("projectEditor.saveProjectFirst"));
+          return;
+        }
+
+        if (removingPdf) {
+          return;
+        }
+
+        if (file.type !== "application/pdf") {
+          toast.error(t("projectEditor.onlyPdfAllowed"));
+          return;
+        }
+
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+          toast.error(t("projectEditor.fileTooLarge"));
+          return;
+        }
+
+        const requestId = uploadRequestIdRef.current + 1;
+        uploadRequestIdRef.current = requestId;
+
+        const abortController = new AbortController();
+        pdfUploadAbortControllerRef.current = abortController;
+
+        setUploadingPdf(true);
+        setPdfUploadProgress({
+          fileName: file.name,
+          fileSize: file.size,
+          progress: 0,
+          status: "uploading",
+        });
+
+        try {
+          const { PDFDocument } = await import("pdf-lib");
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfDoc = await PDFDocument.load(arrayBuffer, {
+            ignoreEncryption: true,
+          });
+
+          if (pdfDoc.getPageCount() === 0) {
+            toast.error(t("projectEditor.invalidPdf"));
+            return;
+          }
+
+          const { publicUrl } = await uploadProjectPdf(projectId, file, {
+            signal: abortController.signal,
+            onProgress: (progress) => {
+              if (uploadRequestIdRef.current !== requestId) return;
+
+              setPdfUploadProgress((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      progress,
+                      status: "uploading",
+                    }
+                  : null,
+              );
+            },
+          });
+
+          if (
+            uploadRequestIdRef.current !== requestId ||
+            abortController.signal.aborted
+          ) {
+            return;
+          }
+
+          setPdfUploadProgress((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  progress: 100,
+                  status: "complete",
+                }
+              : null,
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, 450));
+
+          if (
+            uploadRequestIdRef.current !== requestId ||
+            abortController.signal.aborted
+          ) {
+            return;
+          }
+
+          onPdfUrlChange(publicUrl);
+          toast.success(t("projectEditor.pdfUploadSuccess"));
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            return;
+          }
+
+          console.error("Error uploading PDF:", error);
+          toast.error(t("projectEditor.pdfUploadError"));
+        } finally {
+          if (uploadRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          if (pdfUploadAbortControllerRef.current === abortController) {
+            pdfUploadAbortControllerRef.current = null;
+          }
+
+          setPdfUploadProgress(null);
+          setUploadingPdf(false);
+          resetFileInput();
+        }
+      },
+      [
+        hasUser,
+        isNew,
+        onPdfUrlChange,
+        projectId,
+        removingPdf,
+        resetFileInput,
+        t,
+      ],
+    );
+
+    const handleRemovePdf = useCallback(async () => {
+      if (!hasUser || !pdfPresentationUrl || removingPdf || uploadingPdf) {
+        return;
+      }
+
+      const requestId = removeRequestIdRef.current + 1;
+      removeRequestIdRef.current = requestId;
+
+      const currentPdfUrl = pdfPresentationUrl;
+
+      setRemovingPdf(true);
+      onPdfUrlChange(null);
+
+      try {
+        await removeProjectPdf(projectId, currentPdfUrl);
+
+        if (removeRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        toast.success(t("projectEditor.pdfRemoveSuccess"));
+      } catch (error) {
+        if (removeRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        if (latestPdfUrlRef.current === null) {
+          onPdfUrlChange(currentPdfUrl);
+        }
+        console.error("Error removing PDF:", error);
+        toast.error(t("projectEditor.pdfRemoveError"));
+      } finally {
+        if (removeRequestIdRef.current === requestId) {
+          setRemovingPdf(false);
+        }
+      }
+    }, [
+      hasUser,
+      onPdfUrlChange,
+      pdfPresentationUrl,
+      projectId,
+      removingPdf,
+      t,
+      uploadingPdf,
+    ]);
+
+    return (
+      <div className="space-y-4 border-t pt-4">
+        <h4 className="flex items-center gap-2 text-sm font-medium">
+          <FileText className="h-4 w-4" />
+          {t("projectEditor.pdfPresentation")}
+        </h4>
+
+        {pdfPresentationUrl ? (
+          <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-red-600" />
+              <span className="text-sm">{t("projectEditor.pdfUploaded")}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => window.open(pdfPresentationUrl, "_blank")}
+              >
+                {t("projectEditor.view")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                type="button"
+                onClick={handleRemovePdf}
+                disabled={removingPdf || uploadingPdf}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+            {pdfUploadProgress ? (
+              <div className="mx-auto max-w-md text-left">
+                <UploadProgressCard
+                  fileName={pdfUploadProgress.fileName}
+                  fileSize={pdfUploadProgress.fileSize}
+                  progress={pdfUploadProgress.progress}
+                  status={pdfUploadProgress.status}
+                  icon={<FileText className="h-8 w-8 text-red-600" />}
+                  onCancel={handleCancelPdfUpload}
+                />
+              </div>
+            ) : (
+              <>
+                <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="mb-4 text-sm text-muted-foreground">
+                  {t("projectEditor.pdfPresentationDesc")}
+                </p>
+              </>
+            )}
+
+            <input
+              type="file"
+              ref={inputRef}
+              accept=".pdf"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                await handlePdfUpload(file);
+              }}
+              className="hidden"
+              id="pdf-upload-desktop"
+              disabled={isNew || uploadingPdf || removingPdf}
+            />
+
+            {!uploadingPdf && (
+              <label htmlFor="pdf-upload-desktop">
+                <Button
+                  variant="outline"
+                  disabled={isNew || removingPdf}
+                  asChild
+                >
+                  <span>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t("projectEditor.uploadPdf")}
+                  </span>
+                </Button>
+              </label>
+            )}
+
+            {isNew && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t("projectEditor.saveProjectFirstNote")}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [project, setProject] = useState<ProjectEditorProject>(
     DEFAULT_PROJECT_EDITOR_PROJECT,
@@ -95,7 +416,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [accessError, setAccessError] = useState<string | null>(null);
-  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const { navigate } = useLanguageNavigation();
   const { user, userProfile, loading: authLoading, signOut } = useAuth();
@@ -440,65 +760,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       e.preventDefault(); // предотвращаем вставку в одно поле
     }
   };
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const resetFileInput = () => {
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
-  };
-  const handlePdfUpload = async (file: File) => {
-    if (!user || isNew) {
-      toast.error(t("projectEditor.saveProjectFirst"));
-      return;
-    }
-    if (file.type !== "application/pdf") {
-      toast.error(t("projectEditor.onlyPdfAllowed"));
-      return;
-    }
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error(t("projectEditor.fileTooLarge"));
-      return;
-    }
-
-    setUploadingPdf(true);
-    try {
-      const { PDFDocument } = await import("pdf-lib");
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(arrayBuffer, {
-        ignoreEncryption: true,
-      });
-      if (pdfDoc.getPageCount() === 0) {
-        toast.error(t("projectEditor.invalidPdf"));
-        setUploadingPdf(false);
-        return;
-      }
-
-      const { publicUrl } = await uploadProjectPdf(project.id, file);
-      setProject((prev) => ({ ...prev, pdf_presentation_url: publicUrl }));
-      toast.success(t("projectEditor.pdfUploadSuccess"));
-      void editorDataContext?.refresh();
-    } catch (error) {
-      console.error("Error uploading PDF:", error);
-      toast.error(t("projectEditor.pdfUploadError"));
-    } finally {
-      setUploadingPdf(false);
-    }
-  };
-
-  const handleRemovePdf = async () => {
-    if (!user || !project.pdf_presentation_url) return;
-    try {
-      await removeProjectPdf(project.id, project.pdf_presentation_url);
-      setProject((prev) => ({ ...prev, pdf_presentation_url: null }));
-      toast.success(t("projectEditor.pdfRemoveSuccess"));
-      void editorDataContext?.refresh();
-    } catch (error) {
-      console.error("Error removing PDF:", error);
-      toast.error(t("projectEditor.pdfRemoveError"));
-    }
-  };
+  const handlePdfUrlChange = useCallback((pdfUrl: string | null) => {
+    setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
+  }, []);
 
   const [isCollapsed, setIsCollapsed] = useState(true);
 
@@ -1085,85 +1349,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           </p>
                         </div>
 
-                        {/* PDF Presentation Upload */}
-                        <div className="space-y-4 border-t pt-4">
-                          <h4 className="flex items-center gap-2 text-sm font-medium">
-                            <FileText className="h-4 w-4" />
-                            {t("projectEditor.pdfPresentation")}
-                          </h4>
-
-                          {project.pdf_presentation_url ? (
-                            <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-red-600" />
-                                <span className="text-sm">
-                                  {t("projectEditor.pdfUploaded")}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    window.open(
-                                      project.pdf_presentation_url!,
-                                      "_blank",
-                                    )
-                                  }
-                                >
-                                  {t("projectEditor.view")}
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={handleRemovePdf}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
-                              <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                              <p className="mb-4 text-sm text-muted-foreground">
-                                {t("projectEditor.pdfPresentationDesc")}
-                              </p>
-                              <input
-                                type="file"
-                                ref={inputRef}
-                                accept=".pdf"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  await handlePdfUpload(file);
-                                  resetFileInput();
-                                }}
-                                className="hidden"
-                                id="pdf-upload-desktop"
-                                disabled={isNew || uploadingPdf}
-                              />
-                              <label htmlFor="pdf-upload-desktop">
-                                <Button
-                                  variant="outline"
-                                  disabled={isNew || uploadingPdf}
-                                  asChild
-                                >
-                                  <span>
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    {uploadingPdf
-                                      ? t("projectEditor.uploading")
-                                      : t("projectEditor.uploadPdf")}
-                                  </span>
-                                </Button>
-                              </label>
-                              {isNew && (
-                                <p className="mt-2 text-xs text-muted-foreground">
-                                  {t("projectEditor.saveProjectFirstNote")}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                        <ProjectPdfPresentationSection
+                          projectId={project.id}
+                          pdfPresentationUrl={project.pdf_presentation_url}
+                          isNew={isNew}
+                          hasUser={Boolean(user)}
+                          onPdfUrlChange={handlePdfUrlChange}
+                        />
 
                         {/* Настройки рассрочки */}
                         <div className="space-y-4 border-t pt-4">
