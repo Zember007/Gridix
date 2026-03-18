@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ExternalLink,
   Briefcase,
   Building2,
   Calendar,
@@ -20,6 +21,10 @@ interface ChangelogEntry {
   id: string;
   github_pr_id: number;
   title: string;
+  title_ru: string | null;
+  title_en: string | null;
+  summary_ru: string | null;
+  summary_en: string | null;
   author: string | null;
   merged_at: string;
   task_link: string | null;
@@ -28,6 +33,15 @@ interface ChangelogEntry {
   how_to_verify: string | null;
   risks: string | null;
   code_zones: CodeZone[] | null;
+  media: ChangelogMedia[] | null;
+}
+
+interface ChangelogMedia {
+  source_url: string;
+  public_url: string;
+  storage_path: string;
+  content_type: string;
+  media_kind: "image" | "video" | "file" | "link";
 }
 
 type ChangelogClient = {
@@ -129,12 +143,15 @@ function formatDate(dateIso: string): string {
 
 function getEntryDescription(entry: ChangelogEntry): string {
   return (
+    entry.summary_ru ??
     entry.what_done ??
     entry.context ??
-    entry.how_to_verify ??
-    entry.risks ??
     "Описание изменений не указано."
   );
+}
+
+function getEntryTitle(entry: ChangelogEntry): string {
+  return entry.title_ru ?? entry.title;
 }
 
 export function ChangelogPage() {
@@ -154,7 +171,7 @@ export function ChangelogPage() {
       const { data, error } = await changelogClient
         .from("changelog_pull_requests")
         .select(
-          "id, github_pr_id, title, author, merged_at, task_link, context, what_done, how_to_verify, risks, code_zones",
+          "id, github_pr_id, title, title_ru, title_en, summary_ru, summary_en, author, merged_at, task_link, context, what_done, how_to_verify, risks, code_zones, media",
         )
         .order("merged_at", { ascending: false })
         .limit(200);
@@ -177,6 +194,15 @@ export function ChangelogPage() {
                 zone === "developer" ||
                 zone === "partner" ||
                 zone === "superadmin",
+            )
+          : [],
+        media: Array.isArray(entry.media)
+          ? entry.media.filter(
+              (item): item is ChangelogMedia =>
+                Boolean(item) &&
+                typeof item === "object" &&
+                typeof item.public_url === "string" &&
+                typeof item.media_kind === "string",
             )
           : [],
       }));
@@ -346,13 +372,12 @@ export function ChangelogPage() {
                     ))}
                   </div>
                   <h2 className="mb-2 text-xl font-bold text-slate-900">
-                    #{entry.github_pr_id} {entry.title}
+                    #{entry.github_pr_id} {getEntryTitle(entry)}
                   </h2>
                   <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-400 uppercase">
                     <span className="inline-flex items-center gap-1.5">
                       <Calendar size={14} /> {formatDate(entry.merged_at)}
                     </span>
-                    {entry.author && <span>@{entry.author}</span>}
                     {entry.task_link && (
                       <a
                         href={entry.task_link}
@@ -370,24 +395,61 @@ export function ChangelogPage() {
                   <p className="text-sm leading-relaxed text-slate-600">
                     {getEntryDescription(entry)}
                   </p>
-                  {entry.how_to_verify && (
-                    <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-3">
-                      <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                        Как проверить
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {entry.how_to_verify}
-                      </p>
-                    </div>
-                  )}
-                  {entry.risks && (
-                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                      <p className="text-xs font-semibold tracking-wide text-amber-700 uppercase">
-                        Риски
-                      </p>
-                      <p className="mt-1 text-sm text-amber-800">
-                        {entry.risks}
-                      </p>
+                  {(entry.media ?? []).length > 0 && (
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {(entry.media ?? []).slice(0, 6).map((item, index) => {
+                        if (item.media_kind === "image") {
+                          return (
+                            <a
+                              key={`${entry.id}-img-${index}`}
+                              href={item.public_url}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              className="block overflow-hidden rounded-lg border border-slate-200"
+                            >
+                              <img
+                                src={item.public_url}
+                                alt={`media-${entry.github_pr_id}-${index + 1}`}
+                                className="h-44 w-full object-cover"
+                                loading="lazy"
+                              />
+                            </a>
+                          );
+                        }
+
+                        if (item.media_kind === "video") {
+                          return (
+                            <div
+                              key={`${entry.id}-video-${index}`}
+                              className="overflow-hidden rounded-lg border border-slate-200 bg-black"
+                            >
+                              <video
+                                controls
+                                preload="metadata"
+                                className="h-44 w-full object-cover"
+                              >
+                                <source
+                                  src={item.public_url}
+                                  type={item.content_type}
+                                />
+                              </video>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <a
+                            key={`${entry.id}-link-${index}`}
+                            href={item.public_url}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                          >
+                            <ExternalLink size={14} />
+                            Открыть вложение
+                          </a>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
