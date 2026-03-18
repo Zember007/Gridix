@@ -71,7 +71,7 @@ export function PublicRoutes() {
         }
       />
 
-      <Route path="changelog" element={<ChangelogPage />} />
+      <Route path="changelog" element={<ChangelogPage standalone={true} />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -55,6 +55,7 @@ const ProfileFooterMenu = ({
   docsUrl,
   t,
   userId,
+  onSectionChange,
 }: {
   userEmail: string;
   isCollapsed: boolean;
@@ -66,6 +67,7 @@ const ProfileFooterMenu = ({
   docsUrl?: string;
   t: (k: string) => string;
   userId?: string;
+  onSectionChange?: (section: string) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
@@ -286,11 +288,15 @@ const ProfileFooterMenu = ({
           className="flex cursor-pointer items-center gap-2"
           style={{ color: ADMIN_THEME.sidebarText }}
           onSelect={() => {
-            window.open(
-              `/${language}/changelog`,
-              "_blank",
-              "noopener,noreferrer",
-            );
+            if (onSectionChange) {
+              onSectionChange("changelog");
+            } else {
+              window.open(
+                `/${language}/changelog`,
+                "_blank",
+                "noopener,noreferrer",
+              );
+            }
           }}
         >
           <Sparkles className="h-4 w-4" />
@@ -656,6 +662,7 @@ export function SimplifiedSidebar({
             docsUrl={resolvedDocsUrl}
             t={t}
             {...(userId ? { userId } : {})}
+            onSectionChange={handleSectionChange}
           />
         </div>
       ) : null}
