@@ -18,6 +18,7 @@ const BitrixInstallPage = lazy(
   () => import("@/pages/bitrix/BitrixInstallPage"),
 );
 const BitrixPage = lazy(() => import("@/pages/bitrix/BitrixPage"));
+const ChangelogPage = lazy(() => import("@gridix/ui/changelog-page"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const withLocalSuspense = (element: ReactNode) => (
@@ -90,7 +91,9 @@ export function PublicRoutes() {
         }
       />
 
-      <Route path="*" element={withLocalSuspense(<NotFound />)} />
+      <Route path="changelog" element={<ChangelogPage standalone={true} />} />
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

@@ -6,7 +6,8 @@ export type AgentCabinetPage =
   | "contacts"
   | "catalog"
   | "partnerProgram"
-  | "settings";
+  | "settings"
+  | "changelog";
 
 /**
  * Checks whether a query value matches one of the supported cabinet pages.
@@ -18,7 +19,8 @@ const isAgentCabinetPage = (page: string | null): page is AgentCabinetPage => {
     page === "contacts" ||
     page === "catalog" ||
     page === "partnerProgram" ||
-    page === "settings"
+    page === "settings" ||
+    page === "changelog"
   );
 };
 

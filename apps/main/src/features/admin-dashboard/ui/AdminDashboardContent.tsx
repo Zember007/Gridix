@@ -42,6 +42,7 @@ const AdminContactsPage = lazy(() =>
     default: m.AdminContactsPanel,
   })),
 );
+const ChangelogPage = lazy(() => import("@gridix/ui/changelog-page"));
 
 type AdminDashboardContentProps = {
   activeTab: string;
@@ -135,6 +136,12 @@ export const AdminDashboardContent = ({
               />
             </div>
           )}
+
+        {activeTab === "changelog" && (
+          <div className="h-full space-y-6">
+            <ChangelogPage />
+          </div>
+        )}
       </Suspense>
     </div>
   );

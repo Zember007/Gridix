@@ -11,26 +11,35 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 import {
   PartnersCabinetLayout,
+  type PartnersCabinetPage,
   usePartnersCabinetPageRouting,
 } from "@/components/layout/PartnersCabinetLayout";
 import { PartnerProgram } from "@gridix/partner-program";
+import { ChangelogPage } from "@gridix/ui";
 
 import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
 
 function PartnersCabinetRouter() {
   const { activePage, setActivePage } = usePartnersCabinetPageRouting();
+  const isChangelog = activePage === "changelog";
 
   return (
     <PartnersCabinetLayout activePage={activePage} onChangePage={setActivePage}>
-      <div className="p-4 md:p-6">
-        <PartnerProgram
-          navigationMode="sidebar"
-          activeSection={activePage}
-          onSectionChange={setActivePage}
-          autoCreateProfile
-        />
-      </div>
+      {isChangelog ? (
+        <ChangelogPage />
+      ) : (
+        <div className="p-4 md:p-6">
+          <PartnerProgram
+            navigationMode="sidebar"
+            activeSection={
+              activePage as Exclude<PartnersCabinetPage, "changelog">
+            }
+            onSectionChange={(section) => setActivePage(section)}
+            autoCreateProfile
+          />
+        </div>
+      )}
     </PartnersCabinetLayout>
   );
 }

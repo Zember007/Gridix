@@ -15,24 +15,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@gridix/ui";
 import type { PartnerSection } from "@gridix/partner-program";
 
-const getQueryPage = (search: string): PartnerSection | null => {
+export type PartnersCabinetPage = PartnerSection | "changelog";
+
+const getQueryPage = (search: string): PartnersCabinetPage | null => {
   const page = new URLSearchParams(search).get("page");
-  const validPages: PartnerSection[] = [
+  const validPages: PartnersCabinetPage[] = [
     "overview",
     "referrals",
     "clients",
     "instructions",
     "account",
+    "changelog",
   ];
-  if (validPages.includes(page as PartnerSection))
-    return page as PartnerSection;
+  if (validPages.includes(page as PartnersCabinetPage))
+    return page as PartnersCabinetPage;
   return null;
 };
 
 const setQueryPage = (
   navigate: ReturnType<typeof useNavigate>,
   location: ReturnType<typeof useLocation>,
-  page: PartnerSection,
+  page: PartnersCabinetPage,
 ) => {
   const url = new URL(window.location.href);
   if (url.searchParams.get("page") === page) return;
@@ -46,8 +49,8 @@ export function PartnersCabinetLayout({
   onChangePage,
 }: {
   children: ReactNode;
-  activePage: PartnerSection;
-  onChangePage: (p: PartnerSection) => void;
+  activePage: PartnersCabinetPage;
+  onChangePage: (p: PartnersCabinetPage) => void;
 }) {
   const { language, t } = useLanguage();
   const { user, signOut } = useAuth();
@@ -135,9 +138,9 @@ export function usePartnersCabinetPageRouting() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const activePage: PartnerSection =
+  const activePage: PartnersCabinetPage =
     getQueryPage(location.search) ?? "overview";
-  const setActivePage = (p: PartnerSection) =>
+  const setActivePage = (p: PartnersCabinetPage) =>
     setQueryPage(navigate, location, p);
 
   return { activePage, setActivePage };

@@ -12,6 +12,7 @@ import {
   DashboardTab,
   PartnerProgramTab,
 } from "@/pages/tabs";
+import { ChangelogPage } from "@gridix/ui";
 
 export function AgentCabinetRouter() {
   const { activePage, setActivePage } = useAgentCabinetPageRouting();
@@ -22,6 +23,7 @@ export function AgentCabinetRouter() {
     catalog: <CatalogTab />,
     partnerProgram: <PartnerProgramTab />,
     settings: <AgentSettingsTab />,
+    changelog: <ChangelogPage />,
   };
 
   return (
