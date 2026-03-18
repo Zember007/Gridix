@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import PolygonAnnotator from "@/components/visualization/polygon-editor/PolygonAnnotator";
+import PolygonAnnotator from "@/components/visualization/polygon-editor/PolygonAnnotatorLazy";
 import PolygonCustomizationSettings, {
   type PolygonSettings,
 } from "@/components/visualization/PolygonCustomizationSettings";

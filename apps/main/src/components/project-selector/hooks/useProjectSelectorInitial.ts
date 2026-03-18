@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   loadSelectorInitial,
+  loadSelectorSummary,
   type SelectorInitialResult,
+  type SelectorSummaryResult,
 } from "@/features/projectSelector/api/projectSelectorApi";
 import {
   type Apartment,
@@ -27,26 +29,53 @@ interface UseProjectSelectorInitialResult {
   customDomain: string | null;
 }
 
+function requestIdle(cb: () => void, timeoutMs = 1500) {
+  if (typeof window === "undefined") return;
+  const ric = window.requestIdleCallback as
+    | ((callback: IdleRequestCallback, options?: IdleRequestOptions) => number)
+    | undefined;
+  if (ric) {
+    ric(() => cb(), { timeout: timeoutMs });
+    return;
+  }
+  window.setTimeout(cb, Math.min(timeoutMs, 1000));
+}
+
 export const useProjectSelectorInitial = (
   projectId: string,
 ): UseProjectSelectorInitialResult => {
-  const query = useQuery<SelectorInitialResult>({
-    queryKey: ["project-selector", "initial", projectId],
-    queryFn: () => loadSelectorInitial(projectId),
+  const summaryQuery = useQuery<SelectorSummaryResult>({
+    queryKey: ["project-selector", "summary", projectId],
+    queryFn: () => loadSelectorSummary(projectId),
     enabled: !!projectId,
   });
 
+  const [shouldLoadFull, setShouldLoadFull] = useState(false);
+  useEffect(() => {
+    if (!summaryQuery.data?.project?.id) return;
+    requestIdle(() => setShouldLoadFull(true));
+  }, [summaryQuery.data?.project?.id]);
+
+  const fullQuery = useQuery<SelectorInitialResult>({
+    queryKey: ["project-selector", "full", projectId],
+    queryFn: () => loadSelectorInitial(projectId),
+    enabled: !!projectId && shouldLoadFull,
+  });
+
   const rawApartments = useMemo(
-    () => (query.data?.apartments ?? []).map(normalizeApartmentData),
-    [query.data?.apartments],
+    () => (fullQuery.data?.apartments ?? []).map(normalizeApartmentData),
+    [fullQuery.data?.apartments],
   );
   const fieldSettings = useMemo(
-    () => (query.data?.fieldSettings as Array<Record<string, unknown>>) ?? [],
-    [query.data?.fieldSettings],
+    () =>
+      (summaryQuery.data?.fieldSettings as Array<Record<string, unknown>>) ??
+      [],
+    [summaryQuery.data?.fieldSettings],
   );
   const customFields = useMemo(
-    () => (query.data?.customFields as Array<Record<string, unknown>>) ?? [],
-    [query.data?.customFields],
+    () =>
+      (summaryQuery.data?.customFields as Array<Record<string, unknown>>) ?? [],
+    [summaryQuery.data?.customFields],
   );
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -58,23 +87,26 @@ export const useProjectSelectorInitial = (
   }, [rawApartments]);
 
   const { incrementViewCount } = useProjectCRUD();
-  const resolvedProjectId = query.data?.project?.id;
+  const resolvedProjectId = summaryQuery.data?.project?.id;
 
   useEffect(() => {
     if (resolvedProjectId) {
-      incrementViewCount(resolvedProjectId);
+      requestIdle(() => {
+        incrementViewCount(resolvedProjectId);
+      });
     }
   }, [resolvedProjectId, incrementViewCount]);
 
   return {
-    project: (query.data?.project as Project) ?? null,
+    project: (summaryQuery.data?.project as Project) ?? null,
     apartments,
     setApartments,
-    apartmentsLoaded: !query.isLoading,
+    apartmentsLoaded: !!fullQuery.data && !fullQuery.isLoading,
     preloadedLayoutPhotosByRooms:
-      (query.data?.layoutPhotosByRooms as Record<string, LayoutPhoto[]>) ?? {},
+      (fullQuery.data?.layoutPhotosByRooms as Record<string, LayoutPhoto[]>) ??
+      {},
     fieldSettings,
     customFields,
-    customDomain: query.data?.customDomain ?? null,
+    customDomain: summaryQuery.data?.customDomain ?? null,
   };
 };

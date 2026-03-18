@@ -42,7 +42,7 @@ interface AnnotationSelector {
   };
 }
 
-interface PolygonAnnotatorProps {
+export interface PolygonAnnotatorProps {
   imageUrl: string;
   shapes?: Shape[];
   currentShape?: Shape | null;

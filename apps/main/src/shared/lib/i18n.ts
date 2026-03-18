@@ -1,13 +1,13 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { addSharedResources, DEFAULT_LANGUAGE } from "@gridix/utils/lib";
+import {
+  addSharedResourcesForLanguage,
+  DEFAULT_LANGUAGE,
+} from "@gridix/utils/lib";
 
 const SUPPORTED_LANGUAGES = ["ru", "en", "ka", "ar", "he", "tr"] as const;
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
-const eagerLocaleModules = import.meta.glob<{
-  default: Record<string, unknown>;
-}>("../../locales/en/*.json", { eager: true });
 const lazyLocaleModules = import.meta.glob<{
   default: Record<string, unknown>;
 }>("../../locales/*/*.json");
@@ -45,6 +45,7 @@ function flattenTranslations(
 
 const resources: Record<string, { translation: Record<string, string> }> = {};
 const loadedLanguages = new Set<string>();
+const loadedModulesByLanguage = new Map<string, Set<string>>();
 
 function parseLocalePath(path: string): {
   language: SupportedLanguage;
@@ -78,22 +79,31 @@ function addModuleToResources(
   Object.assign(resources[language].translation, flat);
 }
 
-Object.entries(eagerLocaleModules).forEach(([path, mod]) => {
-  addModuleToResources(path, mod as { default: Record<string, unknown> });
-});
+function getLoadedModulesSet(language: string): Set<string> {
+  const existing = loadedModulesByLanguage.get(language);
+  if (existing) return existing;
+  const next = new Set<string>();
+  loadedModulesByLanguage.set(language, next);
+  return next;
+}
 
-loadedLanguages.add("en");
-
-async function ensureLanguageResources(language: string): Promise<void> {
+async function ensureLanguageResources(
+  language: string,
+  fileBases?: string[],
+): Promise<void> {
   if (!SUPPORTED_LANGUAGES.includes(language as SupportedLanguage)) return;
-  if (loadedLanguages.has(language)) return;
+  const requested = fileBases?.filter(Boolean) ?? null;
+  const loadedModules = getLoadedModulesSet(language);
 
-  const entries = Object.entries(lazyLocaleModules).filter(([path]) =>
-    path.includes(`/locales/${language}/`),
-  );
+  const entries = Object.entries(lazyLocaleModules).filter(([path]) => {
+    if (!path.includes(`/locales/${language}/`)) return false;
+    if (!requested) return true;
+    const parsed = parseLocalePath(path);
+    if (!parsed) return false;
+    return requested.includes(parsed.fileBase);
+  });
 
   if (!entries.length) {
-    loadedLanguages.add(language);
     return;
   }
 
@@ -102,10 +112,16 @@ async function ensureLanguageResources(language: string): Promise<void> {
     const [path] = entries[i] ?? [];
     const mod = loaded[i];
     if (!path || !mod) continue;
+    const parsed = parseLocalePath(path);
+    if (!parsed) continue;
+    if (loadedModules.has(parsed.fileBase)) continue;
     addModuleToResources(path, mod);
+    loadedModules.add(parsed.fileBase);
   }
 
-  loadedLanguages.add(language);
+  if (!requested) {
+    loadedLanguages.add(language);
+  }
 }
 
 function detectInitialLanguage(): SupportedLanguage {
@@ -119,11 +135,41 @@ function detectInitialLanguage(): SupportedLanguage {
   return (match?.[1] as SupportedLanguage | undefined) ?? "en";
 }
 
+function getI18nModulesForPathname(pathname: string): string[] | null {
+  // Keep the project page critical path as small as possible.
+  // For unknown/other routes we fall back to "load all" to avoid breaking pages.
+  const isProjectRoute = pathname.includes("/project/");
+  if (isProjectRoute) {
+    return [
+      "common",
+      "project",
+      "apartment",
+      "filters",
+      "favorites",
+      "floorPlan",
+      "currency",
+      "state",
+      "errors",
+    ];
+  }
+
+  return null;
+}
+
+export async function preloadI18nForPathname(pathname: string): Promise<void> {
+  const language = i18n.language || detectInitialLanguage();
+  const modules = getI18nModulesForPathname(pathname);
+  await Promise.all([
+    addSharedResourcesForLanguage(i18n, language),
+    ensureLanguageResources(language, modules ?? undefined),
+  ]);
+}
+
 // Инициализация i18next
 void i18n.use(initReactI18next).init({
   resources,
-  lng: "en",
-  fallbackLng: ["en"],
+  lng: DEFAULT_LANGUAGE,
+  fallbackLng: [DEFAULT_LANGUAGE],
 
   interpolation: {
     escapeValue: false, // React уже экранирует
@@ -142,17 +188,32 @@ void i18n.use(initReactI18next).init({
   },
 });
 
-addSharedResources(i18n);
-
 const initialLanguage = detectInitialLanguage();
-void ensureLanguageResources(initialLanguage).then(() => {
+const initialPathname =
+  typeof window === "undefined" ? "/" : window.location.pathname;
+
+void Promise.all([
+  addSharedResourcesForLanguage(i18n, initialLanguage),
+  ensureLanguageResources(
+    initialLanguage,
+    getI18nModulesForPathname(initialPathname) ?? undefined,
+  ),
+]).then(() => {
   if (i18n.language !== initialLanguage) {
     void i18n.changeLanguage(initialLanguage);
   }
 });
 
 i18n.on("languageChanged", (language) => {
-  void ensureLanguageResources(language);
+  const pathname =
+    typeof window === "undefined" ? "/" : window.location.pathname;
+  void Promise.all([
+    addSharedResourcesForLanguage(i18n, language),
+    ensureLanguageResources(
+      language,
+      getI18nModulesForPathname(pathname) ?? undefined,
+    ),
+  ]);
 });
 
 export default i18n;

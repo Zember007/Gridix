@@ -4,7 +4,7 @@ import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ApartmentPopup from "./ApartmentPopup";
 import { FieldSetting } from "@/hooks/useFields";
-import PolygonAnnotator from "./polygon-editor/PolygonAnnotator";
+import PolygonAnnotator from "./polygon-editor/PolygonAnnotatorLazy";
 import type { Shape } from "./polygon-editor/GeometryShapes";
 import InteractionHint from "./InteractionHint";
 import { Spinner } from "@/shared/ui/Spinner";

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import type { Shape } from "@/components/visualization/polygon-editor/GeometryShapes";
-import type { PolygonAnnotatorRef } from "@/components/visualization/polygon-editor/PolygonAnnotator";
+import type { PolygonAnnotatorRef } from "@/components/visualization/polygon-editor/PolygonAnnotatorLazy";
 import type {
   BuildingFloor,
   ProjectFacade,

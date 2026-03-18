@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { Suspense, lazy, useRef, useState } from "react";
 import { Button } from "@gridix/ui";
 import {
   Card,
@@ -25,9 +25,12 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
-import ExcelColumnMapper from "@/components/data-import/ExcelColumnMapper";
-import ExcelUrlImporter from "@/components/data-import/ExcelUrlImporter";
-import * as XLSX from "xlsx";
+const ExcelColumnMapper = lazy(
+  () => import("@/components/data-import/ExcelColumnMapper"),
+);
+const ExcelUrlImporter = lazy(
+  () => import("@/components/data-import/ExcelUrlImporter"),
+);
 import { adminThemeClasses as admin } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -87,7 +90,7 @@ const ProjectCreationModal = ({
         });
       }, 100);
 
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const result = e.target?.result;
           if (!result) {
@@ -96,6 +99,7 @@ const ProjectCreationModal = ({
           }
 
           // CSV читаем как string, Excel как ArrayBuffer
+          const XLSX = await import("xlsx");
           const workbook = isCsv
             ? XLSX.read(
                 typeof result === "string"
@@ -230,11 +234,13 @@ const ProjectCreationModal = ({
       <Dialog open={open} onOpenChange={handleCloseModal}>
         <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
           <DialogHeader></DialogHeader>
-          <ExcelColumnMapper
-            excelColumns={excelColumns}
-            importedData={importedData}
-            onComplete={handleCloseModal}
-          />
+          <Suspense>
+            <ExcelColumnMapper
+              excelColumns={excelColumns}
+              importedData={importedData}
+              onComplete={handleCloseModal}
+            />
+          </Suspense>
         </DialogContent>
       </Dialog>
     );
@@ -256,10 +262,12 @@ const ProjectCreationModal = ({
               </Button>
             </div>
           </DialogHeader>
-          <ExcelUrlImporter
-            onDataImported={handleUrlImport}
-            onClose={() => setShowUrlImporter(false)}
-          />
+          <Suspense>
+            <ExcelUrlImporter
+              onDataImported={handleUrlImport}
+              onClose={() => setShowUrlImporter(false)}
+            />
+          </Suspense>
         </DialogContent>
       </Dialog>
     );

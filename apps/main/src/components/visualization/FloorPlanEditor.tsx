@@ -43,7 +43,7 @@ import { useProjectEditorDataContext } from "@/features/projectEditor/context/Pr
 import { TooltipProvider } from "@gridix/ui";
 import PolygonAnnotator, {
   PolygonAnnotatorRef,
-} from "./polygon-editor/PolygonAnnotator";
+} from "./polygon-editor/PolygonAnnotatorLazy";
 import { Shape } from "./polygon-editor/GeometryShapes";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
 import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
@@ -1767,6 +1767,8 @@ const FloorPlanEditor = ({
                               <img
                                 src={photo.image_url}
                                 alt="Apartment"
+                                loading="lazy"
+                                decoding="async"
                                 className="h-20 w-full rounded object-cover"
                               />
                               <Button
