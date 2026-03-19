@@ -32,6 +32,7 @@
       "renders": "Renders",
       "videos": "Videos",
       "presentations": "Presentations",
+      "loading": "Loading materials...",
       "noMaterials": "No materials",
       "restricted": "Access restricted",
       "signToAccess": "Sign the contract with the developer to access the media bank.",

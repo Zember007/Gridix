@@ -229,30 +229,89 @@ const OverviewTab: React.FC<{
       </div>
 
       {/* Quick Downloads */}
-      {isConnected &&
-        project.media?.presentations &&
-        project.media.presentations.length > 0 && (
-          <div>
-            <h3 className="mb-3 text-sm font-bold tracking-wider text-slate-500 uppercase">
-              {t("drawer.quickAccess")}
-            </h3>
-            <a
-              href="#"
-              className="group flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
-            >
-              <div className="rounded-lg bg-[var(--admin-background-secondary)] p-2 text-[var(--admin-primary)] group-hover:bg-[var(--admin-background-hover)]">
-                <FileText size={18} />
-              </div>
-              <span className="text-sm font-medium text-slate-700">
-                {project.media.presentations[0]?.title}
-              </span>
-              <Download
-                size={16}
-                className="ml-auto text-slate-400 group-hover:text-[var(--admin-primary)]"
-              />
-            </a>
-          </div>
-        )}
+      {isConnected && (
+        <div>
+          {(() => {
+            const presentations = project.media?.presentations ?? [];
+            const quickAccessDoc =
+              presentations.find((doc) => Boolean(doc.url)) ?? presentations[0];
+            const quickAccessReady = Boolean(quickAccessDoc?.url);
+            const quickAccessLabel = quickAccessDoc?.title ?? "—";
+            const hasAnyDocs = presentations.length > 0;
+            const quickAccessLoading = !project.media;
+
+            const handleQuickAccessDownload = () => {
+              if (!quickAccessDoc?.url) return;
+              downloadFile(
+                quickAccessDoc.url,
+                `${safeFilename(project.name)}-${safeFilename(quickAccessDoc.title)}.pdf`,
+              );
+            };
+
+            const quickAccessHref = quickAccessDoc?.url ?? "";
+
+            return (
+              <>
+                <h3 className="mb-3 text-sm font-bold tracking-wider text-slate-500 uppercase">
+                  {t("drawer.quickAccess")}
+                </h3>
+                <div className="min-h-[58px]">
+                  <div
+                    className={`flex w-full items-center gap-2 rounded-lg border border-slate-200 p-2 transition-colors ${
+                      quickAccessReady ? "hover:bg-slate-50" : "opacity-60"
+                    }`}
+                  >
+                    {quickAccessReady ? (
+                      <a
+                        href={quickAccessHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex min-w-0 flex-1 items-center gap-3 rounded-md p-1"
+                      >
+                        <div className="rounded-lg bg-[var(--admin-background-secondary)] p-2 text-[var(--admin-primary)] group-hover:bg-[var(--admin-background-hover)]">
+                          <FileText size={18} />
+                        </div>
+                        <span className="truncate text-sm font-medium text-slate-700">
+                          {quickAccessLabel}
+                        </span>
+                      </a>
+                    ) : (
+                      <div className="group flex min-w-0 flex-1 items-center gap-3 rounded-md p-1">
+                        {quickAccessLoading ? (
+                          <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-[var(--admin-background-secondary)]">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--admin-primary)] border-t-transparent" />
+                          </div>
+                        ) : (
+                          <div className="rounded-lg bg-[var(--admin-background-secondary)] p-2 text-[var(--admin-primary)]">
+                            <FileText size={18} />
+                          </div>
+                        )}
+                        <span className="truncate text-sm font-medium text-slate-700">
+                          {quickAccessLoading
+                            ? t("drawer.media.loading")
+                            : hasAnyDocs
+                              ? quickAccessLabel
+                              : t("drawer.media.noMaterials")}
+                        </span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleQuickAccessDownload}
+                      disabled={!quickAccessReady}
+                      className="rounded-md p-2 text-slate-400 transition-colors hover:bg-[var(--admin-background-hover)] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                      title={quickAccessReady ? "Download" : undefined}
+                    >
+                      <Download size={16} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 };
