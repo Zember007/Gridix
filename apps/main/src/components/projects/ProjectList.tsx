@@ -64,6 +64,13 @@ const ProjectUnitsChessEditorTab = lazy(
   () => import("@/components/projects/ProjectUnitsChessEditorTab"),
 );
 
+const MEDIA_ACCEPT_BY_SECTION = {
+  render: "image/*",
+  video: "video/*",
+  presentation:
+    "application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+} as const;
+
 interface ProjectListProps {
   onCreateNew?: () => void;
   onEditProject?: (projectId: string, isNew: boolean) => void;
@@ -531,6 +538,7 @@ const ProjectList = ({
 
   const DeveloperMediaTab = ({ project }: { project: SharedProject }) => {
     type MediaUploadKind = "render" | "presentation";
+    type MediaSectionKind = "render" | "video" | "presentation";
     interface MediaUploadProgressItem {
       id: string;
       kind: MediaUploadKind;
@@ -556,6 +564,8 @@ const ProjectList = ({
     const [videoLinksError, setVideoLinksError] = useState<string | null>(null);
     const [addingVideoLinks, setAddingVideoLinks] = useState(false);
     const [videoLinksExpanded, setVideoLinksExpanded] = useState(false);
+    const [activeDropSection, setActiveDropSection] =
+      useState<MediaSectionKind | null>(null);
     const [previewMedia, setPreviewMedia] = useState<{
       kind: "image" | "video";
       url: string;
@@ -625,6 +635,99 @@ const ProjectList = ({
         return false;
       }
     };
+
+    const hasDraggedFiles = (dataTransfer: DataTransfer | null) =>
+      Array.from(dataTransfer?.types ?? []).includes("Files");
+
+    const matchesDraggedItemAccept = (
+      item: DataTransferItem,
+      acceptToken: string,
+    ) => {
+      const normalizedToken = acceptToken.trim().toLowerCase();
+      if (!normalizedToken || item.kind !== "file") return false;
+
+      const itemType = item.type.toLowerCase();
+      if (!itemType) return false;
+
+      if (normalizedToken.endsWith("/*")) {
+        const mimePrefix = normalizedToken.slice(0, -1);
+        return itemType.startsWith(mimePrefix);
+      }
+
+      if (normalizedToken.startsWith(".")) {
+        return false;
+      }
+
+      return itemType === normalizedToken;
+    };
+
+    const canDropIntoSection = useCallback(
+      (dataTransfer: DataTransfer | null, section: MediaSectionKind) => {
+        const items = Array.from(dataTransfer?.items ?? []);
+        if (items.length === 0) return false;
+
+        const acceptTokens = MEDIA_ACCEPT_BY_SECTION[section]
+          .split(",")
+          .map((token) => token.trim())
+          .filter(Boolean);
+
+        return items.some((item) =>
+          acceptTokens.some((acceptToken) =>
+            matchesDraggedItemAccept(item, acceptToken),
+          ),
+        );
+      },
+      [],
+    );
+
+    const handleMediaSectionDragOver = useCallback(
+      (section: MediaSectionKind) =>
+        (event: React.DragEvent<HTMLDivElement>) => {
+          if (
+            !hasDraggedFiles(event.dataTransfer) ||
+            !canDropIntoSection(event.dataTransfer, section)
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          if (uploading !== null) {
+            return;
+          }
+
+          setActiveDropSection((current) =>
+            current === section ? current : section,
+          );
+        },
+      [canDropIntoSection, uploading],
+    );
+
+    const handleMediaSectionDragLeave = useCallback(
+      (section: MediaSectionKind) =>
+        (event: React.DragEvent<HTMLDivElement>) => {
+          const nextTarget = event.relatedTarget as Node | null;
+          if (nextTarget && event.currentTarget.contains(nextTarget)) {
+            return;
+          }
+
+          setActiveDropSection((current) =>
+            current === section ? null : current,
+          );
+        },
+      [],
+    );
+
+    useEffect(() => {
+      const resetActiveDropSection = () => setActiveDropSection(null);
+
+      window.addEventListener("drop", resetActiveDropSection);
+      window.addEventListener("dragend", resetActiveDropSection);
+
+      return () => {
+        window.removeEventListener("drop", resetActiveDropSection);
+        window.removeEventListener("dragend", resetActiveDropSection);
+      };
+    }, []);
 
     const parseVideoLinks = (input: string): string[] | null => {
       const links = input
@@ -1151,7 +1254,11 @@ const ProjectList = ({
 
     return (
       <div className="space-y-6 p-4">
-        <div>
+        <div
+          onDragOver={handleMediaSectionDragOver("render")}
+          onDragEnter={handleMediaSectionDragOver("render")}
+          onDragLeave={handleMediaSectionDragLeave("render")}
+        >
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
               <ImageIcon size={16} /> {t("projectList.media.renders")} (
@@ -1186,21 +1293,21 @@ const ProjectList = ({
               ))}
             </div>
           ) : null}
-          {renders.length === 0 && uploading !== "render" ? (
-            <div className="mb-4 overflow-hidden rounded-xl border-2 border-dashed border-slate-200">
-              <FileDropzone
-                accept="image/*"
-                multiple
-                size="compact"
-                heading={t("projectList.media.renders")}
-                description={t("projectList.media.renderDropzoneDescription")}
-                idleLabel={t("projectEditor.clickOrDrop")}
-                dropLabel={t("projectEditor.clickOrDrop")}
-                onFilesSelected={async (files) => {
-                  await uploadFiles("render", files);
-                }}
-              />
-            </div>
+          {uploading !== "render" ? (
+            <FileDropzone
+              accept="image/*"
+              multiple
+              size="compact"
+              collapsed={renders.length > 0 && activeDropSection !== "render"}
+              className="mb-4 border-2 border-dashed border-slate-200"
+              heading={t("projectList.media.renders")}
+              description={t("projectList.media.renderDropzoneDescription")}
+              idleLabel={t("projectEditor.clickOrDrop")}
+              dropLabel={t("projectEditor.clickOrDrop")}
+              onFilesSelected={async (files) => {
+                await uploadFiles("render", files);
+              }}
+            />
           ) : null}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {renders.map((url, i) => (
@@ -1252,7 +1359,11 @@ const ProjectList = ({
           </div>
         </div>
 
-        <div>
+        <div
+          onDragOver={handleMediaSectionDragOver("video")}
+          onDragEnter={handleMediaSectionDragOver("video")}
+          onDragLeave={handleMediaSectionDragLeave("video")}
+        >
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
               <PlayCircle size={16} /> {t("projectList.media.videos")} (
@@ -1319,19 +1430,19 @@ const ProjectList = ({
               </div>
             </div>
           )}
-          {videos.length === 0 && uploading !== "video" ? (
-            <div className="mb-4 overflow-hidden rounded-xl border-2 border-dashed border-slate-200">
-              <FileDropzone
-                accept="video/*"
-                multiple
-                size="compact"
-                heading={t("projectList.media.videos")}
-                description={t("projectList.media.videoDropzoneDescription")}
-                idleLabel={t("projectEditor.clickOrDrop")}
-                dropLabel={t("projectEditor.clickOrDrop")}
-                onFilesSelected={handleVideoFilesSelected}
-              />
-            </div>
+          {uploading !== "video" ? (
+            <FileDropzone
+              accept="video/*"
+              multiple
+              size="compact"
+              collapsed={videos.length > 0 && activeDropSection !== "video"}
+              className="mb-4 border-2 border-dashed border-slate-200"
+              heading={t("projectList.media.videos")}
+              description={t("projectList.media.videoDropzoneDescription")}
+              idleLabel={t("projectEditor.clickOrDrop")}
+              dropLabel={t("projectEditor.clickOrDrop")}
+              onFilesSelected={handleVideoFilesSelected}
+            />
           ) : null}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {videos.map((vid, i) => (
@@ -1416,7 +1527,11 @@ const ProjectList = ({
           </div>
         </div>
 
-        <div>
+        <div
+          onDragOver={handleMediaSectionDragOver("presentation")}
+          onDragEnter={handleMediaSectionDragOver("presentation")}
+          onDragLeave={handleMediaSectionDragLeave("presentation")}
+        >
           <div className="mb-3 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900">
               <FileText size={16} /> {t("projectList.media.presentations")} (
@@ -1453,23 +1568,25 @@ const ProjectList = ({
               ))}
             </div>
           ) : null}
-          {docs.length === 0 && uploading !== "presentation" ? (
-            <div className="mb-4 overflow-hidden rounded-xl border-2 border-dashed border-slate-200">
-              <FileDropzone
-                accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                multiple
-                size="compact"
-                heading={t("projectList.media.presentations")}
-                description={t(
-                  "projectList.media.presentationDropzoneDescription",
-                )}
-                idleLabel={t("projectEditor.clickOrDrop")}
-                dropLabel={t("projectEditor.clickOrDrop")}
-                onFilesSelected={async (files) => {
-                  await uploadFiles("presentation", files);
-                }}
-              />
-            </div>
+          {uploading !== "presentation" ? (
+            <FileDropzone
+              accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              multiple
+              size="compact"
+              collapsed={
+                docs.length > 0 && activeDropSection !== "presentation"
+              }
+              className="mb-4 border-2 border-dashed border-slate-200"
+              heading={t("projectList.media.presentations")}
+              description={t(
+                "projectList.media.presentationDropzoneDescription",
+              )}
+              idleLabel={t("projectEditor.clickOrDrop")}
+              dropLabel={t("projectEditor.clickOrDrop")}
+              onFilesSelected={async (files) => {
+                await uploadFiles("presentation", files);
+              }}
+            />
           ) : null}
           <div className="space-y-2">
             {docs.map((doc) => (

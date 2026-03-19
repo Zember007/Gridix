@@ -17,6 +17,37 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
 
+const matchesAcceptToken = (file: File, acceptToken: string): boolean => {
+  const normalizedToken = acceptToken.trim().toLowerCase();
+  if (!normalizedToken) return true;
+
+  if (normalizedToken.startsWith(".")) {
+    return file.name.toLowerCase().endsWith(normalizedToken);
+  }
+
+  if (normalizedToken.endsWith("/*")) {
+    const mimePrefix = normalizedToken.slice(0, -1);
+    return file.type.toLowerCase().startsWith(mimePrefix);
+  }
+
+  return file.type.toLowerCase() === normalizedToken;
+};
+
+const filterFilesByAccept = (files: File[], accept?: string): File[] => {
+  if (!accept) return files;
+
+  const acceptTokens = accept
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (acceptTokens.length === 0) return files;
+
+  return files.filter((file) =>
+    acceptTokens.some((acceptToken) => matchesAcceptToken(file, acceptToken)),
+  );
+};
+
 export interface FileDropzoneProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
   "onChange" | "onDrop"
@@ -34,6 +65,7 @@ export interface FileDropzoneProps extends Omit<
   dropLabel?: React.ReactNode;
   selectedFiles?: File[];
   size?: "default" | "compact";
+  collapsed?: boolean;
 }
 
 export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
@@ -51,6 +83,7 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
       dropLabel = "Drop it",
       selectedFiles = [],
       size = "default",
+      collapsed = false,
       ...props
     },
     ref,
@@ -63,12 +96,12 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
       async (fileList: FileList | File[] | null) => {
         if (!fileList || disabled) return;
 
-        const files = Array.from(fileList);
+        const files = filterFilesByAccept(Array.from(fileList), accept);
         if (files.length === 0) return;
 
         await onFilesSelected?.(multiple ? files : files.slice(0, 1));
       },
-      [disabled, multiple, onFilesSelected],
+      [accept, disabled, multiple, onFilesSelected],
     );
 
     const handleClick = React.useCallback(() => {
@@ -117,7 +150,11 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
     return (
       <div
         ref={ref}
-        className={cn("w-full overflow-hidden rounded-xl", className)}
+        className={cn(
+          "w-full overflow-hidden rounded-xl transition-all duration-200 ease-out",
+          className,
+          collapsed && "pointer-events-none mb-0 max-h-0 border-0 opacity-0",
+        )}
         onDragOver={handleDragOver}
         onDragEnter={handleDragOver}
         onDragLeave={handleDragLeave}
