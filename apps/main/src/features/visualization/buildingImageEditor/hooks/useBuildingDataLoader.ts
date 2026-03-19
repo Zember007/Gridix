@@ -76,7 +76,18 @@ export function useBuildingDataLoader({
       const pid = project?.id || projectId;
       const projectFloors = project?.floors || 1;
 
-      const loadedFacades = await api.fetchFacades(pid);
+      let loadedFacades = await api.fetchFacades(pid);
+      const legacyImageUrl =
+        project?.building_image_url ?? currentImageUrl ?? null;
+
+      // Auto-heal legacy/inconsistent state:
+      // image exists on project, but project_facades has no records.
+      // In that case create primary "main" facade so UI tabs stay consistent.
+      if (loadedFacades.length === 0 && legacyImageUrl) {
+        const primaryFacade = await api.insertFacade(pid, "main", 0);
+        await api.updateFacadeImage(primaryFacade.id, legacyImageUrl);
+        loadedFacades = [{ ...primaryFacade, image_url: legacyImageUrl }];
+      }
 
       let nextSelectedFacadeId = preferredFacadeId ?? selectedFacadeId;
       if (!nextSelectedFacadeId) {
@@ -89,11 +100,7 @@ export function useBuildingDataLoader({
         loadedFacades.find((f) => f.id === nextSelectedFacadeId) ??
         loadedFacades[0] ??
         null;
-      const activeUrl =
-        active?.image_url ??
-        project?.building_image_url ??
-        currentImageUrl ??
-        null;
+      const activeUrl = active?.image_url ?? legacyImageUrl;
 
       let apartmentNumbersSnapshot: number[] = [];
       if (isObjectProject) {
