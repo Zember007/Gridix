@@ -16,7 +16,11 @@ interface UseFacadeCrudParams {
   activeFacade: ProjectFacade | null;
   loadBuildingData: () => Promise<void>;
   projectId: string;
-  project: { id?: string; floors?: number } | null;
+  project: {
+    id?: string;
+    floors?: number;
+    building_image_url?: string | null;
+  } | null;
   user: { id: string } | null;
   t: (key: string, params?: Record<string, unknown>) => string;
   onImageUpdate?: (imageUrl: string) => void;
@@ -49,10 +53,12 @@ export function useFacadeCrud({
   const syncPrimaryFacadeToProject = useCallback(
     async (nextFacades?: ProjectFacade[]) => {
       const list = nextFacades ?? facades;
-      const primary = list
-        .slice()
-        .sort((a, b) => a.order_index - b.order_index)[0];
-      const primaryUrl = primary?.image_url ?? null;
+      const sorted = list.slice().sort((a, b) => a.order_index - b.order_index);
+      const primary = sorted[0];
+      // Preview should not be blank if ANY facade already has an image.
+      const fallbackWithImage =
+        sorted.find((f) => !!f.image_url)?.image_url ?? null;
+      const primaryUrl = primary?.image_url ?? fallbackWithImage ?? null;
 
       try {
         await api.syncProjectBuildingImage(
@@ -115,7 +121,10 @@ export function useFacadeCrud({
       );
       setBuildingImage(publicUrl);
 
-      if (activeFacade.order_index === 0) {
+      const shouldSyncProjectPreview =
+        activeFacade.order_index === 0 || !project?.building_image_url;
+
+      if (shouldSyncProjectPreview) {
         await syncPrimaryFacadeToProject(
           facades.map((f) =>
             f.id === activeFacade.id ? { ...f, image_url: publicUrl } : f,
@@ -175,6 +184,9 @@ export function useFacadeCrud({
       setBuildingImage(publicUrl);
       setBuildingFloors([]);
       setShapes([]);
+
+      // Ensure project-level preview is populated immediately (used by cards / gallery).
+      await syncPrimaryFacadeToProject(nextFacades);
 
       setIsAddingFacade(false);
       setNewFacadeName("");
