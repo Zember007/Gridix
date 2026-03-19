@@ -19,6 +19,13 @@ export interface ProjectFacade {
 export interface FacadeDisplaySettings {
   colors: { building: string };
   opacity: { normal: number; hover: number };
+  hoverEffects: {
+    scale: boolean;
+    colorChange: boolean;
+    opacityChange: boolean;
+    glow: boolean;
+  };
+  display: { showNumbers: boolean; showTooltip: boolean };
 }
 
 export interface BuildingDataSnapshot {

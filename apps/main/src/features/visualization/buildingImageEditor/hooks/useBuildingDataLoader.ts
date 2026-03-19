@@ -40,6 +40,13 @@ export function useBuildingDataLoader({
     useState<FacadeDisplaySettings>({
       colors: { building: "#3b82f6" },
       opacity: { normal: 0.4, hover: 0.7 },
+      hoverEffects: {
+        scale: false,
+        colorChange: true,
+        opacityChange: true,
+        glow: true,
+      },
+      display: { showNumbers: true, showTooltip: false },
     });
   const initializedProjectIdRef = useRef<string | null>(null);
 

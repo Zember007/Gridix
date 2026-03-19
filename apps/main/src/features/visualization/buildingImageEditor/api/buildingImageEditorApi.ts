@@ -56,6 +56,13 @@ export async function fetchFacadeDisplaySettings(projectId: string) {
   const defaultSettings = {
     colors: { building: "#3b82f6" },
     opacity: { normal: 0.4, hover: 0.7 },
+    hoverEffects: {
+      scale: false,
+      colorChange: true,
+      opacityChange: true,
+      glow: true,
+    },
+    display: { showNumbers: true, showTooltip: false },
   };
 
   if (
@@ -66,6 +73,8 @@ export async function fetchFacadeDisplaySettings(projectId: string) {
     const s = data.polygon_settings_facade as Record<string, unknown>;
     const colors = s?.colors as Record<string, unknown> | undefined;
     const opacity = s?.opacity as Record<string, unknown> | undefined;
+    const hoverEffects = s?.hoverEffects as Record<string, unknown> | undefined;
+    const display = s?.display as Record<string, unknown> | undefined;
     return {
       colors: {
         building:
@@ -74,6 +83,30 @@ export async function fetchFacadeDisplaySettings(projectId: string) {
       opacity: {
         normal: typeof opacity?.normal === "number" ? opacity.normal : 0.4,
         hover: typeof opacity?.hover === "number" ? opacity.hover : 0.7,
+      },
+      hoverEffects: {
+        scale:
+          typeof hoverEffects?.scale === "boolean" ? hoverEffects.scale : false,
+        colorChange:
+          typeof hoverEffects?.colorChange === "boolean"
+            ? hoverEffects.colorChange
+            : true,
+        opacityChange:
+          typeof hoverEffects?.opacityChange === "boolean"
+            ? hoverEffects.opacityChange
+            : true,
+        glow:
+          typeof hoverEffects?.glow === "boolean" ? hoverEffects.glow : true,
+      },
+      display: {
+        showNumbers:
+          typeof display?.showNumbers === "boolean"
+            ? display.showNumbers
+            : true,
+        showTooltip:
+          typeof display?.showTooltip === "boolean"
+            ? display.showTooltip
+            : false,
       },
     };
   }
