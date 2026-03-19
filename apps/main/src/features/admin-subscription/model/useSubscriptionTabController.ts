@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BillingDetails,
   ProjectSubscription,
@@ -9,6 +9,12 @@ import { supabase } from "@/shared/api/supabase";
 import { fetchCurrentSession } from "@gridix/utils";
 import { toast } from "sonner";
 import { trackUsertourEvent } from "@gridix/utils/integrations";
+import {
+  createStripeCheckoutSession,
+  createStripePortalSession,
+  fetchProjectSubscriptions as fetchProjectSubscriptionsApi,
+} from "@/entities/subscription/api/subscriptionApi";
+import { CheckoutPaymentMethod } from "@/features/subscription-checkout/model/types";
 
 export const useSubscriptionTabController = () => {
   const {
@@ -29,6 +35,108 @@ export const useSubscriptionTabController = () => {
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const stripeState = url.searchParams.get("stripe");
+    if (stripeState !== "success") return;
+
+    const rawPendingProjects = window.sessionStorage.getItem(
+      "gridix_stripe_checkout_projects",
+    );
+    const pendingProjectIds = rawPendingProjects
+      ? (JSON.parse(rawPendingProjects) as string[])
+      : [];
+
+    let attempts = 0;
+    let cancelled = false;
+
+    const finalizeUrl = () => {
+      url.searchParams.delete("stripe");
+      window.history.replaceState(
+        {},
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+    };
+
+    const run = async () => {
+      while (!cancelled && attempts < 12) {
+        attempts += 1;
+        await refreshProjectSubscriptions();
+        const latest = await fetchProjectSubscriptionsApi();
+        const latestProjects = (latest?.projects ??
+          []) as ProjectSubscription[];
+
+        if (
+          pendingProjectIds.length > 0 &&
+          pendingProjectIds.every((projectId) => {
+            const project = latestProjects.find(
+              (item) => item.id === projectId,
+            );
+            if (!project) return false;
+            const sub = project.user_subscriptions?.[0];
+            if (!sub) return false;
+            const periodEnd = sub.current_period_end
+              ? new Date(sub.current_period_end).getTime()
+              : null;
+            const hasPaidAccess = periodEnd === null || periodEnd > Date.now();
+            return ["active", "trialing"].includes(sub.status) && hasPaidAccess;
+          })
+        ) {
+          toast.success("Payment confirmed. Projects are activated.");
+          window.sessionStorage.removeItem("gridix_stripe_checkout_projects");
+          finalizeUrl();
+          return;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 2000));
+      }
+
+      if (!cancelled) {
+        toast.info(
+          "Payment received. Activation is still syncing, please refresh shortly.",
+        );
+        finalizeUrl();
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+    // Run only on mount for Stripe return URL handling.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isProjectEligibleForNewPayment = (projectId: string): boolean => {
+    const project = projectSubscriptions.find((p) => p.id === projectId);
+    if (!project) return false;
+
+    const sub = project.user_subscriptions?.[0];
+    if (!sub) return true;
+
+    const periodEnd = sub.current_period_end
+      ? new Date(sub.current_period_end).getTime()
+      : null;
+    const hasActivePaidPeriod = periodEnd !== null && periodEnd > Date.now();
+
+    if (sub.status === "pending_payment") {
+      return false;
+    }
+
+    if (
+      ["active", "trialing"].includes(sub.status) &&
+      (periodEnd === null || hasActivePaidPeriod)
+    ) {
+      return false;
+    }
+
+    return true;
+  };
 
   const expiredProjects = projectSubscriptions.filter(
     (proj: ProjectSubscription) => {
@@ -117,9 +225,11 @@ export const useSubscriptionTabController = () => {
     projectId: string,
     currentPlanId?: string | null,
   ) => {
+    const fallbackPlanId =
+      currentPlanId || selectedPlanId || plans[0]?.id || "";
     setSelectedProjects([projectId]);
-    if (currentPlanId) {
-      setSelectedPlanId(currentPlanId);
+    if (fallbackPlanId) {
+      setSelectedPlanId(fallbackPlanId);
     }
     setIsInvoiceDialogOpen(true);
   };
@@ -127,6 +237,7 @@ export const useSubscriptionTabController = () => {
   const handleConfirmInvoiceFromModal = async (
     payer: BillingDetails,
     projectIds: string[],
+    method: CheckoutPaymentMethod,
   ): Promise<void> => {
     if (!selectedPlanId) {
       toast.error(t("admin.subscriptionPage.checkout.errors.selectPlan"));
@@ -140,11 +251,52 @@ export const useSubscriptionTabController = () => {
       return;
     }
 
+    const eligibleProjectIds = projectIds.filter((projectId) =>
+      isProjectEligibleForNewPayment(projectId),
+    );
+    if (eligibleProjectIds.length === 0) {
+      toast.error(
+        t("admin.subscriptionPage.checkout.errors.noProjectsSelected"),
+      );
+      return;
+    }
+
     try {
       await saveBillingDetails(payer);
 
-      if (projectIds.length === 1) {
-        const projectId = projectIds[0]!;
+      if (method === "card") {
+        const checkoutResult = await createStripeCheckoutSession(
+          eligibleProjectIds,
+          selectedPlanId,
+          selectedDuration,
+        );
+
+        if (!checkoutResult?.url) {
+          toast.error("Stripe checkout is not available for selected plan");
+          return;
+        }
+
+        void trackUsertourEvent({
+          eventName: "gridix_billing_checkout_started",
+          properties: {
+            project_ids: eligibleProjectIds,
+            plan_id: selectedPlanId,
+            duration_months: selectedDuration,
+            payment_method: "card",
+          },
+          onceKey: "gridix_billing_checkout_started",
+        });
+
+        window.sessionStorage.setItem(
+          "gridix_stripe_checkout_projects",
+          JSON.stringify(eligibleProjectIds),
+        );
+        window.location.href = checkoutResult.url;
+        return;
+      }
+
+      if (eligibleProjectIds.length === 1) {
+        const projectId = eligibleProjectIds[0]!;
         const result = await requestInvoice(
           projectId,
           selectedPlanId,
@@ -162,9 +314,10 @@ export const useSubscriptionTabController = () => {
         void trackUsertourEvent({
           eventName: "gridix_billing_invoice_requested",
           properties: {
-            project_ids: projectIds,
+            project_ids: eligibleProjectIds,
             plan_id: selectedPlanId,
             duration_months: selectedDuration,
+            payment_method: "invoice",
           },
           onceKey: "gridix_billing_invoice_requested",
         });
@@ -178,7 +331,7 @@ export const useSubscriptionTabController = () => {
         }
       } else {
         const results = await requestInvoiceForMultiple(
-          projectIds,
+          eligibleProjectIds,
           selectedPlanId,
           selectedDuration,
         );
@@ -193,15 +346,16 @@ export const useSubscriptionTabController = () => {
 
         toast.success(
           t("admin.subscriptionPage.toasts.invoiceRequestedMultiple", {
-            count: projectIds.length,
+            count: eligibleProjectIds.length,
           }),
         );
         void trackUsertourEvent({
           eventName: "gridix_billing_invoice_requested",
           properties: {
-            project_ids: projectIds,
+            project_ids: eligibleProjectIds,
             plan_id: selectedPlanId,
             duration_months: selectedDuration,
+            payment_method: "invoice",
           },
           onceKey: "gridix_billing_invoice_requested",
         });
@@ -213,6 +367,20 @@ export const useSubscriptionTabController = () => {
     } catch (error) {
       console.error("Error confirming invoice from modal:", error);
       toast.error(t("common.invoiceGenerationFailed"));
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const result = await createStripePortalSession();
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        toast.error(t("admin.subscriptionPage.toasts.portalUnavailable"));
+      }
+    } catch (err) {
+      console.error("Error opening Stripe portal:", err);
+      toast.error(t("admin.subscriptionPage.toasts.portalUnavailable"));
     }
   };
 
@@ -238,5 +406,6 @@ export const useSubscriptionTabController = () => {
     setIsInvoiceDialogOpen,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
+    handleManageSubscription,
   };
 };

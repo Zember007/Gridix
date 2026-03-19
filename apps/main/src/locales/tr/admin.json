@@ -219,7 +219,8 @@
       },
       "buttons": {
         "extend": "Uzatmak",
-        "activate": "Etkinleştir"
+        "activate": "Etkinleştir",
+        "manage": "Yönet"
       }
     },
     "durations": {
@@ -376,7 +377,8 @@
     },
     "toasts": {
       "invoiceRequestedSingle": "Fatura başarıyla talep edildi. Sipariş geçmişinden indirebilirsiniz.",
-      "invoiceRequestedMultiple": "{{count}} proje için faturalar istendi"
+      "invoiceRequestedMultiple": "{{count}} proje için faturalar istendi",
+      "portalUnavailable": "Abonelik yönetimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
     },
     "error": "Abonelikler yüklenirken hata oluştu"
   },

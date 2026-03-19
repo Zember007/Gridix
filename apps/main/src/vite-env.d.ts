@@ -10,6 +10,7 @@ interface ImportMetaEnv {
 
   readonly VITE_USERTOUR_ADMIN_CHECKLIST_CONTENT_ID?: string;
   readonly VITE_USERTOUR_PROJECT_CHECKLIST_CONTENT_ID?: string;
+  readonly VITE_STRIPE_ENABLED?: string;
 }
 
 interface ImportMeta {

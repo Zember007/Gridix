@@ -219,7 +219,8 @@
       },
       "buttons": {
         "extend": "تمديد",
-        "activate": "تفعيل"
+        "activate": "تفعيل",
+        "manage": "إدارة"
       }
     },
     "durations": {
@@ -376,7 +377,8 @@
     },
     "toasts": {
       "invoiceRequestedSingle": "تم طلب الفاتورة بنجاح. يمكنك تنزيلها من سجل الطلبات.",
-      "invoiceRequestedMultiple": "تم طلب فواتير لـ {{count}} مشروع(ات)"
+      "invoiceRequestedMultiple": "تم طلب فواتير لـ {{count}} مشروع(ات)",
+      "portalUnavailable": "إدارة الاشتراك غير متاحة حاليًا. يرجى المحاولة لاحقًا."
     },
     "error": "حدث خطأ أثناء تحميل الاشتراكات"
   },

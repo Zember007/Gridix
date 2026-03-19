@@ -6,6 +6,7 @@ import {
   SubscriptionPlan,
 } from "@/entities/subscription/queries/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CheckoutPaymentMethod } from "../model/types";
 
 type Props = {
   finalTotal: number;
@@ -15,7 +16,7 @@ type Props = {
   payerType: BillingPayerType;
   formData: BillingDetails;
   isLoading: boolean;
-  onConfirm: () => void;
+  onConfirm: (method: CheckoutPaymentMethod) => void;
 };
 
 export const CheckoutStepPaymentMethod: React.FC<Props> = ({
@@ -78,9 +79,12 @@ export const CheckoutStepPaymentMethod: React.FC<Props> = ({
 
       <div className="grid grid-cols-1 gap-4">
         <button
-          onClick={() => {}}
-          disabled={true}
-          className="group relative flex cursor-not-allowed items-center justify-between rounded-xl border border-slate-200 bg-white p-5 opacity-60"
+          type="button"
+          onClick={() => onConfirm("card")}
+          disabled={isLoading}
+          className={`group relative flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-blue-500 hover:shadow-md ${
+            isLoading ? "cursor-not-allowed opacity-60" : ""
+          }`}
         >
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600">
@@ -95,13 +99,11 @@ export const CheckoutStepPaymentMethod: React.FC<Props> = ({
               </p>
             </div>
           </div>
-          <span className="rounded bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase text-gray-500">
-            {t("admin.subscriptionPage.checkout.methods.card.unavailable")}
-          </span>
         </button>
 
         <button
-          onClick={onConfirm}
+          type="button"
+          onClick={() => onConfirm("invoice")}
           disabled={isLoading}
           className="group relative flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-blue-500 hover:shadow-md"
         >

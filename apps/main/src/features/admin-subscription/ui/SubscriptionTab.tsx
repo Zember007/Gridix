@@ -31,7 +31,16 @@ export default function SubscriptionTab() {
     setIsInvoiceDialogOpen,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
+    handleManageSubscription,
   } = useSubscriptionTabController();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Spinner size="md" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex flex-col gap-10 pb-20 duration-500 animate-in fade-in">
@@ -46,6 +55,7 @@ export default function SubscriptionTab() {
         <ProjectSubscriptionsList
           projects={projectSubscriptions}
           onOpenInvoice={handleOpenInvoiceForProject}
+          onManageSubscription={handleManageSubscription}
         />
       </section>
 
@@ -78,15 +88,14 @@ export default function SubscriptionTab() {
         projects={projectSubscriptions}
       />
 
-      {/* Модальное окно оформления подписки */}
-      {isInvoiceDialogOpen && selectedPlanId && (
+      {isInvoiceDialogOpen && (
         <CheckoutModal
           isOpen={isInvoiceDialogOpen}
           onClose={() => setIsInvoiceDialogOpen(false)}
           projects={projectSubscriptions}
           initialSelectedProjectIds={selectedProjects}
           plans={plans}
-          selectedPlanId={selectedPlanId}
+          selectedPlanId={selectedPlanId || plans[0]?.id || ""}
           selectedDuration={selectedDuration}
           billingDetails={billingDetails}
           onPlanChange={(planId) => setSelectedPlanId(planId)}

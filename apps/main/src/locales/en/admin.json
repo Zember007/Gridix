@@ -219,7 +219,8 @@
       },
       "buttons": {
         "extend": "Extend",
-        "activate": "Activate"
+        "activate": "Activate",
+        "manage": "Manage"
       }
     },
     "durations": {
@@ -376,7 +377,8 @@
     },
     "toasts": {
       "invoiceRequestedSingle": "Invoice requested successfully. You can download it in the order history.",
-      "invoiceRequestedMultiple": "Invoices requested for {{count}} projects"
+      "invoiceRequestedMultiple": "Invoices requested for {{count}} projects",
+      "portalUnavailable": "Subscription management is currently unavailable. Please try again later."
     },
     "error": "Error loading subscriptions"
   },

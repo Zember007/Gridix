@@ -1,2 +1,7 @@
-export type { CheckoutModalProps, CheckoutStep, BillingErrors } from "./types";
+export type {
+  CheckoutModalProps,
+  CheckoutStep,
+  BillingErrors,
+  CheckoutPaymentMethod,
+} from "./types";
 export { useCheckoutFlow } from "./useCheckoutFlow";

@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Plus,
+  Settings,
+  CreditCard,
 } from "lucide-react";
 import { ProjectSubscription } from "@/entities/subscription/queries/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,11 +15,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface ProjectSubscriptionsListProps {
   projects: ProjectSubscription[];
   onOpenInvoice: (projectId: string, currentPlanId?: string | null) => void;
+  onManageSubscription?: () => void;
 }
 
 export const ProjectSubscriptionsList: React.FC<
   ProjectSubscriptionsListProps
-> = ({ projects, onOpenInvoice }) => {
+> = ({ projects, onOpenInvoice, onManageSubscription }) => {
   const { t } = useLanguage();
 
   if (projects.length === 0) {
@@ -42,6 +45,14 @@ export const ProjectSubscriptionsList: React.FC<
         const sub = project.user_subscriptions?.[0];
         const isActive = sub?.status === "active";
         const isExpired = sub?.status === "expired";
+        const isCardPayment = sub?.payment_method === "card";
+        const paymentMethod = sub?.payment_method ?? "invoice";
+        const expiresAt =
+          sub?.current_period_end ?? project.subscription_expires_at;
+        const isEnded = expiresAt
+          ? new Date(expiresAt) <= new Date()
+          : isExpired;
+        const canExtendInvoice = paymentMethod === "invoice" && isEnded;
 
         const daysLeft = isActive
           ? Math.ceil(
@@ -127,7 +138,7 @@ export const ProjectSubscriptionsList: React.FC<
                   )}
                 </div>
 
-                <div className="flex items-center sm:justify-start">
+                <div className="flex flex-col items-start gap-1 sm:justify-start">
                   {isActive ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">
                       <CheckCircle2 size={14} />{" "}
@@ -143,30 +154,50 @@ export const ProjectSubscriptionsList: React.FC<
                       {t("admin.subscriptionPage.projects.status.inactive")}
                     </span>
                   )}
+                  {isActive && isCardPayment && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
+                      <CreditCard size={10} /> Stripe
+                    </span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex pt-2 md:justify-end md:pt-0">
-                {isActive ? (
+              <div className="flex gap-2 pt-2 md:justify-end md:pt-0">
+                {isActive && isCardPayment && onManageSubscription && (
                   <Button
+                    type="button"
                     size="sm"
                     variant="outline"
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600 md:w-auto"
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-500 transition-all hover:border-blue-300 hover:text-blue-600"
+                    onClick={onManageSubscription}
+                  >
+                    <Settings size={14} />
+                    {t("admin.subscriptionPage.projects.buttons.manage")}
+                  </Button>
+                )}
+
+                {canExtendInvoice ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600 md:w-auto"
                     onClick={() => onOpenInvoice(project.id, sub?.plan_id)}
                   >
                     {t("admin.subscriptionPage.projects.buttons.extend")}{" "}
                     <ArrowRight size={16} className="opacity-50" />
                   </Button>
-                ) : (
+                ) : !isActive ? (
                   <Button
+                    type="button"
                     size="sm"
-                    className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg md:w-auto"
+                    className="flex transform items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg md:w-auto"
                     onClick={() => onOpenInvoice(project.id, sub?.plan_id)}
                   >
                     <Plus size={18} />{" "}
                     {t("admin.subscriptionPage.projects.buttons.activate")}
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
 

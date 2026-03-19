@@ -219,7 +219,8 @@
       },
       "buttons": {
         "extend": "לְהַאֲרִיך",
-        "activate": "לְהַפְעִיל"
+        "activate": "לְהַפְעִיל",
+        "manage": "ניהול"
       }
     },
     "durations": {
@@ -376,7 +377,8 @@
     },
     "toasts": {
       "invoiceRequestedSingle": "התקבלה בקשה לחשבונית בהצלחה. אתה יכול להוריד אותו בהיסטוריית ההזמנות.",
-      "invoiceRequestedMultiple": "התבקשו חשבוניות עבור {{count}} פרויקטים"
+      "invoiceRequestedMultiple": "התבקשו חשבוניות עבור {{count}} פרויקטים",
+      "portalUnavailable": "ניהול המנוי אינו זמין כרגע. נסה שוב מאוחר יותר."
     },
     "error": "שגיאה בטעינת מנויים"
   },

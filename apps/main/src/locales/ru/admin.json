@@ -219,7 +219,8 @@
       },
       "buttons": {
         "extend": "Продлить",
-        "activate": "Активировать"
+        "activate": "Активировать",
+        "manage": "Управление"
       }
     },
     "durations": {
@@ -376,7 +377,8 @@
     },
     "toasts": {
       "invoiceRequestedSingle": "Счет успешно запрошен. Вы можете скачать его в истории заказов.",
-      "invoiceRequestedMultiple": "Счета запрошены для {{count}} проектов"
+      "invoiceRequestedMultiple": "Счета запрошены для {{count}} проектов",
+      "portalUnavailable": "Управление подпиской временно недоступно. Попробуйте позже."
     },
     "error": "Ошибка загрузки подписок."
   },
