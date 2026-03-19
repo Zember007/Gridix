@@ -1,10 +1,10 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
-import ProjectWidgetPage from "@/pages/ProjectWidgetPage";
 import { EmbedProviders } from "@/app/providers";
 
 // Lazy load pages
+const ProjectWidgetPage = lazy(() => import("@/pages/ProjectWidgetPage"));
 const ApartmentDetailsPage = lazy(() => import("@/pages/ApartmentDetailsPage"));
 const AuthRedirectPage = lazy(() => import("@/pages/AuthRedirectPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
@@ -31,8 +31,14 @@ export function PublicRoutes() {
       <Route index element={<Index />} />
 
       {/* Widget routes */}
-      <Route path="widget/:projectSlug" element={<ProjectWidgetPage />} />
-      <Route path="project/:projectSlug" element={<ProjectWidgetPage />} />
+      <Route
+        path="widget/:projectSlug"
+        element={withLocalSuspense(<ProjectWidgetPage />)}
+      />
+      <Route
+        path="project/:projectSlug"
+        element={withLocalSuspense(<ProjectWidgetPage />)}
+      />
       <Route
         path="project/:projectSlug/apartment/:apartmentNumber"
         element={withLocalSuspense(<ApartmentDetailsPage />)}

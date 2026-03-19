@@ -36,7 +36,7 @@ import { useProjectEditorDataContext } from "@/features/projectEditor/context/Pr
 import { TooltipProvider } from "@gridix/ui";
 import PolygonAnnotator, {
   PolygonAnnotatorRef,
-} from "./polygon-editor/PolygonAnnotator";
+} from "./polygon-editor/PolygonAnnotatorLazy";
 import { Shape } from "./polygon-editor/GeometryShapes";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
 import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
@@ -1637,16 +1637,26 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                         )}
                       </div>
                       {apartmentPhotos.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="text-xs text-muted-foreground">
-                            {apartmentPhotos.length} photo
-                            {apartmentPhotos.length === 1 ? "" : "s"}
-                          </div>
-                          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                            {apartmentPhotos.map((photo, index) => (
-                              <div
-                                key={photo.id}
-                                className="group relative overflow-hidden rounded-xl border bg-muted/20"
+                        <div className="grid grid-cols-2 gap-2">
+                          {apartmentPhotos.map((photo) => (
+                            <div key={photo.id} className="group relative">
+                              <img
+                                src={photo.image_url}
+                                alt="Apartment"
+                                loading="lazy"
+                                decoding="async"
+                                className="h-20 w-full rounded object-cover"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute right-1 top-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
+                                onClick={() =>
+                                  handleDeleteApartmentPhoto(
+                                    photo.id,
+                                    photo.image_url,
+                                  )
+                                }
                               >
                                 <div className="aspect-[4/3] overflow-hidden bg-muted">
                                   <img

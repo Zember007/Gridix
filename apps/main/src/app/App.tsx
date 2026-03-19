@@ -1,18 +1,23 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/features/auth";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
+import { preloadI18nForPathname } from "@/shared/lib/i18n";
 import {
   AdminProviders,
   BaseProviders,
   EmbedProviders,
   LanguageProviders,
 } from "@/app/providers";
-import { PublicRoutes } from "@/app/router/PublicRoutes";
 import { UsertourBlockingGate } from "@gridix/utils/integrations";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const PublicRoutes = lazy(() =>
+  import("@/app/router/PublicRoutes").then((module) => ({
+    default: module.PublicRoutes,
+  })),
+);
 const AdminRoutes = lazy(() =>
   import("@/app/router/AdminRoutes").then((module) => ({
     default: module.AdminRoutes,
@@ -29,10 +34,19 @@ const DomainRoutes = lazy(() =>
   })),
 );
 
+function I18nRoutePreloader() {
+  const location = useLocation();
+  useEffect(() => {
+    void preloadI18nForPathname(location.pathname);
+  }, [location.pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <BaseProviders>
       <BrowserRouter>
+        <I18nRoutePreloader />
         <AuthProvider>
           <UsertourBlockingGate>
             <Routes>
@@ -64,7 +78,9 @@ export default function App() {
                 path="/:lang/*"
                 element={
                   <LanguageProviders>
-                    <PublicRoutes />
+                    <Suspense fallback={<FullPageLoaderView />}>
+                      <PublicRoutes />
+                    </Suspense>
                   </LanguageProviders>
                 }
               />

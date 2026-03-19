@@ -1,19 +1,22 @@
 import type i18n from "i18next";
-import arShared from "../locales/shared/ar.json";
-import enShared from "../locales/shared/en.json";
-import heShared from "../locales/shared/he.json";
-import kaShared from "../locales/shared/ka.json";
-import ruShared from "../locales/shared/ru.json";
-import trShared from "../locales/shared/tr.json";
 
-const SHARED_LOCALES = {
-  ar: arShared as Record<string, unknown>,
-  en: enShared as Record<string, unknown>,
-  he: heShared as Record<string, unknown>,
-  ka: kaShared as Record<string, unknown>,
-  ru: ruShared as Record<string, unknown>,
-  tr: trShared as Record<string, unknown>,
-} as const;
+type SharedLanguage = "ar" | "en" | "he" | "ka" | "ru" | "tr";
+
+type SharedLocaleModule = {
+  default: Record<string, unknown>;
+};
+
+const SHARED_LOCALE_LOADERS: Record<
+  SharedLanguage,
+  () => Promise<SharedLocaleModule>
+> = {
+  ar: () => import("../locales/shared/ar.json"),
+  en: () => import("../locales/shared/en.json"),
+  he: () => import("../locales/shared/he.json"),
+  ka: () => import("../locales/shared/ka.json"),
+  ru: () => import("../locales/shared/ru.json"),
+  tr: () => import("../locales/shared/tr.json"),
+};
 
 function flattenTranslations(
   obj: Record<string, unknown>,
@@ -44,24 +47,61 @@ function flattenTranslations(
   return flattened;
 }
 
-const SHARED_RESOURCES: Record<string, Record<string, string>> = {};
+const SHARED_RESOURCES_CACHE: Record<string, Record<string, string>> = {};
+const loadedSharedLanguages = new Set<string>();
 
-for (const [lng, data] of Object.entries(SHARED_LOCALES)) {
-  SHARED_RESOURCES[lng] = flattenTranslations(data, "");
+async function ensureSharedResourcesLoaded(
+  language: SharedLanguage,
+): Promise<Record<string, string>> {
+  if (loadedSharedLanguages.has(language)) {
+    return SHARED_RESOURCES_CACHE[language] ?? {};
+  }
+
+  const load = SHARED_LOCALE_LOADERS[language];
+  if (!load) {
+    return {};
+  }
+
+  const mod = await load();
+  const flattened = flattenTranslations(mod.default ?? {}, "");
+
+  SHARED_RESOURCES_CACHE[language] = flattened;
+  loadedSharedLanguages.add(language);
+
+  return flattened;
 }
 
 /**
- * Merges shared package translations (drawer, embed, common, admin, auth)
- * into the given i18n instance. Call this when initializing app i18n.
+ * Lazily loads and merges shared package translations
+ * (drawer, embed, common, admin, auth) for a single language.
+ */
+export async function addSharedResourcesForLanguage(
+  i18nInstance: typeof i18n,
+  language: string,
+): Promise<void> {
+  const normalized = language as SharedLanguage;
+  if (!(normalized in SHARED_LOCALE_LOADERS)) return;
+
+  const translations = await ensureSharedResourcesLoaded(normalized);
+
+  i18nInstance.addResourceBundle(
+    normalized,
+    "translation",
+    translations,
+    true,
+    false,
+  );
+}
+
+/**
+ * Backward‑compatible helper that eagerly loads shared resources
+ * for all supported languages. Prefer `addSharedResourcesForLanguage`
+ * in new code.
  */
 export function addSharedResources(i18nInstance: typeof i18n): void {
-  for (const [lng, translations] of Object.entries(SHARED_RESOURCES)) {
-    i18nInstance.addResourceBundle(
-      lng,
-      "translation",
-      translations,
-      true,
-      false,
-    );
-  }
+  void Promise.all(
+    (Object.keys(SHARED_LOCALE_LOADERS) as SharedLanguage[]).map((lng) =>
+      addSharedResourcesForLanguage(i18nInstance, lng),
+    ),
+  );
 }

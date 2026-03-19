@@ -5,7 +5,10 @@ export * from "./datetime";
 export * from "./google-sheets-utils";
 export * from "./i18n";
 export { default as i18n } from "./i18n";
-export { addSharedResources } from "./shared-i18n";
+export {
+  addSharedResources,
+  addSharedResourcesForLanguage,
+} from "./shared-i18n";
 export * from "./image-upload";
 export * from "./language-utils";
 export * from "./polygon";

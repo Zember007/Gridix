@@ -10,6 +10,13 @@ const FUNCTION_NAME = "project-selector";
 
 // ── Result types ──
 
+export interface SelectorSummaryResult {
+  project: Tables<"projects">;
+  fieldSettings: Tables<"project_field_settings">[];
+  customFields: Tables<"project_custom_fields">[];
+  customDomain: string | null;
+}
+
 export interface SelectorInitialResult {
   project: Tables<"projects">;
   apartments: Array<Record<string, unknown>>;
@@ -73,6 +80,35 @@ function unwrap<T>(data: T | null | undefined, error: unknown): T {
 }
 
 // ── API functions ──
+
+export async function loadSelectorSummary(
+  projectId: string,
+): Promise<SelectorSummaryResult> {
+  try {
+    const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+      body: { action: "load-summary", projectId },
+    });
+    const result = unwrap(data, error);
+    if (!result.project) throw new Error("Project not found");
+
+    return {
+      project: result.project,
+      fieldSettings: result.fieldSettings ?? [],
+      customFields: result.customFields ?? [],
+      customDomain: result.customDomain ?? null,
+    };
+  } catch {
+    // Backward compatibility: if the function doesn't support summary yet,
+    // fall back to the existing "load-initial" action.
+    const full = await loadSelectorInitial(projectId);
+    return {
+      project: full.project,
+      fieldSettings: full.fieldSettings,
+      customFields: full.customFields,
+      customDomain: full.customDomain,
+    };
+  }
+}
 
 export async function loadSelectorInitial(
   projectId: string,

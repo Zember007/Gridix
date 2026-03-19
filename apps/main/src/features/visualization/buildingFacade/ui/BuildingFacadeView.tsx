@@ -8,6 +8,7 @@ import {
   type MouseEvent,
   type PointerEvent,
   type TouchEvent,
+  type ImgHTMLAttributes,
 } from "react";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import {
@@ -1077,7 +1078,7 @@ const BuildingFacadeView = ({
                 style={{ filter: "blur(8px)", transform: "scale(1.1)" }}
                 {...({
                   fetchpriority: "high",
-                } as React.ImgHTMLAttributes<HTMLImageElement> & {
+                } as ImgHTMLAttributes<HTMLImageElement> & {
                   fetchpriority?: string;
                 })}
               />

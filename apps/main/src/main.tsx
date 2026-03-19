@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "@/app/App";
 import "./index.css";
 import * as Sentry from "@sentry/react";
+import { i18nReady } from "@/shared/lib/i18n";
 
 if (import.meta.env.PROD) {
   Sentry.init({
@@ -12,4 +13,6 @@ if (import.meta.env.PROD) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+void i18nReady.then(() => {
+  createRoot(document.getElementById("root")!).render(<App />);
+});

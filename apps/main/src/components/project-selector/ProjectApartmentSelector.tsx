@@ -12,12 +12,9 @@ import { useIsMobile } from "@gridix/ui";
 import type { Project } from "@/entities/project/queries/useProjects";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@gridix/utils/react";
-import { useFields } from "@/hooks/useFields";
-import { useFavorites } from "@/hooks/useFavorites";
-import { useAuth } from "@/contexts/AuthContext";
+import type { LayoutPhoto } from "./types";
 import { FilterFieldKey, useProjectFilters } from "./hooks/useProjectFilters";
 import type { FieldVisibility } from "./types";
-import { ChessView } from "./views/ChessView";
 import LoaderView from "./views/LoaderView";
 import { useProjectSelectorInitial } from "./hooks/useProjectSelectorInitial";
 import { useBuildingImage } from "./hooks/useBuildingImage";
@@ -33,6 +30,9 @@ import { useSelectorUIState } from "./hooks/useSelectorUIState";
 import { SubscriptionAlert } from "./SubscriptionAlert";
 import { ProjectHeader } from "./ProjectHeader";
 import Spinner from "@/shared/ui/Spinner.tsx";
+import { useFields } from "@/hooks/useFields";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useAuth } from "@/contexts/AuthContext";
 // Section components
 import { SidePanelWrapper } from "./sections/SidePanelWrapper";
 import { ApartmentDetailsSheet } from "./sections/ApartmentDetailsSheet";
@@ -45,6 +45,11 @@ const InteractiveProjectsMap = lazy(
 const FavoritesTab = lazy(() => import("../FavoritesTab"));
 const ListView = lazy(() =>
   import("./views/ListView").then((module) => ({ default: module.ListView })),
+);
+const ChessView = lazy(() =>
+  import("./views/ChessView").then((module) => ({
+    default: module.ChessView,
+  })),
 );
 const FacadeSection = lazy(() =>
   import("./sections/FacadeSection").then((module) => ({
@@ -63,27 +68,40 @@ interface ProjectApartmentSelectorProps {
   showFullProjectInWidget?: boolean;
 }
 
-const ProjectApartmentSelector = ({
-  projectId,
-  isWidget: isWidgetProp = false,
-}: ProjectApartmentSelectorProps) => {
-  const [searchParams] = useSearchParams();
-  const isWidgetFromUrl = searchParams.get("isWidget") === "true";
-  const isWidget = isWidgetProp || isWidgetFromUrl;
+interface ProjectApartmentSelectorLoadedProps {
+  projectId: string;
+  isWidget: boolean;
+  project: Project;
+  apartments: Apartment[];
+  setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
+  apartmentsLoaded: boolean;
+  preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  rawFieldSettings: Array<Record<string, unknown>>;
+  rawCustomFields: Array<Record<string, unknown>>;
+  customDomain: string | null;
+}
 
+const loaderBlock = (themeColor: string) => (
+  <div className="absolute inset-0 grid h-full w-full place-items-center">
+    <Spinner size="md" color={themeColor} />
+  </div>
+);
+
+function ProjectApartmentSelectorLoaded({
+  projectId,
+  isWidget,
+  project,
+  apartments,
+  setApartments,
+  apartmentsLoaded,
+  preloadedLayoutPhotosByRooms,
+  rawFieldSettings,
+  rawCustomFields,
+  customDomain,
+}: ProjectApartmentSelectorLoadedProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
-
-  const {
-    project,
-    apartments,
-    setApartments,
-    apartmentsLoaded,
-    preloadedLayoutPhotosByRooms,
-    fieldSettings: rawFieldSettings,
-    customFields: rawCustomFields,
-    customDomain,
-  } = useProjectSelectorInitial(projectId);
+  const [searchParams] = useSearchParams();
 
   const { fields: fieldSettings } = useFields(project?.id || null, {
     fieldSettings: rawFieldSettings,
@@ -128,13 +146,10 @@ const ProjectApartmentSelector = ({
 
   const {
     facades,
-    facadesLoaded,
     floorsByFacadeId,
     floorsLoading: floorsAllLoading,
-    floorsLoaded: floorsAllLoaded,
     facadeSettings,
     settingsLoading,
-    settingsLoaded,
   } = useFacadeData({
     projectId: project?.id,
     enabled: shouldLoadFacadeData,
@@ -238,10 +253,6 @@ const ProjectApartmentSelector = ({
     }));
   }, [filters.filteredApartments]);
 
-  const isInitialLoading = useMemo(
-    () => !apartmentsLoaded || !project,
-    [apartmentsLoaded, project],
-  );
   const showContent = apartmentsLoaded;
 
   const { isSubscriptionInactive, isOwner } = useSubscriptionStatus({
@@ -351,210 +362,247 @@ const ProjectApartmentSelector = ({
     }
   }, [projectId, searchParams]);
 
-  const loaderBlock = (
-    <div className="absolute inset-0 grid h-full w-full place-items-center">
-      <Spinner size="md" color={themeColor} />
-    </div>
-  );
+  const loaderFallback = loaderBlock(themeColor);
+
+  if (!project) {
+    return null;
+  }
 
   return (
     <div
       ref={containerRef}
       className={`relative flex ${isWidget ? "h-full min-h-0 overflow-hidden" : "min-h-screen"} select-none flex-col bg-white`}
     >
-      <LoaderView color={themeColor} loading={isInitialLoading} />
       <SubscriptionAlert
         isSubscriptionInactive={isSubscriptionInactive}
         isOwner={!!isOwner}
         language={language}
       />
 
-      {project && (
-        <>
-          <div className="flex min-h-0 grow">
-            {/* Left column: header + content */}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <ProjectHeader
-                filtersRef={filtersRef}
-                project={project as Project}
-                isWidget={isWidget}
-                isMobile={isMobile ?? false}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                favoritesCount={favoritesCount}
-                mapVisible={!!project?.latitude && !!project?.longitude}
-                projectType={
-                  project?.project_type as "building" | "object" | null
-                }
-                themeColor={themeColor}
-                filters={filters}
-                isFiltersOpen={ui.isFiltersOpen}
-                setIsFiltersOpen={ui.setFiltersOpen}
-              />
+      <div className="flex min-h-0 grow">
+        {/* Left column: header + content */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <ProjectHeader
+            filtersRef={filtersRef}
+            project={project as Project}
+            isWidget={isWidget}
+            isMobile={isMobile ?? false}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            favoritesCount={favoritesCount}
+            mapVisible={!!project?.latitude && !!project?.longitude}
+            projectType={project?.project_type as "building" | "object" | null}
+            themeColor={themeColor}
+            filters={filters}
+            isFiltersOpen={ui.isFiltersOpen}
+            setIsFiltersOpen={ui.setFiltersOpen}
+          />
 
-              {/* Main content area */}
-              <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-                <ProjectErrorBoundary>
-                  {showContent ? (
-                    <>
-                      {viewMode === "list" ? (
-                        <Suspense fallback={loaderBlock}>
-                          <ListView
-                            filteredApartments={filters.filteredApartments}
-                            listViewMode="list"
-                            setListViewMode={(mode) => {
-                              if (mode === "grid") setViewMode("chess");
-                              else setViewMode("list");
-                            }}
-                            hideViewToggle={true}
-                            selectedType={filters.selectedType}
-                            setSelectedType={filters.setSelectedType}
-                            openApartmentDetails={openApartmentPreview}
+          {/* Main content area */}
+          <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+            <ProjectErrorBoundary>
+              {showContent ? (
+                <>
+                  {viewMode === "list" ? (
+                    <Suspense fallback={loaderFallback}>
+                      <ListView
+                        filteredApartments={filters.filteredApartments}
+                        listViewMode="list"
+                        setListViewMode={(mode) => {
+                          if (mode === "grid") setViewMode("chess");
+                          else setViewMode("list");
+                        }}
+                        hideViewToggle={true}
+                        selectedType={filters.selectedType}
+                        setSelectedType={filters.setSelectedType}
+                        openApartmentDetails={openApartmentPreview}
+                        preloadedLayoutPhotosByRooms={
+                          preloadedLayoutPhotosByRooms
+                        }
+                        getVisibleFields={getVisibleFields}
+                        getCustomFieldValue={getCustomFieldValue}
+                        formatFieldValue={formatFieldValue}
+                        getFieldLabel={getFieldLabel}
+                        groupApartmentsByFloor={groupApartmentsByFloor}
+                        convertPrice={filters.convertPrice}
+                        formatPrice={formatPrice}
+                        project={project}
+                        selectedCurrency={filters.selectedCurrency}
+                        isMobile={isMobile ?? false}
+                        themeColor={themeColor}
+                        fieldVisibility={fieldVisibility}
+                      />
+                    </Suspense>
+                  ) : viewMode === "chess" ? (
+                    <Suspense fallback={loaderFallback}>
+                      <ChessView
+                        project={project as Project}
+                        apartments={filters.filteredApartments}
+                        onApartmentSelect={openApartmentPreview}
+                        onOpenFloorPlan={openFloorPlanFromPanel}
+                        themeColor={themeColor}
+                        selectedCurrency={filters.selectedCurrency}
+                        fieldVisibility={fieldVisibility}
+                        language={language}
+                      />
+                    </Suspense>
+                  ) : viewMode === "map" ? (
+                    <Suspense fallback={loaderFallback}>
+                      <InteractiveProjectsMap
+                        project={project}
+                        onProjectSelect={() => setViewMode("list")}
+                      />
+                    </Suspense>
+                  ) : viewMode === "favorites" ? (
+                    <div className="container mx-auto grow py-8">
+                      <Suspense fallback={loaderFallback}>
+                        <FavoritesTab
+                          fieldVisible={visibleFields.map(
+                            (field) => field.field_name,
+                          )}
+                          handleViewApartment={openApartmentPreview}
+                          projectId={project.id}
+                          projectCurrency={project?.currency}
+                          selectedCurrency={filters.selectedCurrency}
+                        />
+                      </Suspense>
+                    </div>
+                  ) : (
+                    <div className="relative h-full min-w-0 flex-1">
+                      {viewMode === "facade" ? (
+                        <Suspense fallback={loaderFallback}>
+                          <FacadeSection
+                            project={project as Project}
+                            themeColor={themeColor}
+                            imageUrl={activeFacadeImageUrl}
+                            filtersRef={filtersRef}
+                            buildingImageLoaded={buildingImageLoaded}
+                            buildingImageNaturalSize={buildingImageNaturalSize}
+                            visibleFields={visibleFields}
+                            buildingFloors={buildingFloors}
+                            facadeSettings={facadeSettings}
+                            loading={floorsAllLoading || settingsLoading}
+                            facades={facades.map((f) => ({
+                              id: f.id,
+                              name: f.name,
+                            }))}
+                            activeFacadeIndex={ui.activeFacadeIndex}
+                            onFacadeChange={ui.setActiveFacadeIndex}
+                            onFloorSelect={openFloorPreview}
+                            onApartmentSelect={openApartmentPreview}
+                            filters={filters}
+                            setViewMode={setViewMode}
                             preloadedLayoutPhotosByRooms={
                               preloadedLayoutPhotosByRooms
                             }
-                            getVisibleFields={getVisibleFields}
-                            getCustomFieldValue={getCustomFieldValue}
-                            formatFieldValue={formatFieldValue}
-                            getFieldLabel={getFieldLabel}
-                            groupApartmentsByFloor={groupApartmentsByFloor}
-                            convertPrice={filters.convertPrice}
-                            formatPrice={formatPrice}
-                            project={project}
-                            selectedCurrency={filters.selectedCurrency}
                             isMobile={isMobile ?? false}
-                            themeColor={themeColor}
-                            fieldVisibility={fieldVisibility}
                           />
                         </Suspense>
-                      ) : viewMode === "chess" ? (
-                        <Suspense fallback={loaderBlock}>
-                          <ChessView
-                            project={project as Project}
-                            apartments={filters.filteredApartments}
-                            onApartmentSelect={openApartmentPreview}
-                            onOpenFloorPlan={openFloorPlanFromPanel}
-                            themeColor={themeColor}
-                            selectedCurrency={filters.selectedCurrency}
-                            fieldVisibility={fieldVisibility}
-                            language={language}
-                          />
-                        </Suspense>
-                      ) : viewMode === "map" ? (
-                        <Suspense fallback={loaderBlock}>
-                          <InteractiveProjectsMap
-                            project={project}
-                            onProjectSelect={() => setViewMode("list")}
-                          />
-                        </Suspense>
-                      ) : viewMode === "favorites" ? (
-                        <div className="container mx-auto grow py-8">
-                          <Suspense fallback={loaderBlock}>
-                            <FavoritesTab
-                              fieldVisible={visibleFields.map(
-                                (field) => field.field_name,
-                              )}
-                              handleViewApartment={openApartmentPreview}
-                              projectId={project.id}
-                              projectCurrency={project?.currency}
-                              selectedCurrency={filters.selectedCurrency}
-                            />
-                          </Suspense>
-                        </div>
                       ) : (
-                        <div className="relative h-full min-w-0 flex-1">
-                          {viewMode === "facade" ? (
-                            <Suspense fallback={loaderBlock}>
-                              <FacadeSection
-                                project={project as Project}
-                                themeColor={themeColor}
-                                imageUrl={activeFacadeImageUrl}
-                                filtersRef={filtersRef}
-                                buildingImageLoaded={buildingImageLoaded}
-                                buildingImageNaturalSize={
-                                  buildingImageNaturalSize
-                                }
-                                visibleFields={visibleFields}
-                                buildingFloors={buildingFloors}
-                                facadeSettings={facadeSettings}
-                                loading={floorsAllLoading || settingsLoading}
-                                facades={facades.map((f) => ({
-                                  id: f.id,
-                                  name: f.name,
-                                }))}
-                                activeFacadeIndex={ui.activeFacadeIndex}
-                                onFacadeChange={ui.setActiveFacadeIndex}
-                                onFloorSelect={openFloorPreview}
-                                onApartmentSelect={openApartmentPreview}
-                                filters={filters}
-                                setViewMode={setViewMode}
-                                preloadedLayoutPhotosByRooms={
-                                  preloadedLayoutPhotosByRooms
-                                }
-                                isMobile={isMobile ?? false}
-                              />
-                            </Suspense>
-                          ) : (
-                            <Suspense fallback={loaderBlock}>
-                              <FloorPlanSection
-                                project={project as Project}
-                                filteredApartments={filters.filteredApartments}
-                                allApartments={apartments}
-                                selectedFloorForPlan={selectedFloorForPlan}
-                                setSelectedFloorForPlan={
-                                  setSelectedFloorForPlan
-                                }
-                                onApartmentSelect={openApartmentPreview}
-                                visibleFields={visibleFields}
-                                getUniqueFloors={filters.getUniqueFloors}
-                                themeColor={themeColor}
-                                showOnlyAvailable={filters.showOnlyAvailable}
-                                isMobile={isMobile ?? false}
-                                selectedCurrency={filters.selectedCurrency}
-                              />
-                            </Suspense>
-                          )}
-                        </div>
+                        <Suspense fallback={loaderFallback}>
+                          <FloorPlanSection
+                            project={project as Project}
+                            filteredApartments={filters.filteredApartments}
+                            allApartments={apartments}
+                            selectedFloorForPlan={selectedFloorForPlan}
+                            setSelectedFloorForPlan={setSelectedFloorForPlan}
+                            onApartmentSelect={openApartmentPreview}
+                            visibleFields={visibleFields}
+                            getUniqueFloors={filters.getUniqueFloors}
+                            themeColor={themeColor}
+                            showOnlyAvailable={filters.showOnlyAvailable}
+                            isMobile={isMobile ?? false}
+                            selectedCurrency={filters.selectedCurrency}
+                          />
+                        </Suspense>
                       )}
-                    </>
-                  ) : null}
-                </ProjectErrorBoundary>
-              </div>
-            </div>
-
-            {/* Right column: side panel */}
-            <SidePanelWrapper
-              open={ui.sidePanelOpen}
-              onOpenChange={ui.setSidePanelOpen}
-              state={ui.sidePanelState}
-              project={project as Project}
-              language={language}
-              themeColor={themeColor}
-              t={
-                t as unknown as (
-                  key: string,
-                  options?: Record<string, unknown>,
-                ) => unknown
-              }
-              preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-              filteredApartments={filters.filteredApartments}
-              onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
-              onOpenFloorPlan={openFloorPlanFromPanel}
-              selectedCurrency={filters.selectedCurrency}
-              fieldVisibility={fieldVisibility}
-            />
+                    </div>
+                  )}
+                </>
+              ) : (
+                loaderFallback
+              )}
+            </ProjectErrorBoundary>
           </div>
+        </div>
 
-          <ApartmentDetailsSheet
-            open={ui.isApartmentDetailsOpen}
-            onClose={handleCloseApartmentDetails}
-            apartment={ui.selectedApartment}
-            projectId={project.id}
-            loaderFallback={loaderBlock}
-            portalContainer={widgetPortalContainer}
-            isWidget={isWidget}
-          />
-        </>
+        {/* Right column: side panel */}
+        <SidePanelWrapper
+          open={ui.sidePanelOpen}
+          onOpenChange={ui.setSidePanelOpen}
+          state={ui.sidePanelState}
+          project={project as Project}
+          language={language}
+          themeColor={themeColor}
+          t={
+            t as unknown as (
+              key: string,
+              options?: Record<string, unknown>,
+            ) => unknown
+          }
+          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+          filteredApartments={filters.filteredApartments}
+          onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
+          onOpenFloorPlan={openFloorPlanFromPanel}
+          selectedCurrency={filters.selectedCurrency}
+          fieldVisibility={fieldVisibility}
+        />
+      </div>
+
+      <ApartmentDetailsSheet
+        open={ui.isApartmentDetailsOpen}
+        onClose={handleCloseApartmentDetails}
+        apartment={ui.selectedApartment}
+        projectId={project.id}
+        loaderFallback={loaderFallback}
+        portalContainer={widgetPortalContainer}
+        isWidget={isWidget}
+      />
+    </div>
+  );
+}
+
+const ProjectApartmentSelector = ({
+  projectId,
+  isWidget: isWidgetProp = false,
+}: ProjectApartmentSelectorProps) => {
+  const [searchParams] = useSearchParams();
+  const isWidgetFromUrl = searchParams.get("isWidget") === "true";
+  const isWidget = isWidgetProp || isWidgetFromUrl;
+
+  const {
+    project,
+    apartments,
+    setApartments,
+    apartmentsLoaded,
+    preloadedLayoutPhotosByRooms,
+    fieldSettings: rawFieldSettings,
+    customFields: rawCustomFields,
+    customDomain,
+  } = useProjectSelectorInitial(projectId);
+
+  const themeColor = project?.theme_color ?? "#000000";
+
+  return (
+    <div className="relative min-h-screen bg-white">
+      <LoaderView color={themeColor} loading={!project || !apartmentsLoaded} />
+      {project ? (
+        <ProjectApartmentSelectorLoaded
+          projectId={projectId}
+          isWidget={isWidget}
+          project={project}
+          apartments={apartments}
+          setApartments={setApartments}
+          apartmentsLoaded={apartmentsLoaded}
+          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+          rawFieldSettings={rawFieldSettings}
+          rawCustomFields={rawCustomFields}
+          customDomain={customDomain}
+        />
+      ) : (
+        <div className="flex min-h-screen items-center justify-center">
+          <Spinner size="md" color={themeColor} />
+        </div>
       )}
     </div>
   );
