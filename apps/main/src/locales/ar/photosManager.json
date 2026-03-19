@@ -45,5 +45,6 @@
   },
   "uploadMultiple": "يمكنك تحديد ملفات متعددة في وقت واحد",
   "uploadPhotos": "تحميل الصور",
-  "uploadSuccess": "تم تحميل الصور"
+  "uploadSuccess": "تم تحميل الصور",
+  "partialUploadError": "فشل تحميل بعض الملفات"
 }

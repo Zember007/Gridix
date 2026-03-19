@@ -45,5 +45,6 @@
   },
   "uploadMultiple": "Aynı anda birden fazla dosya seçebilirsiniz",
   "uploadPhotos": "Fotoğraf Yükle",
-  "uploadSuccess": "Fotoğraflar yüklendi"
+  "uploadSuccess": "Fotoğraflar yüklendi",
+  "partialUploadError": "Bazı dosyalar yüklenemedi"
 }

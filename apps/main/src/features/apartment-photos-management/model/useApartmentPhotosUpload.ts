@@ -1,17 +1,19 @@
-import {
-  type ChangeEvent,
-  type DragEvent,
-  RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { uploadApartmentPhoto } from "@/features/projectEditor/api/projectEditorApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@gridix/utils/react";
 import { compressToWebP } from "@gridix/utils/lib";
+
+const MAX_CONCURRENT_UPLOADS = 3;
+
+export interface PhotoUploadProgressItem {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  progress: number;
+  status: "uploading" | "complete";
+}
 
 interface UseApartmentPhotosUploadParams {
   selectedApartment: string;
@@ -27,14 +29,67 @@ export const useApartmentPhotosUpload = ({
   const { user } = useAuth();
   const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
-  const [isDragOverUpload, setIsDragOverUpload] = useState(false);
-  const photoUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadProgresses, setUploadProgresses] = useState<
+    PhotoUploadProgressItem[]
+  >([]);
+  const uploadAbortControllersRef = useRef(new Map<string, AbortController>());
+  const canceledUploadIdsRef = useRef(new Set<string>());
+  const uploadRequestIdRef = useRef(0);
+
+  const clearActiveUploads = useCallback(() => {
+    uploadAbortControllersRef.current.forEach((controller) =>
+      controller.abort(),
+    );
+    uploadAbortControllersRef.current.clear();
+    canceledUploadIdsRef.current.clear();
+  }, []);
 
   useEffect(() => {
-    if (photoUploadInputRef.current) {
-      photoUploadInputRef.current.value = "";
-    }
+    return () => {
+      uploadRequestIdRef.current += 1;
+      clearActiveUploads();
+    };
+  }, [clearActiveUploads, selectedApartment]);
+
+  useEffect(() => {
+    setUploadProgresses([]);
+    setUploading(false);
   }, [selectedApartment]);
+
+  const updateUploadItem = useCallback(
+    (
+      id: string,
+      updater: (
+        item: PhotoUploadProgressItem,
+      ) => PhotoUploadProgressItem | null,
+    ) => {
+      setUploadProgresses((prev) =>
+        prev.flatMap((item) => {
+          if (item.id !== id) return [item];
+          const next = updater(item);
+          return next ? [next] : [];
+        }),
+      );
+    },
+    [],
+  );
+
+  const removeUploadItem = useCallback((id: string) => {
+    setUploadProgresses((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
+  const handleCancelUpload = useCallback(
+    (uploadId: string) => {
+      canceledUploadIdsRef.current.add(uploadId);
+      const controller = uploadAbortControllersRef.current.get(uploadId);
+      if (controller) {
+        controller.abort();
+        uploadAbortControllersRef.current.delete(uploadId);
+      }
+      removeUploadItem(uploadId);
+    },
+    [removeUploadItem],
+  );
 
   const uploadFiles = useCallback(
     async (files: File[]) => {
@@ -44,41 +99,160 @@ export const useApartmentPhotosUpload = ({
         return;
       }
 
-      setUploading(true);
-      try {
-        const uploadPromises = files.map(async (fileGet, index) => {
-          const blob = await compressToWebP(fileGet);
-          const file = new File([blob], `photo-${index}.webp`, {
-            type: "image/webp",
-          });
-          await uploadApartmentPhoto(
-            selectedApartment,
-            photosLength + index,
-            file,
-          );
-        });
+      const requestId = uploadRequestIdRef.current + 1;
+      uploadRequestIdRef.current = requestId;
+      canceledUploadIdsRef.current.clear();
 
-        await Promise.all(uploadPromises);
-        toast.success(t("photosManager.uploadSuccess"));
-        await onAfterUpload();
-      } catch (error) {
-        console.error("Error uploading photos:", error);
-        toast.error(t("photosManager.uploadError"));
+      const uploadItems = files.map((file, index) => ({
+        id: `${requestId}-${index}-${file.name}-${file.lastModified}`,
+        file,
+        orderIndex: photosLength + index,
+      }));
+
+      setUploading(true);
+      setUploadProgresses(
+        uploadItems.map((item) => ({
+          id: item.id,
+          fileName: item.file.name,
+          fileSize: item.file.size,
+          progress: 0,
+          status: "uploading",
+        })),
+      );
+
+      try {
+        let nextTaskIndex = 0;
+        let successfulUploads = 0;
+        let failedUploads = 0;
+
+        const worker = async () => {
+          while (nextTaskIndex < uploadItems.length) {
+            const task = uploadItems[nextTaskIndex];
+            nextTaskIndex += 1;
+
+            if (!task) return;
+            if (canceledUploadIdsRef.current.has(task.id)) {
+              continue;
+            }
+
+            try {
+              const blob = await compressToWebP(task.file);
+
+              if (
+                uploadRequestIdRef.current !== requestId ||
+                canceledUploadIdsRef.current.has(task.id)
+              ) {
+                removeUploadItem(task.id);
+                continue;
+              }
+
+              const file = new File([blob], `photo-${task.orderIndex}.webp`, {
+                type: "image/webp",
+              });
+              const abortController = new AbortController();
+              uploadAbortControllersRef.current.set(task.id, abortController);
+
+              await uploadApartmentPhoto(
+                selectedApartment,
+                task.orderIndex,
+                file,
+                {
+                  signal: abortController.signal,
+                  onProgress: (progress) => {
+                    if (
+                      uploadRequestIdRef.current !== requestId ||
+                      canceledUploadIdsRef.current.has(task.id)
+                    ) {
+                      return;
+                    }
+
+                    updateUploadItem(task.id, (item) => ({
+                      ...item,
+                      progress: progress >= 100 ? 99 : progress,
+                      status: "uploading",
+                    }));
+                  },
+                },
+              );
+
+              uploadAbortControllersRef.current.delete(task.id);
+
+              if (
+                uploadRequestIdRef.current !== requestId ||
+                canceledUploadIdsRef.current.has(task.id)
+              ) {
+                removeUploadItem(task.id);
+                continue;
+              }
+
+              successfulUploads += 1;
+              updateUploadItem(task.id, (item) => ({
+                ...item,
+                progress: 100,
+                status: "complete",
+              }));
+            } catch (error) {
+              uploadAbortControllersRef.current.delete(task.id);
+
+              if (error instanceof Error && error.name === "AbortError") {
+                removeUploadItem(task.id);
+                continue;
+              }
+
+              failedUploads += 1;
+              removeUploadItem(task.id);
+              console.error("Error uploading photo:", error);
+            }
+          }
+        };
+
+        await Promise.all(
+          Array.from(
+            { length: Math.min(MAX_CONCURRENT_UPLOADS, uploadItems.length) },
+            () => worker(),
+          ),
+        );
+
+        if (uploadRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        if (successfulUploads > 0) {
+          toast.success(t("photosManager.uploadSuccess"));
+          await onAfterUpload();
+          await new Promise((resolve) => setTimeout(resolve, 450));
+        }
+
+        if (failedUploads > 0 && successfulUploads === 0) {
+          toast.error(t("photosManager.uploadError"));
+        } else if (failedUploads > 0) {
+          toast.error(t("photosManager.partialUploadError"));
+        }
       } finally {
-        setUploading(false);
-        if (photoUploadInputRef.current) {
-          photoUploadInputRef.current.value = "";
+        if (uploadRequestIdRef.current === requestId) {
+          clearActiveUploads();
+          setUploadProgresses((prev) =>
+            prev.filter((item) => item.status !== "complete"),
+          );
+          setUploading(false);
         }
       }
     },
-    [onAfterUpload, photosLength, selectedApartment, t, user],
+    [
+      clearActiveUploads,
+      onAfterUpload,
+      photosLength,
+      removeUploadItem,
+      selectedApartment,
+      t,
+      updateUploadItem,
+      user,
+    ],
   );
 
-  const handlePhotoUpload = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      if (!files) return;
-      await uploadFiles(Array.from(files));
+  const handleFilesSelected = useCallback(
+    async (files: File[]) => {
+      await uploadFiles(files);
     },
     [uploadFiles],
   );
@@ -137,14 +311,12 @@ export const useApartmentPhotosUpload = ({
     [readAllDirectoryEntries],
   );
 
-  const handleUploadDrop = useCallback(
-    async (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      setIsDragOverUpload(false);
-      if (!selectedApartment) return;
+  const resolveDroppedFiles = useCallback(
+    async (dataTransfer: DataTransfer) => {
+      if (!selectedApartment) return [];
 
-      const transferItems = Array.from(event.dataTransfer.items ?? []);
-      const transferFiles = Array.from(event.dataTransfer.files ?? []);
+      const transferItems = Array.from(dataTransfer.items ?? []);
+      const transferFiles = Array.from(dataTransfer.files ?? []);
 
       const uploadableFiles = transferFiles.filter((file) =>
         file.type.startsWith("image/"),
@@ -182,38 +354,19 @@ export const useApartmentPhotosUpload = ({
 
       if (uniqueFiles.length === 0) {
         toast.error(t("photosManager.uploadError"));
-        return;
+        return [];
       }
 
-      await uploadFiles(uniqueFiles);
+      return uniqueFiles;
     },
-    [extractFilesFromEntry, selectedApartment, t, uploadFiles],
-  );
-
-  const handleUploadDragOver = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      if (!selectedApartment || uploading) return;
-      setIsDragOverUpload(true);
-    },
-    [selectedApartment, uploading],
-  );
-
-  const handleUploadDragLeave = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      setIsDragOverUpload(false);
-    },
-    [],
+    [extractFilesFromEntry, selectedApartment, t],
   );
 
   return {
     uploading,
-    isDragOverUpload,
-    photoUploadInputRef: photoUploadInputRef as RefObject<HTMLInputElement>,
-    handlePhotoUpload,
-    handleUploadDrop,
-    handleUploadDragOver,
-    handleUploadDragLeave,
+    uploadProgresses,
+    handleCancelUpload,
+    handleFilesSelected,
+    resolveDroppedFiles,
   };
 };

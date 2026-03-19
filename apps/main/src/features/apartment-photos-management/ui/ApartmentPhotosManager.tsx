@@ -37,7 +37,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     photos,
     loading,
     uploading,
-    isDragOverUpload,
+    uploadProgresses,
     isCoverageExpanded,
     setIsCoverageExpanded,
     coverageFilter,
@@ -46,11 +46,9 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     apartmentsWithoutPhotos,
     filteredApartments,
     photoCountsByApartment,
-    photoUploadInputRef,
-    handlePhotoUpload,
-    handleUploadDrop,
-    handleUploadDragOver,
-    handleUploadDragLeave,
+    handleCancelUpload,
+    handleFilesSelected,
+    resolveDroppedFiles,
     duplicatePhotosToSimilarApartments,
     handleDeletePhoto,
   } = useApartmentPhotosManager(projectId);
@@ -95,6 +93,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                 <Select
                   value={selectedApartment}
                   onValueChange={setSelectedApartment}
+                  disabled={uploading}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue
@@ -133,13 +132,11 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
               <ApartmentPhotosUploadPanel
                 selectedApartment={selectedApartment}
                 uploading={uploading}
-                isDragOverUpload={isDragOverUpload}
-                photoUploadInputRef={photoUploadInputRef}
+                uploadProgresses={uploadProgresses}
                 photosCount={photos.length}
-                onPhotoUpload={handlePhotoUpload}
-                onUploadDrop={handleUploadDrop}
-                onUploadDragOver={handleUploadDragOver}
-                onUploadDragLeave={handleUploadDragLeave}
+                onCancelUpload={handleCancelUpload}
+                onFilesSelected={handleFilesSelected}
+                resolveDroppedFiles={resolveDroppedFiles}
                 onDuplicatePhotos={duplicatePhotosToSimilarApartments}
               />
 

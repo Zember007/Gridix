@@ -1,22 +1,21 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { Button } from "@gridix/ui";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Label } from "@gridix/ui";
-import {
+  FileDropzone,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  UploadProgressCard,
 } from "@gridix/ui";
-import { Upload, Image as ImageIcon, Trash2, Home } from "lucide-react";
+import { Image as ImageIcon, Trash2, Home } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import {
@@ -27,6 +26,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { compressToWebP } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { uploadLayoutPhoto } from "@/features/projectEditor/api/projectEditorApi";
+
+const MAX_CONCURRENT_UPLOADS = 3;
 
 interface LayoutPhotosManagerProps {
   projectId: string;
@@ -48,6 +50,14 @@ interface LayoutType {
   rooms: number;
   type: string;
   isFreeLayout?: boolean;
+}
+
+interface LayoutUploadProgressItem {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  progress: number;
+  status: "uploading" | "complete";
 }
 
 function deriveLayoutTypesFromApartments(
@@ -106,9 +116,15 @@ const LayoutPhotosManager = ({
   const [selectedLayoutType, setSelectedLayoutType] = useState<string>("");
   const [photos, setPhotos] = useState<LayoutPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgresses, setUploadProgresses] = useState<
+    LayoutUploadProgressItem[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { t } = useLanguage();
+  const uploadAbortControllersRef = useRef(new Map<string, AbortController>());
+  const canceledUploadIdsRef = useRef(new Set<string>());
+  const uploadRequestIdRef = useRef(0);
 
   const loadApartments = useCallback(async () => {
     try {
@@ -176,58 +192,226 @@ const LayoutPhotosManager = ({
     }
   }, [selectedLayoutType, loadLayoutPhotos]);
 
-  const handlePhotoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = event.target.files;
-    if (!files || !selectedLayoutType) return;
+  useEffect(() => {
+    const uploadAbortControllers = uploadAbortControllersRef.current;
+    const canceledUploadIds = canceledUploadIdsRef.current;
 
-    if (!user) {
-      toast.error(t("photosManager.authRequired"));
-      return;
-    }
+    return () => {
+      uploadRequestIdRef.current += 1;
+      uploadAbortControllers.forEach((controller) => controller.abort());
+      uploadAbortControllers.clear();
+      canceledUploadIds.clear();
+    };
+  }, []);
 
-    setUploading(true);
-    try {
-      const uploadPromises = Array.from(files).map(async (file_get, index) => {
-        const file = await compressToWebP(file_get);
+  useEffect(() => {
+    setUploadProgresses([]);
+    setUploading(false);
+  }, [selectedLayoutType]);
 
-        const fileName = `${projectId}-${selectedLayoutType}-${Date.now()}-${index}.webp`;
+  const removeUploadItem = useCallback((uploadId: string) => {
+    setUploadProgresses((prev) => prev.filter((item) => item.id !== uploadId));
+  }, []);
 
-        const { error: uploadError } = await supabase.storage
-          .from("project-images")
-          .upload(`layouts/${fileName}`, file);
+  const updateUploadItem = useCallback(
+    (
+      uploadId: string,
+      updater: (
+        item: LayoutUploadProgressItem,
+      ) => LayoutUploadProgressItem | null,
+    ) => {
+      setUploadProgresses((prev) =>
+        prev.flatMap((item) => {
+          if (item.id !== uploadId) return [item];
+          const next = updater(item);
+          return next ? [next] : [];
+        }),
+      );
+    },
+    [],
+  );
 
-        if (uploadError) throw uploadError;
+  const handleCancelUpload = useCallback(
+    (uploadId: string) => {
+      canceledUploadIdsRef.current.add(uploadId);
+      const controller = uploadAbortControllersRef.current.get(uploadId);
+      if (controller) {
+        controller.abort();
+        uploadAbortControllersRef.current.delete(uploadId);
+      }
+      removeUploadItem(uploadId);
+    },
+    [removeUploadItem],
+  );
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage
-          .from("project-images")
-          .getPublicUrl(`layouts/${fileName}`);
+  const handlePhotoUpload = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0 || !selectedLayoutType) return;
 
-        const { error: insertError } = await supabase
-          .from("layout_photos")
-          .insert({
-            project_id: projectId,
-            layout_type: selectedLayoutType,
-            image_url: publicUrl,
-            order_index: photos.length + index,
-          });
+      if (!user) {
+        toast.error(t("photosManager.authRequired"));
+        return;
+      }
 
-        if (insertError) throw insertError;
-      });
+      const requestId = uploadRequestIdRef.current + 1;
+      uploadRequestIdRef.current = requestId;
+      canceledUploadIdsRef.current.clear();
 
-      await Promise.all(uploadPromises);
-      toast.success(t("photosManager.layoutUploadSuccess"));
-      loadLayoutPhotos();
-    } catch (error) {
-      console.error("Error uploading layout photos:", error);
-      toast.error(t("photosManager.layoutUploadError"));
-    } finally {
-      setUploading(false);
-    }
-  };
+      const uploadItems = files.map((file, index) => ({
+        id: `${requestId}-${index}-${file.name}-${file.lastModified}`,
+        file,
+        orderIndex: photos.length + index,
+      }));
+
+      setUploading(true);
+      setUploadProgresses(
+        uploadItems.map((item) => ({
+          id: item.id,
+          fileName: item.file.name,
+          fileSize: item.file.size,
+          progress: 0,
+          status: "uploading",
+        })),
+      );
+
+      try {
+        let nextTaskIndex = 0;
+        let successfulUploads = 0;
+        let failedUploads = 0;
+
+        const worker = async () => {
+          while (nextTaskIndex < uploadItems.length) {
+            const task = uploadItems[nextTaskIndex];
+            nextTaskIndex += 1;
+
+            if (!task) return;
+            if (canceledUploadIdsRef.current.has(task.id)) {
+              continue;
+            }
+
+            try {
+              const blob = await compressToWebP(task.file);
+
+              if (
+                uploadRequestIdRef.current !== requestId ||
+                canceledUploadIdsRef.current.has(task.id)
+              ) {
+                removeUploadItem(task.id);
+                continue;
+              }
+
+              const file = new File(
+                [blob],
+                `${projectId}-${selectedLayoutType}-${task.orderIndex}.webp`,
+                {
+                  type: "image/webp",
+                },
+              );
+              const abortController = new AbortController();
+              uploadAbortControllersRef.current.set(task.id, abortController);
+
+              await uploadLayoutPhoto(
+                projectId,
+                selectedLayoutType,
+                task.orderIndex,
+                file,
+                {
+                  signal: abortController.signal,
+                  onProgress: (progress) => {
+                    if (
+                      uploadRequestIdRef.current !== requestId ||
+                      canceledUploadIdsRef.current.has(task.id)
+                    ) {
+                      return;
+                    }
+
+                    updateUploadItem(task.id, (item) => ({
+                      ...item,
+                      progress: progress >= 100 ? 99 : progress,
+                      status: "uploading",
+                    }));
+                  },
+                },
+              );
+
+              uploadAbortControllersRef.current.delete(task.id);
+
+              if (
+                uploadRequestIdRef.current !== requestId ||
+                canceledUploadIdsRef.current.has(task.id)
+              ) {
+                removeUploadItem(task.id);
+                continue;
+              }
+
+              successfulUploads += 1;
+              updateUploadItem(task.id, (item) => ({
+                ...item,
+                progress: 100,
+                status: "complete",
+              }));
+            } catch (error) {
+              uploadAbortControllersRef.current.delete(task.id);
+
+              if (error instanceof Error && error.name === "AbortError") {
+                removeUploadItem(task.id);
+                continue;
+              }
+
+              failedUploads += 1;
+              removeUploadItem(task.id);
+              console.error("Error uploading layout photo:", error);
+            }
+          }
+        };
+
+        await Promise.all(
+          Array.from(
+            { length: Math.min(MAX_CONCURRENT_UPLOADS, uploadItems.length) },
+            () => worker(),
+          ),
+        );
+
+        if (uploadRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        if (successfulUploads > 0) {
+          toast.success(t("photosManager.layoutUploadSuccess"));
+          await loadLayoutPhotos();
+          await new Promise((resolve) => setTimeout(resolve, 450));
+        }
+
+        if (failedUploads > 0 && successfulUploads === 0) {
+          toast.error(t("photosManager.layoutUploadError"));
+        } else if (failedUploads > 0) {
+          toast.error(t("photosManager.partialUploadError"));
+        }
+      } finally {
+        if (uploadRequestIdRef.current === requestId) {
+          uploadAbortControllersRef.current.forEach((controller) =>
+            controller.abort(),
+          );
+          uploadAbortControllersRef.current.clear();
+          canceledUploadIdsRef.current.clear();
+          setUploadProgresses((prev) =>
+            prev.filter((item) => item.status !== "complete"),
+          );
+          setUploading(false);
+        }
+      }
+    },
+    [
+      loadLayoutPhotos,
+      photos.length,
+      projectId,
+      removeUploadItem,
+      selectedLayoutType,
+      t,
+      updateUploadItem,
+      user,
+    ],
+  );
 
   const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
     try {
@@ -329,6 +513,7 @@ const LayoutPhotosManager = ({
             <Select
               value={selectedLayoutType}
               onValueChange={setSelectedLayoutType}
+              disabled={uploading}
             >
               <SelectTrigger className="mt-1">
                 <SelectValue
@@ -352,18 +537,36 @@ const LayoutPhotosManager = ({
           {selectedLayoutType && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="layout-photo-upload">
-                  {t("photosManager.uploadLayoutPhotos")}
-                </Label>
-                <Input
-                  id="layout-photo-upload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="mt-1"
-                />
+                <Label>{t("photosManager.uploadLayoutPhotos")}</Label>
+                <div className="mt-1 overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 text-center">
+                  {uploadProgresses.length > 0 ? (
+                    <div className="mx-auto max-w-md space-y-3 p-6 text-left">
+                      {uploadProgresses.map((uploadProgress) => (
+                        <UploadProgressCard
+                          key={uploadProgress.id}
+                          fileName={uploadProgress.fileName}
+                          fileSize={uploadProgress.fileSize}
+                          progress={uploadProgress.progress}
+                          status={uploadProgress.status}
+                          icon={<ImageIcon className="h-8 w-8 text-sky-600" />}
+                          onCancel={() => handleCancelUpload(uploadProgress.id)}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {!uploading && (
+                    <FileDropzone
+                      accept="image/*"
+                      multiple
+                      heading={t("photosManager.uploadLayoutPhotos")}
+                      description={t("photosManager.uploadMultiple")}
+                      idleLabel={t("projectEditor.clickOrDrop")}
+                      dropLabel={t("projectEditor.clickOrDrop")}
+                      onFilesSelected={handlePhotoUpload}
+                    />
+                  )}
+                </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {t("photosManager.layoutTypeInfo", {
                     type: selectedLayoutLabel,
