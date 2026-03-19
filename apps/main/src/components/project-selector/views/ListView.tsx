@@ -1,13 +1,14 @@
 import { Card, CardContent } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import { Button } from "@gridix/ui";
+import { ScrollToTopButton } from "@gridix/ui";
 import { Tabs, TabsList, TabsTrigger } from "@gridix/ui";
 import { List, Grid, Building2, Heart, Share2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useInstallment } from "@/hooks/useInstallment";
 import { Apartment } from "@/entities/apartment/model/types";
-import { cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
+import { ADMIN_THEME, cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Tables } from "@gridix/types/database";
@@ -190,6 +191,11 @@ export const ListView = ({
     roomsVisible,
   ]);
 
+  const getListScrollContainer = useCallback(
+    () => listScrollAreaRef.current,
+    [],
+  );
+
   useEffect(() => {
     const updateLayoutMetrics = () => {
       if (typeof window === "undefined") return;
@@ -236,7 +242,7 @@ export const ListView = ({
   return (
     <div className="container mx-auto flex grow py-3 md:px-6">
       <div
-        className={`${project?.has_commercial || project?.has_parking ? "space-y-3" : "space-y-1"} flex w-full flex-col`}
+        className={`${project?.has_commercial || project?.has_parking ? "space-y-3" : "space-y-1"} relative flex w-full flex-col`}
       >
         <div className="flex justify-between gap-[20px]">
           <h2
@@ -274,8 +280,9 @@ export const ListView = ({
 
         <div
           ref={listScrollAreaRef}
+          data-list-scroll-scope="true"
           className={cn(
-            "no-scrollbar pr-1",
+            "no-scrollbar relative pr-1",
             listMaxHeight && isPageScrolledToBottom && "overflow-y-auto",
             listMaxHeight && !isPageScrolledToBottom && "overflow-y-clip",
           )}
@@ -988,6 +995,14 @@ export const ListView = ({
             )}
           </div>
         </div>
+        <ScrollToTopButton
+          ariaLabel={t("common.back")}
+          title={t("common.back")}
+          className="absolute bottom-6 right-4 z-30"
+          style={{ backgroundColor: ADMIN_THEME.primary, color: "white" }}
+          getScrollContainer={getListScrollContainer}
+          scrollWindow={false}
+        />
       </div>
     </div>
   );

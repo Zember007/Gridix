@@ -10,6 +10,7 @@ import {
   EmbedProviders,
   LanguageProviders,
 } from "@/app/providers";
+import { GlobalScrollToTopButton } from "@/app/GlobalScrollToTopButton";
 import { UsertourBlockingGate } from "@gridix/utils/integrations";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -105,6 +106,7 @@ export default function App() {
                 }
               />
             </Routes>
+            <GlobalScrollToTopButton />
           </UsertourBlockingGate>
         </AuthProvider>
       </BrowserRouter>
