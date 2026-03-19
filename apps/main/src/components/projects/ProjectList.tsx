@@ -275,8 +275,13 @@ const ProjectList = ({
     };
   };
 
-  const loadDrawerProject = async (projectId: string) => {
-    setDrawerLoading(true);
+  const loadDrawerProject = async (
+    projectId: string,
+    options?: { silent?: boolean },
+  ) => {
+    if (!options?.silent) {
+      setDrawerLoading(true);
+    }
     try {
       const { data, error } = await supabase.functions.invoke(
         "project-drawer",
@@ -291,9 +296,13 @@ const ProjectList = ({
     } catch (e) {
       console.error("Failed to load drawer project", e);
       toast.error("Не удалось загрузить данные проекта для сайдбара");
-      setDrawerProject(null);
+      if (!options?.silent) {
+        setDrawerProject(null);
+      }
     } finally {
-      setDrawerLoading(false);
+      if (!options?.silent) {
+        setDrawerLoading(false);
+      }
     }
   };
 
@@ -993,7 +1002,7 @@ const ProjectList = ({
 
           if (successfulUploads > 0) {
             toast.success(t("projectList.media.uploadSuccess"));
-            await loadDrawerProject(project.id);
+            await loadDrawerProject(project.id, { silent: true });
             await new Promise((resolve) => setTimeout(resolve, 450));
           }
 
@@ -1037,7 +1046,7 @@ const ProjectList = ({
           if (data?.error) throw new Error(String(data.error));
         }
         toast.success(t("projectList.media.uploadSuccess"));
-        await loadDrawerProject(project.id);
+        await loadDrawerProject(project.id, { silent: true });
       } catch (e) {
         console.error("Failed to upload media", e);
         toast.error(t("projectList.media.uploadError"));
@@ -1130,7 +1139,7 @@ const ProjectList = ({
         toast.success(t("projectList.media.uploadSuccess"));
         setVideoUploadDialogOpen(false);
         resetPendingVideoUploads();
-        await loadDrawerProject(project.id);
+        await loadDrawerProject(project.id, { silent: true });
       } catch (e) {
         console.error("Failed to upload videos", e);
         toast.error(t("projectList.media.uploadError"));
@@ -1172,7 +1181,7 @@ const ProjectList = ({
         toast.success(t("projectList.media.uploadSuccess"));
         setVideoLinksInput("");
         setVideoLinksExpanded(false);
-        await loadDrawerProject(project.id);
+        await loadDrawerProject(project.id, { silent: true });
       } catch (e) {
         console.error("Failed to add video links", e);
         toast.error(t("projectList.media.uploadError"));
