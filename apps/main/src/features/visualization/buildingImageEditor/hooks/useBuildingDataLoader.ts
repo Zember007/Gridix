@@ -182,9 +182,23 @@ export function useBuildingDataLoader({
     initializedProjectIdRef.current = projectId;
 
     const cached = initialBuildingDataCache.get(projectId);
-    if (cached) {
+    const hasImageWithoutFacadesInCache =
+      !!cached &&
+      cached.facades.length === 0 &&
+      !!(
+        cached.buildingImage ||
+        project?.building_image_url ||
+        currentImageUrl
+      );
+
+    if (cached && !hasImageWithoutFacadesInCache) {
       applyBuildingDataSnapshot(cached);
       return;
+    }
+    if (hasImageWithoutFacadesInCache) {
+      // Cached snapshot can be stale/inconsistent (image exists but no facade tabs).
+      // Force fresh fetch so auto-heal can recreate primary "main" facade.
+      initialBuildingDataCache.delete(projectId);
     }
 
     const inFlight = initialBuildingDataInFlight.get(projectId);
