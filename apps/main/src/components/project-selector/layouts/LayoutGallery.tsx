@@ -7,6 +7,7 @@ import { Apartment } from "@/entities/apartment/model/types";
 import { formatMoney } from "@gridix/utils/lib";
 import { FieldSetting } from "@/hooks/useFields";
 import { Project } from "@/entities/project/queries/useProjectsManager";
+import type { ImgHTMLAttributes } from "react";
 
 interface LayoutPhoto {
   id: string;
@@ -279,7 +280,7 @@ export const LayoutGallery = ({
               },
             );
 
-            return sortedEntries.map(([key, apartmentGroup]) => {
+            return sortedEntries.map(([key, apartmentGroup], cardIndex) => {
               const representativeApt = apartmentGroup[0];
               const availableCount = apartmentGroup.filter(
                 (apt) => apt.status === "available",
@@ -320,9 +321,10 @@ export const LayoutGallery = ({
                       const first = photos[0];
 
                       if (first) {
+                        const isLCPCandidate = cardIndex === 0;
                         return (
                           <img
-                            loading="lazy"
+                            loading={isLCPCandidate ? "eager" : "lazy"}
                             src={first.image_url}
                             alt={
                               isCommercial
@@ -336,6 +338,11 @@ export const LayoutGallery = ({
                                       : `${String(representativeApt.rooms)}-${t("apartment.rooms")}`
                             }
                             className="h-full w-full object-cover"
+                            {...({
+                              fetchpriority: isLCPCandidate ? "high" : "auto",
+                            } as ImgHTMLAttributes<HTMLImageElement> & {
+                              fetchpriority?: string;
+                            })}
                           />
                         );
                       } else {

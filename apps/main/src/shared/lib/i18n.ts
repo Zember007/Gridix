@@ -77,6 +77,12 @@ function addModuleToResources(
   }
 
   Object.assign(resources[language].translation, flat);
+
+  // Register loaded translations with the i18n instance so components
+  // that already rendered pick up the new keys via reactivity.
+  if (i18n.isInitialized) {
+    i18n.addResourceBundle(language, "translation", flat, true, false);
+  }
 }
 
 function getLoadedModulesSet(language: string): Set<string> {
@@ -144,11 +150,16 @@ function getI18nModulesForPathname(pathname: string): string[] | null {
       "common",
       "project",
       "apartment",
+      "apartmentsManager",
+      "embed",
       "filters",
       "favorites",
       "floorPlan",
+      "gallery",
       "currency",
       "state",
+      "subscription",
+      "installment",
       "errors",
     ];
   }
@@ -192,7 +203,7 @@ const initialLanguage = detectInitialLanguage();
 const initialPathname =
   typeof window === "undefined" ? "/" : window.location.pathname;
 
-void Promise.all([
+export const i18nReady: Promise<void> = Promise.all([
   addSharedResourcesForLanguage(i18n, initialLanguage),
   ensureLanguageResources(
     initialLanguage,
