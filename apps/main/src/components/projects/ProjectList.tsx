@@ -1,4 +1,12 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   Badge,
@@ -8,8 +16,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  FileDropzone,
   type SharedProject,
   SharedProjectDrawer,
+  UploadProgressCard,
 } from "@gridix/ui";
 import {
   Building,
@@ -48,6 +58,7 @@ import {
   type PendingVideoUpload,
   VideoUploadDialog,
 } from "./VideoUploadDialog";
+import { uploadProjectDrawerMediaItem } from "@/features/projectSelector/api/projectDrawerMediaApi";
 
 const ProjectUnitsChessEditorTab = lazy(
   () => import("@/components/projects/ProjectUnitsChessEditorTab"),
@@ -519,9 +530,23 @@ const ProjectList = ({
   };
 
   const DeveloperMediaTab = ({ project }: { project: SharedProject }) => {
+    type MediaUploadKind = "render" | "presentation";
+    interface MediaUploadProgressItem {
+      id: string;
+      kind: MediaUploadKind;
+      fileName: string;
+      fileSize: number;
+      progress: number;
+      status: "uploading" | "complete";
+    }
+
+    const MAX_CONCURRENT_MEDIA_UPLOADS = 3;
     const [uploading, setUploading] = useState<
       null | "render" | "video" | "presentation"
     >(null);
+    const [mediaUploadProgresses, setMediaUploadProgresses] = useState<
+      MediaUploadProgressItem[]
+    >([]);
     const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
     const [videoUploadDialogOpen, setVideoUploadDialogOpen] = useState(false);
     const [pendingVideoUploads, setPendingVideoUploads] = useState<
@@ -536,6 +561,11 @@ const ProjectList = ({
       url: string;
       title: string;
     } | null>(null);
+    const mediaUploadAbortControllersRef = useRef(
+      new Map<string, AbortController>(),
+    );
+    const canceledMediaUploadIdsRef = useRef(new Set<string>());
+    const mediaUploadRequestIdRef = useRef(0);
 
     const safeFilename = (value: string, fallback: string) => {
       const cleaned = value
@@ -666,7 +696,15 @@ const ProjectList = ({
     };
 
     useEffect(() => {
+      const mediaUploadAbortControllers =
+        mediaUploadAbortControllersRef.current;
+      const canceledMediaUploadIds = canceledMediaUploadIdsRef.current;
+
       return () => {
+        mediaUploadRequestIdRef.current += 1;
+        mediaUploadAbortControllers.forEach((controller) => controller.abort());
+        mediaUploadAbortControllers.clear();
+        canceledMediaUploadIds.clear();
         pendingVideoUploads.forEach((item) => {
           URL.revokeObjectURL(item.filePreviewUrl);
           if (item.thumbnailPreviewUrl) {
@@ -676,27 +714,217 @@ const ProjectList = ({
       };
     }, [pendingVideoUploads]);
 
+    const updateMediaUploadItem = useCallback(
+      (
+        uploadId: string,
+        updater: (
+          item: MediaUploadProgressItem,
+        ) => MediaUploadProgressItem | null,
+      ) => {
+        setMediaUploadProgresses((current) =>
+          current.flatMap((item) => {
+            if (item.id !== uploadId) return [item];
+            const next = updater(item);
+            return next ? [next] : [];
+          }),
+        );
+      },
+      [],
+    );
+
+    const removeMediaUploadItem = useCallback((uploadId: string) => {
+      setMediaUploadProgresses((current) =>
+        current.filter((item) => item.id !== uploadId),
+      );
+    }, []);
+
+    const handleCancelMediaUpload = useCallback(
+      (uploadId: string) => {
+        canceledMediaUploadIdsRef.current.add(uploadId);
+        const controller = mediaUploadAbortControllersRef.current.get(uploadId);
+        if (controller) {
+          controller.abort();
+          mediaUploadAbortControllersRef.current.delete(uploadId);
+        }
+        removeMediaUploadItem(uploadId);
+      },
+      [removeMediaUploadItem],
+    );
+
     const uploadFiles = async (
       kind: "render" | "video" | "presentation",
-      files: FileList | null,
+      filesInput: FileList | File[] | null,
     ) => {
-      if (!files || files.length === 0) return;
+      const files = filesInput ? Array.from(filesInput) : [];
+      if (files.length === 0) return;
       if (!user) {
         toast.error(t("projectList.authRequired"));
         return;
       }
 
+      if (kind === "video") {
+        setUploading(kind);
+      }
+
+      if (kind === "render" || kind === "presentation") {
+        const requestId = mediaUploadRequestIdRef.current + 1;
+        mediaUploadRequestIdRef.current = requestId;
+        canceledMediaUploadIdsRef.current.clear();
+
+        const uploadItems = files.map((file, index) => ({
+          id: `${requestId}-${kind}-${index}-${file.name}-${file.lastModified}`,
+          file,
+          title:
+            kind === "presentation"
+              ? file.name.replace(/\.[^/.]+$/, "")
+              : undefined,
+        }));
+
+        setUploading(kind);
+        setMediaUploadProgresses((current) => [
+          ...current.filter((item) => item.kind !== kind),
+          ...uploadItems.map((item) => ({
+            id: item.id,
+            kind,
+            fileName: item.file.name,
+            fileSize: item.file.size,
+            progress: 0,
+            status: "uploading" as const,
+          })),
+        ]);
+
+        try {
+          let nextTaskIndex = 0;
+          let successfulUploads = 0;
+          let failedUploads = 0;
+
+          const worker = async () => {
+            while (nextTaskIndex < uploadItems.length) {
+              const task = uploadItems[nextTaskIndex];
+              nextTaskIndex += 1;
+
+              if (!task) return;
+              if (canceledMediaUploadIdsRef.current.has(task.id)) {
+                continue;
+              }
+
+              const abortController = new AbortController();
+              mediaUploadAbortControllersRef.current.set(
+                task.id,
+                abortController,
+              );
+
+              try {
+                await uploadProjectDrawerMediaItem(
+                  {
+                    projectId: project.id,
+                    kind,
+                    file: task.file,
+                    title: task.title,
+                  },
+                  {
+                    signal: abortController.signal,
+                    onProgress: (progress) => {
+                      if (
+                        mediaUploadRequestIdRef.current !== requestId ||
+                        canceledMediaUploadIdsRef.current.has(task.id)
+                      ) {
+                        return;
+                      }
+
+                      updateMediaUploadItem(task.id, (item) => ({
+                        ...item,
+                        progress,
+                        status: "uploading",
+                      }));
+                    },
+                  },
+                );
+
+                mediaUploadAbortControllersRef.current.delete(task.id);
+
+                if (
+                  mediaUploadRequestIdRef.current !== requestId ||
+                  canceledMediaUploadIdsRef.current.has(task.id)
+                ) {
+                  removeMediaUploadItem(task.id);
+                  continue;
+                }
+
+                successfulUploads += 1;
+                updateMediaUploadItem(task.id, (item) => ({
+                  ...item,
+                  progress: 100,
+                  status: "complete",
+                }));
+              } catch (e) {
+                mediaUploadAbortControllersRef.current.delete(task.id);
+
+                if (e instanceof Error && e.name === "AbortError") {
+                  removeMediaUploadItem(task.id);
+                  continue;
+                }
+
+                failedUploads += 1;
+                removeMediaUploadItem(task.id);
+                console.error("Failed to upload media", e);
+              }
+            }
+          };
+
+          await Promise.all(
+            Array.from(
+              {
+                length: Math.min(
+                  MAX_CONCURRENT_MEDIA_UPLOADS,
+                  uploadItems.length,
+                ),
+              },
+              () => worker(),
+            ),
+          );
+
+          if (mediaUploadRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          if (successfulUploads > 0) {
+            toast.success(t("projectList.media.uploadSuccess"));
+            await loadDrawerProject(project.id);
+            await new Promise((resolve) => setTimeout(resolve, 450));
+          }
+
+          if (failedUploads > 0 && successfulUploads === 0) {
+            toast.error(t("projectList.media.uploadError"));
+          }
+        } finally {
+          if (mediaUploadRequestIdRef.current === requestId) {
+            mediaUploadAbortControllersRef.current.forEach((controller, id) => {
+              if (id.includes(`-${kind}-`)) {
+                controller.abort();
+                mediaUploadAbortControllersRef.current.delete(id);
+              }
+            });
+            setMediaUploadProgresses((current) =>
+              current.filter(
+                (item) => item.kind !== kind || item.status !== "complete",
+              ),
+            );
+            setUploading(null);
+          }
+        }
+
+        return;
+      }
+
       setUploading(kind);
       try {
-        for (const file of Array.from(files)) {
+        for (const file of files) {
           const form = new FormData();
           form.set("action", "upload_media_item");
           form.set("project_id", project.id);
           form.set("kind", kind);
           form.set("file", file);
-          if (kind === "presentation") {
-            form.set("title", file.name.replace(/\.[^/.]+$/, ""));
-          }
 
           const { data, error: invokeErr } = await supabase.functions.invoke(
             "project-drawer",
@@ -729,6 +957,14 @@ const ProjectList = ({
 
       setPendingVideoUploads(selected);
       setVideoUploadDialogOpen(true);
+    };
+
+    const handleVideoFilesSelected = async (files: File[]) => {
+      if (files.length === 0) return;
+
+      const dataTransfer = new DataTransfer();
+      files.forEach((file) => dataTransfer.items.add(file));
+      handleVideoSelection(dataTransfer.files);
     };
 
     const updatePendingVideoTitle = (id: string, title: string) => {
@@ -844,6 +1080,31 @@ const ProjectList = ({
 
     const handleDeleteMedia = async (url: string) => {
       if (!url || deletingUrl) return;
+
+      const previousMedia = project.media;
+
+      setDrawerProject((current) => {
+        if (!current || current.id !== project.id) {
+          return current;
+        }
+
+        return {
+          ...current,
+          media: {
+            ...current.media,
+            renders: (current.media?.renders ?? []).filter(
+              (itemUrl) => itemUrl !== url,
+            ),
+            videos: (current.media?.videos ?? []).filter(
+              (video) => video.url !== url,
+            ),
+            presentations: (current.media?.presentations ?? []).filter(
+              (doc) => doc.url !== url,
+            ),
+          },
+        };
+      });
+
       setDeletingUrl(url);
       try {
         const { data, error } = await supabase.functions.invoke(
@@ -859,8 +1120,17 @@ const ProjectList = ({
         if (error) throw error;
         if (data?.error) throw new Error(String(data.error));
         toast.success("Media deleted");
-        await loadDrawerProject(project.id);
       } catch (e) {
+        setDrawerProject((current) => {
+          if (!current || current.id !== project.id) {
+            return current;
+          }
+
+          return {
+            ...current,
+            media: previousMedia,
+          };
+        });
         console.error("Failed to delete media", e);
         toast.error("Failed to delete media");
       } finally {
@@ -871,6 +1141,12 @@ const ProjectList = ({
     const renders = project.media?.renders ?? [];
     const videos = project.media?.videos ?? [];
     const docs = project.media?.presentations ?? [];
+    const renderUploadProgresses = mediaUploadProgresses.filter(
+      (item) => item.kind === "render",
+    );
+    const presentationUploadProgresses = mediaUploadProgresses.filter(
+      (item) => item.kind === "presentation",
+    );
     const projectFilenamePrefix = safeFilename(project.name, "project");
 
     return (
@@ -895,6 +1171,37 @@ const ProjectList = ({
               />
             </label>
           </div>
+          {renderUploadProgresses.length > 0 ? (
+            <div className="mb-4 space-y-3">
+              {renderUploadProgresses.map((uploadProgress) => (
+                <UploadProgressCard
+                  key={uploadProgress.id}
+                  fileName={uploadProgress.fileName}
+                  fileSize={uploadProgress.fileSize}
+                  progress={uploadProgress.progress}
+                  status={uploadProgress.status}
+                  icon={<ImageIcon className="h-8 w-8 text-sky-600" />}
+                  onCancel={() => handleCancelMediaUpload(uploadProgress.id)}
+                />
+              ))}
+            </div>
+          ) : null}
+          {renders.length === 0 && uploading !== "render" ? (
+            <div className="mb-4 overflow-hidden rounded-xl border-2 border-dashed border-slate-200">
+              <FileDropzone
+                accept="image/*"
+                multiple
+                size="compact"
+                heading={t("projectList.media.renders")}
+                description={t("projectList.media.renderDropzoneDescription")}
+                idleLabel={t("projectEditor.clickOrDrop")}
+                dropLabel={t("projectEditor.clickOrDrop")}
+                onFilesSelected={async (files) => {
+                  await uploadFiles("render", files);
+                }}
+              />
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {renders.map((url, i) => (
               <div
@@ -1012,6 +1319,20 @@ const ProjectList = ({
               </div>
             </div>
           )}
+          {videos.length === 0 && uploading !== "video" ? (
+            <div className="mb-4 overflow-hidden rounded-xl border-2 border-dashed border-slate-200">
+              <FileDropzone
+                accept="video/*"
+                multiple
+                size="compact"
+                heading={t("projectList.media.videos")}
+                description={t("projectList.media.videoDropzoneDescription")}
+                idleLabel={t("projectEditor.clickOrDrop")}
+                dropLabel={t("projectEditor.clickOrDrop")}
+                onFilesSelected={handleVideoFilesSelected}
+              />
+            </div>
+          ) : null}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {videos.map((vid, i) => (
               <div key={`${vid.url}-${i}`} className="group relative">
@@ -1117,6 +1438,39 @@ const ProjectList = ({
               />
             </label>
           </div>
+          {presentationUploadProgresses.length > 0 ? (
+            <div className="mb-4 space-y-3">
+              {presentationUploadProgresses.map((uploadProgress) => (
+                <UploadProgressCard
+                  key={uploadProgress.id}
+                  fileName={uploadProgress.fileName}
+                  fileSize={uploadProgress.fileSize}
+                  progress={uploadProgress.progress}
+                  status={uploadProgress.status}
+                  icon={<FileText className="h-8 w-8 text-red-600" />}
+                  onCancel={() => handleCancelMediaUpload(uploadProgress.id)}
+                />
+              ))}
+            </div>
+          ) : null}
+          {docs.length === 0 && uploading !== "presentation" ? (
+            <div className="mb-4 overflow-hidden rounded-xl border-2 border-dashed border-slate-200">
+              <FileDropzone
+                accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                multiple
+                size="compact"
+                heading={t("projectList.media.presentations")}
+                description={t(
+                  "projectList.media.presentationDropzoneDescription",
+                )}
+                idleLabel={t("projectEditor.clickOrDrop")}
+                dropLabel={t("projectEditor.clickOrDrop")}
+                onFilesSelected={async (files) => {
+                  await uploadFiles("presentation", files);
+                }}
+              />
+            </div>
+          ) : null}
           <div className="space-y-2">
             {docs.map((doc) => (
               <div

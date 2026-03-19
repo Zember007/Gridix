@@ -99,5 +99,6 @@
   "priceUpdateInvalidValue": "Пожалуйста, введите корректное значение",
   "priceUpdateNegativeValue": "Значение должно быть положительным",
   "priceUpdateSuccess": "Цены успешно обновлены",
-  "priceUpdateError": "Не удалось обновить цены"
+  "priceUpdateError": "Не удалось обновить цены",
+  "clickOrDrop": "Нажмите или перетащите"
 }

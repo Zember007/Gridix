@@ -70,7 +70,8 @@
     "no": "No"
   },
   "admin": {
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "whatsNew": "What's new"
   },
   "auth": {
     "signOut": "Sign Out"
@@ -427,5 +428,25 @@
     "showPendingOnly": "Show pending only",
     "clickToFilter": "Click to filter",
     "noPartners": "No partners"
+  },
+  "changelog": {
+    "title": "What's New",
+    "subtitle": "Platform updates and improvements history",
+    "loading": "Loading changelog...",
+    "errorLoading": "Failed to load changelog.",
+    "emptyZone": "No records for the selected zone",
+    "showAll": "Show all updates",
+    "task": "Task",
+    "openAttachment": "Open attachment",
+    "shownRecords": "Showing records: {{count}}",
+    "roles": {
+      "developer": "Developer",
+      "agency": "Agency",
+      "agent": "Agent",
+      "partner": "Partner",
+      "admin": "Admin",
+      "superadmin": "Superadmin",
+      "all": "All"
+    }
   }
 }

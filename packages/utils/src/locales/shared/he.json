@@ -70,7 +70,8 @@
     "no": "לֹא"
   },
   "admin": {
-    "documentation": "תיעוד"
+    "documentation": "תיעוד",
+    "whatsNew": "מה חדש"
   },
   "auth": {
     "signOut": "התנתק"
@@ -427,5 +428,25 @@
     "showPendingOnly": "הצג בהמתנה בלבד",
     "clickToFilter": "לחץ כדי לסנן",
     "noPartners": "אין שותפים"
+  },
+  "changelog": {
+    "title": "מה חדש",
+    "subtitle": "היסטוריית עדכוני פלטפורמה ושיפורים",
+    "loading": "טוען יומן שינויים...",
+    "errorLoading": "טעינת יומן השינויים נכשלה.",
+    "emptyZone": "אין רשומות עבור האזור שנבחר",
+    "showAll": "הצג את כל העדכונים",
+    "task": "מְשִׁימָה",
+    "openAttachment": "פתח את הקובץ המצורף",
+    "shownRecords": "מציג רשומות: {{count}}",
+    "roles": {
+      "developer": "מפתח",
+      "agency": "סוֹכְנוּת",
+      "agent": "סוֹכֵן",
+      "partner": "שׁוּתָף",
+      "admin": "מנהל מערכת",
+      "superadmin": "סופר אדמין",
+      "all": "כֹּל"
+    }
   }
 }

@@ -45,5 +45,6 @@
   },
   "uploadMultiple": "You can select multiple files at once",
   "uploadPhotos": "Upload Photos",
-  "uploadSuccess": "Photos uploaded"
+  "uploadSuccess": "Photos uploaded",
+  "partialUploadError": "Some files failed to upload"
 }
