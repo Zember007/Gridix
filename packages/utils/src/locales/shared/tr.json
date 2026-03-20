@@ -32,6 +32,7 @@
       "renders": "renderlar",
       "videos": "Videolar",
       "presentations": "Sunumlar",
+      "loading": "Materyaller yukleniyor...",
       "noMaterials": "Malzeme yok",
       "restricted": "Erişim kısıtlı",
       "signToAccess": "Medya bankasına erişmek için geliştiriciyle sözleşmeyi imzalayın.",
