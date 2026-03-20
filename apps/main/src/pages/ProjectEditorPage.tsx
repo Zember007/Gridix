@@ -25,6 +25,10 @@ function getSafeBackTarget(currentPathname: string): string | null {
   }
 }
 
+function isProjectEditorPath(path: string): boolean {
+  return path.includes("/admin/project/");
+}
+
 const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
   const { projectId, projectSlug } = useParams<{
     projectId?: string;
@@ -40,12 +44,16 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
 
   const goBack = () => {
     const fromState = (location.state as { from?: string } | null)?.from;
-    if (fromState && fromState !== location.pathname) {
+    if (
+      fromState &&
+      fromState !== location.pathname &&
+      !isProjectEditorPath(fromState)
+    ) {
       navigate(fromState);
       return;
     }
     const safeTarget = getSafeBackTarget(location.pathname);
-    if (safeTarget) {
+    if (safeTarget && !isProjectEditorPath(safeTarget)) {
       navigate(safeTarget);
       return;
     }
