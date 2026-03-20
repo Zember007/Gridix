@@ -44,6 +44,7 @@ export * from "./radial-orbital-timeline";
 export * from "./radio-group";
 export * from "./resizable";
 export * from "./scroll-area";
+export * from "./scroll-to-top-button";
 export * from "./select";
 export * from "./separator";
 export * from "./set-password-page";
