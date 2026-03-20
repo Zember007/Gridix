@@ -41,7 +41,7 @@ const loadPDFFromAPI = async (
   pdfUrl: string,
   apiUrl: string,
 ): Promise<ArrayBuffer> => {
-  const response = await fetch(`${apiUrl}/pdf?url=${pdfUrl}`);
+  const response = await fetch(`${apiUrl}/pdf?url=${encodeURIComponent(pdfUrl)}`);
   if (!response.ok) {
     throw new Error(
       `Failed to load PDF from API: ${pdfUrl}. Status: ${response.status}`,
