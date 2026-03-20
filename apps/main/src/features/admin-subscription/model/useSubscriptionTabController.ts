@@ -10,6 +10,7 @@ import { fetchCurrentSession } from "@gridix/utils";
 import { toast } from "sonner";
 import { trackUsertourEvent } from "@gridix/utils/integrations";
 import {
+  changeStripeSubscriptionPlan,
   createStripeCheckoutSession,
   createStripePortalSession,
   fetchProjectSubscriptions as fetchProjectSubscriptionsApi,
@@ -35,6 +36,9 @@ export const useSubscriptionTabController = () => {
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
+  const [planChangeProjectId, setPlanChangeProjectId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -155,8 +159,11 @@ export const useSubscriptionTabController = () => {
 
   const durationOptions = [
     { value: 1, label: t("admin.subscriptionPage.durations.1") },
+    { value: 3, label: t("admin.subscriptionPage.durations.3") },
     { value: 6, label: t("admin.subscriptionPage.durations.6") },
     { value: 12, label: t("admin.subscriptionPage.durations.12") },
+    { value: 24, label: t("admin.subscriptionPage.durations.24") },
+    { value: 36, label: t("admin.subscriptionPage.durations.36") },
   ];
 
   const handleViewInvoice = async (
@@ -225,12 +232,24 @@ export const useSubscriptionTabController = () => {
     projectId: string,
     currentPlanId?: string | null,
   ) => {
+    const project = projectSubscriptions.find((p) => p.id === projectId);
+    const sub = project?.user_subscriptions?.[0];
+    const periodEnd = sub?.current_period_end
+      ? new Date(sub.current_period_end).getTime()
+      : null;
+    const hasPaidAccess = periodEnd === null || periodEnd > Date.now();
+    const isCardPlanChangeCandidate =
+      sub?.payment_method === "card" &&
+      ["active", "trialing"].includes(sub.status) &&
+      hasPaidAccess;
+
     const fallbackPlanId =
       currentPlanId || selectedPlanId || plans[0]?.id || "";
     setSelectedProjects([projectId]);
     if (fallbackPlanId) {
       setSelectedPlanId(fallbackPlanId);
     }
+    setPlanChangeProjectId(isCardPlanChangeCandidate ? projectId : null);
     setIsInvoiceDialogOpen(true);
   };
 
@@ -251,18 +270,50 @@ export const useSubscriptionTabController = () => {
       return;
     }
 
-    const eligibleProjectIds = projectIds.filter((projectId) =>
-      isProjectEligibleForNewPayment(projectId),
-    );
-    if (eligibleProjectIds.length === 0) {
-      toast.error(
-        t("admin.subscriptionPage.checkout.errors.noProjectsSelected"),
-      );
-      return;
-    }
-
     try {
       await saveBillingDetails(payer);
+
+      const isPlanChangeFlow =
+        method === "card" &&
+        planChangeProjectId !== null &&
+        projectIds.length === 1 &&
+        projectIds[0] === planChangeProjectId;
+
+      if (isPlanChangeFlow) {
+        await changeStripeSubscriptionPlan(
+          planChangeProjectId,
+          selectedPlanId,
+          selectedDuration,
+        );
+
+        toast.success(t("admin.subscriptionPage.toasts.planChanged"));
+        void trackUsertourEvent({
+          eventName: "gridix_billing_plan_changed",
+          properties: {
+            project_id: planChangeProjectId,
+            plan_id: selectedPlanId,
+            duration_months: selectedDuration,
+            payment_method: "card",
+          },
+          onceKey: "gridix_billing_plan_changed",
+        });
+
+        await refreshProjectSubscriptions();
+        setIsInvoiceDialogOpen(false);
+        setSelectedProjects([]);
+        setPlanChangeProjectId(null);
+        return;
+      }
+
+      const eligibleProjectIds = projectIds.filter((projectId) =>
+        isProjectEligibleForNewPayment(projectId),
+      );
+      if (eligibleProjectIds.length === 0) {
+        toast.error(
+          t("admin.subscriptionPage.checkout.errors.noProjectsSelected"),
+        );
+        return;
+      }
 
       if (method === "card") {
         const checkoutResult = await createStripeCheckoutSession(
@@ -364,6 +415,7 @@ export const useSubscriptionTabController = () => {
 
       setIsInvoiceDialogOpen(false);
       setSelectedProjects([]);
+      setPlanChangeProjectId(null);
     } catch (error) {
       console.error("Error confirming invoice from modal:", error);
       toast.error(t("common.invoiceGenerationFailed"));
@@ -397,6 +449,7 @@ export const useSubscriptionTabController = () => {
     selectedPlanId,
     selectedDuration,
     selectedProjects,
+    planChangeProjectId,
     expiredProjects,
     durationOptions,
     refreshProjectSubscriptions,
@@ -404,6 +457,7 @@ export const useSubscriptionTabController = () => {
     setSelectedDuration,
     setSelectedProjects,
     setIsInvoiceDialogOpen,
+    setPlanChangeProjectId,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
     handleManageSubscription,

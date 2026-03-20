@@ -220,19 +220,22 @@
       "buttons": {
         "extend": "Extend",
         "activate": "Activate",
-        "manage": "Manage"
+        "manage": "Manage",
+        "changePlan": "Change plan"
       }
     },
     "durations": {
       "1": "1 month",
       "3": "3 months",
       "6": "6 months",
-      "12": "12 months"
+      "12": "12 months",
+      "24": "2 years",
+      "36": "3 years"
     },
     "hints": {
       "6": "💰 Good savings when paying for 6 months.",
       "12": "👍 Great choice! The most popular plan.",
-      "36": "🔥 Super saving! 50% discount for the whole period."
+      "36": "🔥 Super saving! 40% discount for the whole period."
     },
     "pricing": {
       "availablePlansTitle": "Available plans",
@@ -353,11 +356,13 @@
         "noProjectsSelected": "Please select at least one project"
       },
       "summary": {
+        "period": "Billing period",
         "totalToPay": "Total to pay",
         "plan": "Plan",
         "projects": "Projects:",
         "payer": "Payer:"
       },
+      "planChangeSingleProject": "Plan change is available only for the selected active project.",
       "methods": {
         "card": {
           "title": "Bank card",
@@ -378,7 +383,8 @@
     "toasts": {
       "invoiceRequestedSingle": "Invoice requested successfully. You can download it in the order history.",
       "invoiceRequestedMultiple": "Invoices requested for {{count}} projects",
-      "portalUnavailable": "Subscription management is currently unavailable. Please try again later."
+      "portalUnavailable": "Subscription management is currently unavailable. Please try again later.",
+      "planChanged": "Plan updated successfully. Proration was applied automatically."
     },
     "error": "Error loading subscriptions"
   },

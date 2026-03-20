@@ -118,8 +118,8 @@ export const createStripeCheckoutSession = async (
       project_ids: projectIds,
       plan_id: planId,
       duration_months: durationMonths,
-      success_url: `${origin}/admin?stripe=success`,
-      cancel_url: `${origin}/admin?stripe=cancel`,
+      success_url: `${origin}/admin?page=subscription`,
+      cancel_url: `${origin}/admin?page=subscription`,
     },
     headers: {
       Authorization: `Bearer ${sessionData.session?.access_token}`,
@@ -133,6 +133,34 @@ export const createStripeCheckoutSession = async (
     url?: string;
     session_id?: string;
     error?: string;
+  };
+};
+
+export const changeStripeSubscriptionPlan = async (
+  projectId: string,
+  planId: string,
+  durationMonths: number,
+) => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: {
+      action: "change-plan",
+      project_id: projectId,
+      plan_id: planId,
+      duration_months: durationMonths,
+    },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+
+  return data as {
+    success: boolean;
+    error?: string;
+    message?: string;
   };
 };
 
@@ -150,7 +178,7 @@ export const createStripePortalSession = async (): Promise<{
   const { data, error } = await supabase.functions.invoke("stripe-billing", {
     body: {
       action: "create-portal-session",
-      return_url: `${origin}/admin`,
+      return_url: `${origin}/admin?page=subscription`,
     },
     headers: {
       Authorization: `Bearer ${sessionData.session?.access_token}`,

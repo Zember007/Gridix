@@ -220,19 +220,22 @@
       "buttons": {
         "extend": "Uzatmak",
         "activate": "Etkinleştir",
-        "manage": "Yönet"
+        "manage": "Yönet",
+        "changePlan": "Planı değiştir"
       }
     },
     "durations": {
       "1": "1 ay",
       "3": "3 ay",
       "6": "6 ay",
-      "12": "12 ay"
+      "12": "12 ay",
+      "24": "2 yıl",
+      "36": "3 yıl"
     },
     "hints": {
       "6": "💰 6 aylık ödemelerde iyi tasarruf.",
       "12": "👍 Harika seçim! En popüler plan.",
-      "36": "🔥 Süper tasarruf! Tüm dönem boyunca %50 indirim."
+      "36": "🔥 Süper tasarruf! Tüm dönem boyunca %40 indirim."
     },
     "pricing": {
       "availablePlansTitle": "Mevcut planlar",
@@ -353,11 +356,13 @@
         "noProjectsSelected": "Lütfen en az bir proje seçin"
       },
       "summary": {
+        "period": "Faturalama dönemi",
         "totalToPay": "Ödenecek toplam",
         "plan": "Planı",
         "projects": "Projeler:",
         "payer": "Ödeyen:"
       },
+      "planChangeSingleProject": "Plan değişikliği yalnızca seçili aktif proje için kullanılabilir.",
       "methods": {
         "card": {
           "title": "Banka kartı",
@@ -378,7 +383,8 @@
     "toasts": {
       "invoiceRequestedSingle": "Fatura başarıyla talep edildi. Sipariş geçmişinden indirebilirsiniz.",
       "invoiceRequestedMultiple": "{{count}} proje için faturalar istendi",
-      "portalUnavailable": "Abonelik yönetimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
+      "portalUnavailable": "Abonelik yönetimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+      "planChanged": "Plan başarıyla güncellendi. Prorasyon otomatik uygulandı."
     },
     "error": "Abonelikler yüklenirken hata oluştu"
   },

@@ -22,6 +22,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   plans,
   selectedPlanId,
   selectedDuration,
+  planChangeProjectId,
   billingDetails,
   onPlanChange,
   onDurationChange,
@@ -51,6 +52,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     plans,
     selectedPlanId,
     selectedDuration,
+    planChangeProjectId,
     onConfirm,
   });
 
@@ -61,6 +63,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     { value: 3, label: t("admin.subscriptionPage.durations.3") },
     { value: 6, label: t("admin.subscriptionPage.durations.6") },
     { value: 12, label: t("admin.subscriptionPage.durations.12") },
+    { value: 24, label: t("admin.subscriptionPage.durations.24") },
+    { value: 36, label: t("admin.subscriptionPage.durations.36") },
   ];
 
   return (
@@ -81,15 +85,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {t("admin.subscriptionPage.checkout.title")}
               </h2>
               {currentPricing && (
-                <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                  <span>
-                    {t("admin.subscriptionPage.checkout.summary.totalToPay")}
-                  </span>
+                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                    {t("admin.subscriptionPage.checkout.summary.period")}
+                  </div>
                   <Select
                     value={String(selectedDuration)}
                     onValueChange={(val) => onDurationChange(Number(val))}
                   >
-                    <SelectTrigger className="h-7 w-[150px] px-2 py-1 text-xs font-medium">
+                    <SelectTrigger className="h-10 w-[210px] bg-white px-3 py-2 text-sm font-semibold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -100,6 +104,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="mt-2 text-xs font-medium text-blue-700">
+                    {t("admin.subscriptionPage.checkout.summary.totalToPay")}{" "}
+                    <span className="font-bold text-blue-900">
+                      ${finalTotal}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -118,6 +128,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               plans={plans}
               selectedPlanId={selectedPlanId}
               selectedDuration={selectedDuration}
+              planChangeProjectId={planChangeProjectId}
               onPlanChange={onPlanChange}
               projects={projects}
               selectedProjectIds={selectedProjectIds}

@@ -10,6 +10,7 @@ type Props = {
   plans: SubscriptionPlan[];
   selectedPlanId: string;
   selectedDuration: number;
+  planChangeProjectId?: string | null;
   onPlanChange: (planId: string) => void;
   projects: ProjectSubscription[];
   selectedProjectIds: string[];
@@ -21,6 +22,7 @@ export const CheckoutStepSelectProjects: React.FC<Props> = ({
   plans,
   selectedPlanId,
   selectedDuration,
+  planChangeProjectId,
   onPlanChange,
   projects,
   selectedProjectIds,
@@ -31,6 +33,9 @@ export const CheckoutStepSelectProjects: React.FC<Props> = ({
   const now = Date.now();
 
   const isProjectSelectable = (project: ProjectSubscription): boolean => {
+    if (planChangeProjectId) {
+      return project.id === planChangeProjectId;
+    }
     const sub = project.user_subscriptions?.[0];
     if (!sub) return true;
 
@@ -125,6 +130,11 @@ export const CheckoutStepSelectProjects: React.FC<Props> = ({
             {t("admin.subscriptionPage.checkout.projectsHint")}
           </p>
         </div>
+        {planChangeProjectId && (
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+            {t("admin.subscriptionPage.checkout.planChangeSingleProject")}
+          </div>
+        )}
 
         <div className="custom-scrollbar max-h-60 space-y-2 overflow-y-auto pr-2">
           {projects.map((project) =>

@@ -23,12 +23,14 @@ export default function SubscriptionTab() {
     selectedPlanId,
     selectedDuration,
     expiredProjects,
+    planChangeProjectId,
     durationOptions,
     refreshProjectSubscriptions,
     setSelectedPlanId,
     setSelectedDuration,
     setSelectedProjects,
     setIsInvoiceDialogOpen,
+    setPlanChangeProjectId,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
     handleManageSubscription,
@@ -71,6 +73,7 @@ export default function SubscriptionTab() {
         plans={plans}
         onSelectPlan={setSelectedPlanId}
         onOpenCheckout={(planId) => {
+          setPlanChangeProjectId(null);
           setSelectedPlanId(planId);
           if (selectedProjects.length === 0 && expiredProjects.length > 0) {
             setSelectedProjects(expiredProjects.map((p) => p.id));
@@ -91,12 +94,16 @@ export default function SubscriptionTab() {
       {isInvoiceDialogOpen && (
         <CheckoutModal
           isOpen={isInvoiceDialogOpen}
-          onClose={() => setIsInvoiceDialogOpen(false)}
+          onClose={() => {
+            setIsInvoiceDialogOpen(false);
+            setPlanChangeProjectId(null);
+          }}
           projects={projectSubscriptions}
           initialSelectedProjectIds={selectedProjects}
           plans={plans}
           selectedPlanId={selectedPlanId || plans[0]?.id || ""}
           selectedDuration={selectedDuration}
+          planChangeProjectId={planChangeProjectId}
           billingDetails={billingDetails}
           onPlanChange={(planId) => setSelectedPlanId(planId)}
           onDurationChange={setSelectedDuration}

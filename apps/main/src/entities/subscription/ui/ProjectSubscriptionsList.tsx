@@ -175,6 +175,17 @@ export const ProjectSubscriptionsList: React.FC<
                     {t("admin.subscriptionPage.projects.buttons.manage")}
                   </Button>
                 )}
+                {isActive && isCardPayment && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-blue-700"
+                    onClick={() => onOpenInvoice(project.id, sub?.plan_id)}
+                  >
+                    <ArrowRight size={14} />
+                    {t("admin.subscriptionPage.projects.buttons.changePlan")}
+                  </Button>
+                )}
 
                 {canExtendInvoice ? (
                   <Button

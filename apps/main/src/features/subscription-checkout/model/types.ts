@@ -16,6 +16,7 @@ export interface CheckoutModalProps {
   plans: SubscriptionPlan[];
   selectedPlanId: string;
   selectedDuration: number;
+  planChangeProjectId?: string | null;
   billingDetails: BillingDetails | null;
   onPlanChange: (planId: string) => void;
   onDurationChange: (duration: number) => void;

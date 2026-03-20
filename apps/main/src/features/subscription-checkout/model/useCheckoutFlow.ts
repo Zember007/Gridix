@@ -14,6 +14,7 @@ interface UseCheckoutFlowParams {
   plans: SubscriptionPlan[];
   selectedPlanId: string;
   selectedDuration: number;
+  planChangeProjectId?: string | null;
   onConfirm: (
     payer: BillingDetails,
     projectIds: string[],
@@ -28,6 +29,7 @@ export const useCheckoutFlow = ({
   plans,
   selectedPlanId,
   selectedDuration,
+  planChangeProjectId,
   onConfirm,
 }: UseCheckoutFlowParams) => {
   const { t } = useLanguage();
@@ -92,6 +94,11 @@ export const useCheckoutFlow = ({
   };
 
   const toggleProject = (id: string) => {
+    if (planChangeProjectId) {
+      if (id !== planChangeProjectId) return;
+      setSelectedProjectIds([planChangeProjectId]);
+      return;
+    }
     setSelectedProjectIds((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id],
     );
