@@ -68,23 +68,37 @@ export const useLanguage = () => {
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
 
-    if (location.pathname.startsWith("/embed/")) {
-      void i18n.changeLanguage(newLanguage);
-      localStorage.setItem("embed-language", newLanguage);
-      const search = new URLSearchParams(location.search);
-      search.set("lang", newLanguage);
-      navigate(
-        { pathname: location.pathname, search: search.toString() },
-        { replace: true },
-      );
-      return;
-    }
+    void (async () => {
+      const maybePreload = (
+        i18n as typeof i18n & {
+          __gridixPreloadForLanguagePath?: (
+            language: string,
+            pathname: string,
+          ) => Promise<void>;
+        }
+      ).__gridixPreloadForLanguagePath;
+      if (maybePreload) {
+        await maybePreload(newLanguage, location.pathname);
+      }
 
-    const cleanPath = removeLanguageFromPath(location.pathname);
-    const newPath = addLanguageToPath(cleanPath, newLanguage);
+      if (location.pathname.startsWith("/embed/")) {
+        await i18n.changeLanguage(newLanguage);
+        localStorage.setItem("embed-language", newLanguage);
+        const search = new URLSearchParams(location.search);
+        search.set("lang", newLanguage);
+        navigate(
+          { pathname: location.pathname, search: search.toString() },
+          { replace: true },
+        );
+        return;
+      }
 
-    void i18n.changeLanguage(newLanguage);
-    navigate(newPath, { replace: true });
+      const cleanPath = removeLanguageFromPath(location.pathname);
+      const newPath = addLanguageToPath(cleanPath, newLanguage);
+
+      await i18n.changeLanguage(newLanguage);
+      navigate(newPath, { replace: true });
+    })();
   };
 
   return {
@@ -132,9 +146,21 @@ export const useEmbedLanguage = (initialLanguage?: Language) => {
 
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
-
-    void i18n.changeLanguage(newLanguage);
-    localStorage.setItem("embed-language", newLanguage);
+    void (async () => {
+      const maybePreload = (
+        i18n as typeof i18n & {
+          __gridixPreloadForLanguagePath?: (
+            language: string,
+            pathname: string,
+          ) => Promise<void>;
+        }
+      ).__gridixPreloadForLanguagePath;
+      if (maybePreload) {
+        await maybePreload(newLanguage, window.location.pathname);
+      }
+      await i18n.changeLanguage(newLanguage);
+      localStorage.setItem("embed-language", newLanguage);
+    })();
   };
 
   return {

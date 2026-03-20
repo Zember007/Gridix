@@ -77,10 +77,12 @@ const ProfileFooterMenu = ({
   const menuAlign = isMobile ? "start" : isCollapsed ? "center" : "end";
 
   const handleSelectLanguage = async (nextLanguage: Language) => {
-    if (!userId) {
-      setLanguage(nextLanguage);
-      return;
-    }
+    if (nextLanguage === language) return;
+
+    // Apply language immediately so UI updates on first click.
+    setLanguage(nextLanguage);
+
+    if (!userId) return;
 
     try {
       const { error } = await supabase
@@ -93,8 +95,6 @@ const ProfileFooterMenu = ({
       }
     } catch (e) {
       console.error("Failed to persist preferred locale", e);
-    } finally {
-      setLanguage(nextLanguage);
     }
   };
 
@@ -450,6 +450,7 @@ export function SimplifiedSidebar({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const languageRef = useRef(language);
+  const lastAppliedPreferredLocaleRef = useRef<Language | null>(null);
 
   const resolvedMobileOpen = mobileOpen ?? internalMobileOpen;
 
@@ -469,9 +470,17 @@ export function SimplifiedSidebar({
 
   useEffect(() => {
     const preferred = normalizePreferredLanguage(preferredLocale);
-    if (preferred && preferred !== languageRef.current) {
-      setLanguage(preferred);
+    if (!preferred) {
+      lastAppliedPreferredLocaleRef.current = null;
+      return;
     }
+
+    // Apply preferred locale only when the profile value itself changes.
+    // This avoids overriding manual language switching on each re-render.
+    if (lastAppliedPreferredLocaleRef.current === preferred) return;
+
+    lastAppliedPreferredLocaleRef.current = preferred;
+    if (preferred !== languageRef.current) setLanguage(preferred);
   }, [preferredLocale, setLanguage]);
 
   // Auto-expand parent if child is active

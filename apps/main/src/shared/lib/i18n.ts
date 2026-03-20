@@ -46,6 +46,12 @@ function flattenTranslations(
 const resources: Record<string, { translation: Record<string, string> }> = {};
 const loadedLanguages = new Set<string>();
 const loadedModulesByLanguage = new Map<string, Set<string>>();
+type I18nWithPreload = typeof i18n & {
+  __gridixPreloadForLanguagePath?: (
+    language: string,
+    pathname: string,
+  ) => Promise<void>;
+};
 
 function parseLocalePath(path: string): {
   language: SupportedLanguage;
@@ -144,6 +150,28 @@ function detectInitialLanguage(): SupportedLanguage {
 function getI18nModulesForPathname(pathname: string): string[] | null {
   // Keep the project page critical path as small as possible.
   // For unknown/other routes we fall back to "load all" to avoid breaking pages.
+  const isAdminProjectEditorRoute = pathname.includes("/admin/project/");
+  if (isAdminProjectEditorRoute) {
+    return [
+      "common",
+      "project",
+      "apartment",
+      "apartmentsManager",
+      "embed",
+      "filters",
+      "favorites",
+      "floorPlan",
+      "gallery",
+      "currency",
+      "state",
+      "subscription",
+      "installment",
+      "errors",
+      "projectEditor",
+      "projectEditorSidebar",
+    ];
+  }
+
   const isProjectRoute = pathname.includes("/project/");
   if (isProjectRoute) {
     return [
@@ -169,6 +197,17 @@ function getI18nModulesForPathname(pathname: string): string[] | null {
 
 export async function preloadI18nForPathname(pathname: string): Promise<void> {
   const language = i18n.language || detectInitialLanguage();
+  const modules = getI18nModulesForPathname(pathname);
+  await Promise.all([
+    addSharedResourcesForLanguage(i18n, language),
+    ensureLanguageResources(language, modules ?? undefined),
+  ]);
+}
+
+async function preloadI18nForLanguagePath(
+  language: string,
+  pathname: string,
+): Promise<void> {
   const modules = getI18nModulesForPathname(pathname);
   await Promise.all([
     addSharedResourcesForLanguage(i18n, language),
@@ -226,5 +265,8 @@ i18n.on("languageChanged", (language) => {
     ),
   ]);
 });
+
+(i18n as I18nWithPreload).__gridixPreloadForLanguagePath =
+  preloadI18nForLanguagePath;
 
 export default i18n;
