@@ -41,5 +41,8 @@
   "reserve": "Reserve",
   "reserveTitle": "Reserve apartment",
   "leadSubmitError": "Could not send the request. Please try again.",
-  "leadUnexpectedError": "Something went wrong. Please try again."
+  "leadUnexpectedError": "Something went wrong. Please try again.",
+  "objectDetails": "Object details",
+  "objectUnit": "Object",
+  "recommendedApartments": "Recommended apartments"
 }

@@ -620,7 +620,7 @@ const ApartmentDetailsPage = ({
     }
 
     if (fieldName === "area") {
-      return `${value} м²`;
+      return `${value} ${t("apartment.sqm")}`;
     }
 
     if (fieldName === "floor_number" || fieldName === "floor") {
@@ -634,9 +634,13 @@ const ApartmentDetailsPage = ({
       return `${num} ${t("apartment.room").toLowerCase()}`;
     }
 
+    if (fieldName === "status") {
+      return getStatusLabel(String(value));
+    }
+
     switch (fieldType) {
       case "boolean":
-        return value ? "Да" : "Нет";
+        return value ? t("apartment.yes") : t("apartment.no");
       case "number":
         return typeof value === "number" ? value.toString() : String(value);
       case "select":
@@ -788,7 +792,7 @@ const ApartmentDetailsPage = ({
                   {apartment.type === "apartment"
                     ? (project as unknown as Record<string, unknown>)
                         ?.project_type === "object"
-                      ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
+                      ? `${t("apartment.objectUnit")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                       : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
                 </h1>
@@ -830,7 +834,9 @@ const ApartmentDetailsPage = ({
                   <span className="text-gray-700">
                     {apartment.rooms == 0
                       ? t("apartment.studio")
-                      : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}
+                      : apartment.rooms === "free_layout"
+                        ? t("apartment.freeLayout")
+                        : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}
                   </span>
                 </div>
               )}
@@ -838,7 +844,7 @@ const ApartmentDetailsPage = ({
                 <div className="flex items-center gap-2">
                   <Square className="h-5 w-5 text-gray-400" />
                   <span className="text-gray-700">
-                    {apartment.area} м² {t("apartment.area")}
+                    {apartment.area} {t("apartment.sqm")} {t("apartment.area")}
                   </span>
                 </div>
               )}
@@ -872,7 +878,7 @@ const ApartmentDetailsPage = ({
                 <h3 className="mb-3 text-lg font-semibold text-gray-900">
                   {(project as unknown as Record<string, unknown>)
                     ?.project_type === "object"
-                    ? "Object details"
+                    ? t("apartment.objectDetails")
                     : t("apartment.details")}
                 </h3>
 
@@ -964,7 +970,7 @@ const ApartmentDetailsPage = ({
                   {apartment.type === "apartment"
                     ? (project as unknown as Record<string, unknown>)
                         ?.project_type === "object"
-                      ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
+                      ? `${t("apartment.objectUnit")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                       : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
                 </h1>
@@ -978,7 +984,7 @@ const ApartmentDetailsPage = ({
                       ? "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
                       : "border-gray-200"
                   }`}
-                  aria-label="favorite"
+                  aria-label={t("common.drawer.actions.favorite")}
                 >
                   <Heart
                     className={`h-5 w-5 ${isFavorite(apartment?.id || "") ? "fill-current" : ""}`}
@@ -988,7 +994,7 @@ const ApartmentDetailsPage = ({
                   variant="outline"
                   onClick={handleShare}
                   className="rounded-lg border border-gray-200 px-3 py-2 hover:border-gray-300"
-                  aria-label="share"
+                  aria-label={t("common.drawer.actions.share")}
                 >
                   <Share2 className="h-5 w-5" />
                 </Button>
@@ -1026,7 +1032,7 @@ const ApartmentDetailsPage = ({
                     <h2 className="font-poppins text-3xl font-medium text-gray-900">
                       {(project as unknown as Record<string, unknown>)
                         ?.project_type === "object"
-                        ? "Object details"
+                        ? t("apartment.objectDetails")
                         : t("apartment.details")}
                     </h2>
 
@@ -1105,10 +1111,10 @@ const ApartmentDetailsPage = ({
                             : apartment.rooms === "free_layout"
                               ? t("apartment.freeLayout")
                               : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}{" "}
-                          {apartment.area} m2
+                          {apartment.area} {t("apartment.sqm")}
                         </div>
                         <div className="font-poppins text-xl font-light text-gray-500">
-                          {apartment.floor_number} floor
+                          {apartment.floor_number} {t("apartment.floor")}
                         </div>
                       </div>
                       <div className="flex justify-between gap-[15px]">
@@ -1276,10 +1282,10 @@ const ApartmentDetailsPage = ({
                             {isGeneratingPDF ? (
                               <div className="flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>PDF</span>
+                                <span>{t("apartment.downloadPDF")}</span>
                               </div>
                             ) : (
-                              "PDF"
+                              t("apartment.downloadPDF")
                             )}
                           </Button>
                         </div>
@@ -1294,7 +1300,7 @@ const ApartmentDetailsPage = ({
             {recommendedApartments.length > 0 && (
               <div className="mt-12 space-y-6 rounded-2xl bg-gray-50 p-10">
                 <h2 className="font-poppins text-3xl font-medium text-gray-900">
-                  Recommended apartments
+                  {t("apartment.recommendedApartments")}
                 </h2>
                 <div className="grid grid-cols-4 gap-6">
                   {recommendedApartments.map((recApartment) => {
@@ -1302,7 +1308,7 @@ const ApartmentDetailsPage = ({
                       recApartment.type === "apartment"
                         ? (project as unknown as Record<string, unknown>)
                             ?.project_type === "object"
-                          ? `Object № ${recApartment.apartment_number}`
+                          ? `${t("apartment.objectUnit")} № ${recApartment.apartment_number}`
                           : `${t("apartment.apartment")} № ${recApartment.apartment_number}`
                         : `${recApartment.type} № ${recApartment.apartment_number}`;
 
@@ -1413,7 +1419,9 @@ const ApartmentDetailsPage = ({
                   ) : (
                     <FileDown className="h-5 w-5" />
                   )}
-                  <span className="hidden xs:block">PDF</span>
+                  <span className="hidden xs:block">
+                    {t("apartment.downloadPDF")}
+                  </span>
                 </Button>
               </div>
             </div>

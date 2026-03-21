@@ -41,5 +41,8 @@
   "reserve": "Rezerv",
   "reserveTitle": "Daire rezervasyonu",
   "leadSubmitError": "İstek gönderilemedi. Lütfen tekrar deneyin.",
-  "leadUnexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."
+  "leadUnexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+  "objectDetails": "Nesne detayları",
+  "objectUnit": "Nesne",
+  "recommendedApartments": "Önerilen seçenekler"
 }

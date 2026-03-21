@@ -41,5 +41,8 @@
   "reserve": "რეზერვი",
   "reserveTitle": "დაჯავშნე ბინა",
   "leadSubmitError": "მოთხოვნის გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა.",
-  "leadUnexpectedError": "მოულოდნელი შეცდომა. სცადეთ ხელახლა."
+  "leadUnexpectedError": "მოულოდნელი შეცდომა. სცადეთ ხელახლა.",
+  "objectDetails": "ობიექტის დეტალები",
+  "objectUnit": "ობიექტი",
+  "recommendedApartments": "რეკომენდებული ვარიანტები"
 }

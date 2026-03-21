@@ -41,5 +41,8 @@
   "reserve": "לְהַזמִין",
   "reserveTitle": "דירת מילואים",
   "leadSubmitError": "לא ניתן לשלוח את הבקשה. נסה שוב.",
-  "leadUnexpectedError": "אירעה שגיאה בלתי צפויה. נסה שוב."
+  "leadUnexpectedError": "אירעה שגיאה בלתי צפויה. נסה שוב.",
+  "objectDetails": "פרטי הנכס",
+  "objectUnit": "נכס",
+  "recommendedApartments": "המלצות"
 }
