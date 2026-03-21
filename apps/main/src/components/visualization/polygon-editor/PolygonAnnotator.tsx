@@ -70,6 +70,77 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * Keeps the floor image (and polygons) from being panned completely off-screen.
+ * Matches `translate(tx, ty) scale(scale)` with `transform-origin: center center`
+ * on the host-sized layer that contains the `object-contain` image.
+ */
+function clampPanToFloorImage(
+  tx: number,
+  ty: number,
+  scale: number,
+  hostW: number,
+  hostH: number,
+  rb: { left: number; top: number; width: number; height: number },
+): { x: number; y: number } {
+  if (
+    !Number.isFinite(hostW) ||
+    !Number.isFinite(hostH) ||
+    hostW <= 0 ||
+    hostH <= 0
+  ) {
+    return { x: tx, y: ty };
+  }
+  if (scale <= 1 + 1e-6) {
+    return { x: 0, y: 0 };
+  }
+
+  const cx = hostW / 2;
+  const cy = hostH / 2;
+  const L = rb.left;
+  const top = rb.top;
+  const iw = rb.width;
+  const ih = rb.height;
+
+  const corners: Array<[number, number]> = [
+    [L, top],
+    [L + iw, top],
+    [L, top + ih],
+    [L + iw, top + ih],
+  ];
+
+  const vx = corners.map(([lx]) => cx + scale * (lx - cx));
+  const vy = corners.map(([, ly]) => cy + scale * (ly - cy));
+  const vxMin = Math.min(...vx);
+  const vxMax = Math.max(...vx);
+  const vyMin = Math.min(...vy);
+  const vyMax = Math.max(...vy);
+
+  const clampAxis = (
+    t: number,
+    vMin: number,
+    vMax: number,
+    viewLen: number,
+  ): number => {
+    const coverLow = viewLen - vMax;
+    const coverHigh = -vMin;
+    if (coverLow <= coverHigh) {
+      return clamp(t, coverLow, coverHigh);
+    }
+    const overLow = -vMax;
+    const overHigh = viewLen - vMin;
+    if (overLow <= overHigh) {
+      return clamp(t, overLow, overHigh);
+    }
+    return 0;
+  };
+
+  return {
+    x: clampAxis(tx, vxMin, vxMax, hostW),
+    y: clampAxis(ty, vyMin, vyMax, hostH),
+  };
+}
+
 function pointInPolygon(point: Point, polygon: Point[]) {
   let isInside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -166,6 +237,27 @@ const ControlledPolygonAnnotator = forwardRef<
       pointPx: { x: number; y: number };
     } | null>(null);
     const [hoveredShapeId, setHoveredShapeId] = useState<string | null>(null);
+    const [viewportScale, setViewportScale] = useState(1);
+    const [viewportOffset, setViewportOffset] = useState({ x: 0, y: 0 });
+    const renderBoxRef = useRef(renderBox);
+    renderBoxRef.current = renderBox;
+    const viewportRef = useRef({
+      x: viewportOffset.x,
+      y: viewportOffset.y,
+      scale: viewportScale,
+    });
+    viewportRef.current = {
+      x: viewportOffset.x,
+      y: viewportOffset.y,
+      scale: viewportScale,
+    };
+    const panDragRef = useRef<{
+      pointerId: number;
+      startClientX: number;
+      startClientY: number;
+      startOffsetX: number;
+      startOffsetY: number;
+    } | null>(null);
     const prevHoverIdRef = useRef<string | null>(null);
 
     currentShapeRef.current = currentShape;
@@ -219,8 +311,16 @@ const ControlledPolygonAnnotator = forwardRef<
         const host = hostRef.current;
         if (!host || !renderBox) return null;
         const rect = host.getBoundingClientRect();
-        const x = clientX - rect.left - renderBox.left;
-        const y = clientY - rect.top - renderBox.top;
+        const viewportX = clientX - rect.left;
+        const viewportY = clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const localX =
+          (viewportX - viewportOffset.x - centerX) / viewportScale + centerX;
+        const localY =
+          (viewportY - viewportOffset.y - centerY) / viewportScale + centerY;
+        const x = localX - renderBox.left;
+        const y = localY - renderBox.top;
         if (x < 0 || y < 0 || x > renderBox.width || y > renderBox.height)
           return null;
         return {
@@ -228,8 +328,82 @@ const ControlledPolygonAnnotator = forwardRef<
           y: clamp((y / renderBox.height) * 100, 0, 100),
         };
       },
-      [renderBox],
+      [renderBox, viewportOffset.x, viewportOffset.y, viewportScale],
     );
+
+    const handleWheelZoom = useCallback(
+      (event: React.WheelEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const host = hostRef.current;
+        const rb = renderBoxRef.current;
+        if (!host || !rb) return;
+        const rect = host.getBoundingClientRect();
+        const hostW = rect.width;
+        const hostH = rect.height;
+        const { x: ox, y: oy, scale: prevScale } = viewportRef.current;
+        const cursorX = event.clientX - rect.left;
+        const cursorY = event.clientY - rect.top;
+        const centerX = hostW / 2;
+        const centerY = hostH / 2;
+        const scaleFactor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+        const nextScale = clamp(prevScale * scaleFactor, 1, 6);
+
+        let nextTx = ox;
+        let nextTy = oy;
+        if (Math.abs(nextScale - prevScale) >= Number.EPSILON) {
+          const localX = (cursorX - ox - centerX) / prevScale + centerX;
+          const localY = (cursorY - oy - centerY) / prevScale + centerY;
+          nextTx = cursorX - ((localX - centerX) * nextScale + centerX);
+          nextTy = cursorY - ((localY - centerY) * nextScale + centerY);
+        }
+
+        const clamped = clampPanToFloorImage(
+          nextTx,
+          nextTy,
+          nextScale,
+          hostW,
+          hostH,
+          rb,
+        );
+        setViewportScale(nextScale);
+        setViewportOffset(clamped);
+      },
+      [],
+    );
+
+    useEffect(() => {
+      const host = hostRef.current;
+      if (!host || !renderBox) return;
+      const rect = host.getBoundingClientRect();
+      setViewportOffset((prev) =>
+        clampPanToFloorImage(
+          prev.x,
+          prev.y,
+          viewportScale,
+          rect.width,
+          rect.height,
+          renderBox,
+        ),
+      );
+    }, [renderBox, viewportScale]);
+
+    useEffect(() => {
+      const host = hostRef.current;
+      if (!host) return;
+
+      const blockPageScrollOnWheel = (event: WheelEvent) => {
+        event.preventDefault();
+      };
+
+      host.addEventListener("wheel", blockPageScrollOnWheel, {
+        passive: false,
+      });
+
+      return () => {
+        host.removeEventListener("wheel", blockPageScrollOnWheel);
+      };
+    }, []);
 
     const shapeToPixels = useCallback(
       (shape: Shape) => {
@@ -453,6 +627,33 @@ const ControlledPolygonAnnotator = forwardRef<
 
     useEffect(() => {
       const handlePointerMove = (event: PointerEvent) => {
+        const panDrag = panDragRef.current;
+        if (panDrag && panDrag.pointerId === event.pointerId) {
+          event.preventDefault();
+          const host = hostRef.current;
+          const rb = renderBoxRef.current;
+          const scale = viewportRef.current.scale;
+          if (host && rb) {
+            const rect = host.getBoundingClientRect();
+            setViewportOffset(
+              clampPanToFloorImage(
+                panDrag.startOffsetX + (event.clientX - panDrag.startClientX),
+                panDrag.startOffsetY + (event.clientY - panDrag.startClientY),
+                scale,
+                rect.width,
+                rect.height,
+                rb,
+              ),
+            );
+          } else {
+            setViewportOffset({
+              x: panDrag.startOffsetX + (event.clientX - panDrag.startClientX),
+              y: panDrag.startOffsetY + (event.clientY - panDrag.startClientY),
+            });
+          }
+          return;
+        }
+
         const vertexDrag = dragStateRef.current;
         if (vertexDrag) {
           event.preventDefault();
@@ -483,6 +684,13 @@ const ControlledPolygonAnnotator = forwardRef<
         updatePolygonFromEvent(event);
       };
       const handlePointerUp = (event: PointerEvent) => {
+        const panDrag = panDragRef.current;
+        if (panDrag && panDrag.pointerId === event.pointerId) {
+          event.preventDefault();
+          panDragRef.current = null;
+          return;
+        }
+
         const vertexDrag = dragStateRef.current;
         if (vertexDrag && vertexDrag.pointerId === event.pointerId) {
           event.preventDefault();
@@ -523,198 +731,229 @@ const ControlledPolygonAnnotator = forwardRef<
         <div
           ref={hostRef}
           className="relative h-full w-full overflow-hidden rounded-lg border bg-black/5"
+          onWheel={handleWheelZoom}
+          onDoubleClick={() => {
+            setViewportScale(1);
+            setViewportOffset({ x: 0, y: 0 });
+          }}
+          onPointerDown={(event) => {
+            if (
+              (event.button === 1 || event.button === 0) &&
+              (viewportScale > 1 || event.altKey)
+            ) {
+              event.preventDefault();
+              panDragRef.current = {
+                pointerId: event.pointerId,
+                startClientX: event.clientX,
+                startClientY: event.clientY,
+                startOffsetX: viewportOffset.x,
+                startOffsetY: viewportOffset.y,
+              };
+            }
+          }}
         >
-          <img
-            ref={imageRef}
-            src={imageUrl}
-            alt=""
-            className="pointer-events-none h-full w-full select-none object-contain"
-            draggable={false}
-            onLoad={recomputeRenderBox}
-          />
-          {renderBox && (
-            <svg
-              className="absolute inset-0 h-full w-full"
-              style={{ touchAction: mode === "edit" ? "none" : "auto" }}
-              onClick={handleCanvasClick}
-              onMouseMove={(event) => {
-                const percentPoint = toPercentPoint(
-                  event.clientX,
-                  event.clientY,
-                );
-                const hoveredId = percentPoint
-                  ? findClickedShapeId(percentPoint)
-                  : null;
-                emitHoverId(hoveredId);
-                setHoveredShapeId(hoveredId);
-                if (
-                  mode !== "edit" ||
-                  !currentShape ||
-                  isDrawingEnabled ||
-                  dragStateRef.current ||
-                  polygonDragStateRef.current
-                ) {
-                  if (insertPreview) setInsertPreview(null);
-                  return;
-                }
-                const host = hostRef.current;
-                if (!host) return;
-                const rect = host.getBoundingClientRect();
-                const candidate = getEdgeInsertionCandidate({
-                  x: event.clientX - rect.left,
-                  y: event.clientY - rect.top,
-                });
-                setInsertPreview(candidate);
-              }}
-              onMouseLeave={() => {
-                setInsertPreview(null);
-                emitHoverId(null);
-                setHoveredShapeId(null);
-              }}
-            >
-              {renderedShapes.map((shape) => {
-                if (!shape.points || shape.points.length < 3) return null;
-                const pointsPx = shapeToPixels(shape);
-                const pointsAttr = pointsPx
-                  .map((p) => `${p.x},${p.y}`)
-                  .join(" ");
-                const style = getStyleById?.(shape.id);
-                const isActive = currentShape?.id === shape.id;
-                const isHovered = hoveredShapeId === shape.id;
-                const isDraggableHover =
-                  mode === "edit" && isActive && !isDrawingEnabled && isHovered;
-                const isPolygonHoverHighlight =
-                  isHovered &&
-                  (mode === "view" ||
-                    (mode === "edit" && !isDrawingEnabled && !isActive));
-                const baseFill =
-                  (style?.fill as string) || shape.color || "#3b82f6";
-                const baseStroke =
-                  (style?.stroke as string) || shape.color || "#3b82f6";
-                const baseFillOpacity =
-                  typeof style?.fillOpacity === "number"
-                    ? style.fillOpacity
-                    : isActive
-                      ? 0.35
-                      : 0.2;
-                const baseStrokeWidth =
-                  typeof style?.strokeWidth === "number"
-                    ? style.strokeWidth
-                    : isActive
-                      ? 3
-                      : 2;
-                return (
-                  <polygon
-                    key={shape.id}
-                    points={pointsAttr}
-                    fill={isPolygonHoverHighlight ? "#3b82f6" : baseFill}
-                    fillOpacity={
-                      isDraggableHover
-                        ? Math.max(baseFillOpacity, 0.45)
-                        : isPolygonHoverHighlight
-                          ? Math.max(baseFillOpacity, 0.5)
-                          : baseFillOpacity
-                    }
-                    stroke={isPolygonHoverHighlight ? "#3b82f6" : baseStroke}
-                    strokeWidth={
-                      isDraggableHover
-                        ? Math.max(baseStrokeWidth, 4)
-                        : isPolygonHoverHighlight
-                          ? Math.max(baseStrokeWidth, 3.5)
-                          : baseStrokeWidth
-                    }
-                    strokeOpacity={1}
-                    style={{
-                      cursor:
-                        mode === "edit" && isActive && !isDrawingEnabled
-                          ? "move"
-                          : mode === "view"
-                            ? "pointer"
-                            : isPolygonHoverHighlight
-                              ? "pointer"
-                              : "default",
-                      transition:
-                        "fill-opacity 120ms ease, stroke-width 120ms ease",
-                    }}
-                    onPointerDown={(event) => {
-                      if (
-                        mode !== "edit" ||
-                        !isActive ||
-                        isDrawingEnabled ||
-                        event.button !== 0
-                      ) {
-                        return;
-                      }
-                      if (!currentShapeRef.current) return;
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setInsertPreview(null);
-                      polygonDragStateRef.current = {
-                        pointerId: event.pointerId,
-                        startClientX: event.clientX,
-                        startClientY: event.clientY,
-                        startPoints: currentShapeRef.current.points.map(
-                          (point) => ({
-                            x: point.x,
-                            y: point.y,
-                          }),
-                        ),
-                        sourceShapeId: currentShapeRef.current.id,
-                      };
-                      didPolygonDragMoveRef.current = false;
-                    }}
-                  />
-                );
-              })}
-
-              {currentShape &&
-                shapeToPixels(currentShape).map((point, index) => {
-                  const isActive = selectedVertexIndex === index;
+          <div
+            className="absolute inset-0"
+            style={{
+              transform: `translate(${viewportOffset.x}px, ${viewportOffset.y}px) scale(${viewportScale})`,
+              transformOrigin: "center center",
+            }}
+          >
+            <img
+              ref={imageRef}
+              src={imageUrl}
+              alt=""
+              className="pointer-events-none h-full w-full select-none object-contain"
+              draggable={false}
+              onLoad={recomputeRenderBox}
+            />
+            {renderBox && (
+              <svg
+                className="absolute inset-0 h-full w-full"
+                style={{ touchAction: mode === "edit" ? "none" : "auto" }}
+                onClick={handleCanvasClick}
+                onMouseMove={(event) => {
+                  const percentPoint = toPercentPoint(
+                    event.clientX,
+                    event.clientY,
+                  );
+                  const hoveredId = percentPoint
+                    ? findClickedShapeId(percentPoint)
+                    : null;
+                  emitHoverId(hoveredId);
+                  setHoveredShapeId(hoveredId);
+                  if (
+                    mode !== "edit" ||
+                    !currentShape ||
+                    isDrawingEnabled ||
+                    dragStateRef.current ||
+                    polygonDragStateRef.current
+                  ) {
+                    if (insertPreview) setInsertPreview(null);
+                    return;
+                  }
+                  const host = hostRef.current;
+                  if (!host) return;
+                  const rect = host.getBoundingClientRect();
+                  const candidate = getEdgeInsertionCandidate({
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top,
+                  });
+                  setInsertPreview(candidate);
+                }}
+                onMouseLeave={() => {
+                  setInsertPreview(null);
+                  emitHoverId(null);
+                  setHoveredShapeId(null);
+                }}
+              >
+                {renderedShapes.map((shape) => {
+                  if (!shape.points || shape.points.length < 3) return null;
+                  const pointsPx = shapeToPixels(shape);
+                  const pointsAttr = pointsPx
+                    .map((p) => `${p.x},${p.y}`)
+                    .join(" ");
+                  const style = getStyleById?.(shape.id);
+                  const isActive = currentShape?.id === shape.id;
+                  const isHovered = hoveredShapeId === shape.id;
+                  const isDraggableHover =
+                    mode === "edit" &&
+                    isActive &&
+                    !isDrawingEnabled &&
+                    isHovered;
+                  const isPolygonHoverHighlight =
+                    isHovered &&
+                    (mode === "view" ||
+                      (mode === "edit" && !isDrawingEnabled && !isActive));
+                  const baseFill =
+                    (style?.fill as string) || shape.color || "#3b82f6";
+                  const baseStroke =
+                    (style?.stroke as string) || shape.color || "#3b82f6";
+                  const baseFillOpacity =
+                    typeof style?.fillOpacity === "number"
+                      ? style.fillOpacity
+                      : isActive
+                        ? 0.35
+                        : 0.2;
+                  const baseStrokeWidth =
+                    typeof style?.strokeWidth === "number"
+                      ? style.strokeWidth
+                      : isActive
+                        ? 3
+                        : 2;
                   return (
-                    <circle
-                      key={`vertex-${index}`}
-                      cx={point.x}
-                      cy={point.y}
-                      r={isActive ? 5 : 4}
-                      fill={isActive ? "#2563eb" : "#ef4444"}
-                      stroke="#ffffff"
-                      strokeWidth={isActive ? 2 : 1}
-                      style={{ cursor: mode === "edit" ? "grab" : "default" }}
-                      onPointerDown={(e) => {
-                        if (mode !== "edit") return;
-                        e.preventDefault();
-                        e.stopPropagation();
+                    <polygon
+                      key={shape.id}
+                      points={pointsAttr}
+                      fill={isPolygonHoverHighlight ? "#3b82f6" : baseFill}
+                      fillOpacity={
+                        isDraggableHover
+                          ? Math.max(baseFillOpacity, 0.45)
+                          : isPolygonHoverHighlight
+                            ? Math.max(baseFillOpacity, 0.5)
+                            : baseFillOpacity
+                      }
+                      stroke={isPolygonHoverHighlight ? "#3b82f6" : baseStroke}
+                      strokeWidth={
+                        isDraggableHover
+                          ? Math.max(baseStrokeWidth, 4)
+                          : isPolygonHoverHighlight
+                            ? Math.max(baseStrokeWidth, 3.5)
+                            : baseStrokeWidth
+                      }
+                      strokeOpacity={1}
+                      style={{
+                        cursor:
+                          mode === "edit" && isActive && !isDrawingEnabled
+                            ? "move"
+                            : mode === "view"
+                              ? "pointer"
+                              : isPolygonHoverHighlight
+                                ? "pointer"
+                                : "default",
+                        transition:
+                          "fill-opacity 120ms ease, stroke-width 120ms ease",
+                      }}
+                      onPointerDown={(event) => {
+                        if (
+                          mode !== "edit" ||
+                          !isActive ||
+                          isDrawingEnabled ||
+                          event.button !== 0
+                        ) {
+                          return;
+                        }
+                        if (!currentShapeRef.current) return;
+                        event.preventDefault();
+                        event.stopPropagation();
                         setInsertPreview(null);
-                        onSelectVertexIndex?.(index);
-                        dragStartPointRef.current = {
-                          x: e.clientX,
-                          y: e.clientY,
+                        polygonDragStateRef.current = {
+                          pointerId: event.pointerId,
+                          startClientX: event.clientX,
+                          startClientY: event.clientY,
+                          startPoints: currentShapeRef.current.points.map(
+                            (point) => ({
+                              x: point.x,
+                              y: point.y,
+                            }),
+                          ),
+                          sourceShapeId: currentShapeRef.current.id,
                         };
-                        didVertexDragMoveRef.current = false;
-                        dragStateRef.current = {
-                          pointerId: e.pointerId,
-                          vertexIndex: index,
-                        };
+                        didPolygonDragMoveRef.current = false;
                       }}
                     />
                   );
                 })}
-              {mode === "edit" &&
-                currentShape &&
-                !isDrawingEnabled &&
-                insertPreview && (
-                  <circle
-                    cx={insertPreview.pointPx.x}
-                    cy={insertPreview.pointPx.y}
-                    r={5}
-                    fill="#9ca3af"
-                    stroke="#ffffff"
-                    strokeWidth={1.5}
-                    style={{ pointerEvents: "none" }}
-                  />
-                )}
-            </svg>
-          )}
+
+                {currentShape &&
+                  shapeToPixels(currentShape).map((point, index) => {
+                    const isActive = selectedVertexIndex === index;
+                    return (
+                      <circle
+                        key={`vertex-${index}`}
+                        cx={point.x}
+                        cy={point.y}
+                        r={isActive ? 5 : 4}
+                        fill={isActive ? "#2563eb" : "#ef4444"}
+                        stroke="#ffffff"
+                        strokeWidth={isActive ? 2 : 1}
+                        style={{ cursor: mode === "edit" ? "grab" : "default" }}
+                        onPointerDown={(e) => {
+                          if (mode !== "edit") return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setInsertPreview(null);
+                          onSelectVertexIndex?.(index);
+                          dragStartPointRef.current = {
+                            x: e.clientX,
+                            y: e.clientY,
+                          };
+                          didVertexDragMoveRef.current = false;
+                          dragStateRef.current = {
+                            pointerId: e.pointerId,
+                            vertexIndex: index,
+                          };
+                        }}
+                      />
+                    );
+                  })}
+                {mode === "edit" &&
+                  currentShape &&
+                  !isDrawingEnabled &&
+                  insertPreview && (
+                    <circle
+                      cx={insertPreview.pointPx.x}
+                      cy={insertPreview.pointPx.y}
+                      r={5}
+                      fill="#9ca3af"
+                      stroke="#ffffff"
+                      strokeWidth={1.5}
+                      style={{ pointerEvents: "none" }}
+                    />
+                  )}
+              </svg>
+            )}
+          </div>
         </div>
       </div>
     );

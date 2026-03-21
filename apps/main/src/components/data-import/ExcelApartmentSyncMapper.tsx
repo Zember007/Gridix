@@ -926,12 +926,17 @@ const ExcelApartmentSyncMapper = ({
                                       <SelectItem value="0">
                                         {t("rooms.studio") || "Студия (0)"}
                                       </SelectItem>
-                                      {[1, 2, 3, 4, 5].map((n) => (
+                                      {(
+                                        [
+                                          [1, "rooms.one"],
+                                          [2, "rooms.two"],
+                                          [3, "rooms.three"],
+                                          [4, "rooms.four"],
+                                          [5, "rooms.fivePlus"],
+                                        ] as const
+                                      ).map(([n, roomsKey]) => (
                                         <SelectItem key={n} value={String(n)}>
-                                          {n}{" "}
-                                          {n === 1
-                                            ? t("rooms.one") || "комната"
-                                            : t("rooms.many") || "комнат"}
+                                          {t(roomsKey)}
                                         </SelectItem>
                                       ))}
                                       <SelectItem value="invalid">
