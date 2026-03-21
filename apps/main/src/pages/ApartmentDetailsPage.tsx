@@ -699,7 +699,6 @@ const ApartmentDetailsPage = ({
   const priceVisible = fieldVisibility.price;
   const areaVisible = fieldVisibility.area;
   const roomsVisible = fieldVisibility.rooms;
-  const statusVisible = fieldVisibility.status;
   const floorVisible = fieldVisibility.floor;
   const numberVisible = fieldVisibility.number;
 
@@ -756,7 +755,7 @@ const ApartmentDetailsPage = ({
       <div className="container mx-auto px-0 lg:px-6">
         {/* Mobile Layout */}
         <div className="lg:hidden">
-          {/* Header with back button and status badge */}
+          {/* Header with back button */}
           <div className="relative">
             <div className="absolute left-4 top-4 z-10">
               <Button
@@ -769,16 +768,6 @@ const ApartmentDetailsPage = ({
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            {statusVisible && (
-              <div className="absolute right-4 top-4 z-10">
-                <Badge
-                  className={`${getStatusColor(apartment.status)} rounded-full px-3 py-1 font-medium`}
-                  style={getStatusStyle(apartment.status)}
-                >
-                  {getStatusLabel(apartment.status)}
-                </Badge>
-              </div>
-            )}
 
             {/* Main apartment image */}
             <div className="relative overflow-hidden">
@@ -1010,17 +999,6 @@ const ApartmentDetailsPage = ({
               <div className="flex-1 space-y-4">
                 {/* Gallery */}
                 <div className="relative">
-                  {statusVisible && (
-                    <div className="absolute left-4 top-4 z-10">
-                      <Badge
-                        className={`${getStatusColor(apartment.status)} rounded-full px-3 py-1 font-poppins font-medium`}
-                        style={getStatusStyle(apartment.status)}
-                      >
-                        {getStatusLabel(apartment.status)}
-                      </Badge>
-                    </div>
-                  )}
-
                   <ApartmentPhotosViewer preloadedLayoutPhotos={photos} />
                   {/* Gallery navigation line */}
                 </div>
