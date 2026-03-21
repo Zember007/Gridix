@@ -7,6 +7,13 @@ import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import { SuccessNotification } from "@gridix/ui";
 import { getAttributedAgentId } from "@/shared/lib/agent-attribution";
+import {
+  isValidLeadPhone,
+  normalizeLeadPhoneE164,
+} from "@/shared/lib/validateLeadPhone";
+
+/** Sonner по умолчанию может держать error до ручного закрытия. */
+const ERROR_TOAST_DURATION_MS = 5000;
 
 interface ApartmentReservationFormProps {
   apartmentId: string;
@@ -36,14 +43,30 @@ const ApartmentReservationForm = ({
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const normalizedPhone = normalizeLeadPhoneE164(phone);
+  const phoneValid = isValidLeadPhone(phone);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
 
+    if (!phoneValid) {
+      toast.error(t("apartment.invalidPhone"), {
+        duration: ERROR_TOAST_DURATION_MS,
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       if (onSubmit) {
-        onSubmit({ name, email, phone, apartmentId, projectId });
+        onSubmit({
+          name,
+          email,
+          phone: normalizedPhone,
+          apartmentId,
+          projectId,
+        });
       }
 
       const { data, error } = await supabase.functions.invoke(
@@ -52,7 +75,7 @@ const ApartmentReservationForm = ({
           body: {
             name,
             email,
-            phone,
+            phone: normalizedPhone,
             apartmentId,
             projectId,
             agentId: getAttributedAgentId(projectId),
@@ -64,13 +87,16 @@ const ApartmentReservationForm = ({
         console.error("Error creating lead:", error);
         toast.error(
           "Произошла ошибка при отправке заявки. Попробуйте еще раз.",
+          { duration: ERROR_TOAST_DURATION_MS },
         );
         return;
       }
 
       if (data?.error) {
         console.error("AmoCRM API error:", data.error);
-        toast.error(`Ошибка: ${data.error}`);
+        toast.error(`Ошибка: ${data.error}`, {
+          duration: ERROR_TOAST_DURATION_MS,
+        });
         return;
       }
 
@@ -80,7 +106,9 @@ const ApartmentReservationForm = ({
       setPhone("");
     } catch (error) {
       console.error("Unexpected error:", error);
-      toast.error("Произошла неожиданная ошибка. Попробуйте еще раз.");
+      toast.error("Произошла неожиданная ошибка. Попробуйте еще раз.", {
+        duration: ERROR_TOAST_DURATION_MS,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -130,7 +158,14 @@ const ApartmentReservationForm = ({
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+995 (999) 00-00-00"
             required
+            aria-describedby="reservation-phone-hint"
           />
+          <p
+            id="reservation-phone-hint"
+            className="text-xs text-muted-foreground"
+          >
+            {t("apartment.phoneFormatHint")}
+          </p>
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>

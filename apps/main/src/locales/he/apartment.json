@@ -32,6 +32,8 @@
   "goBack": "לַחֲזוֹר",
   "installmentCalculator": "מחשבון תשלומים",
   "invalidId": "מזהה דירה לא חוקי",
+  "invalidPhone": "הזינו מספר טלפון תקין: 10–15 ספרות כולל קידומת מדינה (למשל +995…).",
+  "phoneFormatHint": "כללו קידומת מדינה — בסך הכול 10–15 ספרות.",
   "linkCopied": "הקישור הועתק",
   "notFound": "דירה לא נמצאה",
   "notFoundDescription": "הדירה המבוקשת לא נמצאה.",

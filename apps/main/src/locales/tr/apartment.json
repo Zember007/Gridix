@@ -32,6 +32,8 @@
   "goBack": "Geri gitmek",
   "installmentCalculator": "Taksit hesaplayıcı",
   "invalidId": "Geçersiz apartman kimliği",
+  "invalidPhone": "Geçerli bir telefon girin: ülke kodu dahil 10–15 rakam (ör. +995…).",
+  "phoneFormatHint": "Ülke kodunu ekleyin — toplam 10–15 rakam.",
   "linkCopied": "Bağlantı kopyalandı",
   "notFound": "Daire bulunamadı",
   "notFoundDescription": "İstenilen daire bulunamadı.",
