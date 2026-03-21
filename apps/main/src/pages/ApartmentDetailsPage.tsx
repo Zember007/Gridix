@@ -628,11 +628,10 @@ const ApartmentDetailsPage = ({
     }
 
     if (fieldName === "rooms") {
-      if (Number.isNaN(value)) return "-";
-      if (value === 0) {
-        return t("apartment.studio");
-      }
-      return `${value} ${t("apartment.room").toLowerCase()}`;
+      const num = Number(value);
+      if (Number.isNaN(num)) return "-";
+      if (num === 0) return t("apartment.studio");
+      return `${num} ${t("apartment.room").toLowerCase()}`;
     }
 
     switch (fieldType) {
