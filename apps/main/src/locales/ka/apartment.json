@@ -39,5 +39,7 @@
   "notFoundDescription": "მოთხოვნილი ბინა ვერ მოიძებნა.",
   "pdfGenerationError": "შეცდომა PDF-ის გენერირებისას",
   "reserve": "რეზერვი",
-  "reserveTitle": "დაჯავშნე ბინა"
+  "reserveTitle": "დაჯავშნე ბინა",
+  "leadSubmitError": "მოთხოვნის გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა.",
+  "leadUnexpectedError": "მოულოდნელი შეცდომა. სცადეთ ხელახლა."
 }

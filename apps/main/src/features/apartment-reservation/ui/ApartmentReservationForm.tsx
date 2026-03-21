@@ -11,6 +11,11 @@ import {
   isValidLeadPhone,
   normalizeLeadPhoneE164,
 } from "@/shared/lib/validateLeadPhone";
+import {
+  extractFunctionErrorMessageFromPayload,
+  hasTruthyErrorField,
+  resolveSupabaseFunctionInvokeErrorMessage,
+} from "@/shared/lib/resolveSupabaseFunctionInvokeErrorMessage";
 
 /** Sonner по умолчанию может держать error до ручного закрытия. */
 const ERROR_TOAST_DURATION_MS = 5000;
@@ -85,16 +90,25 @@ const ApartmentReservationForm = ({
 
       if (error) {
         console.error("Error creating lead:", error);
-        toast.error(
-          "Произошла ошибка при отправке заявки. Попробуйте еще раз.",
-          { duration: ERROR_TOAST_DURATION_MS },
+        const message = await resolveSupabaseFunctionInvokeErrorMessage(
+          data,
+          error,
+          t("apartment.leadSubmitError"),
         );
+        toast.error(message, { duration: ERROR_TOAST_DURATION_MS });
         return;
       }
 
-      if (data?.error) {
-        console.error("AmoCRM API error:", data.error);
-        toast.error(`Ошибка: ${data.error}`, {
+      const payloadError = extractFunctionErrorMessageFromPayload(data);
+      if (payloadError) {
+        console.error("crm-create-lead error payload:", data);
+        toast.error(payloadError, { duration: ERROR_TOAST_DURATION_MS });
+        return;
+      }
+
+      if (hasTruthyErrorField(data)) {
+        console.error("crm-create-lead error flag without message:", data);
+        toast.error(t("apartment.leadSubmitError"), {
           duration: ERROR_TOAST_DURATION_MS,
         });
         return;
@@ -106,7 +120,7 @@ const ApartmentReservationForm = ({
       setPhone("");
     } catch (error) {
       console.error("Unexpected error:", error);
-      toast.error("Произошла неожиданная ошибка. Попробуйте еще раз.", {
+      toast.error(t("apartment.leadUnexpectedError"), {
         duration: ERROR_TOAST_DURATION_MS,
       });
     } finally {

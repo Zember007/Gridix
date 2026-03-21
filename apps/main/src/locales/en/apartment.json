@@ -39,5 +39,7 @@
   "notFoundDescription": "The requested apartment could not be found.",
   "pdfGenerationError": "Error generating PDF",
   "reserve": "Reserve",
-  "reserveTitle": "Reserve apartment"
+  "reserveTitle": "Reserve apartment",
+  "leadSubmitError": "Could not send the request. Please try again.",
+  "leadUnexpectedError": "Something went wrong. Please try again."
 }

@@ -39,5 +39,7 @@
   "notFoundDescription": "لا يمكن العثور على الشقة المطلوبة.",
   "pdfGenerationError": "حدث خطأ أثناء إنشاء ملف PDF",
   "reserve": "احتياطي",
-  "reserveTitle": "شقة احتياطية"
+  "reserveTitle": "شقة احتياطية",
+  "leadSubmitError": "تعذر إرسال الطلب. يرجى المحاولة مرة أخرى.",
+  "leadUnexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى."
 }

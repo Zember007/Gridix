@@ -39,5 +39,7 @@
   "notFoundDescription": "İstenilen daire bulunamadı.",
   "pdfGenerationError": "PDF oluşturulurken hata oluştu",
   "reserve": "Rezerv",
-  "reserveTitle": "Daire rezervasyonu"
+  "reserveTitle": "Daire rezervasyonu",
+  "leadSubmitError": "İstek gönderilemedi. Lütfen tekrar deneyin.",
+  "leadUnexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."
 }
