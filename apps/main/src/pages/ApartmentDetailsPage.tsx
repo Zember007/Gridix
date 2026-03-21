@@ -615,7 +615,10 @@ const ApartmentDetailsPage = ({
 
     if (fieldName === "price") {
       return typeof value === "number"
-        ? formatPriceWithCurrency(value, project?.currency || null)
+        ? formatPriceWithCurrency(
+            convertPrice(value, project?.currency || null, selectedCurrency),
+            selectedCurrency,
+          )
         : "-";
     }
 
