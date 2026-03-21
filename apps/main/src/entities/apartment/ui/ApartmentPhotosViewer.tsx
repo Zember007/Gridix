@@ -39,7 +39,6 @@ const ApartmentPhotosViewer = ({
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
     null,
   );
-  const [minPhotoHeight, setMinPhotoHeight] = useState<number | null>(null);
   const [photos, setPhotos] = useState<CombinedPhoto[]>(
     preloadedLayoutPhotos ?? [],
   );
@@ -138,8 +137,20 @@ const ApartmentPhotosViewer = ({
     };
   }, [carouselApi]);
 
+  /** Warm cache so fast swipes don't hit unloaded lazy frames */
+  useEffect(() => {
+    if (!photos.length) return;
+    for (const photo of photos) {
+      const img = new Image();
+      img.src = photo.image_url;
+    }
+  }, [photos]);
+
+  /** Sync carousel only when index changed outside Embla (e.g. lightbox), not on every select */
   useEffect(() => {
     if (!carouselApi) return;
+    const selected = carouselApi.selectedScrollSnap();
+    if (selected === currentPhotoIndex) return;
     carouselApi.scrollTo(currentPhotoIndex, true);
   }, [carouselApi, currentPhotoIndex]);
 
@@ -192,26 +203,19 @@ const ApartmentPhotosViewer = ({
             <CarouselContent>
               {photos.map((photo, index) => (
                 <CarouselItem key={photo.id}>
-                  <img
-                    src={photo.image_url}
-                    alt={photo.description || "Apartment photo"}
-                    className="h-auto max-h-[340px] w-full cursor-pointer object-cover md:max-h-[500px] lg:rounded-lg"
-                    style={{
-                      height: minPhotoHeight != null ? minPhotoHeight : "auto",
-                    }}
-                    onClick={() => {
-                      setCurrentPhotoIndex(index);
-                      openLightbox();
-                    }}
-                    onLoad={(e) => {
-                      const height = e.currentTarget.clientHeight;
-                      if (!height) return;
-                      setMinPhotoHeight((prev) =>
-                        prev == null ? height : Math.min(prev, height),
-                      );
-                    }}
-                    loading={index === 0 ? "eager" : "lazy"}
-                  />
+                  <div className="flex min-h-[200px] items-center justify-center overflow-hidden bg-muted/40 md:min-h-[260px] lg:rounded-lg">
+                    <img
+                      src={photo.image_url}
+                      alt={photo.description || "Apartment photo"}
+                      className="max-h-[340px] w-full max-w-full cursor-pointer object-contain md:max-h-[500px]"
+                      loading="eager"
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                      onClick={() => {
+                        setCurrentPhotoIndex(index);
+                        openLightbox();
+                      }}
+                    />
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
