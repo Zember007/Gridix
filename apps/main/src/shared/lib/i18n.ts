@@ -147,12 +147,24 @@ function detectInitialLanguage(): SupportedLanguage {
   return (match?.[1] as SupportedLanguage | undefined) ?? "en";
 }
 
+/**
+ * Locale JSON bases reused across catalog, modals, and shared forms (not only
+ * project/apartment keys). Any route that uses a *partial* module list must
+ * merge these in, otherwise `t("auth.*")`, `t("managerAccounts.*")`, etc.
+ * render as raw keys until another page loads those files.
+ */
+const I18N_CROSS_CUTTING_MODULES = ["auth", "managerAccounts"] as const;
+
+function mergeI18nModuleList(modules: string[]): string[] {
+  return Array.from(new Set([...I18N_CROSS_CUTTING_MODULES, ...modules]));
+}
+
 function getI18nModulesForPathname(pathname: string): string[] | null {
   // Keep the project page critical path as small as possible.
   // For unknown/other routes we fall back to "load all" to avoid breaking pages.
   const isAdminProjectEditorRoute = pathname.includes("/admin/project/");
   if (isAdminProjectEditorRoute) {
-    return [
+    return mergeI18nModuleList([
       "common",
       "project",
       "apartment",
@@ -169,12 +181,12 @@ function getI18nModulesForPathname(pathname: string): string[] | null {
       "errors",
       "projectEditor",
       "projectEditorSidebar",
-    ];
+    ]);
   }
 
   const isProjectRoute = pathname.includes("/project/");
   if (isProjectRoute) {
-    return [
+    return mergeI18nModuleList([
       "common",
       "project",
       "apartment",
@@ -189,7 +201,7 @@ function getI18nModulesForPathname(pathname: string): string[] | null {
       "subscription",
       "installment",
       "errors",
-    ];
+    ]);
   }
 
   return null;
