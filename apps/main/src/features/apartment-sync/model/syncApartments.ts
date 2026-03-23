@@ -1,4 +1,4 @@
-import { supabase } from "@gridix/utils/api";
+import { supabase } from "@/shared/api/supabase";
 import {
   Apartment,
   normalizeApartmentData,

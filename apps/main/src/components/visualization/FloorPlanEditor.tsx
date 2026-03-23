@@ -28,7 +28,7 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@gridix/utils/api";
+import { supabase } from "@/shared/api/supabase";
 import {
   uploadFloorPlan,
   removeFloorPlan,
@@ -41,7 +41,7 @@ import PolygonAnnotator, {
 } from "./polygon-editor/PolygonAnnotatorLazy";
 import { Shape } from "./polygon-editor/GeometryShapes";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
-import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
+import ApartmentSyncDialog from "@/features/apartment-sync/ui/SharedApartmentSyncDialog";
 import { useApartmentPhotosUpload } from "@/features/apartment-photos-management/model/useApartmentPhotosUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
@@ -125,6 +125,8 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     Tables<"apartment_photos">[]
   >([]);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [floorDuplicateDialogOpen, setFloorDuplicateDialogOpen] =
+    useState(false);
   const [syncSourceApartment, setSyncSourceApartment] =
     useState<GlobalApartment | null>(null);
   const [syncTargetApartments, setSyncTargetApartments] = useState<
@@ -586,130 +588,13 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     event.currentTarget.value = "";
   };
 
-  const duplicateToAllFloors = async () => {
-    if (!imageUrl && apartments.length === 0) {
+  const duplicateToAllFloors = () => {
+    if (!imageUrl && apartments.every((apt) => apt.polygon.length < 3)) {
       toast.error(t("floorPlan.duplicate.noData"));
       return;
     }
 
-    setLoading(true);
-    try {
-      const floorsToUpdate = allFloors.filter((f) => f !== floorNumber);
-
-      for (const targetFloor of floorsToUpdate) {
-        if (imageUrl) {
-          const { data: existingPlan } = await supabase
-            .from("floor_plans")
-            .select("id")
-            .eq("project_id", project?.id || projectId)
-            .eq("floor_number", targetFloor)
-            .maybeSingle();
-
-          if (existingPlan) {
-            await supabase
-              .from("floor_plans")
-              .update({
-                image_url: imageUrl,
-              })
-              .eq("id", existingPlan.id);
-          } else {
-            await supabase.from("floor_plans").insert({
-              project_id: project?.id || projectId,
-              floor_number: targetFloor,
-              image_url: imageUrl,
-            });
-          }
-        }
-
-        if (apartments.length > 0) {
-          // Получаем существующие апартаменты на целевом этаже
-          const { data: existingApartments } = await supabase
-            .from("apartments")
-            .select("id, apartment_number, area, rooms")
-            .eq("project_id", project?.id || projectId)
-            .eq("floor_number", targetFloor)
-            .order("apartment_number");
-
-          // Группируем исходные квартиры по площади и количеству комнат
-          const sourceApartmentsByKey = new Map<string, Apartment[]>();
-          apartments.forEach((apt) => {
-            const area = Math.round(apt.area * 100) / 100;
-            const key = `${area}_${apt.rooms}`;
-            if (!sourceApartmentsByKey.has(key)) {
-              sourceApartmentsByKey.set(key, []);
-            }
-            sourceApartmentsByKey.get(key)!.push(apt);
-          });
-
-          // Группируем целевые квартиры по площади и количеству комнат
-          const targetApartmentsByKey = new Map<
-            string,
-            Array<{ id: string; apartment_number: string }>
-          >();
-          existingApartments?.forEach((apt) => {
-            const area = Math.round(apt.area * 100) / 100;
-            const key = `${area}_${apt.rooms}`;
-            if (!targetApartmentsByKey.has(key)) {
-              targetApartmentsByKey.set(key, []);
-            }
-            targetApartmentsByKey.get(key)!.push({
-              id: apt.id,
-              apartment_number: apt.apartment_number,
-            });
-          });
-
-          // Обрабатываем каждую группу
-          for (const [key, sourceApts] of sourceApartmentsByKey.entries()) {
-            const targetApts = targetApartmentsByKey.get(key);
-
-            if (!targetApts || targetApts.length === 0) {
-              continue;
-            }
-
-            // Сопоставляем 1-к-1 по индексу
-            const minLength = Math.min(sourceApts.length, targetApts.length);
-
-            for (let i = 0; i < minLength; i++) {
-              const sourceApt = sourceApts[i];
-              const targetApt = targetApts[i];
-
-              if (!sourceApt || !targetApt) continue;
-
-              try {
-                await supabase
-                  .from("apartments")
-                  .update({
-                    polygon: sourceApt.polygon as { x: number; y: number }[],
-                  })
-                  .eq("id", targetApt.id);
-              } catch (error) {
-                console.error("Error updating apartment polygon:", error, {
-                  apartmentId: targetApt.id,
-                  apartmentNumber: targetApt.apartment_number,
-                  sourceApartmentNumber: sourceApt.apartment_number,
-                  key,
-                  targetFloor,
-                });
-              }
-            }
-
-            // Предупреждение если количество не совпадает
-            if (sourceApts.length !== targetApts.length) {
-              console.warn(
-                `Mismatch in apartment count for ${key} on floor ${targetFloor}: source has ${sourceApts.length}, target has ${targetApts.length}`,
-              );
-            }
-          }
-        }
-      }
-
-      toast.success(t("floorPlan.duplicate.success"));
-    } catch (error) {
-      console.error("Error duplicating to all floors:", error);
-      toast.error(t("floorPlan.duplicate.error"));
-    } finally {
-      setLoading(false);
-    }
+    setFloorDuplicateDialogOpen(true);
   };
 
   const getActualCurrentShape = async (fallback: Shape) => {
@@ -1392,7 +1277,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
               disabled={
                 loading ||
                 removingFloorPlan ||
-                (!imageUrl && apartments.length === 0)
+                (!imageUrl && apartments.every((apt) => apt.polygon.length < 3))
               }
             >
               <Copy className="mr-2 h-4 w-4" />
@@ -1917,6 +1802,19 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         currencySymbol={currencySymbol}
         getStatusColor={getStatusColorClass}
         getStatusLabel={getStatusLabel}
+      />
+      <ApartmentSyncDialog
+        mode="floor-duplicate"
+        open={floorDuplicateDialogOpen}
+        onOpenChange={setFloorDuplicateDialogOpen}
+        projectId={project?.id || projectId}
+        sourceFloorNumber={floorNumber}
+        allFloorNumbers={allFloors}
+        sourceImageUrl={imageUrl}
+        sourceApartments={apartments.map((apartment) => ({
+          ...apartment,
+          type: "apartment" as const,
+        }))}
       />
     </TooltipProvider>
   );
