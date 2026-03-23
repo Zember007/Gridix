@@ -6,6 +6,7 @@ import {
 } from "@/entities/subscription/queries/useSubscription";
 
 export type CheckoutStep = "select_projects" | "payer_info" | "payment_method";
+export type CheckoutPaymentMethod = "invoice" | "card";
 
 export interface CheckoutModalProps {
   isOpen: boolean;
@@ -15,10 +16,15 @@ export interface CheckoutModalProps {
   plans: SubscriptionPlan[];
   selectedPlanId: string;
   selectedDuration: number;
+  planChangeProjectId?: string | null;
   billingDetails: BillingDetails | null;
   onPlanChange: (planId: string) => void;
   onDurationChange: (duration: number) => void;
-  onConfirm: (payer: BillingDetails, projectIds: string[]) => Promise<void>;
+  onConfirm: (
+    payer: BillingDetails,
+    projectIds: string[],
+    method: CheckoutPaymentMethod,
+  ) => Promise<void>;
 }
 
 export type BillingErrors = Partial<Record<keyof BillingDetails, string>>;

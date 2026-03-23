@@ -100,6 +100,96 @@ export const requestInvoiceForMultiple = async (
   return results;
 };
 
+export const createStripeCheckoutSession = async (
+  projectIds: string[],
+  planId: string,
+  durationMonths: number,
+) => {
+  const sessionData = await fetchCurrentSession();
+
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://gridix.live";
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: {
+      action: "create-checkout-session",
+      project_ids: projectIds,
+      plan_id: planId,
+      duration_months: durationMonths,
+      success_url: `${origin}/admin?page=subscription`,
+      cancel_url: `${origin}/admin?page=subscription`,
+    },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+
+  return data as {
+    success: boolean;
+    url?: string;
+    session_id?: string;
+    error?: string;
+  };
+};
+
+export const changeStripeSubscriptionPlan = async (
+  projectId: string,
+  planId: string,
+  durationMonths: number,
+) => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: {
+      action: "change-plan",
+      project_id: projectId,
+      plan_id: planId,
+      duration_months: durationMonths,
+    },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+
+  return data as {
+    success: boolean;
+    error?: string;
+    message?: string;
+  };
+};
+
+export const createStripePortalSession = async (): Promise<{
+  success: boolean;
+  url?: string;
+  error?: string;
+}> => {
+  const sessionData = await fetchCurrentSession();
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://gridix.live";
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: {
+      action: "create-portal-session",
+      return_url: `${origin}/admin?page=subscription`,
+    },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+
+  return data as { success: boolean; url?: string; error?: string };
+};
+
 export const fetchBillingDetails = async (userId: string) => {
   const { data: profile } = await supabase
     .from("user_profiles")

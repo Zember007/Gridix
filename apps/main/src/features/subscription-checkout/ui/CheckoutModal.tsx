@@ -22,6 +22,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   plans,
   selectedPlanId,
   selectedDuration,
+  planChangeProjectId,
   billingDetails,
   onPlanChange,
   onDurationChange,
@@ -51,6 +52,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     plans,
     selectedPlanId,
     selectedDuration,
+    planChangeProjectId,
     onConfirm,
   });
 
@@ -61,6 +63,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     { value: 3, label: t("admin.subscriptionPage.durations.3") },
     { value: 6, label: t("admin.subscriptionPage.durations.6") },
     { value: 12, label: t("admin.subscriptionPage.durations.12") },
+    { value: 24, label: t("admin.subscriptionPage.durations.24") },
+    { value: 36, label: t("admin.subscriptionPage.durations.36") },
   ];
 
   return (
@@ -76,20 +80,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <ArrowLeft size={20} />
               </button>
             )}
-            <div>
+            <div className="flex items-center gap-5">
               <h2 className="text-xl font-bold text-slate-900">
                 {t("admin.subscriptionPage.checkout.title")}
               </h2>
               {currentPricing && (
-                <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                  <span>
-                    {t("admin.subscriptionPage.checkout.summary.totalToPay")}
+                <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-2 py-1">
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                    {t("admin.subscriptionPage.checkout.summary.period")}
                   </span>
                   <Select
                     value={String(selectedDuration)}
                     onValueChange={(val) => onDurationChange(Number(val))}
                   >
-                    <SelectTrigger className="h-7 w-[150px] px-2 py-1 text-xs font-medium">
+                    <SelectTrigger className="h-8 w-[min(11rem,100%)] min-w-[7.5rem] bg-white px-2 text-xs font-semibold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -100,6 +104,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  <span className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-blue-700">
+                    <span>
+                      {t("admin.subscriptionPage.checkout.summary.totalToPay")}
+                    </span>
+                    <span className="font-bold text-blue-900">
+                      ${finalTotal}
+                    </span>
+                  </span>
                 </div>
               )}
             </div>
@@ -118,6 +130,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               plans={plans}
               selectedPlanId={selectedPlanId}
               selectedDuration={selectedDuration}
+              planChangeProjectId={planChangeProjectId}
               onPlanChange={onPlanChange}
               projects={projects}
               selectedProjectIds={selectedProjectIds}

@@ -5,7 +5,7 @@ import {
   BillingPayerType,
   SubscriptionPlan,
 } from "@/entities/subscription/queries/useSubscription";
-import { BillingErrors, CheckoutStep } from "./types";
+import { BillingErrors, CheckoutPaymentMethod, CheckoutStep } from "./types";
 
 interface UseCheckoutFlowParams {
   isOpen: boolean;
@@ -14,7 +14,12 @@ interface UseCheckoutFlowParams {
   plans: SubscriptionPlan[];
   selectedPlanId: string;
   selectedDuration: number;
-  onConfirm: (payer: BillingDetails, projectIds: string[]) => Promise<void>;
+  planChangeProjectId?: string | null;
+  onConfirm: (
+    payer: BillingDetails,
+    projectIds: string[],
+    method: CheckoutPaymentMethod,
+  ) => Promise<void>;
 }
 
 export const useCheckoutFlow = ({
@@ -24,6 +29,7 @@ export const useCheckoutFlow = ({
   plans,
   selectedPlanId,
   selectedDuration,
+  planChangeProjectId,
   onConfirm,
 }: UseCheckoutFlowParams) => {
   const { t } = useLanguage();
@@ -70,7 +76,13 @@ export const useCheckoutFlow = ({
   const currentPricing =
     currentPlan?.pricing?.find((p) => p.durationMonths === selectedDuration) ||
     currentPlan?.pricing?.[0];
-  const baseTotal = currentPricing ? currentPricing.totalPrice : 0;
+  const fallbackMonthlyPrice = currentPlan
+    ? Number.parseFloat(String(currentPlan.base_price))
+    : 0;
+  const fallbackTotal = Number.isFinite(fallbackMonthlyPrice)
+    ? fallbackMonthlyPrice * selectedDuration
+    : 0;
+  const baseTotal = currentPricing ? currentPricing.totalPrice : fallbackTotal;
   const finalTotal = baseTotal * selectedProjectIds.length;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +94,11 @@ export const useCheckoutFlow = ({
   };
 
   const toggleProject = (id: string) => {
+    if (planChangeProjectId) {
+      if (id !== planChangeProjectId) return;
+      setSelectedProjectIds([planChangeProjectId]);
+      return;
+    }
     setSelectedProjectIds((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id],
     );
@@ -143,7 +160,7 @@ export const useCheckoutFlow = ({
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (method: CheckoutPaymentMethod) => {
     if (!currentPlan) {
       return;
     }
@@ -156,6 +173,7 @@ export const useCheckoutFlow = ({
           type: payerType,
         },
         selectedProjectIds,
+        method,
       );
       setStep("select_projects");
       setSelectedProjectIds([]);

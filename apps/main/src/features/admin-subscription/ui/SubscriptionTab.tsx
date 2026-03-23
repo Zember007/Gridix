@@ -23,15 +23,26 @@ export default function SubscriptionTab() {
     selectedPlanId,
     selectedDuration,
     expiredProjects,
+    planChangeProjectId,
     durationOptions,
     refreshProjectSubscriptions,
     setSelectedPlanId,
     setSelectedDuration,
     setSelectedProjects,
     setIsInvoiceDialogOpen,
+    setPlanChangeProjectId,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
+    handleManageSubscription,
   } = useSubscriptionTabController();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Spinner size="md" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex flex-col gap-10 pb-20 duration-500 animate-in fade-in">
@@ -46,6 +57,7 @@ export default function SubscriptionTab() {
         <ProjectSubscriptionsList
           projects={projectSubscriptions}
           onOpenInvoice={handleOpenInvoiceForProject}
+          onManageSubscription={handleManageSubscription}
         />
       </section>
 
@@ -61,6 +73,7 @@ export default function SubscriptionTab() {
         plans={plans}
         onSelectPlan={setSelectedPlanId}
         onOpenCheckout={(planId) => {
+          setPlanChangeProjectId(null);
           setSelectedPlanId(planId);
           if (selectedProjects.length === 0 && expiredProjects.length > 0) {
             setSelectedProjects(expiredProjects.map((p) => p.id));
@@ -78,16 +91,19 @@ export default function SubscriptionTab() {
         projects={projectSubscriptions}
       />
 
-      {/* Модальное окно оформления подписки */}
-      {isInvoiceDialogOpen && selectedPlanId && (
+      {isInvoiceDialogOpen && (
         <CheckoutModal
           isOpen={isInvoiceDialogOpen}
-          onClose={() => setIsInvoiceDialogOpen(false)}
+          onClose={() => {
+            setIsInvoiceDialogOpen(false);
+            setPlanChangeProjectId(null);
+          }}
           projects={projectSubscriptions}
           initialSelectedProjectIds={selectedProjects}
           plans={plans}
-          selectedPlanId={selectedPlanId}
+          selectedPlanId={selectedPlanId || plans[0]?.id || ""}
           selectedDuration={selectedDuration}
+          planChangeProjectId={planChangeProjectId}
           billingDetails={billingDetails}
           onPlanChange={(planId) => setSelectedPlanId(planId)}
           onDurationChange={setSelectedDuration}
