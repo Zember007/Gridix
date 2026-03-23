@@ -94,7 +94,9 @@ export const AdminDashboardContent = ({
           ) : adminAccess?.canViewLeads ? (
             <LeadsManager showProjectColumn={!isManager} />
           ) : (
-            <AdminAccessNotice variant="subscription" />
+            <div className="h-full space-y-6">
+              <AdminAccessNotice variant="subscription" />
+            </div>
           ))}
 
         {activeTab === "subscription" && userRole.type !== "manager" && (
@@ -105,13 +107,7 @@ export const AdminDashboardContent = ({
 
         {activeTab === "partners" && (
           <div className="h-full space-y-6">
-            {adminAccess?.loading ? (
-              tabFallback
-            ) : adminAccess?.hasAnyProProject ? (
-              <PartnersPage />
-            ) : (
-              <AdminAccessNotice variant="pro" />
-            )}
+            <PartnersPage />
           </div>
         )}
 
