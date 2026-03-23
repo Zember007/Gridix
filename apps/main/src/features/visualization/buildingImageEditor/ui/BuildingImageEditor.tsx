@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import PolygonAnnotator from "@/components/visualization/polygon-editor/PolygonAnnotator";
+import PolygonAnnotator from "@/components/visualization/polygon-editor/PolygonAnnotatorLazy";
 import PolygonCustomizationSettings, {
   type PolygonSettings,
 } from "@/components/visualization/PolygonCustomizationSettings";
@@ -187,6 +187,35 @@ const BuildingImageEditor = ({
     totalFloorsCount > 0
       ? `${allFloorsInRange[0]}-${allFloorsInRange[totalFloorsCount - 1]}`
       : `${floorInputRange.min}-${floorInputRange.max}`;
+  const facadePolygonInitialSettings = useMemo(
+    () =>
+      ({
+        colors: {
+          available: "#3b82f6",
+          sold: "#ef4444",
+          reserved: "#f59e0b",
+          building: loader.facadeDisplaySettings.colors.building,
+        },
+        hoverEffects: {
+          scale: loader.facadeDisplaySettings.hoverEffects.scale,
+          colorChange: loader.facadeDisplaySettings.hoverEffects.colorChange,
+          opacityChange:
+            loader.facadeDisplaySettings.hoverEffects.opacityChange,
+          glow: loader.facadeDisplaySettings.hoverEffects.glow,
+        },
+        display: {
+          showNumbers: loader.facadeDisplaySettings.display.showNumbers,
+          showTooltip: loader.facadeDisplaySettings.display.showTooltip,
+          showArea: false,
+          showPrice: false,
+        },
+        opacity: {
+          normal: loader.facadeDisplaySettings.opacity.normal,
+          hover: loader.facadeDisplaySettings.opacity.hover,
+        },
+      }) satisfies PolygonSettings,
+    [loader.facadeDisplaySettings],
+  );
 
   useEffect(() => {
     if (!guidedModeEnabled || hasCompletedAllFloors) {
@@ -857,32 +886,7 @@ const BuildingImageEditor = ({
       <PolygonCustomizationSettings
         projectId={loader.project?.id || projectId}
         type="building"
-        initialSettings={
-          {
-            colors: {
-              available: "#3b82f6",
-              sold: "#ef4444",
-              reserved: "#f59e0b",
-              building: loader.facadeDisplaySettings.colors.building,
-            },
-            hoverEffects: {
-              scale: false,
-              colorChange: true,
-              opacityChange: true,
-              glow: true,
-            },
-            display: {
-              showNumbers: true,
-              showTooltip: false,
-              showArea: false,
-              showPrice: false,
-            },
-            opacity: {
-              normal: loader.facadeDisplaySettings.opacity.normal,
-              hover: loader.facadeDisplaySettings.opacity.hover,
-            },
-          } satisfies PolygonSettings
-        }
+        initialSettings={facadePolygonInitialSettings}
         onSettingsChange={(settings) => {
           loader.setFacadeDisplaySettings({
             colors: {
@@ -891,6 +895,16 @@ const BuildingImageEditor = ({
             opacity: {
               normal: settings.opacity.normal,
               hover: settings.opacity.hover,
+            },
+            hoverEffects: {
+              scale: settings.hoverEffects.scale,
+              colorChange: settings.hoverEffects.colorChange,
+              opacityChange: settings.hoverEffects.opacityChange,
+              glow: settings.hoverEffects.glow,
+            },
+            display: {
+              showNumbers: settings.display.showNumbers,
+              showTooltip: settings.display.showTooltip,
             },
           });
         }}

@@ -5,7 +5,7 @@
   "apartments": "daireler",
   "area": "Alan",
   "available": "Mevcut",
-  "details": "Detay bilgileri",
+  "details": "Detaylı bilgi",
   "enter": "Girmek",
   "floor": "Zemin",
   "no": "HAYIR",
@@ -32,10 +32,17 @@
   "goBack": "Geri gitmek",
   "installmentCalculator": "Taksit hesaplayıcı",
   "invalidId": "Geçersiz apartman kimliği",
+  "invalidPhone": "Seçilen ülke için geçerli bir telefon numarası girin.",
+  "phoneFormatHint": "Ülke kodunu seçin ve numaranızı girin — doğrulama otomatik yapılır.",
   "linkCopied": "Bağlantı kopyalandı",
   "notFound": "Daire bulunamadı",
   "notFoundDescription": "İstenilen daire bulunamadı.",
   "pdfGenerationError": "PDF oluşturulurken hata oluştu",
   "reserve": "Rezerv",
-  "reserveTitle": "Daire rezervasyonu"
+  "reserveTitle": "Daire rezervasyonu",
+  "leadSubmitError": "İstek gönderilemedi. Lütfen tekrar deneyin.",
+  "leadUnexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+  "objectDetails": "Nesne detayları",
+  "objectUnit": "Nesne",
+  "recommendedApartments": "Önerilen seçenekler"
 }

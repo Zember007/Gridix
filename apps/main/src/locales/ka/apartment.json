@@ -5,7 +5,7 @@
   "apartments": "ბინები",
   "area": "ფართობი",
   "available": "ხელმისაწვდომია",
-  "details": "ინფორმაცია",
+  "details": "დეტალური ინფორმაცია",
   "enter": "შეიყვანეთ",
   "floor": "სართული",
   "no": "არა",
@@ -32,10 +32,17 @@
   "goBack": "დაბრუნდი",
   "installmentCalculator": "განვადების კალკულატორი",
   "invalidId": "ბინის ID არასწორია",
+  "invalidPhone": "მიუთითეთ სწორი ნომერი არჩეული ქვეყნისთვის.",
+  "phoneFormatHint": "აირჩიეთ ქვეყნის კოდი და შეიყვანეთ ნომერი — შემოწმება ავტომატურია.",
   "linkCopied": "ბმული კოპირებულია",
   "notFound": "ბინა არ მოიძებნა",
   "notFoundDescription": "მოთხოვნილი ბინა ვერ მოიძებნა.",
   "pdfGenerationError": "შეცდომა PDF-ის გენერირებისას",
   "reserve": "რეზერვი",
-  "reserveTitle": "დაჯავშნე ბინა"
+  "reserveTitle": "დაჯავშნე ბინა",
+  "leadSubmitError": "მოთხოვნის გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა.",
+  "leadUnexpectedError": "მოულოდნელი შეცდომა. სცადეთ ხელახლა.",
+  "objectDetails": "ობიექტის დეტალები",
+  "objectUnit": "ობიექტი",
+  "recommendedApartments": "რეკომენდებული ვარიანტები"
 }

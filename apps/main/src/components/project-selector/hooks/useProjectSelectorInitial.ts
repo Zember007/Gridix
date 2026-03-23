@@ -27,6 +27,18 @@ interface UseProjectSelectorInitialResult {
   customDomain: string | null;
 }
 
+function requestIdle(cb: () => void, timeoutMs = 1500) {
+  if (typeof window === "undefined") return;
+  const ric = window.requestIdleCallback as
+    | ((callback: IdleRequestCallback, options?: IdleRequestOptions) => number)
+    | undefined;
+  if (ric) {
+    ric(() => cb(), { timeout: timeoutMs });
+    return;
+  }
+  window.setTimeout(cb, Math.min(timeoutMs, 1000));
+}
+
 export const useProjectSelectorInitial = (
   projectId: string,
 ): UseProjectSelectorInitialResult => {
@@ -62,7 +74,9 @@ export const useProjectSelectorInitial = (
 
   useEffect(() => {
     if (resolvedProjectId) {
-      incrementViewCount(resolvedProjectId);
+      requestIdle(() => {
+        incrementViewCount(resolvedProjectId);
+      });
     }
   }, [resolvedProjectId, incrementViewCount]);
 

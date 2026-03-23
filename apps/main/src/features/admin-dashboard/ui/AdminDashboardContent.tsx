@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import ProjectList from "@/components/projects/ProjectList";
-import { LoaderView } from "@/shared/ui/LoaderView";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import type { UserRole } from "@/hooks/useUserRole";
 
 const AdminSettingsRoot = lazy(() =>
@@ -65,6 +65,12 @@ export const AdminDashboardContent = ({
   onCreateNew,
   onEditProject,
 }: AdminDashboardContentProps) => {
+  const tabFallback = (
+    <div className="flex min-h-[320px] items-center justify-center">
+      <LoadingProgress />
+    </div>
+  );
+
   return (
     <div
       className={`flex-1 overflow-y-auto ${activeTab === "subscription" ? "mx-auto" : ""} ${activeTab !== "leads" ? "px-6 py-4 lg:py-6" : ""}`}
@@ -78,7 +84,7 @@ export const AdminDashboardContent = ({
         </div>
       )}
 
-      <Suspense fallback={<LoaderView />}>
+      <Suspense fallback={tabFallback}>
         {activeTab === "leads" && (
           <LeadsManager showProjectColumn={!isManager} />
         )}

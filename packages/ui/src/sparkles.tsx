@@ -1,8 +1,5 @@
 "use client";
-import { useEffect, useId, useState } from "react";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import type { Container } from "@tsparticles/engine";
-import { loadSlim } from "@tsparticles/slim";
+import { useEffect, useId, useState, type ComponentType } from "react";
 import { cn } from "@gridix/utils/lib";
 import { motion, useAnimation } from "framer-motion";
 
@@ -29,16 +26,41 @@ export const SparklesCore = (props: ParticlesProps) => {
     particleDensity,
   } = props;
   const [init, setInit] = useState(false);
+  const [Particles, setParticles] = useState<ComponentType<any> | null>(null);
+  const [initParticlesEngine, setInitParticlesEngine] = useState<
+    ((loader: (engine: unknown) => Promise<void>) => Promise<void>) | null
+  >(null);
+  const [loadSlim, setLoadSlim] = useState<
+    ((engine: any) => Promise<any>) | null
+  >(null);
+
   useEffect(() => {
+    let cancelled = false;
+    void Promise.all([
+      import("@tsparticles/react"),
+      import("@tsparticles/slim"),
+    ]).then(([reactMod, slimMod]) => {
+      if (cancelled) return;
+      setParticles(() => reactMod.default);
+      setInitParticlesEngine(() => reactMod.initParticlesEngine);
+      setLoadSlim(() => slimMod.loadSlim);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!initParticlesEngine || !loadSlim) return;
     initParticlesEngine(async (engine) => {
       await loadSlim(engine);
     }).then(() => {
       setInit(true);
     });
-  }, []);
+  }, [initParticlesEngine, loadSlim]);
   const controls = useAnimation();
 
-  const particlesLoaded = async (container?: Container) => {
+  const particlesLoaded = async (container?: unknown) => {
     if (container) {
       controls.start({
         opacity: 1,
@@ -52,7 +74,7 @@ export const SparklesCore = (props: ParticlesProps) => {
   const generatedId = useId();
   return (
     <motion.div animate={controls} className={cn("opacity-0", className)}>
-      {init && (
+      {init && Particles && (
         <Particles
           id={id || generatedId}
           className={cn("h-full w-full")}

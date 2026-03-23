@@ -36,7 +36,7 @@ import { useProjectEditorDataContext } from "@/features/projectEditor/context/Pr
 import { TooltipProvider } from "@gridix/ui";
 import PolygonAnnotator, {
   PolygonAnnotatorRef,
-} from "./polygon-editor/PolygonAnnotator";
+} from "./polygon-editor/PolygonAnnotatorLazy";
 import { Shape } from "./polygon-editor/GeometryShapes";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
 import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
@@ -1637,46 +1637,37 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                         )}
                       </div>
                       {apartmentPhotos.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="text-xs text-muted-foreground">
-                            {apartmentPhotos.length} photo
-                            {apartmentPhotos.length === 1 ? "" : "s"}
-                          </div>
-                          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                            {apartmentPhotos.map((photo, index) => (
-                              <div
-                                key={photo.id}
-                                className="group relative overflow-hidden rounded-xl border bg-muted/20"
-                              >
-                                <div className="aspect-[4/3] overflow-hidden bg-muted">
-                                  <img
-                                    src={photo.image_url}
-                                    alt={`Apartment photo ${index + 1}`}
-                                    className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
-                                  />
-                                </div>
-
-                                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent px-3 pb-2 pt-8 text-xs font-medium text-white">
-                                  Photo {index + 1}
-                                </div>
-
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  type="button"
-                                  className="absolute right-2 top-2 h-8 w-8 rounded-full p-0 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100"
-                                  onClick={() =>
-                                    handleDeleteApartmentPhoto(
-                                      photo.id,
-                                      photo.image_url,
-                                    )
-                                  }
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          {apartmentPhotos.map((photo, index) => (
+                            <div key={photo.id} className="group relative">
+                              <div className="aspect-[4/3] overflow-hidden rounded-md bg-muted">
+                                <img
+                                  src={photo.image_url}
+                                  alt={`Apartment photo ${index + 1}`}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                                />
                               </div>
-                            ))}
-                          </div>
+                              <div className="pointer-events-none absolute inset-x-0 bottom-0 rounded-b-md bg-gradient-to-t from-black/65 via-black/20 to-transparent px-3 pb-2 pt-8 text-xs font-medium text-white">
+                                Photo {index + 1}
+                              </div>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                type="button"
+                                className="absolute right-2 top-2 h-8 w-8 rounded-full p-0 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100"
+                                onClick={() =>
+                                  handleDeleteApartmentPhoto(
+                                    photo.id,
+                                    photo.image_url,
+                                  )
+                                }
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useLanguage } from "@gridix/utils/react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@gridix/ui";
@@ -199,7 +199,9 @@ export function AdminSidebar({
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
-    onTabChange?.(section);
+    startTransition(() => {
+      onTabChange?.(section);
+    });
     if (isMobile && setIsMobileOpen) {
       setIsMobileOpen(false);
     }

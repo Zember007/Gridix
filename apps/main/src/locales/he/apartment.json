@@ -5,7 +5,7 @@
   "apartments": "דירות",
   "area": "אֵזוֹר",
   "available": "זָמִין",
-  "details": "פרטים פרטים",
+  "details": "מידע מפורט",
   "enter": "לְהַכנִיס",
   "floor": "קוֹמָה",
   "no": "לֹא",
@@ -32,10 +32,17 @@
   "goBack": "לַחֲזוֹר",
   "installmentCalculator": "מחשבון תשלומים",
   "invalidId": "מזהה דירה לא חוקי",
+  "invalidPhone": "הזינו מספר תקין עבור המדינה שנבחרה.",
+  "phoneFormatHint": "בחרו קידומת מדינה והזינו את המספר — הבדיקה מתבצעת אוטומטית.",
   "linkCopied": "הקישור הועתק",
   "notFound": "דירה לא נמצאה",
   "notFoundDescription": "הדירה המבוקשת לא נמצאה.",
   "pdfGenerationError": "שגיאה ביצירת PDF",
   "reserve": "לְהַזמִין",
-  "reserveTitle": "דירת מילואים"
+  "reserveTitle": "דירת מילואים",
+  "leadSubmitError": "לא ניתן לשלוח את הבקשה. נסה שוב.",
+  "leadUnexpectedError": "אירעה שגיאה בלתי צפויה. נסה שוב.",
+  "objectDetails": "פרטי הנכס",
+  "objectUnit": "נכס",
+  "recommendedApartments": "המלצות"
 }

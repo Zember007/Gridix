@@ -14,9 +14,12 @@ export async function generateApartmentPdf({
   language,
 }: GenerateApartmentPdfParams): Promise<void> {
   const projectSlug = project.slug || `id/${project.id}`;
+  const apartmentNumber = encodeURIComponent(
+    String(apartment.apartment_number ?? ""),
+  );
   const serverDomain = import.meta.env.VITE_SERVER_DOMAIN;
   const apiUrl = import.meta.env.VITE_API_URL || "";
-  const pdfUrl = `https://${serverDomain}/${language}/project/${projectSlug}/apartment/${apartment.apartment_number}/pdf`;
+  const pdfUrl = `https://${serverDomain}/${language}/project/${projectSlug}/apartment/${apartmentNumber}/pdf`;
 
   await generateApartmentPDF({
     apartment,

@@ -36,26 +36,52 @@ const ApartmentPhotosCoveragePanel = ({
   const { t } = useLanguage();
 
   return (
-    <div className="space-y-3 rounded-lg border p-4">
-      <button
-        type="button"
-        className="flex w-full items-start justify-between rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/40"
-        onClick={() => setIsCoverageExpanded((prev) => !prev)}
-      >
-        <div>
-          <p className="text-sm font-medium">
-            {t("photosManager.coverageTitle")}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t("photosManager.coverageDescription")}
-          </p>
-        </div>
-        {isCoverageExpanded ? (
-          <ChevronUp className="mt-0.5 h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="mt-0.5 h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
+    <div className="space-y-3 rounded-lg border px-3 py-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:justify-between">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between rounded-md text-left transition-colors hover:bg-muted/40 sm:flex-1"
+          onClick={() => setIsCoverageExpanded((prev) => !prev)}
+        >
+          <div>
+            <p className="text-sm font-medium">
+              {t("photosManager.coverageTitle")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("photosManager.coverageDescription")}
+            </p>
+          </div>
+          {isCoverageExpanded ? (
+            <ChevronUp className="h-6 w-6 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-6 w-6 text-muted-foreground" />
+          )}
+        </button>
+
+        <Button
+          type="button"
+          aria-pressed={coverageFilter === "without"}
+          variant="outline"
+          className={`h-auto w-full items-center justify-start rounded-lg border-amber-500/30 px-4 py-3 text-left text-foreground transition-all sm:w-auto sm:min-w-[200px] ${
+            coverageFilter === "without"
+              ? "bg-amber-500/20 shadow-sm hover:bg-amber-500/25"
+              : "bg-amber-500/10 hover:bg-amber-500/15"
+          }`}
+          onClick={() => {
+            setCoverageFilter("without");
+            setIsCoverageExpanded(true);
+          }}
+        >
+          <div className="flex flex-col items-start justify-center gap-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+              {t("photosManager.withoutPhotos")}
+            </p>
+            <p className="text-s font-semibold leading-none">
+              {apartmentsWithoutPhotos.length}
+            </p>
+          </div>
+        </Button>
+      </div>
 
       {isCoverageExpanded && (
         <>

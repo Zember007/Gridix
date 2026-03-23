@@ -32,10 +32,17 @@
   "goBack": "عُد",
   "installmentCalculator": "حاسبة القسط",
   "invalidId": "معرف الشقة غير صالح",
+  "invalidPhone": "أدخل رقم هاتف صالحًا: من 10 إلى 15 رقمًا مع رمز الدولة (مثل +995…).",
+  "phoneFormatHint": "ضمّن رمز الدولة — من 10 إلى 15 رقمًا إجمالاً.",
   "linkCopied": "تم نسخ الرابط",
   "notFound": "لم يتم العثور على الشقة",
   "notFoundDescription": "لا يمكن العثور على الشقة المطلوبة.",
   "pdfGenerationError": "حدث خطأ أثناء إنشاء ملف PDF",
   "reserve": "احتياطي",
-  "reserveTitle": "شقة احتياطية"
+  "reserveTitle": "شقة احتياطية",
+  "leadSubmitError": "تعذر إرسال الطلب. يرجى المحاولة مرة أخرى.",
+  "leadUnexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+  "objectDetails": "تفاصيل العقار",
+  "objectUnit": "عقار",
+  "recommendedApartments": "خيارات موصى بها"
 }
