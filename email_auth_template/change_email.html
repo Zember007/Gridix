@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Verify your new email – Gridix</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #f4f4f5;
+        font-family: "Inter", sans-serif;
+        color: #18181b;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .header {
+        background: #1a1a1a;
+        padding: 32px 48px;
+        text-align: center;
+      }
+
+      .body {
+        background: #ffffff;
+        border-left: 1px solid #e4e4e7;
+        border-right: 1px solid #e4e4e7;
+        padding: 48px 48px 40px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f4f4f5;
+        border: 1px solid #e4e4e7;
+        border-radius: 100px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #71717a;
+        margin-bottom: 24px;
+      }
+      .badge-dot {
+        width: 5px;
+        height: 5px;
+        background: #18181b;
+        border-radius: 50%;
+      }
+
+      h1 {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: #18181b;
+        margin-bottom: 14px;
+        letter-spacing: -0.02em;
+      }
+
+      .intro {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #71717a;
+        margin-bottom: 28px;
+      }
+      .intro strong {
+        color: #18181b;
+        font-weight: 600;
+      }
+
+      /* Email change card */
+      .change-card {
+        background: #f4f4f5;
+        border: 1px solid #e4e4e7;
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin-bottom: 32px;
+      }
+      .change-title {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #a1a1aa;
+        margin-bottom: 14px;
+      }
+      .change-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .change-label {
+        font-size: 11px;
+        color: #a1a1aa;
+        width: 44px;
+        flex-shrink: 0;
+      }
+      .email-pill {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 5px;
+      }
+      .email-old {
+        background: #ffffff;
+        border: 1px solid #e4e4e7;
+        color: #a1a1aa;
+        text-decoration: line-through;
+      }
+      .email-new {
+        background: #18181b;
+        color: #ffffff;
+      }
+      .arrow {
+        color: #d4d4d8;
+        font-size: 16px;
+      }
+
+      .cta-wrap {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+      .cta-btn {
+        display: inline-block;
+        background: #18181b;
+        color: #ffffff;
+        text-decoration: none;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 14px 36px;
+        border-radius: 8px;
+      }
+
+      .divider {
+        height: 1px;
+        background: #e4e4e7;
+        margin: 28px 0;
+      }
+
+      .fallback-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #a1a1aa;
+        margin-bottom: 8px;
+      }
+      .fallback-url {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        word-break: break-all;
+        background: #f4f4f5;
+        border: 1px solid #e4e4e7;
+        border-radius: 6px;
+        padding: 10px 14px;
+        color: #a1a1aa;
+      }
+      .fallback-url a {
+        color: #18181b;
+        text-decoration: none;
+      }
+
+      .security-notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-top: 20px;
+      }
+      .security-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .security-text {
+        font-size: 13px;
+        line-height: 1.6;
+        color: #991b1b;
+      }
+      .security-text a {
+        color: #dc2626;
+        text-decoration: none;
+      }
+
+      .footer {
+        background: #fafafa;
+        border: 1px solid #e4e4e7;
+        border-top: none;
+        padding: 24px 48px;
+        text-align: center;
+      }
+      .footer p {
+        font-size: 12px;
+        color: #a1a1aa;
+        line-height: 1.7;
+        margin-bottom: 4px;
+      }
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        margin-top: 12px;
+      }
+      .footer-links a {
+        font-size: 11px;
+        color: #a1a1aa;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img
+        src="https://app.gridix.live/images/logo/gridix_black_logo.svg"
+        alt="Gridix"
+        class="logo"
+        style="height: 50px"
+      />
+    </div>
+
+    <div class="body">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Email Change
+      </div>
+
+      <h1>Verify your new email address</h1>
+
+      <p class="intro">
+        A request was made to change the email address on your
+        <strong>Gridix</strong> account. Please verify your new address to
+        confirm this change.
+      </p>
+
+      <div class="change-card">
+        <p class="change-title">Email Address Change</p>
+        <div class="change-row">
+          <span class="change-label">From</span>
+          <span class="email-pill email-old">{{ .Email }}</span>
+          <span class="arrow">→</span>
+          <span class="email-pill email-new">{{ .NewEmail }}</span>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="{{ .ConfirmationURL }}" class="cta-btn">Verify New Email</a>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="fallback-label">Or copy this link into your browser</p>
+      <div class="fallback-url">
+        <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a>
+      </div>
+
+      <div class="security-notice">
+        <span class="security-icon">🔐</span>
+        <span class="security-text">
+          If you didn't request this change, your account may be compromised.
+          Please
+          <a href="mailto:support@gridix.live">contact our support team</a>
+          immediately and change your password.
+        </span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        This email was sent because an email change was requested on your Gridix
+        account.
+      </p>
+      <p>© 2025 Gridix. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="https://gridix.live/en/privacy/">Privacy Policy</a>
+        <a href="https://gridix.live/en/offerta/">Terms of Service</a>
+        <a href="mailto:support@gridix.live">Support</a>
+      </div>
+    </div>
+  </body>
+</html>

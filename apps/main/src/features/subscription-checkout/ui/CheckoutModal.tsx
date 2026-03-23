@@ -80,20 +80,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <ArrowLeft size={20} />
               </button>
             )}
-            <div>
+            <div className="flex items-center gap-5">
               <h2 className="text-xl font-bold text-slate-900">
                 {t("admin.subscriptionPage.checkout.title")}
               </h2>
               {currentPricing && (
-                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
-                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-2 py-1">
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
                     {t("admin.subscriptionPage.checkout.summary.period")}
-                  </div>
+                  </span>
                   <Select
                     value={String(selectedDuration)}
                     onValueChange={(val) => onDurationChange(Number(val))}
                   >
-                    <SelectTrigger className="h-10 w-[210px] bg-white px-3 py-2 text-sm font-semibold">
+                    <SelectTrigger className="h-8 w-[min(11rem,100%)] min-w-[7.5rem] bg-white px-2 text-xs font-semibold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -104,12 +104,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <div className="mt-2 text-xs font-medium text-blue-700">
-                    {t("admin.subscriptionPage.checkout.summary.totalToPay")}{" "}
+                  <span className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-blue-700">
+                    <span>
+                      {t("admin.subscriptionPage.checkout.summary.totalToPay")}
+                    </span>
                     <span className="font-bold text-blue-900">
                       ${finalTotal}
                     </span>
-                  </div>
+                  </span>
                 </div>
               )}
             </div>
