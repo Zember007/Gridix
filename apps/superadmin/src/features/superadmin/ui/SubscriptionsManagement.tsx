@@ -209,34 +209,12 @@ export function SubscriptionsManagement() {
     }
   };
 
-  /** Projects that already have (or had / pending) a subscription row — same scope as the list above. */
+  /** All projects — superadmin can attach a subscription to any project (owner = project.user_id). */
   const fetchProjects = async () => {
     try {
-      const { data: subRows, error: subError } = await supabase
-        .from("user_subscriptions")
-        .select("project_id")
-        .not("status", "eq", "migrated")
-        .not("project_id", "is", null);
-
-      if (subError) throw subError;
-
-      const projectIds = Array.from(
-        new Set(
-          (subRows ?? [])
-            .map((row) => row.project_id as string | null)
-            .filter((id): id is string => Boolean(id)),
-        ),
-      );
-
-      if (projectIds.length === 0) {
-        setProjects([]);
-        return;
-      }
-
       const { data, error } = await supabase
         .from("projects")
         .select("id, name, user_id")
-        .in("id", projectIds)
         .order("name");
 
       if (error) throw error;
