@@ -2,6 +2,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import ProjectEditor from "@/components/projects/ProjectEditor";
 import { ProjectEditorDataProvider } from "@/features/projectEditor/context/ProjectEditorDataContext";
+import { useAdminAccess } from "@/entities/admin-access";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface ProjectEditorPageProps {
   useId?: boolean;
@@ -37,10 +39,32 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { navigate: navigateWithLanguage } = useLanguageNavigation();
+  const adminAccess = useAdminAccess();
 
   const projectIdentifier = useId ? projectId : projectSlug || projectId;
   const isNew = !projectIdentifier || projectIdentifier === "new";
-  const actualProjectId = isNew ? "" : projectIdentifier;
+  const bootstrapProject = isNew
+    ? null
+    : (adminAccess?.projects.find(
+        (project) =>
+          project.id === projectIdentifier ||
+          project.slug === projectIdentifier,
+      ) ?? null);
+  const actualProjectId = isNew
+    ? ""
+    : (bootstrapProject?.id ?? projectIdentifier ?? "");
+  const isRestrictedProject =
+    !isNew &&
+    bootstrapProject != null &&
+    bootstrapProject.access_status !== "active";
+
+  if (!isNew && adminAccess?.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingProgress />
+      </div>
+    );
+  }
 
   const goBack = () => {
     const fromState = (location.state as { from?: string } | null)?.from;
@@ -63,12 +87,14 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
   return (
     <ProjectEditorDataProvider
       projectId={isNew ? null : actualProjectId}
-      enabled={!isNew}
+      enabled={!isNew && !isRestrictedProject}
     >
       <ProjectEditor
         projectId={actualProjectId}
         isNew={isNew}
         onBack={goBack}
+        bootstrapProject={bootstrapProject}
+        isRestrictedProject={isRestrictedProject}
       />
     </ProjectEditorDataProvider>
   );

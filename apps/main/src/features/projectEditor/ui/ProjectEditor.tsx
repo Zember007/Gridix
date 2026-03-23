@@ -66,12 +66,39 @@ import {
   DEFAULT_PROJECT_EDITOR_PROJECT,
   type ProjectEditorProject,
 } from "@/features/projectEditor/model/types";
+import type { AdminBootstrapProject } from "@/entities/admin-access";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 interface ProjectEditorProps {
   projectId: string;
   isNew: boolean;
   onBack: () => void;
+  bootstrapProject?: AdminBootstrapProject | null;
+  isRestrictedProject?: boolean;
 }
+
+type EditorProjectSource = {
+  id?: string;
+  name?: string | null;
+  description?: string | null;
+  address?: string | null;
+  floors?: number | null;
+  has_parking?: boolean | null;
+  has_commercial?: boolean | null;
+  building_image_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  currency?: CurrencyType | null;
+  installment_enabled?: boolean | null;
+  min_down_payment_percent?: number | null;
+  max_installment_months?: number | null;
+  pdf_presentation_url?: string | null;
+  theme_color?: string | null;
+  project_type?: "building" | "object" | null;
+  facade_open?: boolean | null;
+  available_languages?: unknown;
+  user_id?: string | null;
+};
 
 const parseAvailableLanguages = (value: unknown): Language[] => {
   if (!Array.isArray(value)) return SUPPORTED_LANGUAGES;
@@ -364,7 +391,13 @@ const ProjectPdfPresentationSection = memo(
   },
 );
 
-const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
+const ProjectEditor = ({
+  projectId,
+  isNew,
+  onBack,
+  bootstrapProject = null,
+  isRestrictedProject = false,
+}: ProjectEditorProps) => {
   const [project, setProject] = useState<ProjectEditorProject>(
     DEFAULT_PROJECT_EDITOR_PROJECT,
   );
@@ -416,42 +449,45 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   }, [searchParams]);
 
-  const projectSource = editorDataContext?.data?.project ?? cachedProject;
+  const projectSource = isRestrictedProject
+    ? bootstrapProject
+    : (editorDataContext?.data?.project ?? cachedProject);
 
-  const mapDbProjectToEditor = useCallback((row: typeof cachedProject) => {
-    if (!row) return;
-    setProject({
-      id: row.id,
-      name: row.name || "",
-      description: row.description || "",
-      address: row.address || "",
-      floors: row.floors || 1,
-      has_parking: row.has_parking || false,
-      has_commercial: row.has_commercial || false,
-      building_image_url: row.building_image_url,
-      latitude: row.latitude,
-      longitude: row.longitude,
-      currency: (row.currency as CurrencyType) || DEFAULT_CURRENCY,
-      installment_enabled: row.installment_enabled || false,
-      min_down_payment_percent: row.min_down_payment_percent || 20,
-      max_installment_months: row.max_installment_months || 24,
-      pdf_presentation_url: row.pdf_presentation_url,
-      theme_color:
-        ((row as unknown as Record<string, unknown>).theme_color as string) ||
-        "#000000",
-      project_type:
-        ((row as unknown as Record<string, unknown>).project_type as
-          | "building"
-          | "object"
-          | null) || "building",
-      facade_open:
-        ((row as unknown as Record<string, unknown>).facade_open as boolean) ||
-        false,
-      available_languages: parseAvailableLanguages(
-        (row as unknown as Record<string, unknown>).available_languages,
-      ),
-    });
-  }, []);
+  const mapDbProjectToEditor = useCallback(
+    (row: EditorProjectSource | null) => {
+      if (!row) return;
+      setProject({
+        id: row.id || "",
+        name: row.name || "",
+        description: row.description || "",
+        address: row.address || "",
+        floors: row.floors || 1,
+        has_parking: row.has_parking || false,
+        has_commercial: row.has_commercial || false,
+        building_image_url: row.building_image_url || null,
+        latitude: row.latitude ?? null,
+        longitude: row.longitude ?? null,
+        currency: (row.currency as CurrencyType) || DEFAULT_CURRENCY,
+        installment_enabled: row.installment_enabled || false,
+        min_down_payment_percent: row.min_down_payment_percent || 20,
+        max_installment_months: row.max_installment_months || 24,
+        pdf_presentation_url: row.pdf_presentation_url || null,
+        theme_color:
+          ((row as unknown as Record<string, unknown>).theme_color as string) ||
+          "#000000",
+        project_type:
+          ((row as unknown as Record<string, unknown>).project_type as
+            | "building"
+            | "object"
+            | null) || "building",
+        facade_open:
+          ((row as unknown as Record<string, unknown>)
+            .facade_open as boolean) || false,
+        available_languages: parseAvailableLanguages(row.available_languages),
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     if (isNew || !projectId) return;
@@ -459,7 +495,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     if (!source) return;
 
     try {
-      const canEdit =
+      const canAccess =
         user &&
         (source.user_id === user.id ||
           (isManagerMode &&
@@ -467,7 +503,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             source.user_id === activeWorkspaceId) ||
           (isManager && developerIds.includes(source.user_id ?? "")));
 
-      if (!canEdit) {
+      if (!canAccess) {
         setAccessError(t("projectEditor.noEditRights"));
         return;
       }
@@ -723,7 +759,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const isEditorDataLoading =
-    !isNew && (editorDataContext?.loading ?? projectLoading);
+    !isNew &&
+    !isRestrictedProject &&
+    (editorDataContext?.loading ?? projectLoading);
 
   if (accessError) {
     return (
@@ -864,7 +902,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               <div className="flex items-center gap-2">
                 <Button
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || isRestrictedProject}
                   size="sm"
                   className="project_save_usertour"
                   style={{
@@ -899,6 +937,49 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         {isEditorDataLoading ? (
           <div className="flex min-h-full items-center justify-center">
             <LoadingProgress />
+          </div>
+        ) : isRestrictedProject ? (
+          <div className="flex-1 overflow-y-auto py-4 lg:px-6 lg:py-6">
+            <div className="space-y-6">
+              <AdminAccessNotice variant="subscription" />
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("projectEditor.basicInfo")}</CardTitle>
+                  <CardDescription>
+                    {t("projectEditor.editProject")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>{t("projectEditor.projectName")}</Label>
+                    <Input value={project.name} readOnly />
+                  </div>
+                  <div>
+                    <Label>{t("projectEditor.projectType")}</Label>
+                    <Input
+                      value={
+                        project.project_type === "object"
+                          ? t("projectEditor.typeObject")
+                          : t("projectEditor.typeBuilding")
+                      }
+                      readOnly
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>{t("projectEditor.description")}</Label>
+                    <Textarea
+                      value={project.description ?? ""}
+                      readOnly
+                      rows={4}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>{t("projectEditor.address")}</Label>
+                    <Input value={project.address ?? ""} readOnly />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         ) : (
           <div className="project_editor_content_usertour flex-1 overflow-y-auto py-4 lg:px-6 lg:py-6">

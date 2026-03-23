@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { LanguageWrapper } from "@gridix/utils/react";
+import { AdminAccessProvider } from "@/entities/admin-access";
 
 interface AdminProvidersProps {
   children: ReactNode;
@@ -9,7 +10,9 @@ interface AdminProvidersProps {
 export function AdminProviders({ children }: AdminProvidersProps) {
   return (
     <WorkspaceProvider>
-      <LanguageWrapper>{children}</LanguageWrapper>
+      <AdminAccessProvider>
+        <LanguageWrapper>{children}</LanguageWrapper>
+      </AdminAccessProvider>
     </WorkspaceProvider>
   );
 }

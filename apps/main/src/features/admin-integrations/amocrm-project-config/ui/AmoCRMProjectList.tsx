@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useUserProjects } from "@gridix/utils";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useAdminAccess } from "@/entities/admin-access";
 import {
   fetchAmoData,
   fetchProjectSettingsBulk,
@@ -22,8 +20,7 @@ export const AmoCRMProjectList = ({
   open,
 }: AmoCRMProjectListProps) => {
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const { activeWorkspaceId } = useWorkspace();
+  const adminAccess = useAdminAccess();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [settingsByProjectId, setSettingsByProjectId] = useState<
@@ -31,8 +28,6 @@ export const AmoCRMProjectList = ({
   >({});
   const [amoData, setAmoData] = useState<AmoCRMData | null>(null);
 
-  const ownerUserId = activeWorkspaceId ?? user?.id ?? null;
-  const { refetch: refetchProjects } = useUserProjects(ownerUserId, false);
   const projectIds = useMemo(
     () => projects.map((project) => project.id),
     [projects],
@@ -72,22 +67,19 @@ export const AmoCRMProjectList = ({
   );
 
   useEffect(() => {
-    if (!open || !ownerUserId || !connection?.id) return;
+    if (!open || !connection?.id) return;
 
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const [projectsResponse, nextAmoData] = await Promise.all([
-          refetchProjects(),
-          fetchAmoData(),
-        ]);
-
-        if (projectsResponse.error) throw projectsResponse.error;
-        const nextProjects = (projectsResponse.data ?? []).map((project) => ({
-          id: project.id,
-          name: project.name,
-          created_at: project.created_at,
-        }));
+        const nextProjects = (adminAccess?.proProjects ?? []).map(
+          (project) => ({
+            id: project.id,
+            name: project.name,
+            created_at: project.created_at,
+          }),
+        );
+        const nextAmoData = await fetchAmoData();
 
         setProjects(nextProjects);
         setAmoData(nextAmoData);
@@ -100,7 +92,7 @@ export const AmoCRMProjectList = ({
     };
 
     void fetchAll();
-  }, [open, ownerUserId, connection?.id, refreshAllSettings, refetchProjects]);
+  }, [adminAccess?.proProjects, connection?.id, open, refreshAllSettings]);
 
   if (loading) {
     return (

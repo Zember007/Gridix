@@ -3,12 +3,14 @@ import { useAdminWidgetConfig } from "@/features/admin-widgets/model/useAdminWid
 import { WidgetSettingsCard } from "@/features/admin-widgets/ui/WidgetSettingsCard";
 import { WidgetEmbedCodeCard } from "@/features/admin-widgets/ui/WidgetEmbedCodeCard";
 import { WidgetLinksCard } from "@/features/admin-widgets/ui/WidgetLinksCard";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 const AdminWidgets = () => {
   const {
     t,
     loading,
     projects,
+    hasAnyActiveProject,
     selectedProject,
     setSelectedProject,
     defaultLanguage,
@@ -39,6 +41,10 @@ const AdminWidgets = () => {
         <Spinner size="md" style={{ borderColor: ADMIN_THEME.primary }} />
       </div>
     );
+  }
+
+  if (!hasAnyActiveProject) {
+    return <AdminAccessNotice variant="subscription" />;
   }
 
   return (

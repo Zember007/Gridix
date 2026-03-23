@@ -6,15 +6,20 @@ import {
   Language,
 } from "@gridix/utils/lib";
 import { toast } from "sonner";
-import { useUserProjects } from "@/entities/project/queries/useProjects";
-import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateEmbedCode } from "@/features/admin-widgets/lib/generateEmbedCode";
+import { useAdminAccess } from "@/entities/admin-access";
 
 export const useAdminWidgetConfig = () => {
-  const { user } = useAuth();
   const { t } = useLanguage();
-  const { projects, loading } = useUserProjects(user?.id);
+  const adminAccess = useAdminAccess();
+  const loading = adminAccess?.loading ?? false;
+  const projects = (adminAccess?.activeProjects ?? []).map((project) => ({
+    id: project.id,
+    name: project.name,
+    slug: project.slug,
+  }));
+  const hasAnyActiveProject = adminAccess?.hasAnyActiveProject ?? false;
 
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [defaultLanguage, setDefaultLanguage] = useState<Language>("en");
@@ -37,10 +42,15 @@ export const useAdminWidgetConfig = () => {
   }, []);
 
   useEffect(() => {
-    if (projects.length > 0) {
-      setSelectedProject(projects?.[0]?.id || "");
+    if (!projects.length) {
+      setSelectedProject("");
+      return;
     }
-  }, [projects]);
+
+    if (!projects.some((project) => project.id === selectedProject)) {
+      setSelectedProject(projects[0]?.id || "");
+    }
+  }, [projects, selectedProject]);
 
   const selectedProjectData = projects.find(
     (project) => project.id === selectedProject,
@@ -100,16 +110,22 @@ export const useAdminWidgetConfig = () => {
   );
 
   const copyEmbedCode = () => {
+    if (!selectedProjectEmbedIdentifier) {
+      toast.error("No active project available for widget generation.");
+      return;
+    }
     navigator.clipboard.writeText(embedCode);
     toast.success(t("adminWidgets.codeCopied"));
   };
 
   const openPreview = () => {
+    if (!selectedProjectEmbedIdentifier) {
+      toast.error("No active project available for preview.");
+      return;
+    }
     const baseUrl = window.location.origin;
     let previewUrl = "";
-    if (selectedProject === "all") {
-      previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
-    } else if (selectedProjectEmbedIdentifier) {
+    if (selectedProjectEmbedIdentifier) {
       previewUrl = `${baseUrl}/embed/project/${selectedProjectEmbedIdentifier}?lang=${defaultLanguage}`;
     }
     if (!previewUrl) return;
@@ -120,7 +136,7 @@ export const useAdminWidgetConfig = () => {
     t,
     loading,
     projects,
-    user,
+    hasAnyActiveProject,
     selectedProject,
     setSelectedProject,
     defaultLanguage,

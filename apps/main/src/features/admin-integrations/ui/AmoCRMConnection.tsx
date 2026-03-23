@@ -19,7 +19,13 @@ import { useAmoCRMConnection } from "@/features/admin-integrations/model/useAmoC
 import { AmoCRMDisconnectDialog } from "@/features/admin-integrations/ui/AmoCRMDisconnectDialog";
 import { AmoCRMProjectsDialog } from "@/features/admin-integrations/ui/AmoCRMProjectsDialog";
 
-export const AmoCRMConnection = () => {
+interface AmoCRMConnectionProps {
+  blockedReason?: "subscription" | "pro" | null;
+}
+
+export const AmoCRMConnection = ({
+  blockedReason = null,
+}: AmoCRMConnectionProps) => {
   const {
     t,
     connection,
@@ -98,6 +104,7 @@ export const AmoCRMConnection = () => {
                   variant="destructive"
                   className="w-full border-red-200 hover:bg-red-50 hover:text-red-700"
                   onClick={() => setShowDisconnectDialog(true)}
+                  disabled={Boolean(blockedReason)}
                 >
                   {t("amocrm.disconnect")}
                 </Button>
@@ -105,6 +112,7 @@ export const AmoCRMConnection = () => {
                   variant="outline"
                   className="w-full"
                   onClick={handleAuth}
+                  disabled={Boolean(blockedReason)}
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   {t("amocrm.reconnect")}
@@ -115,6 +123,7 @@ export const AmoCRMConnection = () => {
                 variant="outline"
                 className="w-full"
                 onClick={() => setShowProjectsModal(true)}
+                disabled={Boolean(blockedReason)}
               >
                 <Settings className="mr-2 h-4 w-4" />
                 {t("admin.configureProjects")}
@@ -133,7 +142,7 @@ export const AmoCRMConnection = () => {
               <Button
                 className="w-full bg-[#4c8bf7] text-white shadow-lg shadow-blue-200 hover:bg-[#3b72d1]"
                 onClick={handleAuth}
-                disabled={authorizing}
+                disabled={authorizing || Boolean(blockedReason)}
               >
                 {authorizing ? (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />

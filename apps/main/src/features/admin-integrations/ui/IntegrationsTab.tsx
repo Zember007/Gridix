@@ -8,10 +8,19 @@ import {
 import { Package } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AmoCRMConnection } from "./AmoCRMConnection";
-import { Bitrix24Connection } from "./Bitrix24Connection";
+import { useAdminAccess } from "@/entities/admin-access";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 export const IntegrationsTab = () => {
   const { t } = useLanguage();
+  const adminAccess = useAdminAccess();
+  const hasAnyActiveProject = adminAccess?.hasAnyActiveProject ?? false;
+  const hasAnyProProject = adminAccess?.hasAnyProProject ?? false;
+  const blockedReason = !hasAnyActiveProject
+    ? "subscription"
+    : !hasAnyProProject
+      ? "pro"
+      : null;
 
   return (
     <div className="space-y-6">
@@ -24,9 +33,15 @@ export const IntegrationsTab = () => {
         </p>
       </div>
 
+      {blockedReason && (
+        <AdminAccessNotice
+          variant={blockedReason === "subscription" ? "subscription" : "pro"}
+        />
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* AmoCRM Card */}
-        <AmoCRMConnection />
+        <AmoCRMConnection blockedReason={blockedReason} />
 
         {/* Bitrix24 Card */}
         {/* <Bitrix24Connection /> */}

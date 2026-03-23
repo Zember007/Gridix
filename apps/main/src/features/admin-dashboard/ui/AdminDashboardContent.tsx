@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import ProjectList from "@/components/projects/ProjectList";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import type { UserRole } from "@/hooks/useUserRole";
+import { useAdminAccess } from "@/entities/admin-access";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 const AdminSettingsRoot = lazy(() =>
   import("@/features/admin-settings").then((m) => ({
@@ -65,6 +67,7 @@ export const AdminDashboardContent = ({
   onCreateNew,
   onEditProject,
 }: AdminDashboardContentProps) => {
+  const adminAccess = useAdminAccess();
   const tabFallback = (
     <div className="flex min-h-[320px] items-center justify-center">
       <LoadingProgress />
@@ -85,9 +88,14 @@ export const AdminDashboardContent = ({
       )}
 
       <Suspense fallback={tabFallback}>
-        {activeTab === "leads" && (
-          <LeadsManager showProjectColumn={!isManager} />
-        )}
+        {activeTab === "leads" &&
+          (adminAccess?.loading ? (
+            tabFallback
+          ) : adminAccess?.canViewLeads ? (
+            <LeadsManager showProjectColumn={!isManager} />
+          ) : (
+            <AdminAccessNotice variant="subscription" />
+          ))}
 
         {activeTab === "subscription" && userRole.type !== "manager" && (
           <div className="h-full space-y-6">
@@ -97,13 +105,25 @@ export const AdminDashboardContent = ({
 
         {activeTab === "partners" && (
           <div className="h-full space-y-6">
-            <PartnersPage />
+            {adminAccess?.loading ? (
+              tabFallback
+            ) : adminAccess?.hasAnyProProject ? (
+              <PartnersPage />
+            ) : (
+              <AdminAccessNotice variant="pro" />
+            )}
           </div>
         )}
 
         {activeTab === "agent_network" && (
           <div className="space-y-6">
-            <AgencyPartnersPage />
+            {adminAccess?.loading ? (
+              tabFallback
+            ) : adminAccess?.hasAnyProProject ? (
+              <AgencyPartnersPage />
+            ) : (
+              <AdminAccessNotice variant="pro" />
+            )}
           </div>
         )}
 

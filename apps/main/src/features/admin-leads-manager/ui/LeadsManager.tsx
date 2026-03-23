@@ -10,6 +10,7 @@ import { LeadsSelectionToolbar } from "./LeadsSelectionToolbar";
 import { LeadsManagerContent } from "./LeadsManagerContent";
 import { LeadsManagerModals } from "./LeadsManagerModals";
 import { LeadsManagerDrawer } from "./LeadsManagerDrawer";
+import { useAdminAccess } from "@/entities/admin-access";
 
 interface LeadsManagerProps {
   projectId?: string;
@@ -21,6 +22,10 @@ export function LeadsManager({
   showProjectColumn: _showProjectColumn = false,
 }: LeadsManagerProps) {
   const { t } = useTranslation();
+  const adminAccess = useAdminAccess();
+  const canUseMassActions = projectId
+    ? (adminAccess?.canUseMassActions(projectId) ?? false)
+    : (adminAccess?.canUseMassActions() ?? false);
 
   const {
     viewMode,
@@ -235,7 +240,7 @@ export function LeadsManager({
         resetFilters={resetFilters}
       />
 
-      {!isFunnelSetupMode && (
+      {!isFunnelSetupMode && canUseMassActions && (
         <LeadsSelectionToolbar
           t={t}
           selectedCount={selectedIds.size}

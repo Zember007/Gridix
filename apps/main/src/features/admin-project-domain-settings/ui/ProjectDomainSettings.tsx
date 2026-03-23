@@ -15,6 +15,8 @@ import { useProjectDomainSettings } from "../model/useProjectDomainSettings";
 import { DomainAddForm } from "./DomainAddForm";
 import { DomainList } from "./DomainList";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { useAdminAccess } from "@/entities/admin-access";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 interface ProjectDomainSettingsProps {
   projectId: string;
@@ -26,6 +28,7 @@ export function ProjectDomainSettings({
   projectName,
 }: ProjectDomainSettingsProps) {
   const { t } = useLanguage();
+  const adminAccess = useAdminAccess();
   const {
     domains,
     loading,
@@ -48,6 +51,10 @@ export function ProjectDomainSettings({
     handleCheckDomainStatus,
     handleTogglePrimary,
   } = useProjectDomainSettings({ projectId });
+
+  if (!(adminAccess?.canUseCustomDomain(projectId) ?? false)) {
+    return <AdminAccessNotice variant="pro" />;
+  }
 
   return (
     <Card>

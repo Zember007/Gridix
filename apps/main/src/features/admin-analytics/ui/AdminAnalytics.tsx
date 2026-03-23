@@ -8,6 +8,8 @@ import { useWorkspaceProjects } from "@/entities/workspace/queries/useWorkspaceP
 import Spinner from "@/shared/ui/Spinner";
 import { KpiCard } from "@/shared/ui/KpiCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAdminAccess } from "@/entities/admin-access";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 import {
   type DateRange,
   EMPTY_ANALYTICS,
@@ -22,11 +24,13 @@ import {
 } from "@/entities/analytics";
 
 export const AdminAnalytics = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { userRole } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
   const { projects: workspaceProjects } = useWorkspaceProjects();
+  const adminAccess = useAdminAccess();
+  const activeProjects = adminAccess?.activeProjects ?? [];
 
   const [dateRange, setDateRange] = useState<DateRange>("30");
   const [selectedProject, setSelectedProject] = useState<string>("all");
@@ -49,6 +53,10 @@ export const AdminAnalytics = () => {
   });
 
   const analyticsData = analyticsDataRaw ?? EMPTY_ANALYTICS;
+
+  if (!(adminAccess?.canViewAnalytics ?? false)) {
+    return <AdminAccessNotice variant="subscription" />;
+  }
 
   if (isLoading) {
     return (
@@ -89,7 +97,9 @@ export const AdminAnalytics = () => {
         onDateToChange={setDateTo}
         selectedProject={selectedProject}
         onProjectChange={setSelectedProject}
-        projects={workspaceProjects}
+        projects={
+          activeProjects.length > 0 ? activeProjects : workspaceProjects
+        }
         t={t}
       />
 
