@@ -615,12 +615,15 @@ const ApartmentDetailsPage = ({
 
     if (fieldName === "price") {
       return typeof value === "number"
-        ? formatPriceWithCurrency(value, project?.currency || null)
+        ? formatPriceWithCurrency(
+            convertPrice(value, project?.currency || null, selectedCurrency),
+            selectedCurrency,
+          )
         : "-";
     }
 
     if (fieldName === "area") {
-      return `${value} м²`;
+      return `${value} ${t("apartment.sqm")}`;
     }
 
     if (fieldName === "floor_number" || fieldName === "floor") {
@@ -628,16 +631,19 @@ const ApartmentDetailsPage = ({
     }
 
     if (fieldName === "rooms") {
-      if (Number.isNaN(value)) return "-";
-      if (value === 0) {
-        return t("apartment.studio");
-      }
-      return `${value} ${t("apartment.room").toLowerCase()}`;
+      const num = Number(value);
+      if (Number.isNaN(num)) return "-";
+      if (num === 0) return t("apartment.studio");
+      return `${num} ${t("apartment.room").toLowerCase()}`;
+    }
+
+    if (fieldName === "status") {
+      return getStatusLabel(String(value));
     }
 
     switch (fieldType) {
       case "boolean":
-        return value ? "Да" : "Нет";
+        return value ? t("apartment.yes") : t("apartment.no");
       case "number":
         return typeof value === "number" ? value.toString() : String(value);
       case "select":
@@ -693,7 +699,6 @@ const ApartmentDetailsPage = ({
   const priceVisible = fieldVisibility.price;
   const areaVisible = fieldVisibility.area;
   const roomsVisible = fieldVisibility.rooms;
-  const statusVisible = fieldVisibility.status;
   const floorVisible = fieldVisibility.floor;
   const numberVisible = fieldVisibility.number;
 
@@ -750,7 +755,7 @@ const ApartmentDetailsPage = ({
       <div className="container mx-auto px-0 lg:px-6">
         {/* Mobile Layout */}
         <div className="lg:hidden">
-          {/* Header with back button and status badge */}
+          {/* Header with back button */}
           <div className="relative">
             <div className="absolute left-4 top-4 z-10">
               <Button
@@ -763,16 +768,6 @@ const ApartmentDetailsPage = ({
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            {statusVisible && (
-              <div className="absolute right-4 top-4 z-10">
-                <Badge
-                  className={`${getStatusColor(apartment.status)} rounded-full px-3 py-1 font-medium`}
-                  style={getStatusStyle(apartment.status)}
-                >
-                  {getStatusLabel(apartment.status)}
-                </Badge>
-              </div>
-            )}
 
             {/* Main apartment image */}
             <div className="relative overflow-hidden">
@@ -789,7 +784,7 @@ const ApartmentDetailsPage = ({
                   {apartment.type === "apartment"
                     ? (project as unknown as Record<string, unknown>)
                         ?.project_type === "object"
-                      ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
+                      ? `${t("apartment.objectUnit")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                       : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
                 </h1>
@@ -831,7 +826,9 @@ const ApartmentDetailsPage = ({
                   <span className="text-gray-700">
                     {apartment.rooms == 0
                       ? t("apartment.studio")
-                      : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}
+                      : apartment.rooms === "free_layout"
+                        ? t("apartment.freeLayout")
+                        : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}
                   </span>
                 </div>
               )}
@@ -839,7 +836,7 @@ const ApartmentDetailsPage = ({
                 <div className="flex items-center gap-2">
                   <Square className="h-5 w-5 text-gray-400" />
                   <span className="text-gray-700">
-                    {apartment.area} м² {t("apartment.area")}
+                    {apartment.area} {t("apartment.sqm")} {t("apartment.area")}
                   </span>
                 </div>
               )}
@@ -873,7 +870,7 @@ const ApartmentDetailsPage = ({
                 <h3 className="mb-3 text-lg font-semibold text-gray-900">
                   {(project as unknown as Record<string, unknown>)
                     ?.project_type === "object"
-                    ? "Object details"
+                    ? t("apartment.objectDetails")
                     : t("apartment.details")}
                 </h3>
 
@@ -965,7 +962,7 @@ const ApartmentDetailsPage = ({
                   {apartment.type === "apartment"
                     ? (project as unknown as Record<string, unknown>)
                         ?.project_type === "object"
-                      ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
+                      ? `${t("apartment.objectUnit")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                       : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
                 </h1>
@@ -979,7 +976,7 @@ const ApartmentDetailsPage = ({
                       ? "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
                       : "border-gray-200"
                   }`}
-                  aria-label="favorite"
+                  aria-label={t("common.drawer.actions.favorite")}
                 >
                   <Heart
                     className={`h-5 w-5 ${isFavorite(apartment?.id || "") ? "fill-current" : ""}`}
@@ -989,7 +986,7 @@ const ApartmentDetailsPage = ({
                   variant="outline"
                   onClick={handleShare}
                   className="rounded-lg border border-gray-200 px-3 py-2 hover:border-gray-300"
-                  aria-label="share"
+                  aria-label={t("common.drawer.actions.share")}
                 >
                   <Share2 className="h-5 w-5" />
                 </Button>
@@ -1002,17 +999,6 @@ const ApartmentDetailsPage = ({
               <div className="flex-1 space-y-4">
                 {/* Gallery */}
                 <div className="relative">
-                  {statusVisible && (
-                    <div className="absolute left-4 top-4 z-10">
-                      <Badge
-                        className={`${getStatusColor(apartment.status)} rounded-full px-3 py-1 font-poppins font-medium`}
-                        style={getStatusStyle(apartment.status)}
-                      >
-                        {getStatusLabel(apartment.status)}
-                      </Badge>
-                    </div>
-                  )}
-
                   <ApartmentPhotosViewer preloadedLayoutPhotos={photos} />
                   {/* Gallery navigation line */}
                 </div>
@@ -1027,7 +1013,7 @@ const ApartmentDetailsPage = ({
                     <h2 className="font-poppins text-3xl font-medium text-gray-900">
                       {(project as unknown as Record<string, unknown>)
                         ?.project_type === "object"
-                        ? "Object details"
+                        ? t("apartment.objectDetails")
                         : t("apartment.details")}
                     </h2>
 
@@ -1106,10 +1092,10 @@ const ApartmentDetailsPage = ({
                             : apartment.rooms === "free_layout"
                               ? t("apartment.freeLayout")
                               : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}{" "}
-                          {apartment.area} m2
+                          {apartment.area} {t("apartment.sqm")}
                         </div>
                         <div className="font-poppins text-xl font-light text-gray-500">
-                          {apartment.floor_number} floor
+                          {apartment.floor_number} {t("apartment.floor")}
                         </div>
                       </div>
                       <div className="flex justify-between gap-[15px]">
@@ -1277,10 +1263,10 @@ const ApartmentDetailsPage = ({
                             {isGeneratingPDF ? (
                               <div className="flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>PDF</span>
+                                <span>{t("apartment.downloadPDF")}</span>
                               </div>
                             ) : (
-                              "PDF"
+                              t("apartment.downloadPDF")
                             )}
                           </Button>
                         </div>
@@ -1295,7 +1281,7 @@ const ApartmentDetailsPage = ({
             {recommendedApartments.length > 0 && (
               <div className="mt-12 space-y-6 rounded-2xl bg-gray-50 p-10">
                 <h2 className="font-poppins text-3xl font-medium text-gray-900">
-                  Recommended apartments
+                  {t("apartment.recommendedApartments")}
                 </h2>
                 <div className="grid grid-cols-4 gap-6">
                   {recommendedApartments.map((recApartment) => {
@@ -1303,7 +1289,7 @@ const ApartmentDetailsPage = ({
                       recApartment.type === "apartment"
                         ? (project as unknown as Record<string, unknown>)
                             ?.project_type === "object"
-                          ? `Object № ${recApartment.apartment_number}`
+                          ? `${t("apartment.objectUnit")} № ${recApartment.apartment_number}`
                           : `${t("apartment.apartment")} № ${recApartment.apartment_number}`
                         : `${recApartment.type} № ${recApartment.apartment_number}`;
 
@@ -1414,7 +1400,9 @@ const ApartmentDetailsPage = ({
                   ) : (
                     <FileDown className="h-5 w-5" />
                   )}
-                  <span className="hidden xs:block">PDF</span>
+                  <span className="hidden xs:block">
+                    {t("apartment.downloadPDF")}
+                  </span>
                 </Button>
               </div>
             </div>

@@ -5,7 +5,7 @@
   "apartments": "apartments",
   "area": "Area",
   "available": "Available",
-  "details": "Details information",
+  "details": "Detailed information",
   "enter": "Enter",
   "floor": "Floor",
   "no": "No",
@@ -32,10 +32,17 @@
   "goBack": "Go back",
   "installmentCalculator": "Installment calculator",
   "invalidId": "Invalid apartment ID",
+  "invalidPhone": "Enter a valid phone number for the selected country.",
+  "phoneFormatHint": "Pick your country code, then enter your number — it is checked automatically.",
   "linkCopied": "Link copied",
   "notFound": "Apartment not found",
   "notFoundDescription": "The requested apartment could not be found.",
   "pdfGenerationError": "Error generating PDF",
   "reserve": "Reserve",
-  "reserveTitle": "Reserve apartment"
+  "reserveTitle": "Reserve apartment",
+  "leadSubmitError": "Could not send the request. Please try again.",
+  "leadUnexpectedError": "Something went wrong. Please try again.",
+  "objectDetails": "Object details",
+  "objectUnit": "Object",
+  "recommendedApartments": "Recommended apartments"
 }
