@@ -13,6 +13,8 @@ import {
 } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import {
+  ChevronLeft,
+  ChevronRight,
   Upload,
   Plus,
   Trash2,
@@ -158,12 +160,13 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   const historyGestureActiveRef = useRef(false);
   const historyGestureTimerRef = useRef<number | null>(null);
   const isApartmentFormOpen = editingApartment !== null;
+  const activePolygonApartmentId =
+    editingApartment && editingApartment !== "new"
+      ? editingApartment
+      : selectedApartmentId;
   const canStartDrawingFromImage =
-    isApartmentFormOpen &&
-    ((isCreatingNew && !currentShape) ||
-      (!isCreatingNew &&
-        !!editingApartment &&
-        (currentShape?.points.length ?? 0) === 0));
+    (isCreatingNew && isApartmentFormOpen && !currentShape) ||
+    (!!activePolygonApartmentId && (currentShape?.points.length ?? 0) === 0);
 
   const cloneShape = useCallback((shape: Shape): Shape => {
     return {
@@ -716,7 +719,12 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   };
 
   const persistCurrentPolygonBeforeApartmentSwitch = async () => {
-    if (!editingApartment || editingApartment === "new" || !currentShape) {
+    const polygonApartmentId =
+      editingApartment && editingApartment !== "new"
+        ? editingApartment
+        : selectedApartmentId;
+
+    if (!polygonApartmentId || !currentShape) {
       return true;
     }
 
@@ -732,13 +740,13 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         .update({
           polygon: shapeToSave.points as unknown as Json,
         })
-        .eq("id", editingApartment);
+        .eq("id", polygonApartmentId);
 
       if (error) throw error;
 
       setApartments((prev) =>
         prev.map((apt) =>
-          apt.id === editingApartment
+          apt.id === polygonApartmentId
             ? { ...apt, polygon: shapeToSave.points as Point[] }
             : apt,
         ),
@@ -746,7 +754,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
       setShapes((prev) =>
         prev.map((shape) =>
-          shape.id === editingApartment
+          shape.id === polygonApartmentId
             ? {
                 ...shape,
                 points: shapeToSave.points,
@@ -844,6 +852,39 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
       }
     }
     return false;
+  };
+
+  const activateApartmentPolygon = async (apartmentId: string) => {
+    if (!ensureFloorSelected()) {
+      return false;
+    }
+
+    if (activePolygonApartmentId !== apartmentId) {
+      const persisted = await persistCurrentPolygonBeforeApartmentSwitch();
+      if (!persisted) return false;
+    }
+
+    const apartment = apartments.find((apt) => apt.id === apartmentId);
+    if (!apartment) {
+      return false;
+    }
+
+    const polygonShape: Shape = {
+      id: apartment.id,
+      type: "polygon",
+      points: apartment.polygon,
+      color: getStatusColor(apartment.status),
+      isSelected: true,
+    };
+
+    setSelectedApartmentId(apartmentId);
+    setCurrentShape(apartment.polygon.length > 0 ? polygonShape : null);
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    resetHistoryGesture();
+    setSelectedVertexIndex(apartment.polygon.length > 0 ? 0 : null);
+
+    return true;
   };
 
   const handlePolygonSave = async () => {
@@ -1019,19 +1060,54 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   };
 
   const handleDeletePolygon = () => {
-    if (!editingApartment || editingApartment === "new") return;
+    if (!activePolygonApartmentId) return;
     setCurrentShape(null);
     setSelectedVertexIndex(null);
     setShapes((prev) =>
       prev.map((shape) =>
-        shape.id === editingApartment ? { ...shape, points: [] } : shape,
+        shape.id === activePolygonApartmentId
+          ? { ...shape, points: [] }
+          : shape,
       ),
     );
     setApartments((prev) =>
       prev.map((apt) =>
-        apt.id === editingApartment ? { ...apt, polygon: [] } : apt,
+        apt.id === activePolygonApartmentId ? { ...apt, polygon: [] } : apt,
       ),
     );
+  };
+
+  const pointCount = currentShape?.points.length ?? 0;
+  const normalizedSelectedVertexIndex =
+    selectedVertexIndex !== null &&
+    selectedVertexIndex >= 0 &&
+    selectedVertexIndex < pointCount
+      ? selectedVertexIndex
+      : pointCount > 0
+        ? pointCount - 1
+        : null;
+  const selectedVertexDisplayIndex =
+    normalizedSelectedVertexIndex !== null
+      ? normalizedSelectedVertexIndex + 1
+      : 0;
+  const canSelectVertex = pointCount > 0;
+
+  const selectPrevVertex = () => {
+    if (!canSelectVertex) return;
+    setSelectedVertexIndex((prev) => {
+      const current =
+        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
+      return current === 0 ? pointCount - 1 : current - 1;
+    });
+  };
+
+  const selectNextVertex = () => {
+    if (!canSelectVertex) return;
+    setSelectedVertexIndex((prev) => {
+      const current =
+        prev !== null && prev >= 0 && prev < pointCount ? prev : pointCount - 1;
+      return (current + 1) % pointCount;
+    });
   };
 
   const handlePolygonAnnotationClick = (id: string) => {
@@ -1043,9 +1119,8 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
       }
       return;
     }
-    setSelectedApartmentId(id);
     void (async () => {
-      await startEditingApartment(id);
+      await activateApartmentPolygon(id);
     })();
   };
 
@@ -1360,10 +1435,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                           : "cursor-pointer rounded border p-2 transition-colors hover:bg-muted/50"
                       }
                       onClick={() => {
-                        void (async () => {
-                          setSelectedApartmentId(apartment.id);
-                          await startEditingApartment(apartment.id);
-                        })();
+                        void activateApartmentPolygon(apartment.id);
                       }}
                     >
                       <div className="mb-1 flex items-center justify-between">
@@ -1454,7 +1526,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             </CardContent>
           </Card>
 
-          <div className="lg:col-span-2">
+          <div className="space-y-4 lg:col-span-2">
             {isApartmentFormOpen ? (
               <Card>
                 <CardHeader>
@@ -1475,11 +1547,11 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="apt-number">
+                    <Label htmlFor="apt-number-edit">
                       {t("floorPlan.apartments.number")}
                     </Label>
                     <Input
-                      id="apt-number"
+                      id="apt-number-edit"
                       value={apartmentData.number}
                       onChange={(e) =>
                         setApartmentData((prev) => ({
@@ -1492,7 +1564,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="apt-rooms">
+                    <Label htmlFor="apt-rooms-edit">
                       {t("floorPlan.apartments.rooms")}
                     </Label>
                     <Select
@@ -1501,7 +1573,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                         setApartmentData((prev) => ({ ...prev, rooms: value }))
                       }
                     >
-                      <SelectTrigger id="apt-rooms" className="mt-1">
+                      <SelectTrigger id="apt-rooms-edit" className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1517,11 +1589,11 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="apt-area">
+                    <Label htmlFor="apt-area-edit">
                       {t("floorPlan.apartments.area")}
                     </Label>
                     <Input
-                      id="apt-area"
+                      id="apt-area-edit"
                       type="number"
                       value={apartmentData.area}
                       onChange={(e) =>
@@ -1534,11 +1606,11 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="apt-price">
+                    <Label htmlFor="apt-price-edit">
                       {t("floorPlan.apartments.price")}
                     </Label>
                     <Input
-                      id="apt-price"
+                      id="apt-price-edit"
                       type="number"
                       value={apartmentData.price}
                       onChange={(e) =>
@@ -1551,7 +1623,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="apt-status">
+                    <Label htmlFor="apt-status-edit">
                       {t("floorPlan.apartments.status")}
                     </Label>
                     <Select
@@ -1562,7 +1634,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                         setApartmentData((prev) => ({ ...prev, status: value }))
                       }
                     >
-                      <SelectTrigger id="apt-status" className="mt-1">
+                      <SelectTrigger id="apt-status-edit" className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1700,8 +1772,88 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                 <CardHeader className="pb-3">
                   <div className="flex flex-col gap-3">
                     <CardTitle className="text-md">
-                      {t("floorPlan.title")}
+                      {isCreatingNew
+                        ? t("floorPlan.apartments.newApartment")
+                        : editingApartment
+                          ? t("floorPlan.apartments.editApartment", {
+                              number: apartmentData.number,
+                            })
+                          : t("floorPlan.title")}
                     </CardTitle>
+                    {(editingApartment || currentShape) && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          onClick={handleUndo}
+                          variant="outline"
+                          size="sm"
+                          disabled={undoStackRef.current.length === 0}
+                          title="Undo (Ctrl+Z)"
+                        >
+                          <Undo2 className="h-3.5 w-3.5" />
+                          <span className="ml-1">Undo</span>
+                        </Button>
+                        <Button
+                          onClick={handleRedo}
+                          variant="outline"
+                          size="sm"
+                          disabled={redoStackRef.current.length === 0}
+                          title="Redo (Ctrl+Shift+Z)"
+                        >
+                          <Redo2 className="h-3.5 w-3.5" />
+                          <span className="ml-1">Redo</span>
+                        </Button>
+                        <Button
+                          onClick={selectPrevVertex}
+                          variant="outline"
+                          size="sm"
+                          disabled={!canSelectVertex}
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                        </Button>
+                        <span className="min-w-[56px] text-center text-xs text-muted-foreground">
+                          {selectedVertexDisplayIndex}/{pointCount}
+                        </span>
+                        <Button
+                          onClick={selectNextVertex}
+                          variant="outline"
+                          size="sm"
+                          disabled={!canSelectVertex}
+                        >
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            void handleDeletePoint();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            !currentShape ||
+                            selectedVertexIndex === null ||
+                            currentShape.points.length <= 3
+                          }
+                          title={t("floorPlan.apartments.deletePoint")}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="ml-1">
+                            {t("floorPlan.apartments.deletePoint")}
+                          </span>
+                        </Button>
+                        <Button
+                          onClick={handleDeletePolygon}
+                          variant="outline"
+                          size="sm"
+                          disabled={!currentShape || pointCount === 0}
+                          title={t("floorPlan.apartments.deletePolygon")}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="ml-1">
+                            {t("floorPlan.apartments.deletePolygon")}
+                          </span>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="p-2">
