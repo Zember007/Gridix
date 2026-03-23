@@ -92,7 +92,6 @@ export function SubscriptionsManagement() {
 
   // Form states for creating subscription
   const [createForm, setCreateForm] = useState({
-    userEmail: "",
     projectId: "",
     planId: "",
     durationMonths: 1,
@@ -210,11 +209,34 @@ export function SubscriptionsManagement() {
     }
   };
 
+  /** Projects that already have (or had / pending) a subscription row — same scope as the list above. */
   const fetchProjects = async () => {
     try {
+      const { data: subRows, error: subError } = await supabase
+        .from("user_subscriptions")
+        .select("project_id")
+        .not("status", "eq", "migrated")
+        .not("project_id", "is", null);
+
+      if (subError) throw subError;
+
+      const projectIds = Array.from(
+        new Set(
+          (subRows ?? [])
+            .map((row) => row.project_id as string | null)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      );
+
+      if (projectIds.length === 0) {
+        setProjects([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("projects")
         .select("id, name, user_id")
+        .in("id", projectIds)
         .order("name");
 
       if (error) throw error;
@@ -225,7 +247,19 @@ export function SubscriptionsManagement() {
   };
 
   const handleCreateSubscription = async () => {
-    if (!createForm.userEmail || !createForm.projectId || !createForm.planId) {
+    if (!createForm.projectId || !createForm.planId) {
+      toast({
+        title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
+        description: t(
+          "admin.superadmin.subscriptionsManagement.toast.fillRequiredFields",
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedProject = projects.find((p) => p.id === createForm.projectId);
+    if (!selectedProject) {
       toast({
         title: t("admin.superadmin.subscriptionsManagement.toast.errorTitle"),
         description: t(
@@ -238,29 +272,6 @@ export function SubscriptionsManagement() {
 
     setIsProcessing(true);
     try {
-      // Get user by email
-      const { data: userData, error: userError } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("email", createForm.userEmail)
-        .single();
-
-      if (userError || !userData) {
-        throw new Error("User not found with this email");
-      }
-
-      // Verify project belongs to user
-      const { data: projectData, error: projectError } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("id", createForm.projectId)
-        .eq("user_id", userData.id)
-        .single();
-
-      if (projectError || !projectData) {
-        throw new Error("Project not found or does not belong to this user");
-      }
-
       // Calculate end date
       const startDate = new Date();
       const endDate = new Date(startDate);
@@ -270,7 +281,7 @@ export function SubscriptionsManagement() {
       const { error: insertError } = await supabase
         .from("user_subscriptions")
         .insert({
-          user_id: userData.id,
+          user_id: selectedProject.user_id,
           project_id: createForm.projectId,
           plan_id: createForm.planId,
           status: "active",
@@ -291,7 +302,6 @@ export function SubscriptionsManagement() {
       });
 
       setCreateForm({
-        userEmail: "",
         projectId: "",
         planId: "",
         durationMonths: 1,
@@ -299,7 +309,8 @@ export function SubscriptionsManagement() {
         invoiceUrl: "",
       });
       setIsCreateDialogOpen(false);
-      fetchSubscriptions();
+      void fetchSubscriptions();
+      void fetchProjects();
     } catch (error) {
       console.error("Error creating subscription:", error);
       toast({
@@ -643,25 +654,6 @@ export function SubscriptionsManagement() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>
-                  {t(
-                    "admin.superadmin.subscriptionsManagement.fields.userEmail",
-                  )}{" "}
-                  *
-                </Label>
-                <Input
-                  type="email"
-                  placeholder="user@example.com"
-                  value={createForm.userEmail}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({
-                      ...prev,
-                      userEmail: e.target.value,
-                    }))
-                  }
-                />
-              </div>
               <div>
                 <Label>
                   {t("admin.superadmin.subscriptionsManagement.fields.project")}{" "}
