@@ -160,32 +160,15 @@ function mergeI18nModuleList(modules: string[]): string[] {
 }
 
 function getI18nModulesForPathname(pathname: string): string[] | null {
-  // Keep the project page critical path as small as possible.
-  // For unknown/other routes we fall back to "load all" to avoid breaking pages.
-  const isAdminProjectEditorRoute = pathname.includes("/admin/project/");
-  if (isAdminProjectEditorRoute) {
-    return mergeI18nModuleList([
-      "common",
-      "project",
-      "apartment",
-      "apartmentsManager",
-      "auth",
-      "managerAccounts",
-      "embed",
-      "filters",
-      "favorites",
-      "floorPlan",
-      "gallery",
-      "currency",
-      "state",
-      "subscription",
-      "installment",
-      "errors",
-      "projectEditor",
-      "projectEditorSidebar",
-    ]);
+  // Admin routes load all modules — they're used by internal users where
+  // bundle-size optimisation is not needed, and partial lists cause missing
+  // translations on hard refresh (no prior navigation to load the rest).
+  if (pathname.includes("/admin/")) {
+    return null;
   }
 
+  // Keep the project page critical path as small as possible.
+  // For unknown/other routes we fall back to "load all" to avoid breaking pages.
   const isProjectRoute = pathname.includes("/project/");
   if (isProjectRoute) {
     return mergeI18nModuleList([
