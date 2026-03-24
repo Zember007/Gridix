@@ -415,13 +415,23 @@ export async function uploadApartmentPhoto(
   return { publicUrl: response.publicUrl };
 }
 
+export interface LayoutPhotoAssignment {
+  /** Mark this photo as a project catalog/card preview. Default: false. */
+  is_project_preview?: boolean;
+  /** Explicit apartment bindings (tier-1 matching). Empty array or null = no binding. */
+  apartment_ids?: string[] | null;
+}
+
 export async function uploadLayoutPhoto(
   projectId: string,
   layoutType: string,
   orderIndex: number,
   file: File,
-  options: UploadWithProgressOptions = {},
+  options: UploadWithProgressOptions & {
+    assignment?: LayoutPhotoAssignment;
+  } = {},
 ): Promise<{ publicUrl: string }> {
+  const { assignment, ...uploadOptions } = options;
   const fileName = createUniqueFileName(projectId, ".webp", layoutType);
   const objectPath = `layouts/${fileName}`;
 
@@ -429,7 +439,7 @@ export async function uploadLayoutPhoto(
     "project-images",
     objectPath,
     file,
-    options,
+    uploadOptions,
   );
 
   const {
@@ -441,6 +451,8 @@ export async function uploadLayoutPhoto(
     layout_type: layoutType,
     image_url: publicUrl,
     order_index: orderIndex,
+    is_project_preview: assignment?.is_project_preview ?? false,
+    apartment_ids: assignment?.apartment_ids ?? null,
   });
 
   if (error) {
@@ -449,6 +461,24 @@ export async function uploadLayoutPhoto(
   }
 
   return { publicUrl };
+}
+
+export async function updateLayoutPhotoAssignment(
+  photoId: string,
+  assignment: LayoutPhotoAssignment,
+): Promise<void> {
+  const { error } = await supabase
+    .from("layout_photos")
+    .update({
+      is_project_preview: assignment.is_project_preview ?? false,
+      apartment_ids:
+        assignment.apartment_ids && assignment.apartment_ids.length > 0
+          ? assignment.apartment_ids
+          : null,
+    })
+    .eq("id", photoId);
+
+  if (error) throw error;
 }
 
 /**
