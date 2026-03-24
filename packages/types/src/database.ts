@@ -197,7 +197,6 @@ export type Database = {
           created_at: string;
           developer_user_id: string;
           id: number;
-          lang: string;
           name: string;
           storage_path: string;
           updated_at: string;
@@ -206,7 +205,6 @@ export type Database = {
           created_at?: string;
           developer_user_id: string;
           id?: number;
-          lang?: string;
           name: string;
           storage_path: string;
           updated_at?: string;
@@ -215,7 +213,6 @@ export type Database = {
           created_at?: string;
           developer_user_id?: string;
           id?: number;
-          lang?: string;
           name?: string;
           storage_path?: string;
           updated_at?: string;
@@ -719,6 +716,69 @@ export type Database = {
           },
         ];
       };
+      changelog_pull_requests: {
+        Row: {
+          author: string | null;
+          body: string | null;
+          code_zones: string[];
+          context: string | null;
+          created_at: string;
+          github_pr_id: number;
+          how_to_verify: string | null;
+          id: string;
+          media: Json;
+          merged_at: string;
+          risks: string | null;
+          summary_en: string | null;
+          summary_ru: string | null;
+          task_link: string | null;
+          title: string;
+          title_en: string | null;
+          title_ru: string | null;
+          what_done: string | null;
+        };
+        Insert: {
+          author?: string | null;
+          body?: string | null;
+          code_zones?: string[];
+          context?: string | null;
+          created_at?: string;
+          github_pr_id: number;
+          how_to_verify?: string | null;
+          id?: string;
+          media?: Json;
+          merged_at: string;
+          risks?: string | null;
+          summary_en?: string | null;
+          summary_ru?: string | null;
+          task_link?: string | null;
+          title: string;
+          title_en?: string | null;
+          title_ru?: string | null;
+          what_done?: string | null;
+        };
+        Update: {
+          author?: string | null;
+          body?: string | null;
+          code_zones?: string[];
+          context?: string | null;
+          created_at?: string;
+          github_pr_id?: number;
+          how_to_verify?: string | null;
+          id?: string;
+          media?: Json;
+          merged_at?: string;
+          risks?: string | null;
+          summary_en?: string | null;
+          summary_ru?: string | null;
+          task_link?: string | null;
+          title?: string;
+          title_en?: string | null;
+          title_ru?: string | null;
+          what_done?: string | null;
+        };
+        Relationships: [];
+      };
       commission_tiers: {
         Row: {
           commission_percentage: number;
@@ -1180,30 +1240,36 @@ export type Database = {
       };
       layout_photos: {
         Row: {
+          apartment_ids: string[] | null;
           created_at: string;
           description: string | null;
           id: string;
           image_url: string;
+          is_project_preview: boolean;
           layout_type: string;
           order_index: number;
           project_id: string;
           updated_at: string;
         };
         Insert: {
+          apartment_ids?: string[] | null;
           created_at?: string;
           description?: string | null;
           id?: string;
           image_url: string;
+          is_project_preview?: boolean;
           layout_type: string;
           order_index?: number;
           project_id: string;
           updated_at?: string;
         };
         Update: {
+          apartment_ids?: string[] | null;
           created_at?: string;
           description?: string | null;
           id?: string;
           image_url?: string;
+          is_project_preview?: boolean;
           layout_type?: string;
           order_index?: number;
           project_id?: string;
@@ -2064,6 +2130,39 @@ export type Database = {
           },
         ];
       };
+      processed_stripe_events: {
+        Row: {
+          attempt_count: number;
+          event_type: string | null;
+          last_error: string | null;
+          processed_at: string | null;
+          processing_started_at: string | null;
+          status: string;
+          stripe_event_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          attempt_count?: number;
+          event_type?: string | null;
+          last_error?: string | null;
+          processed_at?: string | null;
+          processing_started_at?: string | null;
+          status?: string;
+          stripe_event_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempt_count?: number;
+          event_type?: string | null;
+          last_error?: string | null;
+          processed_at?: string | null;
+          processing_started_at?: string | null;
+          status?: string;
+          stripe_event_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       project_bitrix_settings: {
         Row: {
           assigned_by_id: number | null;
@@ -2125,6 +2224,7 @@ export type Database = {
           images: string[] | null;
           project_id: string;
           title: string;
+          translations: Json | null;
         };
         Insert: {
           created_at?: string;
@@ -2135,6 +2235,7 @@ export type Database = {
           images?: string[] | null;
           project_id: string;
           title: string;
+          translations?: Json | null;
         };
         Update: {
           created_at?: string;
@@ -2145,6 +2246,7 @@ export type Database = {
           images?: string[] | null;
           project_id?: string;
           title?: string;
+          translations?: Json | null;
         };
         Relationships: [
           {
@@ -2700,6 +2802,53 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stripe_subscription_items: {
+        Row: {
+          cancelled_at: string | null;
+          created_at: string;
+          id: string;
+          plan_slug: string;
+          project_id: string;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          stripe_subscription_item_id: string;
+          user_id: string;
+        };
+        Insert: {
+          cancelled_at?: string | null;
+          created_at?: string;
+          id?: string;
+          plan_slug: string;
+          project_id: string;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          stripe_subscription_item_id: string;
+          user_id: string;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          created_at?: string;
+          id?: string;
+          plan_slug?: string;
+          project_id?: string;
+          status?: string;
+          stripe_customer_id?: string;
+          stripe_subscription_id?: string;
+          stripe_subscription_item_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stripe_subscription_items_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
         ];
@@ -3266,6 +3415,7 @@ export type Database = {
         Args: { base_slug: string; project_id?: string };
         Returns: string;
       };
+      expire_elapsed_subscriptions: { Args: never; Returns: number };
       generate_invitation_token: { Args: never; Returns: string };
       generate_partner_code: {
         Args: { user_id_param: string };
@@ -3280,6 +3430,14 @@ export type Database = {
           p_is_manager_mode?: boolean;
           p_selected_project_id?: string;
           p_start_ts?: string;
+        };
+        Returns: Json;
+      };
+      get_admin_bootstrap: {
+        Args: {
+          p_active_workspace_id?: string;
+          p_auth_user_id: string;
+          p_is_manager_mode?: boolean;
         };
         Returns: Json;
       };
@@ -3312,6 +3470,11 @@ export type Database = {
       };
       is_superadmin: { Args: { _user_id: string }; Returns: boolean };
       needs_token_refresh: { Args: { settings_id: string }; Returns: boolean };
+      purge_agent_public_preview_files: {
+        Args: { max_files?: number };
+        Returns: number;
+      };
+      trigger_changelog_scan: { Args: never; Returns: undefined };
     };
     Enums: {
       apartment_type: "apartment" | "commercial" | "parking";

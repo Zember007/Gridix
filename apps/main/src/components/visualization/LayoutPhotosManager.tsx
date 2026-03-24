@@ -1,38 +1,59 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
+  Badge,
   Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
   FileDropzone,
+  Input,
   Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
+  UnitsChessboard,
   UploadProgressCard,
 } from "@gridix/ui";
-import { Image as ImageIcon, Trash2, Home } from "lucide-react";
+import {
+  Image as ImageIcon,
+  SlidersHorizontal,
+  Star,
+  Trash2,
+  Home,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import {
   Apartment,
   normalizeApartmentData,
 } from "@/entities/apartment/model/types";
+import { deriveApartmentLayoutType } from "@/entities/apartment/model/resolveLayoutPhotos";
 import { useAuth } from "@/contexts/AuthContext";
 import { compressToWebP } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
-import { uploadLayoutPhoto } from "@/features/projectEditor/api/projectEditorApi";
+import {
+  uploadLayoutPhoto,
+  updateLayoutPhotoAssignment,
+  type LayoutPhotoAssignment,
+} from "@/features/projectEditor/api/projectEditorApi";
 
 const MAX_CONCURRENT_UPLOADS = 3;
 
 interface LayoutPhotosManagerProps {
   projectId: string;
-  /** When provided, apartments are not fetched again (e.g. from project editor context). */
   initialApartments?: Apartment[] | null;
 }
 
@@ -43,6 +64,8 @@ interface LayoutPhoto {
   image_url: string;
   description?: string | null;
   order_index: number;
+  is_project_preview: boolean;
+  apartment_ids: string[];
 }
 
 interface LayoutType {
@@ -59,6 +82,8 @@ interface LayoutUploadProgressItem {
   progress: number;
   status: "uploading" | "complete";
 }
+
+// ── Helpers ──
 
 function deriveLayoutTypesFromApartments(
   normalizedApartments: Apartment[],
@@ -106,6 +131,322 @@ function deriveLayoutTypesFromApartments(
     }
   });
 }
+
+// ── Photo settings dialog ──
+
+interface PhotoSettingsDialogProps {
+  photo: LayoutPhoto;
+  apartments: Apartment[];
+  layoutType: string;
+  onSaved: (photoId: string, updated: Partial<LayoutPhoto>) => void;
+}
+
+function PhotoSettingsDialog({
+  photo,
+  apartments,
+  layoutType,
+  onSaved,
+}: PhotoSettingsDialogProps) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+
+  // Persisted state
+  const [isPreview, setIsPreview] = useState(photo.is_project_preview);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    new Set(photo.apartment_ids),
+  );
+
+  // UI-only area filter (never saved)
+  const [areaMin, setAreaMin] = useState("");
+  const [areaMax, setAreaMax] = useState("");
+
+  const [saving, setSaving] = useState(false);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      setIsPreview(photo.is_project_preview);
+      setSelectedIds(new Set(photo.apartment_ids));
+      setAreaMin("");
+      setAreaMax("");
+    }
+    setOpen(nextOpen);
+  };
+
+  const compatibleApartments = useMemo(
+    () => apartments.filter((a) => deriveApartmentLayoutType(a) === layoutType),
+    [apartments, layoutType],
+  );
+
+  const uniqueAreas = useMemo(() => {
+    const set = new Set(compatibleApartments.map((a) => a.area));
+    return Array.from(set).sort((a, b) => a - b);
+  }, [compatibleApartments]);
+
+  // Apartments matching the current area filter
+  const inAreaFilter = useCallback(
+    (apt: Apartment) => {
+      const min = areaMin !== "" ? parseFloat(areaMin) : null;
+      const max = areaMax !== "" ? parseFloat(areaMax) : null;
+      if (min === null && max === null) return false;
+      if (min !== null && apt.area < min) return false;
+      if (max !== null && apt.area > max) return false;
+      return true;
+    },
+    [areaMin, areaMax],
+  );
+
+  const hasAreaFilter = areaMin !== "" || areaMax !== "";
+
+  // Chessboard status: available = selected, booked = matches filter but not selected, sold = not selected
+  const chessboardUnits = useMemo(
+    () =>
+      compatibleApartments.map((apt) => {
+        const isSelected = selectedIds.has(apt.id);
+        const matchesFilter = inAreaFilter(apt);
+        const status = isSelected
+          ? "available"
+          : matchesFilter
+            ? "booked"
+            : "sold";
+        return {
+          id: apt.id,
+          apartment_number: String(apt.apartment_number),
+          floor_number: apt.floor_number,
+          status,
+        };
+      }),
+    [compatibleApartments, selectedIds, inAreaFilter],
+  );
+
+  const handleUnitClick = (unit: { id: string }) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(unit.id)) {
+        next.delete(unit.id);
+      } else {
+        next.add(unit.id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllInFilter = () => {
+    const matching = compatibleApartments.filter(inAreaFilter).map((a) => a.id);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      matching.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const handleClearAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const dirty =
+    isPreview !== photo.is_project_preview ||
+    selectedIds.size !== photo.apartment_ids.length ||
+    [...selectedIds].some((id) => !photo.apartment_ids.includes(id));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const assignment: LayoutPhotoAssignment = {
+        is_project_preview: isPreview,
+        apartment_ids: ids.length > 0 ? ids : null,
+      };
+      await updateLayoutPhotoAssignment(photo.id, assignment);
+      onSaved(photo.id, {
+        is_project_preview: isPreview,
+        apartment_ids: ids,
+      });
+      toast.success(t("photosManager.assignmentSaved"));
+      setOpen(false);
+    } catch {
+      toast.error(t("photosManager.assignmentSaveError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const matchingInFilter = hasAreaFilter
+    ? compatibleApartments.filter(inAreaFilter).length
+    : 0;
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{t("photosManager.assignmentTitle")}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {/* Preview toggle */}
+          <div className="flex items-start gap-3 rounded-lg border bg-muted/40 p-3.5">
+            <Checkbox
+              id={`preview-${photo.id}`}
+              checked={isPreview}
+              onCheckedChange={(v) => setIsPreview(Boolean(v))}
+              className="mt-0.5"
+            />
+            <div className="leading-tight">
+              <label
+                htmlFor={`preview-${photo.id}`}
+                className="cursor-pointer font-medium"
+              >
+                {t("photosManager.roleProjectPreview")}
+              </label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("photosManager.roleProjectPreviewHint")}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Apartment chessboard */}
+          {compatibleApartments.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <Label>{t("photosManager.apartmentCoverageTitle")}</Label>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t("photosManager.apartmentCoverageHint")}
+                  </p>
+                </div>
+                {selectedIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="shrink-0 text-xs text-muted-foreground underline-offset-2 hover:underline"
+                  >
+                    {t("photosManager.clearAll")}
+                  </button>
+                )}
+              </div>
+
+              {/* Area filter — UI only */}
+              <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t("photosManager.areaFilterLabel")}
+                </p>
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground">
+                      {t("photosManager.areaMin")}
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder={t("photosManager.areaPlaceholder")}
+                      value={areaMin}
+                      onChange={(e) => setAreaMin(e.target.value)}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                  <span className="pb-1.5 text-muted-foreground">—</span>
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground">
+                      {t("photosManager.areaMax")}
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder={t("photosManager.areaPlaceholder")}
+                      value={areaMax}
+                      onChange={(e) => setAreaMax(e.target.value)}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                  {hasAreaFilter && matchingInFilter > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mb-0.5 h-8 shrink-0 text-xs"
+                      onClick={handleSelectAllInFilter}
+                    >
+                      {t("photosManager.selectMatching", {
+                        count: matchingInFilter,
+                      })}
+                    </Button>
+                  )}
+                </div>
+                {uniqueAreas.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {uniqueAreas.slice(0, 12).map((a) => (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() => {
+                          setAreaMin(String(a));
+                          setAreaMax(String(a));
+                        }}
+                        className="rounded-md border bg-background px-2 py-0.5 text-xs transition-colors hover:bg-muted"
+                      >
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Chessboard */}
+              <div className="max-h-60 overflow-y-auto rounded-xl">
+                <UnitsChessboard
+                  units={chessboardUnits}
+                  labels={{ available: "", booked: "", sold: "" }}
+                  showLegend={false}
+                  onUnitClick={handleUnitClick}
+                  getUnitStatusGroup={(status) =>
+                    status === "available"
+                      ? "available"
+                      : status === "booked"
+                        ? "booked"
+                        : "sold"
+                  }
+                  renderUnitMeta={() => ""}
+                />
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  {t("photosManager.legendSelected")} ({selectedIds.size})
+                </span>
+                {hasAreaFilter && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                    {t("photosManager.legendInFilter")} ({matchingInFilter})
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+                  {t("photosManager.legendUnbound")}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end border-t pt-4">
+          <Button onClick={handleSave} disabled={!dirty || saving}>
+            {saving ? "…" : t("photosManager.save")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Main component ──
 
 const LayoutPhotosManager = ({
   projectId,
@@ -157,14 +498,22 @@ const LayoutPhotosManager = ({
     try {
       const { data, error } = await supabase
         .from("layout_photos")
-        .select("*")
+        .select(
+          "id, project_id, layout_type, image_url, description, order_index, is_project_preview, apartment_ids",
+        )
         .eq("project_id", projectId)
         .eq("layout_type", selectedLayoutType)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
 
-      setPhotos(data || []);
+      setPhotos(
+        (data || []).map((p) => ({
+          ...p,
+          is_project_preview: p.is_project_preview ?? false,
+          apartment_ids: (p.apartment_ids as string[] | null) ?? [],
+        })),
+      );
     } catch (error) {
       console.error("Error loading layout photos:", error);
     }
@@ -437,6 +786,15 @@ const LayoutPhotosManager = ({
     }
   };
 
+  const handleAssignmentSaved = useCallback(
+    (photoId: string, updated: Partial<LayoutPhoto>) => {
+      setPhotos((prev) =>
+        prev.map((p) => (p.id === photoId ? { ...p, ...updated } : p)),
+      );
+    },
+    [],
+  );
+
   const getApartmentCountForLayout = (layoutKey: string) => {
     const layoutType = layoutTypes.find((lt) => lt.key === layoutKey);
     if (!layoutType) return 0;
@@ -583,7 +941,7 @@ const LayoutPhotosManager = ({
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {photos.map((photo) => (
                     <div key={photo.id} className="group relative">
                       <img
@@ -591,18 +949,48 @@ const LayoutPhotosManager = ({
                         alt={
                           photo.description || t("photosManager.layoutPhotoAlt")
                         }
-                        className="h-32 w-full rounded-lg object-cover"
+                        className="h-40 w-full rounded-xl object-cover"
                       />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-                        onClick={() =>
-                          handleDeletePhoto(photo.id, photo.image_url)
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {/* Badges */}
+                      <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                        {photo.is_project_preview && (
+                          <Badge
+                            variant="secondary"
+                            className="gap-1 bg-yellow-100 text-xs text-yellow-800"
+                          >
+                            <Star className="h-3 w-3" />
+                            {t("photosManager.roleProjectPreview")}
+                          </Badge>
+                        )}
+                        {photo.apartment_ids.length > 0 && (
+                          <Badge
+                            variant="outline"
+                            className="gap-1 bg-blue-50 text-xs text-blue-800"
+                          >
+                            <Users className="h-3 w-3" />
+                            {photo.apartment_ids.length}
+                          </Badge>
+                        )}
+                      </div>
+                      {/* Action buttons */}
+                      <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <PhotoSettingsDialog
+                          photo={photo}
+                          apartments={apartments}
+                          layoutType={selectedLayoutType}
+                          onSaved={handleAssignmentSaved}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() =>
+                            handleDeletePhoto(photo.id, photo.image_url)
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

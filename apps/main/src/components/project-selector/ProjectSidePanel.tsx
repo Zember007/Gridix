@@ -63,7 +63,7 @@ const getLayoutKey = (apartment: Apartment) => {
       ? apartment.rooms
       : Number(apartment.rooms);
   if (Number.isFinite(roomsNum) && roomsNum === 0) return "studio";
-  if (Number.isFinite(roomsNum)) return `${roomsNum} -room`;
+  if (Number.isFinite(roomsNum)) return `${roomsNum}-room`;
   return "apartment";
 };
 
@@ -219,19 +219,17 @@ export const ProjectSidePanel = ({
   // Safely get image URL
   const getApartmentImage = useCallback(
     (apt: Apartment) => {
-      // 1) Prefer apartment first photo (cover)
+      // 1) Prefer apartment-specific photo (cover)
       const apartmentPhoto = apartmentCoverPhotoById[apt.id];
       if (apartmentPhoto) return apartmentPhoto;
 
-      // Check property existence safely or fallback to preloaded images
-      const imgUrl = (apt as { layout_image_url?: string | null })
-        .layout_image_url;
-      if (imgUrl) return imgUrl;
-
-      // Fallback to preloaded category image
+      // 2) Tier-1 layout photo: explicitly bound to this apartment in chess
       const key = getLayoutKey(apt);
-      const photos = preloadedLayoutPhotosByRooms[key] || [];
-      return photos[0]?.image_url ?? null;
+      const layoutPhotos = preloadedLayoutPhotosByRooms[key] || [];
+      const boundPhoto = layoutPhotos.find(
+        (p) => p.apartment_ids !== null && p.apartment_ids.includes(apt.id),
+      );
+      return boundPhoto?.image_url ?? null;
     },
     [apartmentCoverPhotoById, preloadedLayoutPhotosByRooms],
   );

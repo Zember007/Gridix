@@ -22,6 +22,10 @@ export interface LayoutPhoto {
   description?: string;
   order_index: number;
   type: "layout";
+  /** True if marked as project catalog/card preview. */
+  is_project_preview: boolean;
+  /** Explicit apartment bindings (resolver tier-1). */
+  apartment_ids: string[] | null;
 }
 
 export interface FieldVisibility {

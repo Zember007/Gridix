@@ -408,16 +408,13 @@ const ApartmentDetailsPage = ({
           type: "apartment" as const,
         }));
 
-        const layoutPhotos: CombinedPhoto[] =
-          result.project.id !== "04bcb797-a155-479c-a9ae-131ce850375f"
-            ? []
-            : result.layoutPhotos.map((p) => ({
-                id: p.id,
-                image_url: p.image_url,
-                description: p.description ?? null,
-                order_index: p.order_index,
-                type: "layout" as const,
-              }));
+        const layoutPhotos: CombinedPhoto[] = result.layoutPhotos.map((p) => ({
+          id: p.id,
+          image_url: p.image_url,
+          description: p.description ?? null,
+          order_index: p.order_index,
+          type: "layout" as const,
+        }));
 
         setPhotos(
           [...layoutPhotos, ...aptPhotos].sort(
