@@ -22,6 +22,8 @@ interface LayoutPhoto {
   description?: string;
   order_index: number;
   type: "layout";
+  is_project_preview: boolean;
+  apartment_ids: string[] | null;
 }
 
 interface FieldSetting {
@@ -134,7 +136,9 @@ export const ListView = ({
     return Math.max(max, apartment.floor_number || 0);
   }, 0);
 
-  const getFavoriteImageUrl = (apartment: Apartment): string | null => {
+  const getApartmentLayoutPhoto = (
+    apartment: Apartment,
+  ): LayoutPhoto | null => {
     const layoutKey =
       apartment.type === "apartment"
         ? apartment.rooms == 0
@@ -144,8 +148,17 @@ export const ListView = ({
             : `${apartment.rooms}-room`
         : apartment.type;
     const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-    return photos[0]?.image_url ?? null;
+    // Only show explicitly bound photo; unbound = nothing
+    return (
+      photos.find(
+        (p) =>
+          p.apartment_ids !== null && p.apartment_ids.includes(apartment.id),
+      ) ?? null
+    );
   };
+
+  const getFavoriteImageUrl = (apartment: Apartment): string | null =>
+    getApartmentLayoutPhoto(apartment)?.image_url ?? null;
 
   const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
@@ -365,21 +378,11 @@ export const ListView = ({
                             <div className="flex-shrink-0">
                               <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
                                 {(() => {
-                                  const layoutKey =
-                                    apartment.type === "apartment"
-                                      ? apartment.rooms == 0
-                                        ? "studio"
-                                        : apartment.rooms === "free_layout"
-                                          ? "free_layout"
-                                          : `${apartment.rooms}-room`
-                                      : apartment.type;
-                                  const photos =
-                                    preloadedLayoutPhotosByRooms[layoutKey] ||
-                                    [];
-                                  const first = photos[0];
-                                  return first ? (
+                                  const photo =
+                                    getApartmentLayoutPhoto(apartment);
+                                  return photo ? (
                                     <img
-                                      src={first.image_url}
+                                      src={photo.image_url}
                                       alt={
                                         apartment.rooms == 0
                                           ? t("apartment.studio")
@@ -558,21 +561,11 @@ export const ListView = ({
                             <div className="ml-[57px] flex-shrink-0">
                               <div className="flex h-[64px] w-[60px] items-center justify-center overflow-hidden rounded-lg bg-gray-100">
                                 {(() => {
-                                  const layoutKey =
-                                    apartment.type === "apartment"
-                                      ? apartment.rooms == 0
-                                        ? "studio"
-                                        : apartment.rooms === "free_layout"
-                                          ? "free_layout"
-                                          : `${apartment.rooms}-room`
-                                      : apartment.type;
-                                  const photos =
-                                    preloadedLayoutPhotosByRooms[layoutKey] ||
-                                    [];
-                                  const first = photos[0];
-                                  return first ? (
+                                  const photo =
+                                    getApartmentLayoutPhoto(apartment);
+                                  return photo ? (
                                     <img
-                                      src={first.image_url}
+                                      src={photo.image_url}
                                       alt={
                                         apartment.rooms == 0
                                           ? t("apartment.studio")

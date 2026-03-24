@@ -15,6 +15,8 @@ interface LayoutPhoto {
   description?: string;
   order_index: number;
   type: "layout";
+  is_project_preview: boolean;
+  apartment_ids: string[] | null;
 }
 
 interface LayoutGalleryProps {
@@ -318,7 +320,8 @@ export const LayoutGallery = ({
 
                       const photos =
                         preloadedLayoutPhotosByRooms[layoutKey] || [];
-                      const first = photos[0];
+                      const first =
+                        photos.find((p) => p.is_project_preview) ?? photos[0];
 
                       if (first) {
                         const isLCPCandidate = cardIndex === 0;

@@ -13,6 +13,10 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@gridix/ui";
+import {
+  resolveLayoutPhotosForApartment,
+  type LayoutPhotoRaw,
+} from "@/entities/apartment/model/resolveLayoutPhotos";
 
 interface CombinedPhoto {
   id: string;
@@ -25,12 +29,18 @@ interface CombinedPhoto {
 interface ApartmentPhotosViewerProps {
   projectId?: string;
   apartmentId?: string;
+  /** Apartment area in m² — used for resolver tier-2 when falling back to self-fetch. */
+  apartmentArea?: number;
+  /** Apartment layout type key (e.g. "2-room") — used for resolver when falling back. */
+  apartmentLayoutType?: string;
   preloadedLayoutPhotos?: CombinedPhoto[];
 }
 
 const ApartmentPhotosViewer = ({
   projectId,
   apartmentId,
+  apartmentArea,
+  apartmentLayoutType,
   preloadedLayoutPhotos,
 }: ApartmentPhotosViewerProps) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -61,7 +71,9 @@ const ApartmentPhotosViewer = ({
           projectId
             ? supabase
                 .from("layout_photos")
-                .select("id, image_url, description, order_index")
+                .select(
+                  "id, image_url, description, order_index, layout_type, is_project_preview, apartment_ids",
+                )
                 .eq("project_id", projectId)
                 .order("order_index", { ascending: true })
             : Promise.resolve({ data: [], error: null } as any),
@@ -77,15 +89,46 @@ const ApartmentPhotosViewer = ({
         if (layoutRes.error) throw layoutRes.error;
         if (apartmentRes.error) throw apartmentRes.error;
 
-        const layoutPhotos: CombinedPhoto[] = (layoutRes.data ?? []).map(
+        const rawLayoutPhotos: LayoutPhotoRaw[] = (layoutRes.data ?? []).map(
           (p: any) => ({
             id: p.id,
             image_url: p.image_url,
             description: p.description ?? null,
             order_index: p.order_index ?? 0,
-            type: "layout",
+            layout_type: p.layout_type ?? "",
+            is_project_preview: Boolean(p.is_project_preview),
+            apartment_ids: (p.apartment_ids as string[] | null) ?? null,
           }),
         );
+
+        // Apply resolver when we have enough apartment context
+        let resolvedLayout: CombinedPhoto[];
+        if (apartmentId && apartmentLayoutType !== undefined) {
+          const resolved = resolveLayoutPhotosForApartment(rawLayoutPhotos, {
+            id: apartmentId,
+            layoutType: apartmentLayoutType,
+          });
+          resolvedLayout = resolved.map((p) => ({
+            ...p,
+            type: "layout" as const,
+          }));
+        } else {
+          // Minimal fallback: show only unbound photos (no apartment_ids, not preview-only)
+          resolvedLayout = rawLayoutPhotos
+            .filter(
+              (p) =>
+                (p.apartment_ids === null || p.apartment_ids.length === 0) &&
+                !p.is_project_preview,
+            )
+            .sort((a, b) => a.order_index - b.order_index)
+            .map((p) => ({
+              id: p.id,
+              image_url: p.image_url,
+              description: p.description ?? null,
+              order_index: p.order_index,
+              type: "layout" as const,
+            }));
+        }
 
         const apartmentPhotos: CombinedPhoto[] = (apartmentRes.data ?? []).map(
           (p: any) => ({
@@ -97,7 +140,7 @@ const ApartmentPhotosViewer = ({
           }),
         );
 
-        setPhotos([...apartmentPhotos, ...layoutPhotos]);
+        setPhotos([...apartmentPhotos, ...resolvedLayout]);
       } catch (e) {
         console.error("Failed to load photos:", e);
         setPhotos([]);
@@ -107,7 +150,13 @@ const ApartmentPhotosViewer = ({
     };
 
     void fetchPhotos();
-  }, [apartmentId, projectId, preloadedLayoutPhotos]);
+  }, [
+    apartmentId,
+    projectId,
+    apartmentArea,
+    apartmentLayoutType,
+    preloadedLayoutPhotos,
+  ]);
 
   useEffect(() => {
     const currentElement = document.getElementById("gridix-widget-root");

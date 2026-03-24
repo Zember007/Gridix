@@ -47,7 +47,9 @@ async function fetchLayoutPhotos(
 
   const { data, error } = await supabase
     .from("layout_photos")
-    .select("id, project_id, layout_type, image_url, description, order_index")
+    .select(
+      "id, project_id, layout_type, image_url, description, order_index, is_project_preview, apartment_ids",
+    )
     .eq("project_id", projectId)
     .in("layout_type", layoutTypes)
     .order("order_index", { ascending: true });
@@ -63,6 +65,8 @@ async function fetchLayoutPhotos(
       image_url: p.image_url,
       order_index: p.order_index,
       type: "layout",
+      is_project_preview: p.is_project_preview ?? false,
+      apartment_ids: (p.apartment_ids as string[] | null) ?? null,
     };
     if (p.description) {
       item.description = p.description;

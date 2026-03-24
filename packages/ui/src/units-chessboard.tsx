@@ -25,6 +25,7 @@ export interface UnitsChessboardProps<
   loadingText?: string;
   emptyText?: string;
   selectedUnitId?: string | null;
+  showLegend?: boolean;
   onUnitClick?: (unit: TUnit) => void;
   getUnitStatusGroup?: (status: string | null) => UnitsChessStatusGroup;
   renderUnitMeta?: (
@@ -68,6 +69,7 @@ export function UnitsChessboard<TUnit extends UnitsChessItem>({
   loadingText = "Loading...",
   emptyText = "No units",
   selectedUnitId = null,
+  showLegend = true,
   onUnitClick,
   getUnitStatusGroup = defaultGetUnitStatusGroup,
   renderUnitMeta = defaultRenderUnitMeta,
@@ -119,26 +121,28 @@ export function UnitsChessboard<TUnit extends UnitsChessItem>({
   return (
     <div className="p-6">
       <div className="rounded-xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
-          <div className="inline-flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            <span>
-              {labels.available} ({statusStats.available})
-            </span>
+        {showLegend && (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
+            <div className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <span>
+                {labels.available} ({statusStats.available})
+              </span>
+            </div>
+            <div className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+              <span>
+                {labels.booked} ({statusStats.booked})
+              </span>
+            </div>
+            <div className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+              <span>
+                {labels.sold} ({statusStats.sold})
+              </span>
+            </div>
           </div>
-          <div className="inline-flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-            <span>
-              {labels.booked} ({statusStats.booked})
-            </span>
-          </div>
-          <div className="inline-flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-            <span>
-              {labels.sold} ({statusStats.sold})
-            </span>
-          </div>
-        </div>
+        )}
 
         <div className="p-3 md:p-4">
           <div className="flex flex-col gap-2">
