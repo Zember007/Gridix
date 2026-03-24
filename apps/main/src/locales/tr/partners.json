@@ -379,6 +379,19 @@
     "dateTo": "Tarih bitiş"
   },
   "invite": "Davet etmek",
+  "agencyExport": {
+    "exportBtn": "Dışa aktar",
+    "colName": "Ad",
+    "colEmail": "E-posta",
+    "colBankDetails": "Banka bilgileri",
+    "colPhone": "Telefon",
+    "colMode": "Mod",
+    "modeValue": "direct",
+    "toastNothingToExportTitle": "Dışa aktarılacak veri yok",
+    "toastNothingToExportDesc": "Geçerli listede ortak yok.",
+    "toastExportDoneTitle": "Dışa aktarma tamamlandı",
+    "toastExportDoneDesc": "Ortak listesi indirilenlere kaydedildi."
+  },
   "showPendingOnly": "Yalnızca bekleyenleri göster",
   "clickToFilter": "Filtrelemek için tıklayın",
   "noPartners": "Ortak yok",

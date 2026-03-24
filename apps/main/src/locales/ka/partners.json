@@ -379,6 +379,19 @@
     "dateTo": "თარიღამდე"
   },
   "invite": "მოიწვიე",
+  "agencyExport": {
+    "exportBtn": "ექსპორტი",
+    "colName": "სახელი",
+    "colEmail": "ელფოსტა",
+    "colBankDetails": "საბანკო რეკვიზიტები",
+    "colPhone": "ტელეფონი",
+    "colMode": "რეჟიმი",
+    "modeValue": "direct",
+    "toastNothingToExportTitle": "ექსპორტისთვის არაფერია",
+    "toastNothingToExportDesc": "მიმდინარე სიაში პარტნიორები არ არის.",
+    "toastExportDoneTitle": "ექსპორტი დასრულდა",
+    "toastExportDoneDesc": "პარტნიორების სია შენახულია ჩამოტვირთვებში."
+  },
   "showPendingOnly": "აჩვენე მხოლოდ მომლოდინე",
   "clickToFilter": "დააწკაპუნეთ გასაფილტრად",
   "noPartners": "არ არის პარტნიორები",

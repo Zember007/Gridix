@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import * as XLSX from "xlsx";
 import { showToast } from "@gridix/utils/lib";
+import { computeXlsxColWidths } from "@/shared/lib/xlsxColWidths";
 import type { ContactKind, ContactRow } from "../model/types";
 
 export function exportContactsXLSX(contacts: ContactRow[], t: TFunction) {
@@ -45,7 +46,9 @@ export function exportContactsXLSX(contacts: ContactRow[], t: TFunction) {
     ];
   });
 
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+  const aoa = [headers, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = computeXlsxColWidths(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Contacts");
   XLSX.writeFile(

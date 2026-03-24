@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { computeXlsxColWidths } from "@/shared/lib/xlsxColWidths";
 
 type ExportLead = {
   id: string;
@@ -53,7 +54,9 @@ export const exportLeadsXlsx = ({
     ];
   });
 
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+  const aoa = [headers, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = computeXlsxColWidths(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Leads");
   XLSX.writeFile(
