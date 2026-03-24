@@ -199,121 +199,131 @@ const ApartmentDataSyncDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenStateChange}>
-      <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("apartmentsManager.syncDialog.title")}</DialogTitle>
-          <DialogDescription>
-            {t("apartmentsManager.syncDialog.description")}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex max-h-[86vh] max-w-4xl flex-col overflow-hidden p-0">
+        <div className="border-b px-5 py-4 sm:px-6">
+          <DialogHeader className="space-y-1.5 text-left">
+            <DialogTitle className="text-xl leading-tight">
+              {t("apartmentsManager.syncDialog.title")}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              {t("apartmentsManager.syncDialog.description")}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-6">
-          <div
-            className="rounded-lg border p-4"
-            style={{
-              backgroundColor: ADMIN_THEME.backgroundSecondary,
-              borderColor: ADMIN_THEME.info,
-            }}
-          >
-            <h4
-              className="mb-2 font-semibold"
-              style={{ color: ADMIN_THEME.info }}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+          <div className="space-y-3">
+            <div
+              className="rounded-lg border p-3"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.info,
+              }}
             >
-              {t("apartmentsManager.syncDialog.sourceApartment")}
-            </h4>
-            <div className="space-y-1 text-sm">
-              <p>
-                <strong>
-                  {t("apartmentsManager.syncDialog.apartmentNumber")}:
-                </strong>{" "}
-                {sourceApartment.apartment_number}
-              </p>
-              <p>
-                <strong>{t("apartmentsManager.syncDialog.floor")}:</strong>{" "}
-                {sourceApartment.floor_number}
-              </p>
-              <p>
-                <strong>{t("apartmentsManager.syncDialog.rooms")}:</strong>{" "}
-                {sourceApartment.rooms == 0
-                  ? t("apartment.studio")
-                  : sourceApartment.rooms}
-              </p>
-              <p>
-                <strong>{t("apartmentsManager.syncDialog.area")}:</strong>{" "}
-                {sourceApartment.area} м²
-              </p>
-              <p>
-                <strong>{t("apartmentsManager.price")}:</strong>{" "}
-                {formatPrice(sourceApartment.price)}
-              </p>
-              <p>
-                <strong>{t("apartmentsManager.status")}:</strong>{" "}
-                <Badge className={getStatusColor(sourceApartment.status)}>
-                  {getStatusLabel(sourceApartment.status)}
-                </Badge>
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
               <h4
-                className="font-semibold"
-                style={{ color: ADMIN_THEME.textPrimary }}
+                className="mb-1.5 text-sm font-semibold"
+                style={{ color: ADMIN_THEME.info }}
               >
-                {t("apartmentsManager.syncDialog.targetsTitle", {
-                  selected: selectedApartments.size,
-                  total: targetApartments.length,
-                })}
+                {t("apartmentsManager.syncDialog.sourceApartment")}
               </h4>
-              <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                {selectedApartments.size === targetApartments.length
-                  ? t("apartmentsManager.syncDialog.deselectAll")
-                  : t("apartmentsManager.syncDialog.selectAll")}
-              </Button>
+              <div className="space-y-0.5 text-sm">
+                <p>
+                  <strong>
+                    {t("apartmentsManager.syncDialog.apartmentNumber")}:
+                  </strong>{" "}
+                  {sourceApartment.apartment_number}
+                </p>
+                <p>
+                  <strong>{t("apartmentsManager.syncDialog.floor")}:</strong>{" "}
+                  {sourceApartment.floor_number}
+                </p>
+                <p>
+                  <strong>{t("apartmentsManager.syncDialog.rooms")}:</strong>{" "}
+                  {sourceApartment.rooms == 0
+                    ? t("apartment.studio")
+                    : sourceApartment.rooms}
+                </p>
+                <p>
+                  <strong>{t("apartmentsManager.syncDialog.area")}:</strong>{" "}
+                  {sourceApartment.area} м²
+                </p>
+                <p>
+                  <strong>{t("apartmentsManager.price")}:</strong>{" "}
+                  {formatPrice(sourceApartment.price)}
+                </p>
+                <p>
+                  <strong>{t("apartmentsManager.status")}:</strong>{" "}
+                  <Badge className={getStatusColor(sourceApartment.status)}>
+                    {getStatusLabel(sourceApartment.status)}
+                  </Badge>
+                </p>
+              </div>
             </div>
 
-            <ApartmentSyncTargetsList
-              targetApartments={targetApartments}
-              sourceApartment={sourceApartment}
-              selectedApartments={selectedApartments}
-              onApartmentToggle={handleApartmentToggle}
-              formatPrice={formatPrice}
-              getStatusColor={getStatusColor}
-              getStatusLabel={getStatusLabel}
-            />
-          </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h4
+                  className="text-sm font-semibold"
+                  style={{ color: ADMIN_THEME.textPrimary }}
+                >
+                  {t("apartmentsManager.syncDialog.targetsTitle", {
+                    selected: selectedApartments.size,
+                    total: targetApartments.length,
+                  })}
+                </h4>
+                <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                  {selectedApartments.size === targetApartments.length
+                    ? t("apartmentsManager.syncDialog.deselectAll")
+                    : t("apartmentsManager.syncDialog.selectAll")}
+                </Button>
+              </div>
 
-          <div
-            className="rounded-lg border p-4"
-            style={{
-              backgroundColor: ADMIN_THEME.backgroundSecondary,
-              borderColor: ADMIN_THEME.warning,
-            }}
-          >
-            <h4
-              className="mb-2 font-semibold"
-              style={{ color: ADMIN_THEME.warning }}
-            >
-              {t("apartmentsManager.syncDialog.syncedTitle")}
-            </h4>
-            <ul
-              className="space-y-1 text-sm"
-              style={{ color: ADMIN_THEME.textSecondary }}
-            >
-              <li>• {t("apartmentsManager.syncDialog.syncedPrice")}</li>
-              <li>• {t("apartmentsManager.syncDialog.syncedStatus")}</li>
-              <li>• {t("apartmentsManager.syncDialog.syncedCustomFields")}</li>
-            </ul>
-            <p
-              className="mt-2 text-xs"
-              style={{ color: ADMIN_THEME.textMuted }}
-            >
-              {t("apartmentsManager.syncDialog.notChangedHint")}
-            </p>
-          </div>
+              <ApartmentSyncTargetsList
+                targetApartments={targetApartments}
+                sourceApartment={sourceApartment}
+                selectedApartments={selectedApartments}
+                onApartmentToggle={handleApartmentToggle}
+                formatPrice={formatPrice}
+                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabel}
+              />
+            </div>
 
-          <div className="flex gap-2 pt-4">
+            <div
+              className="rounded-lg border p-3"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.warning,
+              }}
+            >
+              <h4
+                className="mb-1.5 text-sm font-semibold"
+                style={{ color: ADMIN_THEME.warning }}
+              >
+                {t("apartmentsManager.syncDialog.syncedTitle")}
+              </h4>
+              <ul
+                className="space-y-1 text-sm"
+                style={{ color: ADMIN_THEME.textSecondary }}
+              >
+                <li>• {t("apartmentsManager.syncDialog.syncedPrice")}</li>
+                <li>• {t("apartmentsManager.syncDialog.syncedStatus")}</li>
+                <li>
+                  • {t("apartmentsManager.syncDialog.syncedCustomFields")}
+                </li>
+              </ul>
+              <p
+                className="mt-2 text-xs"
+                style={{ color: ADMIN_THEME.textMuted }}
+              >
+                {t("apartmentsManager.syncDialog.notChangedHint")}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t bg-background px-5 py-4 sm:px-6">
+          <div className="flex gap-2">
             <Button
               onClick={handleConfirmSync}
               disabled={selectedApartments.size === 0 || isSyncing}
@@ -570,312 +580,324 @@ const FloorDuplicationModeDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenStateChange}>
-      <DialogContent className="max-h-[85vh] max-w-5xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {t("apartmentsManager.syncDialog.floorDuplicateTitle")}
-          </DialogTitle>
-          <DialogDescription>
-            {t("apartmentsManager.syncDialog.floorDuplicateDescription")}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex max-h-[85vh] max-w-5xl flex-col overflow-hidden p-0">
+        <div className="border-b px-5 py-4 sm:px-6">
+          <DialogHeader className="space-y-1.5 text-left">
+            <DialogTitle className="text-xl leading-tight">
+              {t("apartmentsManager.syncDialog.floorDuplicateTitle")}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              {t("apartmentsManager.syncDialog.floorDuplicateDescription")}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-6">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div
-              className="rounded-xl border p-4"
-              style={{
-                backgroundColor: ADMIN_THEME.backgroundSecondary,
-                borderColor: ADMIN_THEME.info,
-              }}
-            >
-              <div className="mb-2 text-sm font-semibold text-sky-700">
-                {t("apartmentsManager.syncDialog.sourceFloor")}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+          <div className="space-y-4">
+            <div className="grid gap-3 lg:grid-cols-3">
+              <div
+                className="rounded-xl border p-3.5"
+                style={{
+                  backgroundColor: ADMIN_THEME.backgroundSecondary,
+                  borderColor: ADMIN_THEME.info,
+                }}
+              >
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                  {t("apartmentsManager.syncDialog.sourceFloor")}
+                </div>
+                <div className="text-xl font-semibold leading-none">
+                  {sourceFloorNumber}
+                </div>
               </div>
-              <div className="text-2xl font-semibold">{sourceFloorNumber}</div>
-            </div>
-            <div
-              className="rounded-xl border p-4"
-              style={{
-                backgroundColor: ADMIN_THEME.backgroundSecondary,
-                borderColor: ADMIN_THEME.info,
-              }}
-            >
-              <div className="mb-2 text-sm font-semibold text-sky-700">
-                {t("apartmentsManager.syncDialog.sourceFloorPlan")}
+              <div
+                className="rounded-xl border p-3.5"
+                style={{
+                  backgroundColor: ADMIN_THEME.backgroundSecondary,
+                  borderColor: ADMIN_THEME.info,
+                }}
+              >
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                  {t("apartmentsManager.syncDialog.sourceFloorPlan")}
+                </div>
+                <div className="text-xl font-semibold leading-none">
+                  {sourceImageUrl ? t("common.yes") : t("common.no")}
+                </div>
               </div>
-              <div className="text-2xl font-semibold">
-                {sourceImageUrl ? t("common.yes") : t("common.no")}
-              </div>
-            </div>
-            <div
-              className="rounded-xl border p-4"
-              style={{
-                backgroundColor: ADMIN_THEME.backgroundSecondary,
-                borderColor: ADMIN_THEME.info,
-              }}
-            >
-              <div className="mb-2 text-sm font-semibold text-sky-700">
-                {t("apartmentsManager.syncDialog.sourcePolygons")}
-              </div>
-              <div className="text-2xl font-semibold">
-                {availablePolygonCount}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border p-4">
-              <h4 className="mb-4 font-semibold">
-                {t("apartmentsManager.syncDialog.copyOptionsTitle")}
-              </h4>
-              <div className="space-y-3">
-                <label className="flex items-start gap-3">
-                  <Checkbox
-                    checked={selectedCopyOptions.includes("floor_image")}
-                    onCheckedChange={() =>
-                      setSelectedCopyOptions((previous) =>
-                        toggleValue(previous, "floor_image"),
-                      )
-                    }
-                    disabled={!sourceImageUrl}
-                  />
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium">
-                      {t("apartmentsManager.syncDialog.copyFloorImage")}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {t("apartmentsManager.syncDialog.copyFloorImageHint")}
-                    </div>
-                  </div>
-                </label>
-                <label className="flex items-start gap-3">
-                  <Checkbox
-                    checked={selectedCopyOptions.includes("apartment_polygons")}
-                    onCheckedChange={() =>
-                      setSelectedCopyOptions((previous) =>
-                        toggleValue(previous, "apartment_polygons"),
-                      )
-                    }
-                    disabled={availablePolygonCount === 0}
-                  />
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium">
-                      {t("apartmentsManager.syncDialog.copyApartmentPolygons")}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {t(
-                        "apartmentsManager.syncDialog.copyApartmentPolygonsHint",
-                      )}
-                    </div>
-                  </div>
-                </label>
+              <div
+                className="rounded-xl border p-3.5"
+                style={{
+                  backgroundColor: ADMIN_THEME.backgroundSecondary,
+                  borderColor: ADMIN_THEME.info,
+                }}
+              >
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                  {t("apartmentsManager.syncDialog.sourcePolygons")}
+                </div>
+                <div className="text-xl font-semibold leading-none">
+                  {availablePolygonCount}
+                </div>
               </div>
             </div>
 
-            <div className="rounded-xl border p-4">
-              <h4 className="mb-4 font-semibold">
-                {t("apartmentsManager.syncDialog.matchingRulesTitle")}
-              </h4>
-              <div className="space-y-3">
-                {DEFAULT_MATCHING_RULES.map((rule) => (
-                  <label key={rule} className="flex items-start gap-3">
+            <div className="grid gap-3 lg:grid-cols-2">
+              <div className="rounded-xl border p-3.5">
+                <h4 className="mb-3 text-sm font-semibold">
+                  {t("apartmentsManager.syncDialog.copyOptionsTitle")}
+                </h4>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3">
                     <Checkbox
-                      checked={selectedMatchingRules.includes(rule)}
+                      checked={selectedCopyOptions.includes("floor_image")}
                       onCheckedChange={() =>
-                        setSelectedMatchingRules((previous) =>
-                          toggleValue(previous, rule),
+                        setSelectedCopyOptions((previous) =>
+                          toggleValue(previous, "floor_image"),
                         )
                       }
-                      disabled={
-                        !selectedCopyOptions.includes("apartment_polygons")
-                      }
+                      disabled={!sourceImageUrl}
                     />
                     <div className="space-y-1">
-                      <div className="text-sm font-medium">
-                        {getMatchingRuleLabel(rule)}
+                      <div className="text-sm font-medium leading-tight">
+                        {t("apartmentsManager.syncDialog.copyFloorImage")}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {getMatchingRuleHint(rule)}
+                      <div className="text-xs leading-relaxed text-muted-foreground">
+                        {t("apartmentsManager.syncDialog.copyFloorImageHint")}
                       </div>
                     </div>
                   </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {isLoadingPreview ? (
-            <div className="rounded-xl border p-8">
-              <LoadingProgress />
-              <p className="mt-3 text-center text-sm text-muted-foreground">
-                {t("apartmentsManager.syncDialog.previewLoading")}
-              </p>
-            </div>
-          ) : previewLoadError ? (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-              {previewLoadError}
-            </div>
-          ) : !preview ? null : (
-            <div className="space-y-4">
-              <div className="rounded-xl border p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="bg-sky-100 text-sky-800">
-                    {t("apartmentsManager.syncDialog.summaryFloorPlans", {
-                      count: preview.summary.floorPlanOperations,
-                    })}
-                  </Badge>
-                  <Badge className="bg-emerald-100 text-emerald-800">
-                    {t("apartmentsManager.syncDialog.summaryPolygons", {
-                      count: preview.summary.polygonOperations,
-                    })}
-                  </Badge>
-                  <Badge className="bg-amber-100 text-amber-900">
-                    {t("apartmentsManager.syncDialog.summarySkipped", {
-                      count: preview.summary.skippedMatches,
-                    })}
-                  </Badge>
-                  <Badge className="bg-rose-100 text-rose-800">
-                    {t("apartmentsManager.syncDialog.summaryAmbiguous", {
-                      count: preview.summary.ambiguousMatches,
-                    })}
-                  </Badge>
-                  <Badge className="bg-slate-100 text-slate-800">
-                    {t("apartmentsManager.syncDialog.readyOperations", {
-                      count: preview.summary.totalOperations,
-                    })}
-                  </Badge>
-                </div>
-
-                {selectedCopyOptions.length === 0 ? (
-                  <p className="mt-3 text-sm text-amber-700">
-                    {t("apartmentsManager.syncDialog.noCopyOptions")}
-                  </p>
-                ) : null}
-                {selectedCopyOptions.includes("apartment_polygons") &&
-                selectedMatchingRules.length === 0 ? (
-                  <p className="mt-3 text-sm text-amber-700">
-                    {t("apartmentsManager.syncDialog.noMatchingRules")}
-                  </p>
-                ) : null}
-                {targetFloorNumbers.length === 0 ? (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {t("apartmentsManager.syncDialog.noTargetFloors")}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="space-y-3">
-                {preview.floors.map((floor) => (
-                  <div
-                    key={floor.floorNumber}
-                    className="rounded-xl border p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <div className="text-base font-semibold">
-                          {t("apartmentsManager.floor", {
-                            floor: floor.floorNumber,
-                          })}
-                        </div>
-                        <div className="mt-1 text-sm text-muted-foreground">
-                          {getFloorPlanActionLabel(floor.floorPlanAction)}
-                        </div>
+                  <label className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedCopyOptions.includes(
+                        "apartment_polygons",
+                      )}
+                      onCheckedChange={() =>
+                        setSelectedCopyOptions((previous) =>
+                          toggleValue(previous, "apartment_polygons"),
+                        )
+                      }
+                      disabled={availablePolygonCount === 0}
+                    />
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium leading-tight">
+                        {t(
+                          "apartmentsManager.syncDialog.copyApartmentPolygons",
+                        )}
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-emerald-100 text-emerald-800">
-                          {t("apartmentsManager.syncDialog.summaryPolygons", {
-                            count: floor.polygonMatches.length,
-                          })}
-                        </Badge>
-                        <Badge className="bg-amber-100 text-amber-900">
-                          {t("apartmentsManager.syncDialog.summarySkipped", {
-                            count: floor.skippedApartments.length,
-                          })}
-                        </Badge>
+                      <div className="text-xs leading-relaxed text-muted-foreground">
+                        {t(
+                          "apartmentsManager.syncDialog.copyApartmentPolygonsHint",
+                        )}
                       </div>
                     </div>
+                  </label>
+                </div>
+              </div>
 
-                    {floor.polygonMatches.length > 0 ? (
-                      <div className="mt-4 space-y-2">
-                        {floor.polygonMatches.slice(0, 4).map((match) => (
-                          <div
-                            key={`${floor.floorNumber}-${match.targetApartmentId}`}
-                            className="rounded-lg border border-border/70 bg-background p-3 text-sm"
-                          >
-                            <div className="font-medium">
-                              {match.sourceApartmentNumber} -&gt;{" "}
-                              {match.targetApartmentNumber}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {t("apartmentsManager.syncDialog.matchedBy", {
-                                rule: getMatchingRuleLabel(match.strategy),
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                        {floor.polygonMatches.length > 4 ? (
-                          <div className="text-xs text-muted-foreground">
-                            {t("apartmentsManager.syncDialog.moreMatches", {
-                              count: floor.polygonMatches.length - 4,
+              <div className="rounded-xl border p-3.5">
+                <h4 className="mb-3 text-sm font-semibold">
+                  {t("apartmentsManager.syncDialog.matchingRulesTitle")}
+                </h4>
+                <div className="space-y-3">
+                  {DEFAULT_MATCHING_RULES.map((rule) => (
+                    <label key={rule} className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selectedMatchingRules.includes(rule)}
+                        onCheckedChange={() =>
+                          setSelectedMatchingRules((previous) =>
+                            toggleValue(previous, rule),
+                          )
+                        }
+                        disabled={
+                          !selectedCopyOptions.includes("apartment_polygons")
+                        }
+                      />
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium leading-tight">
+                          {getMatchingRuleLabel(rule)}
+                        </div>
+                        <div className="text-xs leading-relaxed text-muted-foreground">
+                          {getMatchingRuleHint(rule)}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {isLoadingPreview ? (
+              <div className="rounded-xl border p-8">
+                <LoadingProgress />
+                <p className="mt-3 text-center text-sm text-muted-foreground">
+                  {t("apartmentsManager.syncDialog.previewLoading")}
+                </p>
+              </div>
+            ) : previewLoadError ? (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                {previewLoadError}
+              </div>
+            ) : !preview ? null : (
+              <div className="space-y-4">
+                <div className="rounded-xl border p-3.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="bg-sky-100 text-sky-800">
+                      {t("apartmentsManager.syncDialog.summaryFloorPlans", {
+                        count: preview.summary.floorPlanOperations,
+                      })}
+                    </Badge>
+                    <Badge className="bg-emerald-100 text-emerald-800">
+                      {t("apartmentsManager.syncDialog.summaryPolygons", {
+                        count: preview.summary.polygonOperations,
+                      })}
+                    </Badge>
+                    <Badge className="bg-amber-100 text-amber-900">
+                      {t("apartmentsManager.syncDialog.summarySkipped", {
+                        count: preview.summary.skippedMatches,
+                      })}
+                    </Badge>
+                    <Badge className="bg-rose-100 text-rose-800">
+                      {t("apartmentsManager.syncDialog.summaryAmbiguous", {
+                        count: preview.summary.ambiguousMatches,
+                      })}
+                    </Badge>
+                    <Badge className="bg-slate-100 text-slate-800">
+                      {t("apartmentsManager.syncDialog.readyOperations", {
+                        count: preview.summary.totalOperations,
+                      })}
+                    </Badge>
+                  </div>
+
+                  {selectedCopyOptions.length === 0 ? (
+                    <p className="mt-3 text-sm text-amber-700">
+                      {t("apartmentsManager.syncDialog.noCopyOptions")}
+                    </p>
+                  ) : null}
+                  {selectedCopyOptions.includes("apartment_polygons") &&
+                  selectedMatchingRules.length === 0 ? (
+                    <p className="mt-3 text-sm text-amber-700">
+                      {t("apartmentsManager.syncDialog.noMatchingRules")}
+                    </p>
+                  ) : null}
+                  {targetFloorNumbers.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.noTargetFloors")}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-3">
+                  {preview.floors.map((floor) => (
+                    <div
+                      key={floor.floorNumber}
+                      className="rounded-xl border p-3.5"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="text-base font-semibold leading-tight">
+                            {t("apartmentsManager.floor", {
+                              floor: floor.floorNumber,
                             })}
                           </div>
-                        ) : null}
+                          <div className="mt-1 text-sm text-muted-foreground">
+                            {getFloorPlanActionLabel(floor.floorPlanAction)}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge className="bg-emerald-100 text-emerald-800">
+                            {t("apartmentsManager.syncDialog.summaryPolygons", {
+                              count: floor.polygonMatches.length,
+                            })}
+                          </Badge>
+                          <Badge className="bg-amber-100 text-amber-900">
+                            {t("apartmentsManager.syncDialog.summarySkipped", {
+                              count: floor.skippedApartments.length,
+                            })}
+                          </Badge>
+                        </div>
                       </div>
-                    ) : null}
 
-                    {floor.skippedApartments.length > 0 ? (
-                      <div className="mt-4 space-y-2">
-                        {floor.skippedApartments
-                          .slice(0, 4)
-                          .map((apartment) => (
+                      {floor.polygonMatches.length > 0 ? (
+                        <div className="mt-3 space-y-2">
+                          {floor.polygonMatches.slice(0, 4).map((match) => (
                             <div
-                              key={`${floor.floorNumber}-${apartment.sourceApartmentId}`}
-                              className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"
+                              key={`${floor.floorNumber}-${match.targetApartmentId}`}
+                              className="rounded-lg border border-border/70 bg-background p-3 text-sm"
                             >
                               <div className="font-medium">
-                                {apartment.sourceApartmentNumber}
+                                {match.sourceApartmentNumber} -&gt;{" "}
+                                {match.targetApartmentNumber}
                               </div>
-                              <div className="text-xs text-amber-800">
-                                {getSkippedReasonLabel(apartment.reason)}
+                              <div className="text-xs text-muted-foreground">
+                                {t("apartmentsManager.syncDialog.matchedBy", {
+                                  rule: getMatchingRuleLabel(match.strategy),
+                                })}
                               </div>
                             </div>
                           ))}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                          {floor.polygonMatches.length > 4 ? (
+                            <div className="text-xs text-muted-foreground">
+                              {t("apartmentsManager.syncDialog.moreMatches", {
+                                count: floor.polygonMatches.length - 4,
+                              })}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
 
-          {applyProgress && applyProgress.total > 0 ? (
-            <div className="rounded-xl border p-4">
-              <div className="mb-2 font-semibold">
-                {t("apartmentsManager.syncDialog.progressTitle")}
+                      {floor.skippedApartments.length > 0 ? (
+                        <div className="mt-3 space-y-2">
+                          {floor.skippedApartments
+                            .slice(0, 4)
+                            .map((apartment) => (
+                              <div
+                                key={`${floor.floorNumber}-${apartment.sourceApartmentId}`}
+                                className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"
+                              >
+                                <div className="font-medium">
+                                  {apartment.sourceApartmentNumber}
+                                </div>
+                                <div className="text-xs text-amber-800">
+                                  {getSkippedReasonLabel(apartment.reason)}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="mb-3 text-sm text-muted-foreground">
-                {t("apartmentsManager.syncDialog.progressDescription", {
-                  completed: applyProgress.completed,
-                  total: applyProgress.total,
+            )}
+
+            {applyProgress && applyProgress.total > 0 ? (
+              <div className="rounded-xl border p-4">
+                <div className="mb-2 font-semibold">
+                  {t("apartmentsManager.syncDialog.progressTitle")}
+                </div>
+                <div className="mb-3 text-sm text-muted-foreground">
+                  {t("apartmentsManager.syncDialog.progressDescription", {
+                    completed: applyProgress.completed,
+                    total: applyProgress.total,
+                  })}
+                </div>
+                <Progress
+                  value={(applyProgress.completed / applyProgress.total) * 100}
+                  className="h-3"
+                />
+              </div>
+            ) : null}
+
+            {applyResult?.errors.length ? (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                {t("apartmentsManager.syncDialog.errorsCount", {
+                  count: applyResult.errors.length,
                 })}
               </div>
-              <Progress
-                value={(applyProgress.completed / applyProgress.total) * 100}
-                className="h-3"
-              />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
+        </div>
 
-          {applyResult?.errors.length ? (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-              {t("apartmentsManager.syncDialog.errorsCount", {
-                count: applyResult.errors.length,
-              })}
-            </div>
-          ) : null}
-
-          <div className="flex gap-2 pt-2">
+        <div className="border-t bg-background px-5 py-4 sm:px-6">
+          <div className="flex gap-2">
             <Button
               onClick={handleApply}
               disabled={!canApply}

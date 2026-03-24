@@ -56,8 +56,7 @@ export const useApartmentPhotosManager = (projectId: string) => {
     handleCancelUpload: upload.handleCancelUpload,
     handleFilesSelected: upload.handleFilesSelected,
     resolveDroppedFiles: upload.resolveDroppedFiles,
-    duplicatePhotosToSimilarApartments:
-      actions.duplicatePhotosToSimilarApartments,
+    duplicatePhotosToApartments: actions.duplicatePhotosToApartments,
     handleDeletePhoto: actions.handleDeletePhoto,
   };
 };
