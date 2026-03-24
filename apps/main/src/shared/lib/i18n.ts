@@ -176,6 +176,7 @@ function getI18nModulesForPathname(pathname: string): string[] | null {
       "favorites",
       "floorPlan",
       "gallery",
+      "photosManager",
       "currency",
       "state",
       "subscription",
