@@ -212,9 +212,9 @@ const ApartmentDataSyncDialog = ({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-          <div className="space-y-3">
+          <div className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.95fr)] lg:gap-3 lg:space-y-0">
             <div
-              className="rounded-lg border p-3"
+              className="rounded-lg border p-3 lg:col-start-1 lg:row-start-1"
               style={{
                 backgroundColor: ADMIN_THEME.backgroundSecondary,
                 borderColor: ADMIN_THEME.info,
@@ -226,7 +226,7 @@ const ApartmentDataSyncDialog = ({
               >
                 {t("apartmentsManager.syncDialog.sourceApartment")}
               </h4>
-              <div className="space-y-0.5 text-sm">
+              <div className="grid gap-x-4 gap-y-0.5 text-sm sm:grid-cols-2">
                 <p>
                   <strong>
                     {t("apartmentsManager.syncDialog.apartmentNumber")}:
@@ -251,8 +251,8 @@ const ApartmentDataSyncDialog = ({
                   <strong>{t("apartmentsManager.price")}:</strong>{" "}
                   {formatPrice(sourceApartment.price)}
                 </p>
-                <p>
-                  <strong>{t("apartmentsManager.status")}:</strong>{" "}
+                <p className="flex items-center gap-2">
+                  <strong>{t("apartmentsManager.status")}:</strong>
                   <Badge className={getStatusColor(sourceApartment.status)}>
                     {getStatusLabel(sourceApartment.status)}
                   </Badge>
@@ -260,7 +260,7 @@ const ApartmentDataSyncDialog = ({
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 lg:col-span-2 lg:row-start-2">
               <div className="flex items-center justify-between gap-3">
                 <h4
                   className="text-sm font-semibold"
@@ -290,7 +290,7 @@ const ApartmentDataSyncDialog = ({
             </div>
 
             <div
-              className="rounded-lg border p-3"
+              className="rounded-lg border p-3 lg:col-start-2 lg:row-start-1"
               style={{
                 backgroundColor: ADMIN_THEME.backgroundSecondary,
                 borderColor: ADMIN_THEME.warning,
@@ -322,7 +322,7 @@ const ApartmentDataSyncDialog = ({
           </div>
         </div>
 
-        <div className="border-t bg-background px-5 py-4 sm:px-6">
+        <div className="border-t bg-background px-5 py-3 sm:px-6">
           <div className="flex gap-2">
             <Button
               onClick={handleConfirmSync}
