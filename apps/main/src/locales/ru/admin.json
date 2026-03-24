@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "Нечего экспортировать",
     "toastNothingToExportDesc": "Нет контактов для экспорта.",
     "toastExportDoneTitle": "Экспорт выполнен",
-    "toastExportDoneDesc": "Контакты экспортированы в CSV."
+    "toastExportDoneDesc": "Контакты экспортированы в Excel."
   },
   "project": {
     "create": {

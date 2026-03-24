@@ -115,7 +115,7 @@
     },
     "exportDone": {
       "title": "Done",
-      "desc": "Export file downloaded"
+      "desc": "Excel file downloaded"
     },
     "importDone": {
       "title": "Import completed",
@@ -255,7 +255,7 @@
   },
   "settings": {
     "import": "Import",
-    "export": "Export (CSV)",
+    "export": "Export (Excel)",
     "funnelSetup": "Funnel setup",
     "cardAppearance": "Card appearance",
     "findDuplicates": "Find duplicates",

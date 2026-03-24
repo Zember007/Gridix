@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "Nothing to export",
     "toastNothingToExportDesc": "There are no contacts to export.",
     "toastExportDoneTitle": "Export completed",
-    "toastExportDoneDesc": "Contacts have been exported to CSV."
+    "toastExportDoneDesc": "Contacts have been exported to Excel."
   },
   "project": {
     "create": {

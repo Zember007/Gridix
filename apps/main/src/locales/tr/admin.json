@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "Dışa aktarılacak hiçbir şey yok",
     "toastNothingToExportDesc": "Dışa aktarılacak kişi yok.",
     "toastExportDoneTitle": "Dışa aktarma tamamlandı",
-    "toastExportDoneDesc": "Kişiler CSV'ye aktarıldı."
+    "toastExportDoneDesc": "Kişiler Excel'e aktarıldı."
   },
   "project": {
     "create": {
