@@ -1,7 +1,7 @@
 // Auth components
 
 // Data import components
-export * from "./data-import";
+// (data-import moved to FSD features)
 
 // Fields components
 export * from "./fields";
