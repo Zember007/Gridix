@@ -37,71 +37,68 @@ export const useApartmentPhotosActions = ({
     [onAfterDelete, t],
   );
 
-  const duplicatePhotosToSimilarApartments = useCallback(async () => {
-    if (!selectedApartment || photos.length === 0) return;
+  const duplicatePhotosToApartments = useCallback(
+    async (targetApartmentIds: string[]) => {
+      if (
+        !selectedApartment ||
+        photos.length === 0 ||
+        targetApartmentIds.length === 0
+      ) {
+        return;
+      }
 
-    try {
-      const currentApartment = apartments.find(
-        (apt) => apt.id === selectedApartment,
-      );
-      if (!currentApartment) return;
-
-      const currentArea = currentApartment.area;
-      const currentRooms = currentApartment.rooms;
-
-      const similarApartments = apartments.filter((apt) => {
-        return (
-          apt.area === currentArea &&
-          apt.rooms === currentRooms &&
-          apt.id !== selectedApartment
+      try {
+        const targetApartments = apartments.filter((apt) =>
+          targetApartmentIds.includes(apt.id),
         );
-      });
 
-      const duplicatePromises = similarApartments.map(async (apartment) => {
-        const { data: existingPhotos, error: existingError } = await supabase
-          .from("apartment_photos")
-          .select("image_url")
-          .eq("apartment_id", apartment.id);
+        const duplicatePromises = targetApartments.map(async (apartment) => {
+          const { data: existingPhotos, error: existingError } = await supabase
+            .from("apartment_photos")
+            .select("image_url")
+            .eq("apartment_id", apartment.id);
 
-        if (existingError) throw existingError;
+          if (existingError) throw existingError;
 
-        const existingUrls = new Set(
-          (existingPhotos || []).map((p) => p.image_url),
+          const existingUrls = new Set(
+            (existingPhotos || []).map((p) => p.image_url),
+          );
+          const photosToInsert = photos.filter(
+            (p) => !existingUrls.has(p.image_url),
+          );
+          if (photosToInsert.length === 0) return;
+
+          const insertPayload = photosToInsert.map((photo) => ({
+            apartment_id: apartment.id,
+            image_url: photo.image_url,
+            description: photo.description,
+            order_index: photo.order_index,
+          }));
+
+          const { error: insertError } = await supabase
+            .from("apartment_photos")
+            .insert(insertPayload);
+
+          if (insertError) throw insertError;
+        });
+
+        await Promise.all(duplicatePromises);
+        toast.success(
+          t("photosManager.duplicateSuccess", {
+            count: targetApartments.length,
+          }),
         );
-        const photosToInsert = photos.filter(
-          (p) => !existingUrls.has(p.image_url),
-        );
-        if (photosToInsert.length === 0) return;
-
-        const insertPayload = photosToInsert.map((photo) => ({
-          apartment_id: apartment.id,
-          image_url: photo.image_url,
-          description: photo.description,
-          order_index: photo.order_index,
-        }));
-
-        const { error: insertError } = await supabase
-          .from("apartment_photos")
-          .insert(insertPayload);
-
-        if (insertError) throw insertError;
-      });
-
-      await Promise.all(duplicatePromises);
-      toast.success(
-        t("photosManager.duplicateSuccess", {
-          count: similarApartments.length,
-        }),
-      );
-      await onAfterDuplicate();
-    } catch (error) {
-      console.error("Error duplicating photos:", error);
-      toast.error(t("photosManager.duplicateError"));
-    }
-  }, [apartments, onAfterDuplicate, photos, selectedApartment, t]);
+        await onAfterDuplicate();
+      } catch (error) {
+        console.error("Error duplicating photos:", error);
+        toast.error(t("photosManager.duplicateError"));
+      }
+    },
+    [apartments, onAfterDuplicate, photos, selectedApartment, t],
+  );
 
   return {
     handleDeletePhoto,
-    duplicatePhotosToSimilarApartments,
+    duplicatePhotosToApartments,
   };
 };
