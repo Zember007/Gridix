@@ -1,0 +1,41 @@
+{
+  "fabLabel": "Kurulum listesi",
+  "close": "Paneli kapat",
+  "go": "Git",
+  "progress": "{{done}} / {{total}} tamamlandı",
+  "allDone": "Tüm adımlar tamamlandı.",
+  "admin": {
+    "title": "Hesap kurulumu",
+    "createProject": {
+      "title": "İlk projenizi oluşturun",
+      "description": "Daireleri içe aktarmak ve widget yayınlamak için bir bina veya site ekleyin."
+    },
+    "billing": {
+      "title": "Abonelik ve faturalama",
+      "description": "Projelerinizin aktif kalması için bir plan seçin veya fatura isteyin."
+    },
+    "crm": {
+      "title": "CRM bağlayın",
+      "description": "Potansiyel müşterileri senkronize etmek için AmoCRM veya Bitrix24 bağlayın."
+    }
+  },
+  "project": {
+    "title": "Proje kurulumu",
+    "basicInfo": {
+      "title": "Temel bilgiler",
+      "description": "Adres, koordinatlar ve PDF sunumu."
+    },
+    "facade": {
+      "title": "Cephe ve kat haritası",
+      "description": "Cephe görselini yükleyin ve katları işaretleyin."
+    },
+    "apartments": {
+      "title": "İlk daire veya ünite",
+      "description": "Katalogda en az bir daire veya ünite oluşturun."
+    },
+    "floorplan": {
+      "title": "Kat planı",
+      "description": "En az bir kat için kat planı yükleyin."
+    }
+  }
+}

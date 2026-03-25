@@ -1,14 +1,17 @@
 import { useEffect, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  isDevTourMode,
-  startAdminChecklist,
-  startAdminOnboardingTour,
-  startPartnersTour,
-  startProjectCreationTour,
+  isDriverDevMode,
+  tryAutoOpenAdminChecklistPanel,
   waitForSelectors,
 } from "@gridix/utils/integrations";
-import { buildTourUserPayload } from "../lib/buildTourUserPayload";
-
+import {
+  destroyPartnersDriverTour,
+  destroyProjectCreationDriverTour,
+  startAdminMainDriverTour,
+  startPartnersDriverTour,
+  startProjectCreationDriverTour,
+} from "@/features/onboarding/driver";
 type UserMetadata = Record<string, unknown> | null | undefined;
 
 type UserLike = {
@@ -44,17 +47,20 @@ export const useAdminDashboardTours = ({
   user,
   userProfile,
 }: UseAdminDashboardToursParams) => {
-  const startedAdminTourRef = useRef(false);
-  const startedAdminChecklistRef = useRef(false);
+  const { t } = useLanguage();
+  const adminMainAndChecklistSequenceRef = useRef(false);
   const startedPartnersTourRef = useRef(false);
+  const wasPartnersTabRef = useRef(false);
   const startedProjectCreationTourRef = useRef(false);
 
+  /** Driver admin main tour, затем in-app checklist panel — без параллельного старта. */
   useEffect(() => {
     if (loading) return;
-    if (!user?.id) return;
-    if (startedAdminTourRef.current) return;
+    const userId = user?.id;
+    if (!userId) return;
+    if (adminMainAndChecklistSequenceRef.current) return;
 
-    startedAdminTourRef.current = true;
+    adminMainAndChecklistSequenceRef.current = true;
     const run = async () => {
       try {
         const anchorsReady = await waitForSelectors(
@@ -68,45 +74,33 @@ export const useAdminDashboardTours = ({
         );
 
         if (!anchorsReady) {
-          startedAdminTourRef.current = false;
+          adminMainAndChecklistSequenceRef.current = false;
           return;
         }
 
-        await startAdminOnboardingTour(
-          buildTourUserPayload(user, userProfile ?? null),
-        );
+        try {
+          await startAdminMainDriverTour({ userId, t });
+        } catch (tourError) {
+          console.warn("Failed to start admin main driver tour:", tourError);
+        }
+
+        try {
+          tryAutoOpenAdminChecklistPanel(userId);
+        } catch (checklistError) {
+          console.warn("Failed to open admin checklist panel:", checklistError);
+        }
       } catch (error) {
-        console.warn("Failed to start admin onboarding tour:", error);
-        startedAdminTourRef.current = false;
+        console.warn("Failed admin dashboard onboarding sequence:", error);
+        adminMainAndChecklistSequenceRef.current = false;
       }
     };
 
     void run();
-  }, [loading, user, userProfile]);
+  }, [loading, t, user, userProfile]);
 
   useEffect(() => {
     if (loading) return;
-    if (!user?.id) return;
-    if (startedAdminChecklistRef.current) return;
-
-    startedAdminChecklistRef.current = true;
-    const run = async () => {
-      try {
-        await startAdminChecklist(
-          buildTourUserPayload(user, userProfile ?? null),
-        );
-      } catch (error) {
-        console.warn("Failed to start admin checklist:", error);
-        startedAdminChecklistRef.current = false;
-      }
-    };
-
-    void run();
-  }, [loading, user, userProfile]);
-
-  useEffect(() => {
-    if (loading) return;
-    const devTour = isDevTourMode();
+    const devTour = isDriverDevMode();
 
     if (devTour && !showCreateModal) {
       startedProjectCreationTourRef.current = false;
@@ -114,15 +108,17 @@ export const useAdminDashboardTours = ({
     }
 
     if (!showCreateModal) return;
-    if (!user?.id) return;
+    const userId = user?.id;
+    if (!userId) return;
     if (startedProjectCreationTourRef.current) return;
 
     startedProjectCreationTourRef.current = true;
     const run = async () => {
       try {
-        await startProjectCreationTour(
-          buildTourUserPayload(user, userProfile ?? null),
-        );
+        await startProjectCreationDriverTour({
+          userId,
+          t,
+        });
       } catch (error) {
         console.warn(
           "Failed to start project creation onboarding tour:",
@@ -132,30 +128,41 @@ export const useAdminDashboardTours = ({
     };
 
     void run();
-  }, [loading, showCreateModal, user, userProfile]);
+
+    return () => {
+      destroyProjectCreationDriverTour();
+    };
+  }, [loading, showCreateModal, t, user, userProfile]);
 
   useEffect(() => {
-    const devTour = isDevTourMode();
+    const onPartners = activeTab === "partners";
+    if (wasPartnersTabRef.current && !onPartners) {
+      destroyPartnersDriverTour();
+      startedPartnersTourRef.current = false;
+    }
+    wasPartnersTabRef.current = onPartners;
+  }, [activeTab]);
+
+  useEffect(() => {
+    const devTour = isDriverDevMode();
     if (devTour && activeTab !== "partners") {
       startedPartnersTourRef.current = false;
-      return;
     }
-    if (loading) return;
     if (activeTab !== "partners") return;
-    if (!user?.id) return;
+    if (loading) return;
+    const userId = user?.id;
+    if (!userId) return;
     if (startedPartnersTourRef.current) return;
 
     startedPartnersTourRef.current = true;
     const run = async () => {
       try {
-        await startPartnersTour(
-          buildTourUserPayload(user, userProfile ?? null),
-        );
+        await startPartnersDriverTour({ userId, t });
       } catch (error) {
         console.warn("Failed to start partners onboarding tour:", error);
       }
     };
 
     void run();
-  }, [activeTab, loading, user, userProfile]);
+  }, [activeTab, loading, t, user?.id]);
 };

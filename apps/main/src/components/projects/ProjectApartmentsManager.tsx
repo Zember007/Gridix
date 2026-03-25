@@ -49,7 +49,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { ADMIN_THEME, cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import {
   AdminApartmentFilters,
@@ -305,7 +305,7 @@ const ProjectApartmentsManager = ({
         toast.success(t("apartmentsManager.saveSuccess"));
 
         if (isFirstApartmentForProject) {
-          void trackUsertourEvent({
+          void trackOnboardingMilestone({
             eventName: "gridix_project_first_apartment_created",
             properties: { project_id: projectId, apartment_id: newApt.id },
             onceKey: "gridix_project_first_apartment_created",

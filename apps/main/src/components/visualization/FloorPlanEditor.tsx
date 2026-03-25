@@ -50,7 +50,7 @@ import { getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { Apartment as GlobalApartment } from "@/entities/apartment/model/types";
 import type { Json, Tables } from "@gridix/types/database";
 import { compressToWebP } from "@gridix/utils/lib";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 
 interface Point {
   x: number;
@@ -525,7 +525,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
       setImageUrl(newImageUrl);
       toast.success(t("floorPlan.upload.success"));
-      void trackUsertourEvent({
+      void trackOnboardingMilestone({
         eventName: "gridix_project_floorplan_uploaded",
         properties: { project_id: pid, floor_number: floorNumber },
         onceKey: "gridix_project_floorplan_uploaded",

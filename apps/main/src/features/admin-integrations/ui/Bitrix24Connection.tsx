@@ -28,7 +28,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/shared/api/supabase";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 
 type CRMConnection = {
   id: string;
@@ -66,7 +66,7 @@ const useBitrix24Connection = () => {
 
   useEffect(() => {
     if (!connection) return;
-    void trackUsertourEvent({
+    void trackOnboardingMilestone({
       eventName: "gridix_crm_connected",
       properties: { crm: "bitrix24" },
       onceKey: "gridix_crm_connected",

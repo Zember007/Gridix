@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/shared/api/supabase";
 import { fetchCurrentSession } from "@gridix/utils";
 import { toast } from "sonner";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import {
   changeStripeSubscriptionPlan,
   createStripeCheckoutSession,
@@ -287,7 +287,7 @@ export const useSubscriptionTabController = () => {
         );
 
         toast.success(t("admin.subscriptionPage.toasts.planChanged"));
-        void trackUsertourEvent({
+        void trackOnboardingMilestone({
           eventName: "gridix_billing_plan_changed",
           properties: {
             project_id: planChangeProjectId,
@@ -327,7 +327,7 @@ export const useSubscriptionTabController = () => {
           return;
         }
 
-        void trackUsertourEvent({
+        void trackOnboardingMilestone({
           eventName: "gridix_billing_checkout_started",
           properties: {
             project_ids: eligibleProjectIds,
@@ -362,7 +362,7 @@ export const useSubscriptionTabController = () => {
         toast.success(
           t("admin.subscriptionPage.toasts.invoiceRequestedSingle"),
         );
-        void trackUsertourEvent({
+        void trackOnboardingMilestone({
           eventName: "gridix_billing_invoice_requested",
           properties: {
             project_ids: eligibleProjectIds,
@@ -400,7 +400,7 @@ export const useSubscriptionTabController = () => {
             count: eligibleProjectIds.length,
           }),
         );
-        void trackUsertourEvent({
+        void trackOnboardingMilestone({
           eventName: "gridix_billing_invoice_requested",
           properties: {
             project_ids: eligibleProjectIds,

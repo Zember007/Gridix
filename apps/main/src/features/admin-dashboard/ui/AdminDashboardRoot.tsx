@@ -1,6 +1,7 @@
 import { AdminSidebar } from "@/shared/ui/sidebar-component";
 import { ManagerBlockedScreen } from "@/features/auth";
 import ProjectCreationModal from "@/components/projects/ProjectCreationModal";
+import { AdminOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import { useAdminDashboardController } from "../model/useAdminDashboardController";
 import { AdminDashboardContent } from "./AdminDashboardContent";
 
@@ -69,6 +70,11 @@ export const AdminDashboardRoot = () => {
           open={showCreateModal}
           onClose={handleCloseCreateModal}
           onManualCreate={handleManualCreate}
+        />
+
+        <AdminOnboardingChecklistPanel
+          onNavigateTab={setActiveTab}
+          onOpenCreateProject={handleCreateNew}
         />
       </div>
     </div>

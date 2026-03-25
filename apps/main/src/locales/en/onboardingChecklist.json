@@ -1,0 +1,41 @@
+{
+  "fabLabel": "Setup checklist",
+  "close": "Close panel",
+  "go": "Go",
+  "progress": "{{done}} / {{total}} complete",
+  "allDone": "All steps completed.",
+  "admin": {
+    "title": "Account setup",
+    "createProject": {
+      "title": "Create your first project",
+      "description": "Add a building or development so you can import apartments and publish a widget."
+    },
+    "billing": {
+      "title": "Subscription & billing",
+      "description": "Pick a plan or request an invoice so your projects stay active."
+    },
+    "crm": {
+      "title": "Connect a CRM",
+      "description": "Link AmoCRM or Bitrix24 to sync leads and deals."
+    }
+  },
+  "project": {
+    "title": "Project setup",
+    "basicInfo": {
+      "title": "Basic information",
+      "description": "Address, coordinates, and PDF presentation for the project."
+    },
+    "facade": {
+      "title": "Facade & floors map",
+      "description": "Upload the facade image and mark floors on the building."
+    },
+    "apartments": {
+      "title": "First apartment or unit",
+      "description": "Create at least one apartment or object in the catalog."
+    },
+    "floorplan": {
+      "title": "Floor plan",
+      "description": "Upload a floor plan image for at least one floor."
+    }
+  }
+}

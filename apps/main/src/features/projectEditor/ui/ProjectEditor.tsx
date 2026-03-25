@@ -57,11 +57,11 @@ import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import {
-  isDevTourMode,
-  startProjectChecklist,
-  startProjectEditorTour,
-  trackUsertourEvent,
+  trackOnboardingMilestone,
+  tryAutoOpenProjectChecklistPanel,
 } from "@gridix/utils/integrations";
+import { startProjectEditorDriverTour } from "@/features/onboarding/driver";
+import { ProjectOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import {
   DEFAULT_PROJECT_EDITOR_PROJECT,
   type ProjectEditorProject,
@@ -416,7 +416,6 @@ const ProjectEditor = ({
   const editorDataContext = useProjectEditorDataContext();
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
-  const startedProjectChecklistRef = useRef(false);
 
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -515,7 +514,7 @@ const ProjectEditor = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, projectSource?.id, isNew, mapDbProjectToEditor]);
 
-  // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
+  // Project editor onboarding: Driver.js + once в localStorage (`gridix_driver_once:…:project_editor`)
   useEffect(() => {
     if (authLoading) return;
 
@@ -527,29 +526,9 @@ const ProjectEditor = ({
     startedEditorTourRef.current = true;
     const run = async () => {
       try {
-        await startProjectEditorTour({
+        await startProjectEditorDriverTour({
           userId: user.id,
-          email: userProfile?.email ?? user.email ?? null,
-          name:
-            userProfile?.full_name ??
-            (typeof user.user_metadata?.full_name === "string"
-              ? user.user_metadata.full_name
-              : null),
-          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
-          companyName:
-            userProfile?.company_name ??
-            (typeof user.user_metadata?.company_name === "string"
-              ? user.user_metadata.company_name
-              : null),
-          phone:
-            userProfile?.phone ??
-            (typeof user.user_metadata?.phone === "string"
-              ? user.user_metadata.phone
-              : null),
-          accountType:
-            typeof user.user_metadata?.account_type === "string"
-              ? user.user_metadata.account_type
-              : null,
+          t,
         });
       } catch (e) {
         console.warn("Failed to start project editor onboarding tour:", e);
@@ -557,64 +536,24 @@ const ProjectEditor = ({
     };
 
     void run();
-  }, [authLoading, isNew, project?.id, user, userProfile]);
+  }, [authLoading, isNew, project?.id, t, user?.id]);
 
-  // Project checklist: once per user (Usertour-side), open on first editor entry
+  // In-app project checklist: auto-open once per (user, project); skipped in driver dev mode
   useEffect(() => {
     if (authLoading) return;
-
-    const devTour = isDevTourMode();
-    // allow re-opening in dev mode
-    if (devTour && (!project?.id || isNew)) {
-      startedProjectChecklistRef.current = false;
-      return;
-    }
-
     if (!user?.id) return;
     if (isNew) return;
     if (!project?.id) return;
-    if (startedProjectChecklistRef.current) return;
-
-    startedProjectChecklistRef.current = true;
-    const run = async () => {
-      try {
-        await startProjectChecklist({
-          userId: user.id,
-          email: userProfile?.email ?? user.email ?? null,
-          name:
-            userProfile?.full_name ??
-            (typeof user.user_metadata?.full_name === "string"
-              ? user.user_metadata.full_name
-              : null),
-          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
-          companyName:
-            userProfile?.company_name ??
-            (typeof user.user_metadata?.company_name === "string"
-              ? user.user_metadata.company_name
-              : null),
-          phone:
-            userProfile?.phone ??
-            (typeof user.user_metadata?.phone === "string"
-              ? user.user_metadata.phone
-              : null),
-          accountType:
-            typeof user.user_metadata?.account_type === "string"
-              ? user.user_metadata.account_type
-              : null,
-        });
-      } catch (e) {
-        console.warn("Failed to start project checklist:", e);
-        startedProjectChecklistRef.current = false;
-      }
-    };
-
-    void run();
-  }, [authLoading, isNew, project?.id, user, userProfile]);
+    try {
+      tryAutoOpenProjectChecklistPanel(user.id, project.id);
+    } catch (e) {
+      console.warn("Failed to open project checklist panel:", e);
+    }
+  }, [authLoading, isNew, project?.id, user?.id]);
 
   // Reset per-project guard when switching projects (and allow re-run on navigation)
   useEffect(() => {
     startedEditorTourRef.current = false;
-    startedProjectChecklistRef.current = false;
   }, [project?.id]);
 
   // Auto-complete signal for "basic info ready" (live and saved)
@@ -635,7 +574,7 @@ const ProjectEditor = ({
 
     if (!hasAddress || !hasLat || !hasLon || !hasPdf) return;
 
-    void trackUsertourEvent({
+    void trackOnboardingMilestone({
       eventName: "gridix_project_basic_info_ready",
       properties: {
         project_id: project.id || projectId,
@@ -701,7 +640,7 @@ const ProjectEditor = ({
 
         setProject((prev) => ({ ...prev, id: data.id }));
         toast.success(t("projectEditor.projectCreated"));
-        void trackUsertourEvent({
+        void trackOnboardingMilestone({
           eventName: "gridix_project_created",
           properties: { project_id: data.id },
           onceKey: "gridix_project_created",
@@ -1570,6 +1509,13 @@ const ProjectEditor = ({
           )}
         </div>
       </div>
+      {!isNew && project.id ? (
+        <ProjectOnboardingChecklistPanel
+          projectId={project.id}
+          projectType={project.project_type ?? "building"}
+          onNavigateEditorTab={setActiveTab}
+        />
+      ) : null}
     </div>
   );
 };

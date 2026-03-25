@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/shared/api/supabase";
 import { useLanguage, useLanguageNavigation } from "@gridix/utils/react";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 
 export interface CRMConnection {
   id: string;
@@ -59,7 +59,7 @@ export const useAmoCRMConnection = () => {
 
   useEffect(() => {
     if (!isConnected) return;
-    void trackUsertourEvent({
+    void trackOnboardingMilestone({
       eventName: "gridix_crm_connected",
       properties: { crm: "amocrm" },
       onceKey: "gridix_crm_connected",

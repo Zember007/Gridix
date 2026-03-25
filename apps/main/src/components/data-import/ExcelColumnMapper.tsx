@@ -20,7 +20,7 @@ import { Badge } from "@gridix/ui";
 import { Check, ArrowRight, Plus, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import CustomFieldsManager from "@/components/fields/CustomFieldsManager";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
@@ -28,7 +28,6 @@ import { useLanguage } from "@gridix/utils/react";
 import { adminThemeClasses as admin } from "@gridix/utils/lib";
 import { Language } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
-import { isDevTourMode } from "@gridix/utils/integrations";
 
 interface ImportedRowData {
   [key: string]: string | number | null | undefined;
@@ -541,8 +540,8 @@ const ExcelColumnMapper = ({
 
       if (!project) throw new Error("Failed to create project");
 
-      // usertour uses `once: true` internally, so we don't persist onboarding state in Supabase.
-      void trackUsertourEvent({
+      // Driver.js tour uses local once-storage; we don't persist onboarding state in Supabase here.
+      void trackOnboardingMilestone({
         eventName: "gridix_project_created",
         properties: { project_id: project.id, source: "excel_import" },
         onceKey: "gridix_project_created",

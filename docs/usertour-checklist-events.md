@@ -1,6 +1,6 @@
-# События Usertour checklist (Gridix)
+# События onboarding checklist (Gridix)
 
-Этот документ содержит список **имен событий**, которые отправляет Gridix для управления **Usertour Checklists**.
+Документ описывает **имена событий** (`eventName` / `onceKey`), которые приложение использует для **встроенного чеклиста** в админке и редакторе проекта. Код вызывает `trackOnboardingMilestone` (алиас `emitOnboardingProgress`) из `@gridix/utils/integrations`.
 
 ## Чеклист аккаунта
 
@@ -17,7 +17,7 @@
     - AmoCRM авторизован (токен присутствует и не истёк)
     - Bitrix24 подключение существует
 
-## Чеклист проекта (примечание: прогресс Usertour привязан к пользователю)
+## Чеклист проекта
 
 - **Базовая информация заполнена**: `gridix_project_basic_info_ready`
   - Отправляется, когда все поля заполнены:
@@ -37,12 +37,12 @@
 - **План этажа загружен**: `gridix_project_floorplan_uploaded`
   - Отправляется, когда `floor_plans.image_url` загружен (вставка или обновление).
 
-## Настройка в Usertour UI
+## UI в приложении
 
-В Usertour:
+- Аккаунт: плавающая панель `AdminOnboardingChecklistPanel` после основного тура дашборда (`tryAutoOpenAdminChecklistPanel`).
+- Проект: `ProjectOnboardingChecklistPanel` в редакторе (`tryAutoOpenProjectChecklistPanel`).
+- Прогресс хранится в `localStorage` с ключами `usertour_once:<onceKey>` (префикс исторический, совместимость с ранними релизами).
 
-- Создайте два контента типа **Checklist**:
-  - ID контента чеклиста аккаунта → установите `VITE_USERTOUR_ADMIN_CHECKLIST_CONTENT_ID`
-  - ID контента чеклиста проекта → установите `VITE_USERTOUR_PROJECT_CHECKLIST_CONTENT_ID`
-- Для каждого пункта: в **Mark completed → If** выберите **Attribute** и проверьте, что атрибут с именем события (например `gridix_project_created`) равен `true`.
-- При клике на пункт: настройте "**Запустить flow**" (существующие туры) или "**Открыть URL**" (видео).
+## Дополнительные события (аналитика чеклиста)
+
+В коде также эмитятся (с `onceKey`): `gridix_billing_plan_changed`, `gridix_billing_checkout_started` — при необходимости расширения панели чеклиста сверять с `useSubscriptionTabController`.
