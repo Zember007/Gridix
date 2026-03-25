@@ -45,6 +45,11 @@ export const useAdminDashboardController = () => {
     [allLeadsForUnread],
   );
 
+  const effectiveOwnerId = useMemo(() => {
+    if (isManager && developerId) return developerId;
+    return user?.id ?? null;
+  }, [isManager, developerId, user?.id]);
+
   const handleCreateNew = () => {
     if (amoWidget) {
       window.open("https://app.gridix.live/ru/admin", "_blank");
@@ -101,6 +106,7 @@ export const useAdminDashboardController = () => {
     userRole,
     isManager,
     developerId: developerId ?? null,
+    effectiveOwnerId,
     availableWorkspaces,
     crmUnreadCount,
     handleCreateNew,

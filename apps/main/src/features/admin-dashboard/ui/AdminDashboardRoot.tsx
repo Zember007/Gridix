@@ -21,6 +21,7 @@ export const AdminDashboardRoot = () => {
     userRole,
     isManager,
     developerId,
+    effectiveOwnerId,
     availableWorkspaces,
     crmUnreadCount,
     handleCreateNew,
@@ -73,6 +74,7 @@ export const AdminDashboardRoot = () => {
         />
 
         <AdminOnboardingChecklistPanel
+          effectiveOwnerId={effectiveOwnerId}
           onNavigateTab={setActiveTab}
           onOpenCreateProject={handleCreateNew}
         />

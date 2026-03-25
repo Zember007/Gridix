@@ -3,24 +3,37 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from "@gridix/ui";
 import { isOnboardingMilestoneCompleted } from "@gridix/utils/integrations";
 import { Check, ListChecks, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { EffectiveOwnerId } from "./onboardingDerivedQueries";
 import { ONBOARDING_MILESTONE } from "./milestoneKeys";
+import { useAdminOnboardingDerivedProgress } from "./useAdminOnboardingDerivedProgress";
 import { useChecklistOpenSignal } from "./useChecklistPanelOpenRequest";
 import { useOnboardingMilestoneSync } from "./useOnboardingMilestoneSync";
 
 type AdminOnboardingChecklistPanelProps = {
+  effectiveOwnerId: EffectiveOwnerId | null | undefined;
   onNavigateTab: (tab: string) => void;
   onOpenCreateProject: () => void;
 };
 
 export function AdminOnboardingChecklistPanel({
+  effectiveOwnerId,
   onNavigateTab,
   onOpenCreateProject,
 }: AdminOnboardingChecklistPanelProps) {
   const { t } = useLanguage();
-  const milestoneVersion = useOnboardingMilestoneSync();
   const openSignal = useChecklistOpenSignal({ scope: "admin" });
 
   const [expanded, setExpanded] = useState(false);
+
+  const { derived, revision } = useAdminOnboardingDerivedProgress({
+    effectiveOwnerId,
+    panelExpanded: expanded,
+    openSignal,
+  });
+
+  const milestoneVersion = useOnboardingMilestoneSync({
+    derivedRevision: revision,
+  });
 
   useEffect(() => {
     if (openSignal > 0) setExpanded(true);
@@ -31,6 +44,7 @@ export function AdminOnboardingChecklistPanel({
       {
         id: "project",
         isDone: () =>
+          derived.projectCreated ||
           isOnboardingMilestoneCompleted(ONBOARDING_MILESTONE.projectCreated),
         title: t("onboardingChecklist.admin.createProject.title"),
         description: t("onboardingChecklist.admin.createProject.description"),
@@ -43,6 +57,7 @@ export function AdminOnboardingChecklistPanel({
       {
         id: "billing",
         isDone: () =>
+          derived.billingTouched ||
           isOnboardingMilestoneCompleted(
             ONBOARDING_MILESTONE.billingInvoiceRequested,
           ) ||
@@ -63,6 +78,7 @@ export function AdminOnboardingChecklistPanel({
       {
         id: "crm",
         isDone: () =>
+          derived.crmConnected ||
           isOnboardingMilestoneCompleted(ONBOARDING_MILESTONE.crmConnected),
         title: t("onboardingChecklist.admin.crm.title"),
         description: t("onboardingChecklist.admin.crm.description"),
@@ -73,7 +89,7 @@ export function AdminOnboardingChecklistPanel({
         },
       },
     ],
-    [onNavigateTab, onOpenCreateProject, t],
+    [derived, onNavigateTab, onOpenCreateProject, t],
   );
 
   const doneCount = useMemo(() => {
@@ -85,7 +101,7 @@ export function AdminOnboardingChecklistPanel({
   const allDone = doneCount === total;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex max-w-sm flex-col items-end gap-2">
+    <div className="fixed bottom-16 right-4 z-[100] flex max-w-sm flex-col items-end gap-2 lg:bottom-20">
       {expanded && (
         <Card className="w-[min(100vw-2rem,22rem)] border shadow-lg">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">

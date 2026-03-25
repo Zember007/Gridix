@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ONBOARDING_MILESTONE } from "./milestoneKeys";
 import { useChecklistOpenSignal } from "./useChecklistPanelOpenRequest";
 import { useOnboardingMilestoneSync } from "./useOnboardingMilestoneSync";
+import { useProjectOnboardingDerivedProgress } from "./useProjectOnboardingDerivedProgress";
 
 type EditorTab =
   | "basic"
@@ -28,13 +29,23 @@ export function ProjectOnboardingChecklistPanel({
   onNavigateEditorTab,
 }: ProjectOnboardingChecklistPanelProps) {
   const { t } = useLanguage();
-  const milestoneVersion = useOnboardingMilestoneSync();
   const openSignal = useChecklistOpenSignal({
     scope: "project",
     projectId,
   });
 
   const [expanded, setExpanded] = useState(false);
+
+  const { derived, revision } = useProjectOnboardingDerivedProgress({
+    projectId,
+    projectType,
+    panelExpanded: expanded,
+    openSignal,
+  });
+
+  const milestoneVersion = useOnboardingMilestoneSync({
+    derivedRevision: revision,
+  });
 
   useEffect(() => {
     if (openSignal > 0) setExpanded(true);
@@ -45,6 +56,7 @@ export function ProjectOnboardingChecklistPanel({
       {
         id: "basic",
         isDone: () =>
+          derived.projectBasicInfoReady ||
           isOnboardingMilestoneCompleted(
             ONBOARDING_MILESTONE.projectBasicInfoReady,
           ),
@@ -59,6 +71,7 @@ export function ProjectOnboardingChecklistPanel({
       {
         id: "facade",
         isDone: () =>
+          derived.projectFacadeConfigured ||
           isOnboardingMilestoneCompleted(
             ONBOARDING_MILESTONE.projectFacadeConfigured,
           ),
@@ -73,6 +86,7 @@ export function ProjectOnboardingChecklistPanel({
       {
         id: "apartments",
         isDone: () =>
+          derived.projectFirstApartmentCreated ||
           isOnboardingMilestoneCompleted(
             ONBOARDING_MILESTONE.projectFirstApartmentCreated,
           ),
@@ -95,6 +109,7 @@ export function ProjectOnboardingChecklistPanel({
       {
         id: "floorplan",
         isDone: () =>
+          derived.projectFloorplanUploaded ||
           isOnboardingMilestoneCompleted(
             ONBOARDING_MILESTONE.projectFloorplanUploaded,
           ),
@@ -107,7 +122,7 @@ export function ProjectOnboardingChecklistPanel({
         },
       },
     ];
-  }, [onNavigateEditorTab, projectType, t]);
+  }, [derived, onNavigateEditorTab, projectType, t]);
 
   const doneCount = useMemo(() => {
     void milestoneVersion;
@@ -118,7 +133,7 @@ export function ProjectOnboardingChecklistPanel({
   const allDone = doneCount === total;
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex max-w-sm flex-col items-end gap-2 [&>*]:pointer-events-auto">
+    <div className="pointer-events-none fixed bottom-16 right-4 z-[100] flex max-w-sm flex-col items-end gap-2 lg:bottom-20 [&>*]:pointer-events-auto">
       {expanded && (
         <Card className="w-[min(100vw-2rem,22rem)] border shadow-lg">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">

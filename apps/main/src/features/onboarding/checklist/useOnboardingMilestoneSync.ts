@@ -1,19 +1,31 @@
 import { useEffect, useState } from "react";
 import { subscribeOnboardingMilestones } from "@gridix/utils/integrations";
 
+export type UseOnboardingMilestoneSyncOptions = {
+  /**
+   * Счётчик из derived-fetch (БД): при каждом успешном refetch увеличивается —
+   * вместе с подпиской на LS даёт пересчёт чеклиста без дублирования deps в панелях.
+   */
+  derivedRevision?: number;
+};
+
 /**
- * Bumps when any `trackOnboardingMilestone` completes so checklist UI can re-read localStorage.
+ * Меняется при `trackOnboardingMilestone` (localStorage) и при росте `derivedRevision`
+ * после успешного fetch серверных критериев чеклиста.
  */
-export function useOnboardingMilestoneSync(): number {
-  const [version, setVersion] = useState(0);
+export function useOnboardingMilestoneSync(
+  options?: UseOnboardingMilestoneSyncOptions,
+): number {
+  const derivedRevision = options?.derivedRevision ?? 0;
+  const [subscriptionVersion, setSubscriptionVersion] = useState(0);
 
   useEffect(
     () =>
       subscribeOnboardingMilestones(() => {
-        setVersion((v) => v + 1);
+        setSubscriptionVersion((v) => v + 1);
       }),
     [],
   );
 
-  return version;
+  return subscriptionVersion + derivedRevision;
 }
