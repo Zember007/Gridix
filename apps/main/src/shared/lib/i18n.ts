@@ -12,8 +12,6 @@ const lazyLocaleModules = import.meta.glob<{
   default: Record<string, unknown>;
 }>("../../locales/*/*.json");
 
-// Отладочная информация
-// Функция для преобразования вложенных объектов в плоскую структуру с точечными ключами
 function flattenTranslations(
   obj: Record<string, unknown>,
   prefix = "",
@@ -44,8 +42,8 @@ function flattenTranslations(
 }
 
 const resources: Record<string, { translation: Record<string, string> }> = {};
-const loadedLanguages = new Set<string>();
 const loadedModulesByLanguage = new Map<string, Set<string>>();
+
 type I18nWithPreload = typeof i18n & {
   __gridixPreloadForLanguagePath?: (
     language: string,
@@ -53,14 +51,15 @@ type I18nWithPreload = typeof i18n & {
   ) => Promise<void>;
 };
 
+const LOCALE_PATH_RE = /\/locales\/([a-z]{2})\/(.+)\.json$/;
+
 function parseLocalePath(path: string): {
   language: SupportedLanguage;
   fileBase: string;
 } | null {
-  const match = path.match(/\/locales\/(ru|en|ka|ar|he|tr)\/(.+)\.json$/);
-  if (!match || !match[1] || !match[2]) {
-    return null;
-  }
+  const match = path.match(LOCALE_PATH_RE);
+  if (!match?.[1] || !match[2]) return null;
+  if (!SUPPORTED_LANGUAGES.includes(match[1] as SupportedLanguage)) return null;
 
   return {
     language: match[1] as SupportedLanguage,
@@ -84,8 +83,6 @@ function addModuleToResources(
 
   Object.assign(resources[language].translation, flat);
 
-  // Register loaded translations with the i18n instance so components
-  // that already rendered pick up the new keys via reactivity.
   if (i18n.isInitialized) {
     i18n.addResourceBundle(language, "translation", flat, true, false);
   }
@@ -99,25 +96,21 @@ function getLoadedModulesSet(language: string): Set<string> {
   return next;
 }
 
-async function ensureLanguageResources(
-  language: string,
-  fileBases?: string[],
-): Promise<void> {
+async function ensureLanguageResources(language: string): Promise<void> {
   if (!SUPPORTED_LANGUAGES.includes(language as SupportedLanguage)) return;
-  const requested = fileBases?.filter(Boolean) ?? null;
+
   const loadedModules = getLoadedModulesSet(language);
 
   const entries = Object.entries(lazyLocaleModules).filter(([path]) => {
-    if (!path.includes(`/locales/${language}/`)) return false;
-    if (!requested) return true;
     const parsed = parseLocalePath(path);
-    if (!parsed) return false;
-    return requested.includes(parsed.fileBase);
+    return (
+      parsed !== null &&
+      parsed.language === language &&
+      !loadedModules.has(parsed.fileBase)
+    );
   });
 
-  if (!entries.length) {
-    return;
-  }
+  if (!entries.length) return;
 
   const loaded = await Promise.all(entries.map(([, load]) => load()));
   for (let i = 0; i < entries.length; i += 1) {
@@ -129,10 +122,6 @@ async function ensureLanguageResources(
     if (loadedModules.has(parsed.fileBase)) continue;
     addModuleToResources(path, mod);
     loadedModules.add(parsed.fileBase);
-  }
-
-  if (!requested) {
-    loadedLanguages.add(language);
   }
 }
 
@@ -147,89 +136,35 @@ function detectInitialLanguage(): SupportedLanguage {
   return (match?.[1] as SupportedLanguage | undefined) ?? "en";
 }
 
-/**
- * Locale JSON bases reused across catalog, modals, and shared forms (not only
- * project/apartment keys). Any route that uses a *partial* module list must
- * merge these in, otherwise `t("auth.*")`, `t("managerAccounts.*")`, etc.
- * render as raw keys until another page loads those files.
- */
-const I18N_CROSS_CUTTING_MODULES = ["auth", "managerAccounts"] as const;
-
-function mergeI18nModuleList(modules: string[]): string[] {
-  return Array.from(new Set([...I18N_CROSS_CUTTING_MODULES, ...modules]));
-}
-
-function getI18nModulesForPathname(pathname: string): string[] | null {
-  // Admin routes load all modules — they're used by internal users where
-  // bundle-size optimisation is not needed, and partial lists cause missing
-  // translations on hard refresh (no prior navigation to load the rest).
-  if (pathname.includes("/admin/")) {
-    return null;
-  }
-
-  // Keep the project page critical path as small as possible.
-  // For unknown/other routes we fall back to "load all" to avoid breaking pages.
-  const isProjectRoute = pathname.includes("/project/");
-  if (isProjectRoute) {
-    return mergeI18nModuleList([
-      "common",
-      "project",
-      "apartment",
-      "apartmentsManager",
-      "auth",
-      "managerAccounts",
-      "embed",
-      "filters",
-      "favorites",
-      "floorPlan",
-      "gallery",
-      "currency",
-      "state",
-      "subscription",
-      "installment",
-      "errors",
-    ]);
-  }
-
-  return null;
-}
-
-export async function preloadI18nForPathname(pathname: string): Promise<void> {
+export async function preloadI18nForPathname(_pathname: string): Promise<void> {
   const language = i18n.language || detectInitialLanguage();
-  const modules = getI18nModulesForPathname(pathname);
   await Promise.all([
     addSharedResourcesForLanguage(i18n, language),
-    ensureLanguageResources(language, modules ?? undefined),
+    ensureLanguageResources(language),
   ]);
 }
 
 async function preloadI18nForLanguagePath(
   language: string,
-  pathname: string,
+  _pathname: string,
 ): Promise<void> {
-  const modules = getI18nModulesForPathname(pathname);
   await Promise.all([
     addSharedResourcesForLanguage(i18n, language),
-    ensureLanguageResources(language, modules ?? undefined),
+    ensureLanguageResources(language),
   ]);
 }
 
-// Инициализация i18next
 void i18n.use(initReactI18next).init({
   resources,
   lng: DEFAULT_LANGUAGE,
   fallbackLng: [DEFAULT_LANGUAGE],
 
   interpolation: {
-    escapeValue: false, // React уже экранирует
+    escapeValue: false,
   },
 
-  // Отключаем разделитель ключей, так как используем точки в именах ключей
   keySeparator: false,
-
-  // Отключаем разделитель namespace, так как используем один namespace
   nsSeparator: false,
-
   debug: false,
 
   react: {
@@ -238,15 +173,10 @@ void i18n.use(initReactI18next).init({
 });
 
 const initialLanguage = detectInitialLanguage();
-const initialPathname =
-  typeof window === "undefined" ? "/" : window.location.pathname;
 
 export const i18nReady: Promise<void> = Promise.all([
   addSharedResourcesForLanguage(i18n, initialLanguage),
-  ensureLanguageResources(
-    initialLanguage,
-    getI18nModulesForPathname(initialPathname) ?? undefined,
-  ),
+  ensureLanguageResources(initialLanguage),
 ]).then(() => {
   if (i18n.language !== initialLanguage) {
     void i18n.changeLanguage(initialLanguage);
@@ -254,14 +184,9 @@ export const i18nReady: Promise<void> = Promise.all([
 });
 
 i18n.on("languageChanged", (language) => {
-  const pathname =
-    typeof window === "undefined" ? "/" : window.location.pathname;
   void Promise.all([
     addSharedResourcesForLanguage(i18n, language),
-    ensureLanguageResources(
-      language,
-      getI18nModulesForPathname(pathname) ?? undefined,
-    ),
+    ensureLanguageResources(language),
   ]);
 });
 
