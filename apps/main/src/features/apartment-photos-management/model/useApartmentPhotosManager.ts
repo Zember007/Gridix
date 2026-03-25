@@ -35,6 +35,9 @@ export const useApartmentPhotosManager = (projectId: string) => {
     onAfterDuplicate: async () => {
       await data.loadPhotoCoverage();
     },
+    onAfterReorder: async () => {
+      await data.loadPhotos();
+    },
   });
 
   return {
@@ -58,5 +61,6 @@ export const useApartmentPhotosManager = (projectId: string) => {
     resolveDroppedFiles: upload.resolveDroppedFiles,
     duplicatePhotosToApartments: actions.duplicatePhotosToApartments,
     handleDeletePhoto: actions.handleDeletePhoto,
+    handleReorderPhotos: actions.handleReorderPhotos,
   };
 };

@@ -12,6 +12,7 @@ interface UseApartmentPhotosActionsParams {
   photos: ApartmentPhoto[];
   onAfterDelete: () => Promise<void>;
   onAfterDuplicate: () => Promise<void>;
+  onAfterReorder: () => Promise<void>;
 }
 
 export const useApartmentPhotosActions = ({
@@ -20,6 +21,7 @@ export const useApartmentPhotosActions = ({
   photos,
   onAfterDelete,
   onAfterDuplicate,
+  onAfterReorder,
 }: UseApartmentPhotosActionsParams) => {
   const { t } = useLanguage();
 
@@ -97,8 +99,45 @@ export const useApartmentPhotosActions = ({
     [apartments, onAfterDuplicate, photos, selectedApartment, t],
   );
 
+  const handleReorderPhotos = useCallback(
+    async (nextPhotos: ApartmentPhoto[]) => {
+      if (!selectedApartment || nextPhotos.length === 0) {
+        return;
+      }
+
+      const hasChanges = nextPhotos.some(
+        (photo, index) =>
+          photo.id !== photos[index]?.id || photo.order_index !== index,
+      );
+
+      if (!hasChanges) {
+        return;
+      }
+
+      const updateResults = await Promise.all(
+        nextPhotos.map((photo, index) =>
+          supabase
+            .from("apartment_photos")
+            .update({ order_index: index })
+            .eq("id", photo.id)
+            .neq("order_index", index),
+        ),
+      );
+
+      const failedUpdate = updateResults.find((result) => result.error);
+      if (failedUpdate?.error) {
+        console.error("Error reordering apartment photos:", failedUpdate.error);
+        throw failedUpdate.error;
+      }
+
+      await onAfterReorder();
+    },
+    [onAfterReorder, photos, selectedApartment],
+  );
+
   return {
     handleDeletePhoto,
     duplicatePhotosToApartments,
+    handleReorderPhotos,
   };
 };
