@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@gridix/ui";
-import GoogleSheetsImportDemo from "@/components/data-import/GoogleSheetsImportDemo";
+import GoogleSheetsImportDemo from "@/features/data-import/demo/ui/GoogleSheetsImportDemo";
 import { useNavigate } from "react-router-dom";
 
 const GoogleSheetsTestPage = () => {

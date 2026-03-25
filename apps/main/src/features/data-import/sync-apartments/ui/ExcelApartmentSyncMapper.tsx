@@ -28,6 +28,11 @@ import {
   type ApartmentSyncUpdate,
 } from "@/features/projectSelector/api/projectSelectorApi";
 
+import { ActionsBar } from "./parts/ActionsBar";
+import { ColumnsMappingSection } from "./parts/ColumnsMappingSection";
+import { PreviewTable } from "./parts/PreviewTable";
+import { ValidationSection } from "./parts/ValidationSection";
+
 interface ImportedRowData {
   [key: string]: string | number | null | undefined;
 }
@@ -140,6 +145,7 @@ const ExcelApartmentSyncMapper = ({
     hold: "reserved",
     резерв: "reserved",
   });
+
   const [statusValidation, setStatusValidation] =
     useState<StatusValidationResult | null>(null);
 
@@ -175,6 +181,7 @@ const ExcelApartmentSyncMapper = ({
     "4-комн": 4,
     "5-комн": 5,
   });
+
   const [roomsValidation, setRoomsValidation] =
     useState<RoomsValidationResult | null>(null);
   const [showValidation, setShowValidation] = useState(false);
@@ -407,7 +414,7 @@ const ExcelApartmentSyncMapper = ({
 
   const isValid = useMemo(() => {
     const aptNumberFilled =
-      columnMapping.apartmentNumber &&
+      !!columnMapping.apartmentNumber &&
       columnMapping.apartmentNumber !== "__none__";
 
     const statusValid =
@@ -489,11 +496,13 @@ const ExcelApartmentSyncMapper = ({
 
         const customFieldsData: Record<string, string | number | boolean> = {};
         let hasCustom = false;
+
         customFields.forEach((field) => {
           const mappedColumn = columnMapping[field.field_name];
           if (mappedColumn && mappedColumn !== "__none__") {
             let value: string | number | boolean = "";
             const raw = row[mappedColumn];
+
             switch (field.field_type) {
               case "number":
                 value = parseFloat(String(raw)) || 0;
@@ -507,10 +516,12 @@ const ExcelApartmentSyncMapper = ({
               default:
                 value = String(raw || "");
             }
+
             customFieldsData[field.field_name] = value;
             hasCustom = true;
           }
         });
+
         if (hasCustom) {
           update.custom_fields = customFieldsData;
         }
@@ -519,7 +530,6 @@ const ExcelApartmentSyncMapper = ({
       });
 
       const validUpdates = updates.filter((u) => u.apartment_number.length > 0);
-
       const result = await syncApartmentsFromExcel(projectId, validUpdates);
 
       if (result.notFound.length > 0) {
@@ -564,92 +574,47 @@ const ExcelApartmentSyncMapper = ({
     t,
   ]);
 
+  // Legacy markup оставляем как страховку (по умолчанию не рендерим).
+  // Флаг должен зависеть от runtime, чтобы ESLint не считал условие константным.
+  const renderLegacyValidation =
+    typeof globalThis !== "undefined" &&
+    (globalThis as any).__GRIDIX_RENDER_LEGACY_VALIDATION__ === true;
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("excel.sync.columns.title")}</CardTitle>
-          <CardDescription>
-            {t("excel.sync.columns.description")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {Object.entries(allFields).map(([field, label]) => {
-              const isRequired = field === "apartmentNumber";
-              const currentValue = columnMapping[field as keyof ColumnMapping];
+      <ColumnsMappingSection
+        t={t}
+        excelColumns={excelColumns}
+        allFields={allFields}
+        columnMapping={columnMapping}
+        handleMappingChange={handleMappingChange}
+        getPreviewValue={getPreviewValue}
+      />
 
-              return (
-                <div key={field} className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    {label}
-                    {isRequired && (
-                      <Badge variant="destructive" className="text-xs">
-                        {t("excel.mapper.required") || "Обязательно"}
-                      </Badge>
-                    )}
-                  </Label>
-                  <Select
-                    value={currentValue || ""}
-                    onValueChange={(value) =>
-                      handleMappingChange(field as keyof ColumnMapping, value)
-                    }
-                  >
-                    <SelectTrigger
-                      className={
-                        (!currentValue || currentValue === "__none__") &&
-                        isRequired
-                          ? "border-red-300"
-                          : ""
-                      }
-                    >
-                      <SelectValue
-                        placeholder={
-                          t("excel.mapper.columns.selectColumn") ||
-                          "Выберите столбец"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">
-                        {t("excel.mapper.columns.selectColumnPlaceholder") ||
-                          "-- Выберите столбец --"}
-                      </SelectItem>
-                      {excelColumns.map((column) => (
-                        <SelectItem key={column} value={column}>
-                          {column}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {currentValue && currentValue !== "__none__" && (
-                    <div className="flex items-center gap-2 rounded bg-real-estate-50 p-2 text-sm text-real-estate-600">
-                      <span>{t("common.example") || "Пример"}:</span>
-                      <ArrowRight className="h-3 w-3" />
-                      <strong>
-                        {getPreviewValue(field as keyof ColumnMapping)}
-                      </strong>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      <ValidationSection
+        t={t}
+        columnMapping={columnMapping}
+        effectiveType={effectiveType}
+        statusValidation={statusValidation}
+        roomsValidation={roomsValidation}
+        statusMapping={statusMapping}
+        roomsMapping={roomsMapping}
+        showValidation={showValidation}
+        setShowValidation={(v) => setShowValidation(v)}
+        updateStatusMapping={updateStatusMapping}
+        updateRoomsMapping={updateRoomsMapping}
+        addCustomStatusMapping={addCustomStatusMapping}
+        addCustomRoomsMapping={addCustomRoomsMapping}
+      />
 
-      {((columnMapping.status && columnMapping.status !== "__none__") ||
-        (effectiveType === "building" &&
-          columnMapping.rooms &&
-          columnMapping.rooms !== "__none__")) && (
+      {renderLegacyValidation && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {t("excel.mapper.validation.title") || "Валидация данных"}
-              {((statusValidation && statusValidation.invalidCount > 0) ||
+              {((statusValidation?.invalidCount ?? 0) > 0 ||
                 (effectiveType === "building" &&
-                  roomsValidation &&
-                  roomsValidation.invalidCount > 0)) && (
+                  (roomsValidation?.invalidCount ?? 0) > 0)) && (
                 <Badge
                   variant="destructive"
                   className="flex items-center gap-1"
@@ -696,11 +661,11 @@ const ExcelApartmentSyncMapper = ({
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {(statusValidation
-                    ? Object.keys(statusValidation.statusDistribution).length
-                    : 0) +
-                    (effectiveType === "building" && roomsValidation
-                      ? Object.keys(roomsValidation.roomsDistribution).length
+                  {Object.keys(statusValidation?.statusDistribution || {})
+                    .length +
+                    (effectiveType === "building"
+                      ? Object.keys(roomsValidation?.roomsDistribution || {})
+                          .length
                       : 0)}
                 </div>
                 <div className="text-sm text-gray-600">
@@ -725,6 +690,7 @@ const ExcelApartmentSyncMapper = ({
 
             {showValidation && (
               <div className="space-y-6 rounded-lg border p-4">
+                {/* Валидация статусов */}
                 {columnMapping.status &&
                   columnMapping.status !== "__none__" &&
                   statusValidation && (
@@ -735,7 +701,7 @@ const ExcelApartmentSyncMapper = ({
                       </Label>
                       <div className="space-y-3">
                         {Object.entries(
-                          statusValidation.statusDistribution,
+                          statusValidation?.statusDistribution || {},
                         ).map(([value, count]) => {
                           const currentMapping =
                             statusMapping[value.toLowerCase()];
@@ -815,6 +781,7 @@ const ExcelApartmentSyncMapper = ({
                             </div>
                           );
                         })}
+
                         <div className="border-t pt-4">
                           <Label className="text-sm font-medium">
                             {t("excel.mapper.validation.status.addMapping") ||
@@ -852,6 +819,7 @@ const ExcelApartmentSyncMapper = ({
                     </div>
                   )}
 
+                {/* Валидация комнат */}
                 {effectiveType === "building" &&
                   columnMapping.rooms &&
                   columnMapping.rooms !== "__none__" &&
@@ -862,94 +830,93 @@ const ExcelApartmentSyncMapper = ({
                           "Настройка количества комнат"}
                       </Label>
                       <div className="space-y-3">
-                        {Object.entries(roomsValidation.roomsDistribution).map(
-                          ([value, count]) => {
-                            const currentMapping =
-                              roomsMapping[value.toLowerCase()];
-                            const isInvalid =
-                              currentMapping === undefined ||
-                              currentMapping === "invalid";
+                        {Object.entries(
+                          roomsValidation?.roomsDistribution || {},
+                        ).map(([value, count]) => {
+                          const currentMapping =
+                            roomsMapping[value.toLowerCase()];
+                          const isInvalid =
+                            currentMapping === undefined ||
+                            currentMapping === "invalid";
 
-                            return (
-                              <div
-                                key={value}
-                                className="flex items-center gap-4 rounded-lg border bg-white p-3"
-                              >
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">
-                                      "{value}"
-                                    </span>
+                          return (
+                            <div
+                              key={value}
+                              className="flex items-center gap-4 rounded-lg border bg-white p-3"
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">"{value}"</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {count}
+                                    {t("excel.mapper.validation.count") ||
+                                      " шт."}
+                                  </Badge>
+                                  {isInvalid && (
                                     <Badge
-                                      variant="outline"
+                                      variant="destructive"
                                       className="text-xs"
                                     >
-                                      {count}
-                                      {t("excel.mapper.validation.count") ||
-                                        " шт."}
+                                      {t(
+                                        "excel.mapper.validation.rooms.unknown",
+                                      ) || "Неизвестное"}
                                     </Badge>
-                                    {isInvalid && (
-                                      <Badge
-                                        variant="destructive"
-                                        className="text-xs"
-                                      >
-                                        {t(
-                                          "excel.mapper.validation.rooms.unknown",
-                                        ) || "Неизвестное"}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <ArrowRight className="h-4 w-4 text-gray-400" />
-                                  <Select
-                                    value={
-                                      currentMapping === undefined
-                                        ? "invalid"
-                                        : String(currentMapping)
-                                    }
-                                    onValueChange={(mappedValue) => {
-                                      if (mappedValue === "invalid") {
-                                        updateRoomsMapping(value, "invalid");
-                                      } else {
-                                        updateRoomsMapping(
-                                          value,
-                                          parseInt(mappedValue),
-                                        );
-                                      }
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-40">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="0">
-                                        {t("rooms.studio") || "Студия (0)"}
-                                      </SelectItem>
-                                      {(
-                                        [
-                                          [1, "rooms.one"],
-                                          [2, "rooms.two"],
-                                          [3, "rooms.three"],
-                                          [4, "rooms.four"],
-                                          [5, "rooms.fivePlus"],
-                                        ] as const
-                                      ).map(([n, roomsKey]) => (
-                                        <SelectItem key={n} value={String(n)}>
-                                          {t(roomsKey)}
-                                        </SelectItem>
-                                      ))}
-                                      <SelectItem value="invalid">
-                                        {t("excel.mapper.validation.ignore") ||
-                                          "Игнорировать"}
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          },
-                        )}
+                              <div className="flex items-center gap-2">
+                                <ArrowRight className="h-4 w-4 text-gray-400" />
+                                <Select
+                                  value={
+                                    currentMapping === undefined
+                                      ? "invalid"
+                                      : String(currentMapping)
+                                  }
+                                  onValueChange={(mappedValue) => {
+                                    if (mappedValue === "invalid") {
+                                      updateRoomsMapping(value, "invalid");
+                                    } else {
+                                      updateRoomsMapping(
+                                        value,
+                                        parseInt(mappedValue),
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-40">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="0">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-3 w-3 rounded bg-purple-500" />
+                                        {t("rooms.studio") || "Студия (0)"}
+                                      </div>
+                                    </SelectItem>
+                                    {(
+                                      [
+                                        [1, "rooms.one"],
+                                        [2, "rooms.two"],
+                                        [3, "rooms.three"],
+                                        [4, "rooms.four"],
+                                        [5, "rooms.fivePlus"],
+                                      ] as const
+                                    ).map(([n, roomsKey]) => (
+                                      <SelectItem key={n} value={String(n)}>
+                                        {t(roomsKey)}
+                                      </SelectItem>
+                                    ))}
+                                    <SelectItem value="invalid">
+                                      {t("excel.mapper.validation.ignore") ||
+                                        "Игнорировать"}
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          );
+                        })}
+
                         <div className="border-t pt-4">
                           <Label className="text-sm font-medium">
                             {t("excel.mapper.validation.rooms.addMapping") ||
@@ -987,7 +954,8 @@ const ExcelApartmentSyncMapper = ({
                     </div>
                   )}
 
-                {statusValidation && statusValidation.invalidCount > 0 && (
+                {/* Предупреждения */}
+                {(statusValidation?.invalidCount ?? 0) > 0 && (
                   <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
                     <div className="flex items-center gap-2 text-yellow-800">
                       <AlertTriangle className="h-4 w-4" />
@@ -998,16 +966,17 @@ const ExcelApartmentSyncMapper = ({
                     </div>
                     <p className="mt-1 text-sm text-yellow-700">
                       {t("excel.mapper.validation.status.warningMessage", {
-                        statuses: statusValidation.invalidStatuses.join(", "),
+                        statuses: (
+                          statusValidation?.invalidStatuses || []
+                        ).join(", "),
                       }) ||
-                        `Неизвестные статусы: ${statusValidation.invalidStatuses.join(", ")}. Строки с ними будут пропущены для поля статуса.`}
+                        `Неизвестные статусы: ${(statusValidation?.invalidStatuses || []).join(", ")}. Строки с ними будут пропущены для поля статуса.`}
                     </p>
                   </div>
                 )}
 
                 {effectiveType === "building" &&
-                  roomsValidation &&
-                  roomsValidation.invalidCount > 0 && (
+                  (roomsValidation?.invalidCount ?? 0) > 0 && (
                     <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
                       <div className="flex items-center gap-2 text-yellow-800">
                         <AlertTriangle className="h-4 w-4" />
@@ -1018,9 +987,11 @@ const ExcelApartmentSyncMapper = ({
                       </div>
                       <p className="mt-1 text-sm text-yellow-700">
                         {t("excel.mapper.validation.rooms.warningMessage", {
-                          rooms: roomsValidation.invalidRooms.join(", "),
+                          rooms: (roomsValidation?.invalidRooms || []).join(
+                            ", ",
+                          ),
                         }) ||
-                          `Неизвестные значения комнат: ${roomsValidation.invalidRooms.join(", ")}. Строки с ними будут пропущены для поля комнат.`}
+                          `Неизвестные значения комнат: ${(roomsValidation?.invalidRooms || []).join(", ")}. Строки с ними будут пропущены для поля комнат.`}
                       </p>
                     </div>
                   )}
@@ -1030,87 +1001,21 @@ const ExcelApartmentSyncMapper = ({
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t("excel.mapper.preview.title") ||
-              "Предварительный просмотр данных"}
-          </CardTitle>
-          <CardDescription>
-            {t("excel.sync.preview.description").replace(
-              "{{count}}",
-              String(importedData.length),
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-3 text-left font-semibold">#</th>
-                  {Object.entries(allFields).map(([field, label]) => (
-                    <th
-                      key={field}
-                      className="p-3 text-left font-semibold text-real-estate-900"
-                    >
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {importedData.slice(0, 5).map((row, index) => (
-                  <tr key={index} className="border-b hover:bg-real-estate-50">
-                    <td className="p-3">
-                      <Check className="h-5 w-5 text-success-500" />
-                    </td>
-                    {Object.entries(allFields).map(([field]) => {
-                      const columnName =
-                        columnMapping[field as keyof ColumnMapping];
-                      const value =
-                        columnName && columnName !== "__none__"
-                          ? row[columnName]
-                          : "";
-                      return (
-                        <td key={field} className="p-3">
-                          {value !== null &&
-                          value !== undefined &&
-                          value !== "" ? (
-                            String(value)
-                          ) : (
-                            <span className="text-gray-400">--</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {importedData.length > 5 && (
-              <p className="mt-2 text-center text-sm text-real-estate-600">
-                {t("excel.mapper.preview.moreRecords", {
-                  count: importedData.length - 5,
-                })}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <PreviewTable
+        t={t}
+        importedData={importedData}
+        allFields={allFields}
+        columnMapping={columnMapping}
+      />
 
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={onComplete}>
-          {t("common.cancel") || "Отмена"}
-        </Button>
-        <Button
-          onClick={handleSync}
-          disabled={!isValid || isSyncing}
-          className={`${admin.primary} ${admin.primaryHover}`}
-        >
-          {isSyncing ? t("excel.sync.syncing") : t("excel.sync.syncButton")}
-        </Button>
-      </div>
+      <ActionsBar
+        t={t}
+        onComplete={onComplete}
+        handleSync={handleSync}
+        isValid={isValid}
+        isSyncing={isSyncing}
+        admin={admin}
+      />
     </div>
   );
 };
