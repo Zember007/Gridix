@@ -36,7 +36,7 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
             <h1 className="text-2xl font-bold text-slate-900">
               {t("partners.agencyNetwork")}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 max-w-[700px] text-sm text-slate-500">
               {t("partners.agencyNetworkSubtitle")}
             </p>
           </div>
