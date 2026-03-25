@@ -27,13 +27,13 @@ const ApartmentSyncTargetsList = ({
 
   return (
     <div
-      className="max-h-64 space-y-2 overflow-y-auto rounded-lg border p-3"
+      className="max-h-44 space-y-2 overflow-y-auto rounded-lg border p-2.5"
       style={{ borderColor: ADMIN_THEME.border }}
     >
       {targetApartments.map((apartment) => (
         <div
           key={apartment.id}
-          className="flex items-start gap-4 rounded border p-3 transition-colors"
+          className="flex items-start gap-3 rounded border p-2.5 transition-colors"
           style={{
             backgroundColor: ADMIN_THEME.backgroundSecondary,
             borderColor: ADMIN_THEME.borderLight,
@@ -65,7 +65,7 @@ const ApartmentSyncTargetsList = ({
               className="space-y-1 text-xs"
               style={{ color: ADMIN_THEME.textSecondary }}
             >
-              <div className="flex justify-between">
+              <div className="flex flex-wrap justify-between gap-2">
                 <span>
                   {t("apartmentsManager.syncDialog.currentPrice")}:{" "}
                   {formatPrice(apartment.price)}
@@ -76,7 +76,7 @@ const ApartmentSyncTargetsList = ({
                   </span>
                 )}
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span>
                   {t("apartmentsManager.status")}:{" "}
                   <Badge className={getStatusColor(apartment.status)}>

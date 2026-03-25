@@ -38,7 +38,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
-import ApartmentSyncDialog from "@/features/apartment-sync/ui/ApartmentSyncDialog";
+import ApartmentSyncDialog from "@/features/apartment-sync/ui/SharedApartmentSyncDialog";
 import ProjectApartmentsExcelSyncDialog from "@/components/projects/ProjectApartmentsExcelSyncDialog";
 import {
   Apartment,
