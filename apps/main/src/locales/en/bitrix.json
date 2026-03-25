@@ -34,6 +34,11 @@
     "connectButton": "Connect Bitrix24",
     "missingParams": "Bitrix parameters are missing (domain/member_id). Open this page from the Gridix app inside Bitrix24."
   },
+  "proGuard": {
+    "title": "Pro plan required",
+    "description": "Activate a Pro subscription for this project to use Bitrix integration.",
+    "cta": "Open subscription settings"
+  },
   "apartmentDetails": {
     "linkDealWithId": "Link to deal #{{dealId}}",
     "linkExistingDeal": "Link to an existing deal",

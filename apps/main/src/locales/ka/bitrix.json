@@ -34,6 +34,11 @@
     "connectButton": "დააკავშირეთ Bitrix24",
     "missingParams": "Bitrix-ის პარამეტრები აკლია (დომენი/წევრის_ID). გახსენით ეს გვერდი Gridix აპიდან Bitrix24-ში."
   },
+  "proGuard": {
+    "title": "საჭიროა Pro გეგმა",
+    "description": "გააქტიურეთ Pro გამოწერა ამ პროექტისთვის Bitrix ინტეგრაციის გამოსაყენებლად.",
+    "cta": "გამოწერის პარამეტრების გახსნა"
+  },
   "apartmentDetails": {
     "linkDealWithId": "გარიგების ბმული #{{dealId}}",
     "linkExistingDeal": "არსებული გარიგების ბმული",

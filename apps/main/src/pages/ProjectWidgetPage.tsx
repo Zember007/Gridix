@@ -3,6 +3,8 @@ import { useLocation, useParams } from "react-router-dom";
 import { ProjectApartmentSelector } from "@/components/project-selector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
+import { AdminAccessProvider, useAdminAccess } from "@/entities/admin-access";
+import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 const BitrixCrmTopBar = lazy(() =>
   import("@/pages/bitrix/components/BitrixCrmTopBar").then((m) => ({
@@ -14,7 +16,7 @@ interface ProjectWidgetPageProps {
   useId?: boolean;
 }
 
-const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
+const ProjectWidgetPageInner = ({ useId = false }: ProjectWidgetPageProps) => {
   const { projectId, projectSlug } = useParams<{
     projectId?: string;
     projectSlug?: string;
@@ -22,7 +24,6 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
   const { t } = useLanguage();
   const location = useLocation();
 
-  // Определяем идентификатор проекта в зависимости от типа маршрута
   const projectIdentifier = useId ? projectId : projectSlug || projectId;
 
   const crm = useMemo(
@@ -42,6 +43,14 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
     const byId = projectId ? projects.find((p) => p.id === projectId) : null;
     return byId?.id ?? null;
   }, [isBitrixCrm, projectId, projectSlug, projects]);
+
+  const adminAccess = useAdminAccess();
+  const crmBlocked =
+    isBitrixCrm &&
+    !!activeProjectId &&
+    !!adminAccess &&
+    !adminAccess.loading &&
+    !adminAccess.canUseCrmIntegration(activeProjectId);
 
   if (!projectIdentifier) {
     return (
@@ -70,8 +79,22 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
           </Suspense>
         </div>
       )}
-      <ProjectApartmentSelector projectId={projectIdentifier} />
+      {isBitrixCrm && crmBlocked ? (
+        <div className="p-4">
+          <AdminAccessNotice variant="pro" />
+        </div>
+      ) : (
+        <ProjectApartmentSelector projectId={projectIdentifier} />
+      )}
     </div>
+  );
+};
+
+const ProjectWidgetPage = (props: ProjectWidgetPageProps) => {
+  return (
+    <AdminAccessProvider>
+      <ProjectWidgetPageInner {...props} />
+    </AdminAccessProvider>
   );
 };
 

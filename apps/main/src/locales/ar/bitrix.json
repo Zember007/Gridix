@@ -34,6 +34,11 @@
     "connectButton": "ربط Bitrix24",
     "missingParams": "معلمات Bitrix مفقودة (المجال/معرف_العضو). افتح هذه الصفحة من تطبيق Gridix داخل Bitrix24."
   },
+  "proGuard": {
+    "title": "يتطلب خطة Pro",
+    "description": "قم بتفعيل اشتراك Pro لهذا المشروع لاستخدام تكامل Bitrix.",
+    "cta": "فتح إعدادات الاشتراك"
+  },
   "apartmentDetails": {
     "linkDealWithId": "رابط الصفقة رقم {{dealId}}",
     "linkExistingDeal": "الارتباط بصفقة موجودة",

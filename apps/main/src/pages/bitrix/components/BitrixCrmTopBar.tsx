@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@gridix/ui/select";
 import { CrmProjectLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
+import { useAdminAccess } from "@/entities/admin-access";
 
 function toPositiveInt(v: string | null): number | null {
   if (!v) return null;
@@ -39,11 +40,13 @@ export function BitrixCrmTopBar({
   dealId,
   activeProjectId,
 }: BitrixCrmTopBarProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { lang } = useParams();
-  const langSegment = lang ?? "ru";
+  const langSegment = lang ?? i18n.language?.split("-")[0] ?? "en";
+
+  const adminAccess = useAdminAccess();
 
   const dealIdResolved = useMemo(() => {
     const fromUrl = toPositiveInt(
@@ -67,6 +70,16 @@ export function BitrixCrmTopBar({
     const p = projects.find((x) => x.id === next) ?? null;
     if (!p) return;
 
+    const canUseCrm = adminAccess?.canUseCrmIntegration(p.id) ?? true;
+    if (!canUseCrm) {
+      window.open(
+        `/${langSegment}/admin?page=subscription`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      return;
+    }
+
     const pathname = p.slug
       ? `/embed/project/${p.slug}`
       : `/embed/project/id/${p.id}`;
@@ -88,11 +101,15 @@ export function BitrixCrmTopBar({
             <SelectItem value="catalog">
               {t("bitrix.topBar.catalog")}
             </SelectItem>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
+            {projects.map((p) => {
+              const canUseCrm = adminAccess?.canUseCrmIntegration(p.id) ?? true;
+              return (
+                <SelectItem key={p.id} value={p.id} disabled={!canUseCrm}>
+                  {p.name}
+                  {!canUseCrm ? ` — ${t("bitrix.proGuard.title")}` : ""}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>

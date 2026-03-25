@@ -34,6 +34,11 @@
     "connectButton": "Bitrix24'ü bağlayın",
     "missingParams": "Bitrix parametreleri eksik (domain/member_id). Bu sayfayı Bitrix24 içindeki Gridix uygulamasından açın."
   },
+  "proGuard": {
+    "title": "Pro plan gerekli",
+    "description": "Bitrix entegrasyonunu kullanmak icin bu projeye Pro abonelik etkinlestirin.",
+    "cta": "Abonelik ayarlarini ac"
+  },
   "apartmentDetails": {
     "linkDealWithId": "#{{dealId}} numaralı anlaşmanın bağlantısı",
     "linkExistingDeal": "Mevcut bir anlaşmaya bağlantı",
