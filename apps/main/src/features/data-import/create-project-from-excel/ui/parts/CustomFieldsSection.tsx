@@ -1,4 +1,4 @@
-import CustomFieldsManager from "@/components/fields/CustomFieldsManager";
+import { CustomFieldsManager } from "@/features/project-custom-fields";
 
 export function CustomFieldsSection({
   onFieldsChange,
