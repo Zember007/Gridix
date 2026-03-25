@@ -270,7 +270,11 @@ const GoogleSheetsImportDemo = () => {
                     </CardHeader>
                     <CardContent>
                       <p
-                        className={`text-sm ${results.validationResult?.isAccessible ? "text-green-700" : "text-red-700"}`}
+                        className={`text-sm ${
+                          results.validationResult?.isAccessible
+                            ? "text-green-700"
+                            : "text-red-700"
+                        }`}
                       >
                         {results.validationResult?.isAccessible
                           ? "Документ доступен для импорта"
