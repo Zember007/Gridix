@@ -89,7 +89,7 @@
     "previewFloorImageUpdate": "სართულის გეგმა განახლდება",
     "previewFloorImageSkip": "სართულის გეგმა უკვე განახლებულია",
     "previewFloorImageNone": "სართულის გეგმის ასლი გათიშულია",
-    "matchedBy": "შეესაბამება წესს: {{წესი}}",
+    "matchedBy": "შეესაბამება წესს: {{rule}}",
     "skippedNoMatch": "უსაფრთხო შესატყვისი ვერ მოიძებნა",
     "skippedAmbiguous": "რამდენიმე შესაძლო მატჩი, გამოტოვებული",
     "summaryFloorPlans": "იატაკის გეგმები: {{count}}",

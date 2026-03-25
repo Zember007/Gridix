@@ -100,7 +100,7 @@
     "progressTitle": "החלת כפילות",
     "progressDescription": "{{completed}} מתוך {{total}} פעולות הושלמו",
     "applyButton": "שכפל {{count}} פריטים",
-    "floorDuplicateSuccess": "השכפול הושלם: תוכניות קומה {{floor Plans}}, מצולעים {{polygons}}, דילוג {{דילג}}",
+    "floorDuplicateSuccess": "השכפול הושלם: תוכניות קומה {{floorPlans}}, מצולעים {{polygons}}, דילוג {{skipped}}",
     "partialSuccess": "השכפול הושלם עם אזהרות",
     "errorsCount": "שגיאות ביצוע: {{count}}",
     "moreMatches": "ועוד {{count}} התאמות"
