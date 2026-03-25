@@ -34,10 +34,10 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              {t("partners.title")}
+              {t("partners.agencyNetwork")}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {t("partners.subtitle")}
+            <p className="mt-1 max-w-[700px] text-sm text-slate-500">
+              {t("partners.agencyNetworkSubtitle")}
             </p>
           </div>
 

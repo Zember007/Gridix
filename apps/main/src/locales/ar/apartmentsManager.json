@@ -98,7 +98,7 @@
     "summaryAmbiguous": "غامض: {{count}}",
     "readyOperations": "العمليات: {{count}}",
     "progressTitle": "تطبيق الازدواجية",
-    "progressDescription": "تم إكمال {{Completed}} من {{total}} العمليات",
+    "progressDescription": "تم إكمال {{completed}} من {{total}} العمليات",
     "applyButton": "تكرار {{count}} من العناصر",
     "floorDuplicateSuccess": "اكتمل التكرار: مخططات الطوابق {{floorPlans}}، المضلعات {{polygons}}، تم تخطيها {{skipped}}",
     "partialSuccess": "اكتمال الازدواجية مع التحذيرات",
