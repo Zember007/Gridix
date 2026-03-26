@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { deleteApartmentPhoto } from "@/features/projectEditor/api/projectEditorApi";
+import {
+  deleteApartmentPhoto,
+  reorderApartmentPhotos,
+} from "@/features/projectEditor/api/projectEditorApi";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@gridix/utils/react";
 import { ApartmentPhoto } from "./useApartmentPhotosManager";
@@ -12,6 +15,7 @@ interface UseApartmentPhotosActionsParams {
   photos: ApartmentPhoto[];
   onAfterDelete: () => Promise<void>;
   onAfterDuplicate: () => Promise<void>;
+  onAfterReorder: () => Promise<void>;
 }
 
 export const useApartmentPhotosActions = ({
@@ -20,6 +24,7 @@ export const useApartmentPhotosActions = ({
   photos,
   onAfterDelete,
   onAfterDuplicate,
+  onAfterReorder,
 }: UseApartmentPhotosActionsParams) => {
   const { t } = useLanguage();
 
@@ -97,8 +102,37 @@ export const useApartmentPhotosActions = ({
     [apartments, onAfterDuplicate, photos, selectedApartment, t],
   );
 
+  const handleReorderPhotos = useCallback(
+    async (nextPhotos: ApartmentPhoto[]) => {
+      if (!selectedApartment || nextPhotos.length === 0) {
+        return;
+      }
+
+      const hasChanges = nextPhotos.some(
+        (photo, index) =>
+          photo.id !== photos[index]?.id || photo.order_index !== index,
+      );
+
+      if (!hasChanges) {
+        return;
+      }
+
+      await reorderApartmentPhotos(
+        selectedApartment,
+        nextPhotos.map((photo, index) => ({
+          photoId: photo.id,
+          orderIndex: index,
+        })),
+      );
+
+      await onAfterReorder();
+    },
+    [onAfterReorder, photos, selectedApartment],
+  );
+
   return {
     handleDeletePhoto,
     duplicatePhotosToApartments,
+    handleReorderPhotos,
   };
 };
