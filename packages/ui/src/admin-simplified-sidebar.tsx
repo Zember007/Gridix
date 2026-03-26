@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { useLanguage, useWorkspace } from "@gridix/utils/react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
@@ -422,6 +422,8 @@ export function SimplifiedSidebar({
   showSupportButton = false,
   userId,
   preferredLocale,
+  workspaceExtra,
+  exitDemoSlot,
 }: {
   navItems: SimplifiedSidebarNavItem[];
   activeSection: string;
@@ -444,6 +446,10 @@ export function SimplifiedSidebar({
   showSupportButton?: boolean;
   userId?: string;
   preferredLocale?: string;
+  /** Optional content rendered below the workspace switcher (e.g. demo join button). Hidden when collapsed. */
+  workspaceExtra?: React.ReactNode;
+  /** Demo exit button — always rendered, even when sidebar is collapsed. */
+  exitDemoSlot?: React.ReactNode;
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
@@ -588,10 +594,16 @@ export function SimplifiedSidebar({
         </div>
       </div>
 
+      {/* Demo exit button — always visible, even when collapsed */}
+      {exitDemoSlot ?? null}
+
       {/* Workspace Switcher */}
       {showWorkspaceSwitcher && availableWorkspaces.length > 0 ? (
         <WorkspaceSwitcher show isCollapsed={isCollapsed} />
       ) : null}
+
+      {/* Extra workspace-area slot (e.g. demo join button). */}
+      {workspaceExtra ?? null}
 
       {/* Navigation */}
       <div className="no-scrollbar flex-1 overflow-y-auto p-4">

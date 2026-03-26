@@ -119,6 +119,16 @@
       "title": "Create new project"
     }
   },
+  "demo": {
+    "bannerTitle": "Demo mode",
+    "bannerDescription": "You are viewing a demo workspace. Data is for demonstration purposes only. Creating and editing projects is not available.",
+    "joinButton": "Try Demo Cabinet",
+    "joining": "Connecting...",
+    "joinError": "Failed to connect to demo. Please try again.",
+    "joinSuccess": "Connected to demo workspace",
+    "exitButton": "Exit Demo",
+    "exitShort": "Exit"
+  },
   "partners": "Partnership",
   "projects": "Projects",
   "settings": "Settings",

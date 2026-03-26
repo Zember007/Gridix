@@ -58,6 +58,10 @@ export interface AdminBootstrapResponse {
     role: "developer" | "manager";
     effective_developer_id: string;
     is_manager_mode: boolean;
+    /** True when the active workspace belongs to the designated demo developer account. */
+    is_demo_workspace?: boolean;
+    /** True when the current user is a read-only demo viewer (not superadmin/admin). */
+    is_demo_viewer?: boolean;
   };
   profile: {
     id: string;
