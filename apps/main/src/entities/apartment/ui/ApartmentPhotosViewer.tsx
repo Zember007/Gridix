@@ -17,6 +17,7 @@ import {
   resolveLayoutPhotosForApartment,
   type LayoutPhotoRaw,
 } from "@/entities/apartment/model/resolveLayoutPhotos";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CombinedPhoto {
   id: string;
@@ -43,6 +44,7 @@ const ApartmentPhotosViewer = ({
   apartmentLayoutType,
   preloadedLayoutPhotos,
 }: ApartmentPhotosViewerProps) => {
+  const { t } = useLanguage();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
@@ -217,7 +219,7 @@ const ApartmentPhotosViewer = ({
         <CardContent className="p-4">
           <div className="flex h-[340px] flex-col items-center justify-center text-muted-foreground">
             <ImageIcon className="mb-2 h-12 w-12" />
-            <p>Загрузка...</p>
+            <p>{t("apartment.photos.loading")}</p>
           </div>
         </CardContent>
       </Card>
@@ -230,7 +232,7 @@ const ApartmentPhotosViewer = ({
         <CardContent className="p-4">
           <div className="flex h-[340px] flex-col items-center justify-center text-muted-foreground">
             <ImageIcon className="mb-2 h-12 w-12" />
-            <p>Фотографии не загружены</p>
+            <p>{t("apartment.photos.empty")}</p>
           </div>
         </CardContent>
       </Card>
@@ -304,8 +306,11 @@ const ApartmentPhotosViewer = ({
         index={currentPhotoIndex}
         slides={photos.map((photo) => ({
           src: photo.image_url,
-          alt: photo.description || "Фото квартиры",
-          title: photo.type === "layout" ? "Планировка" : "Квартира",
+          alt: photo.description || t("apartment.photos.alt"),
+          title:
+            photo.type === "layout"
+              ? t("apartment.photos.layoutTitle")
+              : t("apartment.photos.apartmentTitle"),
         }))}
         on={{
           view: ({ index }) => setCurrentPhotoIndex(index),

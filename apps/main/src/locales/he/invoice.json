@@ -37,6 +37,7 @@
     "paid_date": "תאריך בתשלום",
     "amount": "סְכוּם",
     "duration": "מֶשֶׁך",
+    "months_short": "חוד׳",
     "service_details": "פרטי שירות",
     "plan": "לְתַכְנֵן",
     "project": "פּרוֹיֶקט",
@@ -44,6 +45,7 @@
     "download_pdf": "הורד PDF",
     "open_pdf": "לִפְתוֹחַ",
     "downloading": "מוריד...",
+    "invoice_number_unassigned": "מספר חשבונית לא הוקצה",
     "not_generated": "חשבונית PDF טרם נוצרה. צור קשר עם מנהל המערכת.",
     "payment_instructions": "הוראות תשלום",
     "instructions_list": [

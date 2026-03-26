@@ -40,6 +40,13 @@
   "pdfGenerationError": "შეცდომა PDF-ის გენერირებისას",
   "reserve": "რეზერვი",
   "reserveTitle": "დაჯავშნე ბინა",
+  "photos": {
+    "loading": "იტვირთება...",
+    "empty": "ფოტოები არ არის ატვირთული",
+    "alt": "ბინის ფოტო",
+    "layoutTitle": "გეგმარება",
+    "apartmentTitle": "ბინა"
+  },
   "leadSubmitError": "მოთხოვნის გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა.",
   "leadUnexpectedError": "მოულოდნელი შეცდომა. სცადეთ ხელახლა.",
   "objectDetails": "ობიექტის დეტალები",

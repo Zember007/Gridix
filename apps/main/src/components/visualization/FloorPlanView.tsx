@@ -204,10 +204,8 @@ const FloorPlanView = ({
       <div
         className={`flex h-full grow flex-col items-center justify-center p-6 text-gray-500 ${apartments ? "min-h-[400px]" : "min-h-[100px]"}`}
       >
-        <p>План {floorNumber} этажа не загружен</p>
-        <p className="mt-1 text-sm">
-          Обратитесь к администратору для загрузки плана этажа
-        </p>
+        <p>{t("floorPlan.viewer.notLoaded", { floor: floorNumber })}</p>
+        <p className="mt-1 text-sm">{t("floorPlan.viewer.contactAdmin")}</p>
       </div>
     );
   }

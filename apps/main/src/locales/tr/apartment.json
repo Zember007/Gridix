@@ -40,6 +40,13 @@
   "pdfGenerationError": "PDF oluşturulurken hata oluştu",
   "reserve": "Rezerv",
   "reserveTitle": "Daire rezervasyonu",
+  "photos": {
+    "loading": "Yükleniyor...",
+    "empty": "Fotoğraflar yüklenmedi",
+    "alt": "Daire fotoğrafı",
+    "layoutTitle": "Plan",
+    "apartmentTitle": "Daire"
+  },
   "leadSubmitError": "İstek gönderilemedi. Lütfen tekrar deneyin.",
   "leadUnexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
   "objectDetails": "Nesne detayları",

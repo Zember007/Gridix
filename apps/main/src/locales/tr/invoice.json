@@ -37,6 +37,7 @@
     "paid_date": "Ödeme Tarihi",
     "amount": "Miktar",
     "duration": "Süre",
+    "months_short": "ay",
     "service_details": "Hizmet Detayları",
     "plan": "Planı",
     "project": "Proje",
@@ -44,6 +45,7 @@
     "download_pdf": "PDF'yi indir",
     "open_pdf": "Açık",
     "downloading": "İndiriliyor...",
+    "invoice_number_unassigned": "Fatura numarası atanmadı",
     "not_generated": "PDF faturası henüz oluşturulmadı. Yöneticiyle iletişime geçin.",
     "payment_instructions": "Ödeme Talimatları",
     "instructions_list": [

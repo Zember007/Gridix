@@ -50,6 +50,10 @@
   "loading": {
     "error": "Kat planı yüklenirken hata oluştu"
   },
+  "viewer": {
+    "notLoaded": "{{floor}}. kat planı yüklenmedi",
+    "contactAdmin": "Kat planını yüklemek için yöneticiyle iletişime geçin"
+  },
   "settings": {
     "backToEditor": "Editöre Geri Dön",
     "title": "Kat {{kat}} Poligon Ayarları"

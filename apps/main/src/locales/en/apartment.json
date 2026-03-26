@@ -40,6 +40,13 @@
   "pdfGenerationError": "Error generating PDF",
   "reserve": "Reserve",
   "reserveTitle": "Reserve apartment",
+  "photos": {
+    "loading": "Loading...",
+    "empty": "Photos not uploaded",
+    "alt": "Apartment photo",
+    "layoutTitle": "Layout",
+    "apartmentTitle": "Apartment"
+  },
   "leadSubmitError": "Could not send the request. Please try again.",
   "leadUnexpectedError": "Something went wrong. Please try again.",
   "objectDetails": "Object details",
