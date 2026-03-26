@@ -3,8 +3,6 @@ import { useLocation, useParams } from "react-router-dom";
 import { ProjectApartmentSelector } from "@/components/project-selector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
-import { AdminAccessProvider, useAdminAccess } from "@/entities/admin-access";
-import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
 const BitrixCrmTopBar = lazy(() =>
   import("@/pages/bitrix/components/BitrixCrmTopBar").then((m) => ({
@@ -44,14 +42,6 @@ const ProjectWidgetPageInner = ({ useId = false }: ProjectWidgetPageProps) => {
     return byId?.id ?? null;
   }, [isBitrixCrm, projectId, projectSlug, projects]);
 
-  const adminAccess = useAdminAccess();
-  const crmBlocked =
-    isBitrixCrm &&
-    !!activeProjectId &&
-    !!adminAccess &&
-    !adminAccess.loading &&
-    !adminAccess.canUseCrmIntegration(activeProjectId);
-
   if (!projectIdentifier) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -79,23 +69,13 @@ const ProjectWidgetPageInner = ({ useId = false }: ProjectWidgetPageProps) => {
           </Suspense>
         </div>
       )}
-      {isBitrixCrm && crmBlocked ? (
-        <div className="p-4">
-          <AdminAccessNotice variant="pro" />
-        </div>
-      ) : (
-        <ProjectApartmentSelector projectId={projectIdentifier} />
-      )}
+      <ProjectApartmentSelector projectId={projectIdentifier} />
     </div>
   );
 };
 
 const ProjectWidgetPage = (props: ProjectWidgetPageProps) => {
-  return (
-    <AdminAccessProvider>
-      <ProjectWidgetPageInner {...props} />
-    </AdminAccessProvider>
-  );
+  return <ProjectWidgetPageInner {...props} />;
 };
 
 export default ProjectWidgetPage;
