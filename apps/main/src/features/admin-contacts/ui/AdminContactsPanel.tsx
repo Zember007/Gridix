@@ -2,14 +2,14 @@ import { useTranslation } from "react-i18next";
 import { Building2, FileDown, Search, User } from "lucide-react";
 import { Input, Button } from "@gridix/ui";
 import { useContactsList } from "../hooks/useContactsList";
-import { exportContactsCSV } from "../lib/export-contacts-csv";
+import { exportContactsXLSX } from "../lib/export-contacts-xlsx";
 
 export function AdminContactsPanel() {
   const { t } = useTranslation();
   const { contacts, isLoading, query, setQuery, kindFilter, setKindFilter } =
     useContactsList();
 
-  const handleExportCSV = () => exportContactsCSV(contacts, t);
+  const handleExportExcel = () => exportContactsXLSX(contacts, t);
 
   return (
     <div className="space-y-4">
@@ -25,7 +25,7 @@ export function AdminContactsPanel() {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleExportCSV}
+          onClick={handleExportExcel}
           disabled={isLoading || contacts.length === 0}
           className="shrink-0 gap-2"
         >

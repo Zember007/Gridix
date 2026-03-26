@@ -115,7 +115,7 @@
     },
     "exportDone": {
       "title": "მზადაა",
-      "desc": "ექსპორტის ფაილი ჩამოტვირთულია"
+      "desc": "Excel ფაილი ჩამოტვირთულია"
     },
     "importDone": {
       "title": "იმპორტი დასრულდა",
@@ -255,7 +255,7 @@
   },
   "settings": {
     "import": "იმპორტი",
-    "export": "ექსპორტი (CSV)",
+    "export": "ექსპორტი (Excel)",
     "funnelSetup": "ძაბრის კონფიგურაცია",
     "cardAppearance": "ბარათის გარეგნობა",
     "findDuplicates": "დუბლიკატების პოვნა",

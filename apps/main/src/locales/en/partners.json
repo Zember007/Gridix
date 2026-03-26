@@ -1,8 +1,6 @@
 {
   "title": "Agency network and signature",
   "subtitle": "Attract clients and earn commission from each subscription",
-  "agencyNetwork": "Agency network",
-  "agencyNetworkSubtitle": "Unified Partner Registry: Managing partnership terms, communications center, and agency sales efficiency",
   "becomePartner": "Become a Partner",
   "creating": "Creating...",
   "overview": "Overview",
@@ -381,6 +379,19 @@
     "dateTo": "Date to"
   },
   "invite": "Invite",
+  "agencyExport": {
+    "exportBtn": "Export",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colBankDetails": "Bank details",
+    "colPhone": "Phone",
+    "colMode": "Mode",
+    "modeValue": "direct",
+    "toastNothingToExportTitle": "Nothing to export",
+    "toastNothingToExportDesc": "There are no partners in the current list.",
+    "toastExportDoneTitle": "Export complete",
+    "toastExportDoneDesc": "Partner list saved to your downloads."
+  },
   "showPendingOnly": "Show pending only",
   "clickToFilter": "Click to filter",
   "noPartners": "No partners",

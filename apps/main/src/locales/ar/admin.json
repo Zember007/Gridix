@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "لا يوجد شيء للتصدير",
     "toastNothingToExportDesc": "لا توجد جهات اتصال للتصدير.",
     "toastExportDoneTitle": "اكتمل التصدير",
-    "toastExportDoneDesc": "تم تصدير جهات الاتصال إلى CSV."
+    "toastExportDoneDesc": "تم تصدير جهات الاتصال إلى Excel."
   },
   "project": {
     "create": {

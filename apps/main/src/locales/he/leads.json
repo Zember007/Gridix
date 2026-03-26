@@ -115,7 +115,7 @@
     },
     "exportDone": {
       "title": "נַעֲשָׂה",
-      "desc": "הורד קובץ ייצוא"
+      "desc": "קובץ Excel הורד"
     },
     "importDone": {
       "title": "הייבוא ​​הושלם",
@@ -255,7 +255,7 @@
   },
   "settings": {
     "import": "יְבוּא",
-    "export": "ייצוא (CSV)",
+    "export": "ייצוא (Excel)",
     "funnelSetup": "הגדרת משפך",
     "cardAppearance": "הופעת כרטיס",
     "findDuplicates": "מצא כפילויות",
