@@ -24,6 +24,7 @@ interface ManagerAccountWithProfile {
   email: string;
   full_name: string;
   status: string;
+  is_demo_viewer: boolean;
   user_profiles?: {
     full_name?: string;
     company_name?: string;
@@ -36,6 +37,8 @@ export interface UserRole {
   managerData?: ManagerRole[]; // Массив для поддержки нескольких застройщиков
   developerIds?: string[]; // Массив ID застройщиков
   primaryDeveloperId?: string | undefined; // Основной застройщик (первый)
+  /** Demo workspaces the user joined as a read-only viewer (doesn't change primary role). */
+  demoManagerData?: ManagerRole[];
 }
 
 const buildDeveloperRole = (userId: string | undefined): UserRole => ({
@@ -80,11 +83,13 @@ export const useUserRole = () => {
           console.error("Error checking manager role:", managerError);
         }
 
-        // Пользователь является менеджером, если есть активные аккаунты
         if (managerAccounts && managerAccounts.length > 0) {
           const accountsArray =
             managerAccounts as unknown as ManagerAccountWithProfile[];
-          const managerData: ManagerRole[] = accountsArray.map((account) => ({
+
+          const toManagerRole = (
+            account: ManagerAccountWithProfile,
+          ): ManagerRole => ({
             id: account.id,
             developer_id: account.developer_id,
             manager_id: account.manager_id,
@@ -96,18 +101,34 @@ export const useUserRole = () => {
               company_name: account.user_profiles?.company_name || "",
               email: account.user_profiles?.email || "",
             },
-          }));
+          });
 
-          const developerIds = managerAccounts.map(
-            (account) => account.developer_id,
-          );
+          // Demo-viewer accounts must NOT change the primary role — a developer who
+          // joined the demo stays a developer.
+          const realAccounts = accountsArray.filter((a) => !a.is_demo_viewer);
+          const demoAccounts = accountsArray.filter((a) => a.is_demo_viewer);
 
-          return {
-            type: "manager",
-            managerData,
-            developerIds,
-            primaryDeveloperId: developerIds[0],
-          };
+          if (realAccounts.length > 0) {
+            // Пользователь является менеджером (есть реальные приглашения)
+            const managerData = realAccounts.map(toManagerRole);
+            const developerIds = realAccounts.map((a) => a.developer_id);
+
+            return {
+              type: "manager",
+              managerData,
+              developerIds,
+              primaryDeveloperId: developerIds[0],
+              demoManagerData: demoAccounts.map(toManagerRole),
+            };
+          }
+
+          if (demoAccounts.length > 0) {
+            // Только демо-доступ — остаётся застройщиком, но с демо воркспейсами
+            return {
+              ...buildDeveloperRole(user.id),
+              demoManagerData: demoAccounts.map(toManagerRole),
+            };
+          }
         }
 
         // Пользователь является застройщиком (по умолчанию или если нет активных manager_accounts)

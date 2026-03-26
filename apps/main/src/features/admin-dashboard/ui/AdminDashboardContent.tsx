@@ -53,8 +53,9 @@ type AdminDashboardContentProps = {
   developerId: string | null;
   user: unknown;
   loading: boolean;
-  onCreateNew: () => void;
+  onCreateNew?: () => void;
   onEditProject: (projectId: string, isNew: boolean) => void;
+  isDemoViewer?: boolean;
 };
 
 export const AdminDashboardContent = ({
@@ -66,6 +67,7 @@ export const AdminDashboardContent = ({
   loading,
   onCreateNew,
   onEditProject,
+  isDemoViewer = false,
 }: AdminDashboardContentProps) => {
   const adminAccess = useAdminAccess();
   const tabFallback = (
@@ -137,14 +139,17 @@ export const AdminDashboardContent = ({
           </div>
         )}
 
-        {activeTab === "integrations" && userRole.type !== "manager" && (
-          <div className="space-y-6">
-            <IntegrationsTab />
-          </div>
-        )}
+        {activeTab === "integrations" &&
+          userRole.type !== "manager" &&
+          !isDemoViewer && (
+            <div className="space-y-6">
+              <IntegrationsTab />
+            </div>
+          )}
 
         {activeTab === "settings" &&
           userRole.type !== "manager" &&
+          !isDemoViewer &&
           developerId && (
             <div className="space-y-6">
               <AdminSettingsRoot

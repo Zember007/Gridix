@@ -24,11 +24,22 @@ import {
 } from "@phosphor-icons/react";
 import { SimplifiedSidebar } from "@gridix/ui";
 import { UnreadBadge } from "@/shared/ui/UnreadBadge";
+import { JoinDemoButton, ExitDemoButton } from "@/features/demo-cabinet";
+import { useAdminAccess } from "@/entities/admin-access";
 
 const getQueryPage = (): string | null => {
   if (typeof window === "undefined") return null;
   return new URLSearchParams(window.location.search).get("page");
 };
+
+// Tabs hidden in demo viewer mode
+const DEMO_HIDDEN_TABS = new Set([
+  "subscription",
+  "widgets",
+  "integrations",
+  "partners",
+  "settings",
+]);
 
 // Simplified admin navigation items
 const getAdminNavItems = (
@@ -36,6 +47,7 @@ const getAdminNavItems = (
   isManager: boolean = false,
   amoWidget: boolean = false,
   crmUnreadCount: number = 0,
+  isDemoViewer: boolean = false,
 ) => {
   const items = [
     {
@@ -66,11 +78,15 @@ const getAdminNavItems = (
                 icon: <UserIcon size={18} />,
                 label: t("admin.contacts"),
               },
-              {
-                id: "agent_network",
-                icon: <Handshake size={18} />,
-                label: t("admin.agent_network"),
-              },
+              ...(!isDemoViewer
+                ? [
+                    {
+                      id: "agent_network",
+                      icon: <Handshake size={18} />,
+                      label: t("admin.agent_network"),
+                    },
+                  ]
+                : []),
             ],
           },
         ]
@@ -102,6 +118,11 @@ const getAdminNavItems = (
       label: t("admin.partners"),
     },
   ];
+
+  // Demo viewers only see projects, CRM, analytics
+  if (isDemoViewer) {
+    return items.filter((item) => !DEMO_HIDDEN_TABS.has(item.id));
+  }
 
   // Убрать подписки и настройки для менеджеров
   if (isManager) {
@@ -190,9 +211,13 @@ export function AdminSidebar({
   crmUnreadCount?: number;
 }) {
   const { t } = useLanguage();
-  const { userRole } = useUserRole();
+  const { isManager } = useUserRole();
   const { user, userProfile } = useAuth();
   const isMobile = useIsMobile();
+  const adminAccess = useAdminAccess();
+
+  // Show "Try Demo" button when not already in a demo workspace
+  const showJoinDemo = !adminAccess?.isDemoWorkspace;
   const [activeSection, setActiveSection] = useState(
     () => activeTab || getQueryPage() || "projects",
   );
@@ -225,9 +250,10 @@ export function AdminSidebar({
 
   const navItems = getAdminNavItems(
     t,
-    userRole.type === "manager",
+    isManager,
     amoWidget,
     crmUnreadCount,
+    adminAccess?.isDemoViewer ?? false,
   );
 
   return (
@@ -239,7 +265,7 @@ export function AdminSidebar({
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t("adminSidebar.title")}
-      showWorkspaceSwitcher={userRole.type === "manager"}
+      showWorkspaceSwitcher={isManager || adminAccess?.isDemoWorkspace === true}
       isMobile={isMobile ?? false}
       mobileOpen={isMobileOpen}
       onMobileOpenChange={setIsMobileOpen}
@@ -253,6 +279,14 @@ export function AdminSidebar({
       isSigningOut={isSigningOut}
       userId={user?.id}
       preferredLocale={userProfile?.preferred_locale ?? undefined}
+      exitDemoSlot={
+        adminAccess?.isDemoWorkspace ? (
+          <ExitDemoButton isCollapsed={isCollapsed} />
+        ) : undefined
+      }
+      workspaceExtra={
+        showJoinDemo ? <JoinDemoButton isCollapsed={isCollapsed} /> : undefined
+      }
     />
   );
 }
