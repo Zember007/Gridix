@@ -495,3 +495,23 @@ export async function deleteApartmentPhoto(
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
 }
+
+export interface ApartmentPhotoOrderUpdate {
+  photoId: string;
+  orderIndex: number;
+}
+
+/**
+ * Reorder apartment photos via edge function in one request.
+ */
+export async function reorderApartmentPhotos(
+  apartmentId: string,
+  updates: ApartmentPhotoOrderUpdate[],
+): Promise<void> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: { action: "reorderApartmentPhotos", apartmentId, updates },
+  });
+
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+}

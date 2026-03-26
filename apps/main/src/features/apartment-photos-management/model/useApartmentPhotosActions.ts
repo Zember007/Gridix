@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { deleteApartmentPhoto } from "@/features/projectEditor/api/projectEditorApi";
+import {
+  deleteApartmentPhoto,
+  reorderApartmentPhotos,
+} from "@/features/projectEditor/api/projectEditorApi";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@gridix/utils/react";
 import { ApartmentPhoto } from "./useApartmentPhotosManager";
@@ -114,21 +117,13 @@ export const useApartmentPhotosActions = ({
         return;
       }
 
-      const updateResults = await Promise.all(
-        nextPhotos.map((photo, index) =>
-          supabase
-            .from("apartment_photos")
-            .update({ order_index: index })
-            .eq("id", photo.id)
-            .neq("order_index", index),
-        ),
+      await reorderApartmentPhotos(
+        selectedApartment,
+        nextPhotos.map((photo, index) => ({
+          photoId: photo.id,
+          orderIndex: index,
+        })),
       );
-
-      const failedUpdate = updateResults.find((result) => result.error);
-      if (failedUpdate?.error) {
-        console.error("Error reordering apartment photos:", failedUpdate.error);
-        throw failedUpdate.error;
-      }
 
       await onAfterReorder();
     },
