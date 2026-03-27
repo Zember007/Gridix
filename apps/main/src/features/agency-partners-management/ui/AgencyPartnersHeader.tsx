@@ -1,13 +1,15 @@
 import React from "react";
 import {
+  FileDown,
   LayoutList,
   Link as LinkIcon,
   Search,
   ShieldCheck,
 } from "lucide-react";
 import { Button, Input } from "@gridix/ui";
-import type { PartnerFilter } from "@/entities/agency-partner";
+import type { AgencyPartner, PartnerFilter } from "@/entities/agency-partner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { exportAgencyPartnersXLSX } from "../lib/export-agency-partners-xlsx";
 
 type Props = {
   activeTab: "list" | "conditions";
@@ -16,6 +18,8 @@ type Props = {
   filters: PartnerFilter;
   setFilters: React.Dispatch<React.SetStateAction<PartnerFilter>>;
   pendingRequests: number;
+  partners: AgencyPartner[];
+  partnersLoading: boolean;
 };
 
 export const AgencyPartnersHeader: React.FC<Props> = ({
@@ -25,8 +29,12 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
   filters,
   setFilters,
   pendingRequests,
+  partners,
+  partnersLoading,
 }) => {
   const { t } = useLanguage();
+
+  const handleExport = () => exportAgencyPartnersXLSX(partners, t);
 
   return (
     <>
@@ -34,10 +42,10 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              {t("partners.agencyNetwork")}
+              {t("partners.title")}
             </h1>
-            <p className="mt-1 max-w-[700px] text-sm text-slate-500">
-              {t("partners.agencyNetworkSubtitle")}
+            <p className="mt-1 text-sm text-slate-500">
+              {t("partners.subtitle")}
             </p>
           </div>
 
@@ -63,6 +71,16 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
                 className="flex h-10 items-center gap-2 bg-[var(--admin-primary)] px-4 font-bold text-[var(--admin-text-on-primary)] shadow-sm hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
               >
                 <LinkIcon size={18} /> {t("partners.invite")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                disabled={partnersLoading || partners.length === 0}
+                className="h-10 shrink-0 gap-2 border-slate-200 bg-white px-4 font-bold text-slate-900 hover:bg-slate-50"
+              >
+                <FileDown size={16} />
+                {t("partners.agencyExport.exportBtn")}
               </Button>
             </div>
           ) : (

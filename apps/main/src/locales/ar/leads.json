@@ -115,7 +115,7 @@
     },
     "exportDone": {
       "title": "تم",
-      "desc": "تم تنزيل ملف التصدير"
+      "desc": "تم تنزيل ملف Excel"
     },
     "importDone": {
       "title": "اكتمل الاستيراد",
@@ -255,7 +255,7 @@
   },
   "settings": {
     "import": "استيراد",
-    "export": "تصدير (CSV)",
+    "export": "تصدير (Excel)",
     "funnelSetup": "إعداد القمع",
     "cardAppearance": "مظهر البطاقة",
     "findDuplicates": "البحث عن التكرارات",

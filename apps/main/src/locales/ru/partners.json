@@ -1,8 +1,6 @@
 {
   "title": "Партнёрская программа",
   "subtitle": "Привлекайте клиентов и получайте комиссию с каждой подписки",
-  "agencyNetwork": "Агентская сеть",
-  "agencyNetworkSubtitle": "Единый реестр партнеров: Управление условиями партнерства, коммуникационным центром и эффективностью агентских продаж",
   "becomePartner": "Стать партнёром",
   "creating": "Создание...",
   "overview": "Обзор",
@@ -381,6 +379,19 @@
     "dateTo": "Дата до"
   },
   "invite": "Пригласить",
+  "agencyExport": {
+    "exportBtn": "Экспорт",
+    "colName": "Имя",
+    "colEmail": "Электронная почта",
+    "colBankDetails": "Банковские реквизиты",
+    "colPhone": "Телефон",
+    "colMode": "Режим",
+    "modeValue": "прямой",
+    "toastNothingToExportTitle": "Ничего экспортировать",
+    "toastNothingToExportDesc": "В текущем списке партнеров нет.",
+    "toastExportDoneTitle": "Экспорт завершен",
+    "toastExportDoneDesc": "Список партнеров сохранен в ваших загрузках."
+  },
   "showPendingOnly": "Показать только новые заявки",
   "clickToFilter": "Нажмите для фильтрации",
   "noPartners": "Нет партнёров",

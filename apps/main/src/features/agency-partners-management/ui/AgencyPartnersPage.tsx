@@ -13,6 +13,7 @@ import { AgencyPartnersTable } from "./AgencyPartnersTable";
 export const AgencyPartnersPage: React.FC = () => {
   const {
     partners,
+    loading,
     filters,
     setFilters,
     approvePartner,
@@ -115,6 +116,8 @@ export const AgencyPartnersPage: React.FC = () => {
         filters={filters}
         setFilters={setFilters}
         pendingRequests={stats.pendingRequests}
+        partners={partners}
+        partnersLoading={loading}
       />
 
       <div className="flex-1">

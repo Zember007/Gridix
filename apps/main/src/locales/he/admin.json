@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "אין מה לייצא",
     "toastNothingToExportDesc": "אין אנשי קשר לייצוא.",
     "toastExportDoneTitle": "הייצוא הושלם",
-    "toastExportDoneDesc": "אנשי הקשר יוצאו ל-CSV."
+    "toastExportDoneDesc": "אנשי הקשר יוצאו ל-Excel."
   },
   "project": {
     "create": {

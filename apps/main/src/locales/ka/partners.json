@@ -1,8 +1,6 @@
 {
   "title": "პარტნიორის პროგრამა",
   "subtitle": "მოიზიდეთ კლიენტები და მიიღეთ კომისია ყოველი გამოწერიდან",
-  "agencyNetwork": "სააგენტოს ქსელი",
-  "agencyNetworkSubtitle": "პარტნიორთა ერთიანი რეესტრი: პარტნიორობის პირობების მართვა, საკომუნიკაციო ცენტრი და სააგენტოს გაყიდვების ეფექტურობა",
   "becomePartner": "გახდი პარტნიორი",
   "creating": "შექმნა...",
   "overview": "მიმოხილვა",
@@ -381,6 +379,19 @@
     "dateTo": "თარიღამდე"
   },
   "invite": "მოიწვიე",
+  "agencyExport": {
+    "exportBtn": "ექსპორტი",
+    "colName": "სახელი",
+    "colEmail": "ელფოსტა",
+    "colBankDetails": "ბანკის დეტალები",
+    "colPhone": "ტელეფონი",
+    "colMode": "რეჟიმი",
+    "modeValue": "პირდაპირი",
+    "toastNothingToExportTitle": "საექსპორტო არაფერი",
+    "toastNothingToExportDesc": "მიმდინარე სიაში პარტნიორები არ არის.",
+    "toastExportDoneTitle": "ექსპორტი დასრულებულია",
+    "toastExportDoneDesc": "პარტნიორთა სია შენახულია თქვენს ჩამოტვირთვებში."
+  },
   "showPendingOnly": "აჩვენე მხოლოდ მომლოდინე",
   "clickToFilter": "დააწკაპუნეთ გასაფილტრად",
   "noPartners": "არ არის პარტნიორები",

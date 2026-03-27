@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "ექსპორტისთვის არაფერია",
     "toastNothingToExportDesc": "კონტაქტები ექსპორტისთვის არ არის.",
     "toastExportDoneTitle": "ექსპორტი დასრულებულია",
-    "toastExportDoneDesc": "კონტაქტები ექსპორტირდა CSV-ში."
+    "toastExportDoneDesc": "კონტაქტები ექსპორტირდა Excel-ში."
   },
   "project": {
     "create": {

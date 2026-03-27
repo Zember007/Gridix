@@ -115,7 +115,7 @@
     },
     "exportDone": {
       "title": "Готово",
-      "desc": "Файл экспорта скачан"
+      "desc": "Файл Excel скачан"
     },
     "importDone": {
       "title": "Импорт завершен",
@@ -255,7 +255,7 @@
   },
   "settings": {
     "import": "Импорт",
-    "export": "Экспорт (CSV)",
+    "export": "Экспорт (Excel)",
     "funnelSetup": "Настройка воронки",
     "cardAppearance": "Внешний вид карточки",
     "findDuplicates": "Поиск дублей",
