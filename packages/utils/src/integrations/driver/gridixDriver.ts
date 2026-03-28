@@ -14,6 +14,8 @@ export function getGridixDriverDefaults(): Partial<Config> {
   return {
     popoverClass: GRIDIX_DRIVER_POPOVER_CLASS,
     allowClose: true,
+    /** Клик по затемнению не закрывает тур (только кнопка «Закрыть» / программный destroy). */
+    overlayClickBehavior: () => {},
     smoothScroll: true,
   };
 }

@@ -91,6 +91,7 @@ export async function startAdminMainDriverTour(params: {
       prevBtnText: t("driverOnboarding.buttons.previous"),
       doneBtnText: t("driverOnboarding.buttons.done"),
       showButtons: ["next", "previous", "close"],
+      disableActiveInteraction: true,
       onDestroyed: () => {
         markDriverTourCompletedOnce(userId, ADMIN_MAIN_DRIVER_TOUR_ID);
       },

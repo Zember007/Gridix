@@ -11,12 +11,6 @@ export const PROJECT_CREATION_DRIVER_TOUR_ID = "project_creation";
 
 type Translate = (key: string) => string;
 
-/** Не считать тур завершённым при programmatic destroy (cleanup модалки, Strict Mode). */
-let skipMarkOnceOnDriverDestroy = false;
-
-/** Переход с фазы модалки к мапперу без записи once между инстансами Driver. */
-let phase1TransitioningToPhase2 = false;
-
 let activeProjectCreationDriver: Driver | null = null;
 
 function nextAnimationFrame(): Promise<void> {
@@ -204,23 +198,10 @@ function destroyActiveInstance(): void {
 
 /**
  * Снимает активный Driver тура создания проекта (закрытие модалки, размонтирование).
- * Не записывает флаг once.
+ * Записывает once-флаг — тур больше не показывается при повторном открытии модалки.
  */
 export function destroyProjectCreationDriverTour(): void {
-  if (!activeProjectCreationDriver) return;
-  const instance = activeProjectCreationDriver;
-  skipMarkOnceOnDriverDestroy = true;
-  phase1TransitioningToPhase2 = false;
-  try {
-    instance.destroy();
-  } catch {
-    // ignore
-  } finally {
-    skipMarkOnceOnDriverDestroy = false;
-    if (activeProjectCreationDriver === instance) {
-      activeProjectCreationDriver = null;
-    }
-  }
+  destroyActiveInstance();
 }
 
 function startPhase2Driver(params: {
@@ -252,10 +233,7 @@ function startPhase2Driver(params: {
         if (activeProjectCreationDriver === driver) {
           activeProjectCreationDriver = null;
         }
-        if (!skipMarkOnceOnDriverDestroy) {
-          markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
-        }
-        skipMarkOnceOnDriverDestroy = false;
+        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
         finish();
       },
     });
@@ -271,9 +249,7 @@ function startPhase2Driver(params: {
       if (activeProjectCreationDriver === driver) {
         activeProjectCreationDriver = null;
       }
-      if (!skipMarkOnceOnDriverDestroy) {
-        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
-      }
+      markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
       finish();
     }
   }).catch(() => {
@@ -322,7 +298,20 @@ export function startProjectCreationDriverTour(params: {
         return;
       }
 
+      /**
+       * Вызывается из onNextClick шага 4 (последний шаг phase 1).
+       * Сразу закрывает phase 1 через moveNext() (Driver.js сам вызовет destroy
+       * на последнем шаге), затем асинхронно ждёт маппер и запускает phase 2.
+       */
       const handleUploadNext = (driver: Driver) => {
+        // Немедленно закрыть phase 1 — пользователь нажал «Готово».
+        try {
+          driver.moveNext();
+        } catch {
+          // На последнем шаге moveNext() вызывает destroy — это ожидаемо.
+        }
+
+        // Асинхронно ждём маппер и, если он появится, запускаем phase 2.
         void (async () => {
           const mapperReady = await waitForSelectors(
             [".excel_project_type_usertour"],
@@ -333,30 +322,11 @@ export function startProjectCreationDriverTour(params: {
             },
           );
 
-          if (!mapperReady) {
-            try {
-              driver.destroy();
-            } catch {
-              // ignore
-            }
+          if (!mapperReady) return;
+          if (!document.querySelector(".project_creation_modal_usertour"))
             return;
-          }
 
-          if (!document.querySelector(".project_creation_modal_usertour")) {
-            try {
-              driver.destroy();
-            } catch {
-              // ignore
-            }
-            return;
-          }
-
-          phase1TransitioningToPhase2 = true;
-          try {
-            driver.destroy();
-          } catch {
-            phase1TransitioningToPhase2 = false;
-          }
+          startPhase2Driver({ userId, t, finish });
         })();
       };
 
@@ -380,20 +350,7 @@ export function startProjectCreationDriverTour(params: {
           if (activeProjectCreationDriver === driver) {
             activeProjectCreationDriver = null;
           }
-
-          if (phase1TransitioningToPhase2) {
-            phase1TransitioningToPhase2 = false;
-            startPhase2Driver({ userId, t, finish });
-            return;
-          }
-
-          if (!skipMarkOnceOnDriverDestroy) {
-            markDriverTourCompletedOnce(
-              userId,
-              PROJECT_CREATION_DRIVER_TOUR_ID,
-            );
-          }
-          skipMarkOnceOnDriverDestroy = false;
+          markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
           finish();
         },
       });
@@ -412,9 +369,7 @@ export function startProjectCreationDriverTour(params: {
         if (activeProjectCreationDriver === driver) {
           activeProjectCreationDriver = null;
         }
-        if (!skipMarkOnceOnDriverDestroy) {
-          markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
-        }
+        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
         finish();
       }
     }).catch(() => {
