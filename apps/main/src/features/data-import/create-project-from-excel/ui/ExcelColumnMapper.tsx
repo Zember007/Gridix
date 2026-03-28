@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { useLanguage } from "@gridix/utils/react";
