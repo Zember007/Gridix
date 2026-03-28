@@ -34,6 +34,8 @@ export function usePartner() {
         return;
       }
 
+      setLoading(true);
+
       const cached = partnerStateCache.get(userId);
       if (cached) {
         setIsPartner(cached.isPartner);
@@ -149,7 +151,7 @@ export function usePartner() {
   return {
     isPartner,
     partnerProfile,
-    loading,
+    loading: loading || isSessionLoading,
     createPartnerProfile,
     refetch: checkPartnerStatus,
   };
