@@ -141,7 +141,7 @@ export function ProjectOnboardingChecklistPanel({
       doneCount={doneCount}
       total={total}
       fabLabel={t("onboardingChecklist.fabLabel")}
-      containerClassName="pointer-events-none fixed bottom-16 right-4 z-[100] flex max-w-sm flex-col items-end gap-2 lg:bottom-20 [&>*]:pointer-events-auto"
+      containerClassName="pointer-events-none fixed bottom-16 right-2 z-[100] flex max-w-sm flex-col items-end gap-2 lg:bottom-20 lg:right-6 [&>*]:pointer-events-auto"
     >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div>
