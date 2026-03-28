@@ -58,6 +58,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     resolveDroppedFiles,
     duplicatePhotosToApartments,
     handleDeletePhoto,
+    handleReorderPhotos,
   } = useApartmentPhotosManager(projectId);
 
   const sourceApartment = useMemo(
@@ -226,6 +227,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                 <ApartmentPhotosGrid
                   photos={photos}
                   onDeletePhoto={handleDeletePhoto}
+                  onReorderPhotos={handleReorderPhotos}
                 />
               )}
             </CardContent>

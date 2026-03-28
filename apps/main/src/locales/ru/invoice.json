@@ -37,6 +37,7 @@
     "paid_date": "Дата оплаты",
     "amount": "Сумма",
     "duration": "Длительность",
+    "months_short": "мес.",
     "service_details": "Детали услуги",
     "plan": "План",
     "project": "Проект",
@@ -44,6 +45,7 @@
     "download_pdf": "Скачать PDF",
     "open_pdf": "Открыть",
     "downloading": "Скачивание...",
+    "invoice_number_unassigned": "Номер счета не назначен",
     "not_generated": "PDF-счет еще не сгенерирован. Обратитесь к администратору.",
     "payment_instructions": "Инструкции по оплате",
     "instructions_list": [

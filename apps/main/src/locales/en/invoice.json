@@ -37,6 +37,7 @@
     "paid_date": "Paid Date",
     "amount": "Amount",
     "duration": "Duration",
+    "months_short": "mo.",
     "service_details": "Service Details",
     "plan": "Plan",
     "project": "Project",
@@ -44,6 +45,7 @@
     "download_pdf": "Download PDF",
     "open_pdf": "Open",
     "downloading": "Downloading...",
+    "invoice_number_unassigned": "Invoice number not assigned",
     "not_generated": "PDF invoice not yet generated. Contact administrator.",
     "payment_instructions": "Payment Instructions",
     "instructions_list": [

@@ -19,6 +19,7 @@ import {
   Calendar,
   DollarSign,
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InvoiceViewerProps {
   invoice: {
@@ -43,6 +44,7 @@ interface InvoiceViewerProps {
 
 export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const { t, language } = useLanguage();
 
   const handleDownload = async () => {
     if (!invoice.invoice_url) return;
@@ -65,14 +67,14 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
         return (
           <Badge className="bg-green-500 text-white">
             <CheckCircle className="mr-1 h-3 w-3" />
-            Оплачен
+            {t("invoice.status.paid")}
           </Badge>
         );
       case "pending_payment":
         return (
           <Badge className="bg-yellow-500 text-white">
             <Clock className="mr-1 h-3 w-3" />
-            Ожидает оплаты
+            {t("invoice.status.pending_payment")}
           </Badge>
         );
       default:
@@ -87,7 +89,17 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString("ru-RU");
+    const localeMap: Record<string, string> = {
+      ru: "ru-RU",
+      tr: "tr-TR",
+      he: "he-IL",
+      ar: "ar",
+      ka: "ka-GE",
+      en: "en-US",
+    };
+    return new Date(dateString).toLocaleDateString(
+      localeMap[language] || "en-US",
+    );
   };
 
   const formatPrice = (price: number | null) => {
@@ -103,10 +115,11 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Счет на оплату
+                {t("invoice.invoice_viewer.title")}
               </CardTitle>
               <CardDescription>
-                {invoice.invoice_number || "Номер счета не назначен"}
+                {invoice.invoice_number ||
+                  t("invoice.invoice_viewer.invoice_number_unassigned")}
               </CardDescription>
             </div>
             {getStatusBadge(invoice.status)}
@@ -118,14 +131,18 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Дата создания:</span>
+                <span className="font-medium">
+                  {t("invoice.invoice_viewer.created_date")}:
+                </span>
                 <span>{formatDate(invoice.invoice_generated_at)}</span>
               </div>
 
               {invoice.invoice_paid_at && (
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">Дата оплаты:</span>
+                  <span className="font-medium">
+                    {t("invoice.invoice_viewer.paid_date")}:
+                  </span>
                   <span>{formatDate(invoice.invoice_paid_at)}</span>
                 </div>
               )}
@@ -134,7 +151,9 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Сумма:</span>
+                <span className="font-medium">
+                  {t("invoice.invoice_viewer.amount")}:
+                </span>
                 <span className="font-semibold">
                   {formatPrice(invoice.final_price)}
                 </span>
@@ -142,7 +161,9 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
 
               {invoice.duration_months && (
                 <div className="text-sm text-muted-foreground">
-                  Длительность: {invoice.duration_months} мес.
+                  {t("invoice.invoice_viewer.duration")}:{" "}
+                  {invoice.duration_months}{" "}
+                  {t("invoice.invoice_viewer.months_short")}
                 </div>
               )}
             </div>
@@ -151,17 +172,23 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
           {/* Service Details */}
           {(invoice.subscription_plans || invoice.projects) && (
             <div className="border-t pt-4">
-              <h4 className="mb-2 font-medium">Детали услуги</h4>
+              <h4 className="mb-2 font-medium">
+                {t("invoice.invoice_viewer.service_details")}
+              </h4>
               <div className="space-y-1 text-sm">
                 {invoice.subscription_plans && (
                   <div>
-                    <span className="text-muted-foreground">План:</span>{" "}
+                    <span className="text-muted-foreground">
+                      {t("invoice.invoice_viewer.plan")}:
+                    </span>{" "}
                     {invoice.subscription_plans.name}
                   </div>
                 )}
                 {invoice.projects && (
                   <div>
-                    <span className="text-muted-foreground">Проект:</span>{" "}
+                    <span className="text-muted-foreground">
+                      {t("invoice.invoice_viewer.project")}:
+                    </span>{" "}
                     {invoice.projects.name}
                   </div>
                 )}
@@ -172,7 +199,9 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
           {/* Payment Purpose */}
           {invoice.payment_purpose && (
             <div className="border-t pt-4">
-              <h4 className="mb-2 font-medium">Назначение платежа</h4>
+              <h4 className="mb-2 font-medium">
+                {t("invoice.invoice_viewer.payment_purpose")}
+              </h4>
               <p className="text-sm text-muted-foreground">
                 {invoice.payment_purpose}
               </p>
@@ -189,13 +218,15 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
                   className="flex items-center gap-2"
                 >
                   <Download className="h-4 w-4" />
-                  {isDownloading ? "Скачивание..." : "Скачать PDF"}
+                  {isDownloading
+                    ? t("invoice.invoice_viewer.downloading")
+                    : t("invoice.invoice_viewer.download_pdf")}
                 </Button>
               ) : (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    PDF-счет еще не сгенерирован. Обратитесь к администратору.
+                    {t("invoice.invoice_viewer.not_generated")}
                   </AlertDescription>
                 </Alert>
               )}
@@ -207,7 +238,7 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
                   className="flex items-center gap-2"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Открыть
+                  {t("invoice.invoice_viewer.open_pdf")}
                 </Button>
               )}
             </div>
@@ -219,18 +250,20 @@ export function InvoiceViewer({ invoice, onDownload }: InvoiceViewerProps) {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
-                  <p className="font-medium">Инструкции по оплате:</p>
+                  <p className="font-medium">
+                    {t("invoice.invoice_viewer.payment_instructions")}:
+                  </p>
                   <ol className="list-inside list-decimal space-y-1 text-sm">
-                    <li>Скачайте PDF-счет по кнопке выше</li>
-                    <li>
-                      Оплатите счет через банковский перевод по указанным
-                      реквизитам
-                    </li>
-                    <li>Сохраните подтверждение оплаты</li>
-                    <li>Ожидайте активации подписки администратором</li>
+                    {(
+                      t("invoice.invoice_viewer.instructions_list", {
+                        returnObjects: true,
+                      }) as string[]
+                    ).map((item, index) => (
+                      <li key={`${item}-${index}`}>{item}</li>
+                    ))}
                   </ol>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    При возникновении вопросов обращайтесь в техподдержку.
+                    {t("invoice.invoice_viewer.support_contact")}
                   </p>
                 </div>
               </AlertDescription>

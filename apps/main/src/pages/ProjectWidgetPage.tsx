@@ -14,7 +14,7 @@ interface ProjectWidgetPageProps {
   useId?: boolean;
 }
 
-const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
+const ProjectWidgetPageInner = ({ useId = false }: ProjectWidgetPageProps) => {
   const { projectId, projectSlug } = useParams<{
     projectId?: string;
     projectSlug?: string;
@@ -22,7 +22,6 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
   const { t } = useLanguage();
   const location = useLocation();
 
-  // Определяем идентификатор проекта в зависимости от типа маршрута
   const projectIdentifier = useId ? projectId : projectSlug || projectId;
 
   const crm = useMemo(
@@ -73,6 +72,10 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
       <ProjectApartmentSelector projectId={projectIdentifier} />
     </div>
   );
+};
+
+const ProjectWidgetPage = (props: ProjectWidgetPageProps) => {
+  return <ProjectWidgetPageInner {...props} />;
 };
 
 export default ProjectWidgetPage;

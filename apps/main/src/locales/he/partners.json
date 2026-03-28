@@ -379,6 +379,19 @@
     "dateTo": "עד תאריך"
   },
   "invite": "לְהַזמִין",
+  "agencyExport": {
+    "exportBtn": "יְצוּא",
+    "colName": "שֵׁם",
+    "colEmail": "אֶלֶקטרוֹנִי",
+    "colBankDetails": "פרטי הבנק",
+    "colPhone": "טֵלֵפוֹן",
+    "colMode": "מצב",
+    "modeValue": "יָשִׁיר",
+    "toastNothingToExportTitle": "אין מה לייצא",
+    "toastNothingToExportDesc": "אין שותפים ברשימה הנוכחית.",
+    "toastExportDoneTitle": "הייצוא הושלם",
+    "toastExportDoneDesc": "רשימת השותפים נשמרה בהורדות שלך."
+  },
   "showPendingOnly": "הצג בהמתנה בלבד",
   "clickToFilter": "לחץ כדי לסנן",
   "noPartners": "אין שותפים",

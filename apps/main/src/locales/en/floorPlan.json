@@ -50,6 +50,10 @@
   "loading": {
     "error": "Error loading floor plan"
   },
+  "viewer": {
+    "notLoaded": "Floor {{floor}} plan is not uploaded",
+    "contactAdmin": "Contact administrator to upload the floor plan"
+  },
   "settings": {
     "backToEditor": "Back to Editor",
     "title": "Floor {{floor}} Polygon Settings"

@@ -25,6 +25,10 @@ interface AdminAccessContextValue {
   canViewLeads: boolean;
   canUseWidgets: boolean;
   canUseIntegrations: boolean;
+  /** True when the active workspace is the shared demo developer account. */
+  isDemoWorkspace: boolean;
+  /** True when the current user is a read-only demo viewer (not superadmin/admin). */
+  isDemoViewer: boolean;
   isProjectActive: (projectId?: string | null) => boolean;
   isProjectPro: (projectId?: string | null) => boolean;
   canEditProject: (projectId?: string | null) => boolean;
@@ -91,6 +95,8 @@ export function AdminAccessProvider({ children }: AdminAccessProviderProps) {
       canViewLeads: capabilities?.can_view_leads ?? false,
       canUseWidgets: capabilities?.can_use_widgets ?? false,
       canUseIntegrations: capabilities?.can_use_integrations ?? false,
+      isDemoWorkspace: data?.viewer?.is_demo_workspace ?? false,
+      isDemoViewer: data?.viewer?.is_demo_viewer ?? false,
       isProjectActive: (projectId) =>
         hasInList(access?.active_project_ids, projectId),
       isProjectPro: (projectId) =>

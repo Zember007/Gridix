@@ -26,10 +26,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 const ExcelColumnMapper = lazy(
-  () => import("@/components/data-import/ExcelColumnMapper"),
+  () =>
+    import("@/features/data-import/create-project-from-excel/ui/ExcelColumnMapper"),
 );
 const ExcelUrlImporter = lazy(
-  () => import("@/components/data-import/ExcelUrlImporter"),
+  () => import("@/features/data-import/import-from-url/ui/ExcelUrlImporter"),
 );
 import { adminThemeClasses as admin } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";

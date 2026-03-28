@@ -379,6 +379,19 @@
     "dateTo": "Tarih bitiş"
   },
   "invite": "Davet etmek",
+  "agencyExport": {
+    "exportBtn": "İhracat",
+    "colName": "İsim",
+    "colEmail": "E-posta",
+    "colBankDetails": "Banka ayrıntıları",
+    "colPhone": "Telefon",
+    "colMode": "Mod",
+    "modeValue": "doğrudan",
+    "toastNothingToExportTitle": "Dışa aktarılacak hiçbir şey yok",
+    "toastNothingToExportDesc": "Mevcut listede ortak yok.",
+    "toastExportDoneTitle": "Dışa aktarma tamamlandı",
+    "toastExportDoneDesc": "İş ortağı listesi indirilenlerinize kaydedildi."
+  },
   "showPendingOnly": "Yalnızca bekleyenleri göster",
   "clickToFilter": "Filtrelemek için tıklayın",
   "noPartners": "Ortak yok",

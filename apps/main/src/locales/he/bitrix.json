@@ -34,6 +34,11 @@
     "connectButton": "חבר את Bitrix24",
     "missingParams": "חסרים פרמטרים של Bitrix (domain/member_id). פתח את הדף הזה מאפליקציית Gridix בתוך Bitrix24."
   },
+  "proGuard": {
+    "title": "דורש תוכנית Pro",
+    "description": "הפעל מנוי Pro לפרויקט זה כדי להשתמש באינטגרציית Bitrix.",
+    "cta": "פתח הגדרות מנוי"
+  },
   "apartmentDetails": {
     "linkDealWithId": "קישור לעסקה מס' {{dealId}}",
     "linkExistingDeal": "קישור לעסקה קיימת",

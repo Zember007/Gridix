@@ -1566,6 +1566,7 @@ export type Database = {
           full_name: string;
           id: string;
           invited_at: string;
+          is_demo_viewer: boolean;
           manager_id: string;
           phone: string | null;
           status: string;
@@ -1579,6 +1580,7 @@ export type Database = {
           full_name: string;
           id?: string;
           invited_at?: string;
+          is_demo_viewer?: boolean;
           manager_id: string;
           phone?: string | null;
           status?: string;
@@ -1592,6 +1594,7 @@ export type Database = {
           full_name?: string;
           id?: string;
           invited_at?: string;
+          is_demo_viewer?: boolean;
           manager_id?: string;
           phone?: string | null;
           status?: string;
@@ -3172,6 +3175,7 @@ export type Database = {
           full_name: string | null;
           iban: string | null;
           id: string;
+          is_demo: boolean;
           is_vat_payer: boolean | null;
           legal_address: string | null;
           marketing_emails_consent: boolean;
@@ -3201,6 +3205,7 @@ export type Database = {
           full_name?: string | null;
           iban?: string | null;
           id: string;
+          is_demo?: boolean;
           is_vat_payer?: boolean | null;
           legal_address?: string | null;
           marketing_emails_consent?: boolean;
@@ -3230,6 +3235,7 @@ export type Database = {
           full_name?: string | null;
           iban?: string | null;
           id?: string;
+          is_demo?: boolean;
           is_vat_payer?: boolean | null;
           legal_address?: string | null;
           marketing_emails_consent?: boolean;

@@ -379,6 +379,19 @@
     "dateTo": "Дата до"
   },
   "invite": "Пригласить",
+  "agencyExport": {
+    "exportBtn": "Экспорт",
+    "colName": "Имя",
+    "colEmail": "Электронная почта",
+    "colBankDetails": "Банковские реквизиты",
+    "colPhone": "Телефон",
+    "colMode": "Режим",
+    "modeValue": "прямой",
+    "toastNothingToExportTitle": "Ничего экспортировать",
+    "toastNothingToExportDesc": "В текущем списке партнеров нет.",
+    "toastExportDoneTitle": "Экспорт завершен",
+    "toastExportDoneDesc": "Список партнеров сохранен в ваших загрузках."
+  },
   "showPendingOnly": "Показать только новые заявки",
   "clickToFilter": "Нажмите для фильтрации",
   "noPartners": "Нет партнёров",

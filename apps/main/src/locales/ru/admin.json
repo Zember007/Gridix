@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "Нечего экспортировать",
     "toastNothingToExportDesc": "Нет контактов для экспорта.",
     "toastExportDoneTitle": "Экспорт выполнен",
-    "toastExportDoneDesc": "Контакты экспортированы в CSV."
+    "toastExportDoneDesc": "Контакты экспортированы в Excel."
   },
   "project": {
     "create": {
@@ -118,6 +118,16 @@
       "supportedFormats": "Поддерживаемые форматы:",
       "title": "Создать новый проект"
     }
+  },
+  "demo": {
+    "bannerTitle": "Демо-режим",
+    "bannerDescription": "Вы просматриваете демонстрационный кабинет. Данные предоставлены в ознакомительных целях. Создание и редактирование проектов недоступно.",
+    "joinButton": "Попробовать демо-кабинет",
+    "joining": "Подключение...",
+    "joinError": "Не удалось подключиться к демо. Попробуйте ещё раз.",
+    "joinSuccess": "Вы подключены к демо-кабинету",
+    "exitButton": "Выйти из демо",
+    "exitShort": "Выход"
   },
   "partners": "Партнёрство",
   "projects": "Проекты",

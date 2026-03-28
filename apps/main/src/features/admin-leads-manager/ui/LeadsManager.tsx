@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAdminLeadsData } from "@/hooks/useAdminLeadsData";
 import { showToast } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
-import { exportLeadsCsv } from "../lib/exportLeadsCsv";
+import { exportLeadsXlsx } from "../lib/exportLeadsXlsx";
 import { useLeadsManagerUiState } from "../model/useLeadsManagerUiState";
 import { LeadsManagerHeader } from "./LeadsManagerHeader";
 import { LeadsSelectionToolbar } from "./LeadsSelectionToolbar";
@@ -132,7 +132,7 @@ export function LeadsManager({
     setIsFilterPanelOpen(false);
   };
 
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     if (filteredAndSortedLeads.length === 0) {
       showToast(
         "info",
@@ -142,7 +142,7 @@ export function LeadsManager({
       return;
     }
 
-    exportLeadsCsv({
+    exportLeadsXlsx({
       leads: filteredAndSortedLeads.map((lead) => ({
         id: lead.id,
         name: lead.name,
@@ -232,7 +232,7 @@ export function LeadsManager({
         setViewMode={setViewMode}
         isSettingsOpen={isSettingsOpen}
         setIsSettingsOpen={setIsSettingsOpen}
-        onExportClick={handleExportCSV}
+        onExportClick={handleExportExcel}
         setIsCardAppearanceModalOpen={setIsCardAppearanceModalOpen}
         setIsDuplicateFinderOpen={setIsDuplicateFinderOpen}
         setIsCreateModalOpen={setIsCreateModalOpen}

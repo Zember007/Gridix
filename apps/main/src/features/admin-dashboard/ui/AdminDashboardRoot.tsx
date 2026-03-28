@@ -4,6 +4,8 @@ import ProjectCreationModal from "@/components/projects/ProjectCreationModal";
 import { AdminOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import { useAdminDashboardController } from "../model/useAdminDashboardController";
 import { AdminDashboardContent } from "./AdminDashboardContent";
+import { DemoBanner } from "@/features/demo-cabinet";
+import { useAdminAccess } from "@/entities/admin-access";
 
 export const AdminDashboardRoot = () => {
   const {
@@ -32,6 +34,10 @@ export const AdminDashboardRoot = () => {
     replayInteractiveOnboarding,
   } = useAdminDashboardController();
 
+  const adminAccess = useAdminAccess();
+  const isDemoViewer = adminAccess?.isDemoViewer ?? false;
+  const isDemoWorkspace = adminAccess?.isDemoWorkspace ?? false;
+
   if (
     userRole.type === "manager" &&
     (!availableWorkspaces || availableWorkspaces.length === 0)
@@ -57,6 +63,8 @@ export const AdminDashboardRoot = () => {
       <div
         className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
+        {isDemoWorkspace && isDemoViewer && <DemoBanner />}
+
         <AdminDashboardContent
           activeTab={activeTab}
           isManager={isManager}
@@ -64,16 +72,18 @@ export const AdminDashboardRoot = () => {
           developerId={developerId}
           user={user}
           loading={loading}
-          onCreateNew={handleCreateNew}
+          onCreateNew={isDemoViewer ? undefined : handleCreateNew}
           onEditProject={handleEditProject}
+          isDemoViewer={isDemoViewer}
         />
 
-        <ProjectCreationModal
-          open={showCreateModal}
-          onClose={handleCloseCreateModal}
-          onManualCreate={handleManualCreate}
-        />
-
+        {!isDemoViewer && (
+          <ProjectCreationModal
+            open={showCreateModal}
+            onClose={handleCloseCreateModal}
+            onManualCreate={handleManualCreate}
+          />
+        )}
         <AdminOnboardingChecklistPanel
           effectiveOwnerId={effectiveOwnerId}
           onNavigateTab={setActiveTab}

@@ -25,8 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import ExcelApartmentSyncMapper from "@/components/data-import/ExcelApartmentSyncMapper";
-import ExcelUrlImporter from "@/components/data-import/ExcelUrlImporter";
+import ExcelApartmentSyncMapper from "@/features/data-import/sync-apartments/ui/ExcelApartmentSyncMapper";
+import ExcelUrlImporter from "@/features/data-import/import-from-url/ui/ExcelUrlImporter";
 import { adminThemeClasses as admin } from "@gridix/utils/lib";
 import { useLanguage } from "@gridix/utils/react";
 

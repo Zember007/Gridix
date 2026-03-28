@@ -379,6 +379,19 @@
     "dateTo": "التاريخ إلى"
   },
   "invite": "يدعو",
+  "agencyExport": {
+    "exportBtn": "يصدّر",
+    "colName": "اسم",
+    "colEmail": "بريد إلكتروني",
+    "colBankDetails": "تفاصيل البنك",
+    "colPhone": "هاتف",
+    "colMode": "وضع",
+    "modeValue": "مباشر",
+    "toastNothingToExportTitle": "لا شيء للتصدير",
+    "toastNothingToExportDesc": "لا يوجد شركاء في القائمة الحالية.",
+    "toastExportDoneTitle": "اكتمل التصدير",
+    "toastExportDoneDesc": "تم حفظ قائمة الشركاء في التنزيلات الخاصة بك."
+  },
   "showPendingOnly": "عرض معلق فقط",
   "clickToFilter": "انقر للتصفية",
   "noPartners": "لا شركاء",

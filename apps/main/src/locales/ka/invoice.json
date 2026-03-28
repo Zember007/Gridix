@@ -37,6 +37,7 @@
     "paid_date": "გადახდის თარიღი",
     "amount": "თანხა",
     "duration": "ხანგრძლივობა",
+    "months_short": "თვე",
     "service_details": "მომსახურების დეტალები",
     "plan": "პაკეტი",
     "project": "პროექტი",
@@ -44,6 +45,7 @@
     "download_pdf": "PDF-ის ჩამოტვირთვა",
     "open_pdf": "გახსნა",
     "downloading": "ჩამოტვირთვა...",
+    "invoice_number_unassigned": "ფაქტურის ნომერი მინიჭებული არ არის",
     "not_generated": "PDF-ფაქტურა ჯერ არ არის გენერირებული. მიმართეთ ადმინისტრატორს.",
     "payment_instructions": "გადახდის ინსტრუქციები",
     "instructions_list": [

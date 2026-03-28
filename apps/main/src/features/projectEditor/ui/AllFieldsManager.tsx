@@ -7,7 +7,7 @@ import {
 } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
-import CustomFieldsManager from "@/components/fields/CustomFieldsManager";
+import { CustomFieldsManager } from "@/features/project-custom-fields";
 import { useAllFieldsManager } from "@/features/projectEditor/model/useAllFieldsManager";
 import { FieldRow } from "@/features/projectEditor/ui/FieldRow";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";

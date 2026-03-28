@@ -37,6 +37,7 @@
     "paid_date": "تاريخ الدفع",
     "amount": "المبلغ",
     "duration": "المدة",
+    "months_short": "شهر",
     "service_details": "تفاصيل الخدمة",
     "plan": "الخطة",
     "project": "المشروع",
@@ -44,6 +45,7 @@
     "download_pdf": "تحميل PDF",
     "open_pdf": "فتح",
     "downloading": "جاري التحميل...",
+    "invoice_number_unassigned": "لم يتم تعيين رقم الفاتورة",
     "not_generated": "لم يتم إنشاء فاتورة PDF بعد. اتصل بالمدير.",
     "payment_instructions": "تعليمات الدفع",
     "instructions_list": [

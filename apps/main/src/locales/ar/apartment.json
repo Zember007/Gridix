@@ -40,6 +40,13 @@
   "pdfGenerationError": "حدث خطأ أثناء إنشاء ملف PDF",
   "reserve": "احتياطي",
   "reserveTitle": "شقة احتياطية",
+  "photos": {
+    "loading": "جاري التحميل...",
+    "empty": "لم يتم تحميل الصور",
+    "alt": "صورة الشقة",
+    "layoutTitle": "المخطط",
+    "apartmentTitle": "الشقة"
+  },
   "leadSubmitError": "تعذر إرسال الطلب. يرجى المحاولة مرة أخرى.",
   "leadUnexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
   "objectDetails": "تفاصيل العقار",

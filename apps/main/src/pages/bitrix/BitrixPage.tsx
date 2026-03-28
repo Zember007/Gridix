@@ -10,6 +10,7 @@ import ProjectList from "@/components/projects/ProjectList";
 import { BitrixCrmTopBar } from "@/pages/bitrix/components/BitrixCrmTopBar";
 import { useBitrixConnect } from "@/pages/bitrix/hooks/useBitrixConnect";
 import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
+import { AdminAccessProvider } from "@/entities/admin-access";
 
 function getBitrixDealIdFromPlacement(): number | null {
   try {
@@ -57,6 +58,14 @@ function normalizeDomain(raw: string | null | undefined): string {
 }
 
 export default function BitrixPage() {
+  return (
+    <AdminAccessProvider>
+      <BitrixPageInner />
+    </AdminAccessProvider>
+  );
+}
+
+function BitrixPageInner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const qp = useMemo(() => new URLSearchParams(window.location.search), []);

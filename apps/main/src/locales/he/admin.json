@@ -72,7 +72,7 @@
     "toastNothingToExportTitle": "אין מה לייצא",
     "toastNothingToExportDesc": "אין אנשי קשר לייצוא.",
     "toastExportDoneTitle": "הייצוא הושלם",
-    "toastExportDoneDesc": "אנשי הקשר יוצאו ל-CSV."
+    "toastExportDoneDesc": "אנשי הקשר יוצאו ל-Excel."
   },
   "project": {
     "create": {
@@ -118,6 +118,16 @@
       "supportedFormats": "פורמטים נתמכים:",
       "title": "צור פרויקט חדש"
     }
+  },
+  "demo": {
+    "bannerTitle": "מצב הדגמה",
+    "bannerDescription": "אתה צופה בסביבת עבודה להדגמה. הנתונים הם לצורכי הדגמה בלבד. יצירה ועריכה של פרויקטים אינה זמינה.",
+    "joinButton": "נסה את ארון ההדגמה",
+    "joining": "מתחבר...",
+    "joinError": "חיבור להדגמה נכשל. אנא נסה שנית.",
+    "joinSuccess": "חובר לסביבת ההדגמה",
+    "exitButton": "יציאה מהדגמה",
+    "exitShort": "יציאה"
   },
   "partners": "שׁוּתָפוּת",
   "projects": "פרויקטים",

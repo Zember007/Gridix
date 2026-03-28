@@ -34,6 +34,11 @@
     "connectButton": "Подключить Bitrix24",
     "missingParams": "Нет параметров Bitrix (domain/member_id). Откройте страницу из приложения Gridix в Bitrix24."
   },
+  "proGuard": {
+    "title": "Доступно на тарифе Pro",
+    "description": "Активируйте подписку Pro для этого проекта, чтобы использовать интеграцию с Bitrix.",
+    "cta": "Перейти к подписке"
+  },
   "apartmentDetails": {
     "linkDealWithId": "Привязать к сделке #{{dealId}}",
     "linkExistingDeal": "Привязать к существующей сделке",

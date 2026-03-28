@@ -20,7 +20,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
   const { userRole, isManager } = useUserRole();
   const { t } = useLanguage();
 
-  const reloadKey = `${userRole.type}:${isManager}:${JSON.stringify(userRole.managerData ?? [])}:${t(
+  const reloadKey = `${userRole.type}:${isManager}:${JSON.stringify(userRole.managerData ?? [])}:${JSON.stringify(userRole.demoManagerData ?? [])}:${t(
     "workspace.myWorkspace",
   )}`;
 
@@ -36,13 +36,18 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
         const workspaces: WorkspaceOption[] = [];
 
-        // Only developers have an "own" workspace.
-        if (userRole.type === "developer") {
-          workspaces.push({
-            id: null,
-            label: t("workspace.myWorkspace"),
-            type: "owner",
-          });
+        if (userRole.type === "developer" && userRole.demoManagerData) {
+          for (const demo of userRole.demoManagerData) {
+            workspaces.push({
+              id: demo.developer_id,
+              label:
+                demo.developer_profile?.company_name ||
+                demo.developer_profile?.full_name ||
+                "Demo Workspace",
+              type: "manager",
+              developerInfo: demo.developer_profile,
+            });
+          }
         }
 
         if (isManager && userRole.managerData) {

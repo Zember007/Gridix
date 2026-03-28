@@ -379,6 +379,19 @@
     "dateTo": "Date to"
   },
   "invite": "Invite",
+  "agencyExport": {
+    "exportBtn": "Export",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colBankDetails": "Bank details",
+    "colPhone": "Phone",
+    "colMode": "Mode",
+    "modeValue": "direct",
+    "toastNothingToExportTitle": "Nothing to export",
+    "toastNothingToExportDesc": "There are no partners in the current list.",
+    "toastExportDoneTitle": "Export complete",
+    "toastExportDoneDesc": "Partner list saved to your downloads."
+  },
   "showPendingOnly": "Show pending only",
   "clickToFilter": "Click to filter",
   "noPartners": "No partners",

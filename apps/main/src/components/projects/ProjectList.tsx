@@ -22,8 +22,10 @@ import {
   UploadProgressCard,
 } from "@gridix/ui";
 import {
+  AlertTriangle,
   Building,
   Building2,
+  Crown,
   Download,
   Edit3,
   Eye,
@@ -46,6 +48,7 @@ import {
   useWorkspaceProjects,
 } from "@/entities/workspace/queries/useWorkspaceProjects";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
+import { useAdminAccess } from "@/entities/admin-access";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -109,6 +112,7 @@ const ProjectList = ({
   const [shouldRenderLeadsStats, setShouldRenderLeadsStats] = useState(false);
 
   const isCrmMode = mode === "crm";
+  const adminAccess = useAdminAccess();
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -1839,180 +1843,215 @@ const ProjectList = ({
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-              <Card
-                key={project.id}
-                className="project_card_usertour group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle
-                        style={{ color: ADMIN_THEME.textPrimary }}
-                        className="line-clamp-1 text-lg transition-colors"
-                      >
-                        {project.name}
-                      </CardTitle>
-                      <CardDescription
-                        style={{ color: ADMIN_THEME.textSecondary }}
-                        className="mt-1 line-clamp-2"
-                      >
-                        {project.description || "-"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-4">
-                    {/* Project Image */}
-                    {project.building_image_url ? (
-                      <div className="aspect-video overflow-hidden rounded-lg bg-real-estate-50">
-                        <img
-                          src={project.building_image_url}
-                          alt={project.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="flex aspect-video items-center justify-center rounded-lg bg-real-estate-100"
-                        style={{
-                          backgroundColor: ADMIN_THEME.backgroundSecondary,
-                        }}
-                      >
-                        <Building2
-                          className="h-12 w-12 text-real-estate-400"
-                          style={{ color: ADMIN_THEME.textSecondary }}
-                        />
-                      </div>
-                    )}
+            {projects.map((project) => {
+              const crmBlocked =
+                isCrmMode &&
+                !(adminAccess?.canUseCrmIntegration(project.id) ?? true);
 
-                    {/* Project Info */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <Badge
-                          style={{ color: ADMIN_THEME.textSecondary }}
-                          variant="outline"
+              return (
+                <Card
+                  key={project.id}
+                  className={`project_card_usertour group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${crmBlocked ? "opacity-75" : ""}`}
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle
+                          style={{ color: ADMIN_THEME.textPrimary }}
+                          className="line-clamp-1 text-lg transition-colors"
                         >
-                          {project.floors} {t("projectList.floors")}
-                        </Badge>
-                        <span style={{ color: ADMIN_THEME.textSecondary }}>
-                          {new Date(project.created_at).toLocaleDateString(
-                            "en-US",
+                          {project.name}
+                          {crmBlocked && (
+                            <Crown className="ml-2 inline h-4 w-4 text-amber-500" />
                           )}
-                        </span>
+                        </CardTitle>
+                        <CardDescription
+                          style={{ color: ADMIN_THEME.textSecondary }}
+                          className="mt-1 line-clamp-2"
+                        >
+                          {project.description || "-"}
+                        </CardDescription>
                       </div>
-
-                      {/* Developer Info для менеджеров */}
-                      {isManagerMode && project.developer_info && (
-                        <div className="flex items-center gap-1 text-xs text-blue-600">
-                          <Building className="h-3 w-3" />
-                          <span>
-                            {project.developer_info.company_name ||
-                              project.developer_info.full_name}
-                          </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-4">
+                      {project.building_image_url ? (
+                        <div className="aspect-video overflow-hidden rounded-lg bg-real-estate-50">
+                          <img
+                            src={project.building_image_url}
+                            alt={project.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="flex aspect-video items-center justify-center rounded-lg bg-real-estate-100"
+                          style={{
+                            backgroundColor: ADMIN_THEME.backgroundSecondary,
+                          }}
+                        >
+                          <Building2
+                            className="h-12 w-12 text-real-estate-400"
+                            style={{ color: ADMIN_THEME.textSecondary }}
+                          />
                         </div>
                       )}
 
-                      {/* Leads Stats */}
-                      {shouldRenderLeadsStats ? (
-                        <LeadsStats projectId={project.id} />
-                      ) : (
-                        <div className="h-5" />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <Badge
+                            style={{ color: ADMIN_THEME.textSecondary }}
+                            variant="outline"
+                          >
+                            {project.floors} {t("projectList.floors")}
+                          </Badge>
+                          <span style={{ color: ADMIN_THEME.textSecondary }}>
+                            {new Date(project.created_at).toLocaleDateString(
+                              "en-US",
+                            )}
+                          </span>
+                        </div>
+
+                        {isManagerMode && project.developer_info && (
+                          <div className="flex items-center gap-1 text-xs text-blue-600">
+                            <Building className="h-3 w-3" />
+                            <span>
+                              {project.developer_info.company_name ||
+                                project.developer_info.full_name}
+                            </span>
+                          </div>
+                        )}
+
+                        {shouldRenderLeadsStats ? (
+                          <LeadsStats projectId={project.id} />
+                        ) : (
+                          <div className="h-5" />
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2">
+                        {!isCrmMode && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenDrawer(project)}
+                            className="flex-1"
+                            style={{
+                              backgroundColor: ADMIN_THEME.primary,
+                              color: ADMIN_THEME.textOnPrimary,
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                ADMIN_THEME.primaryHover;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                ADMIN_THEME.primary;
+                            }}
+                          >
+                            <Info className="mr-2 h-4 w-4" />
+                            {t("projectList.details")}
+                          </Button>
+                        )}
+
+                        {isCrmMode && (
+                          <Button
+                            size="sm"
+                            onClick={() => viewProject(project)}
+                            className="flex-1"
+                            disabled={crmBlocked}
+                            title={
+                              crmBlocked
+                                ? t("bitrix.proGuard.title")
+                                : undefined
+                            }
+                            style={{
+                              backgroundColor: ADMIN_THEME.primary,
+                              color: ADMIN_THEME.textOnPrimary,
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!crmBlocked) {
+                                e.currentTarget.style.backgroundColor =
+                                  ADMIN_THEME.primaryHover;
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!crmBlocked) {
+                                e.currentTarget.style.backgroundColor =
+                                  ADMIN_THEME.primary;
+                              }
+                            }}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            {t("managerAccounts.openLink")}
+                          </Button>
+                        )}
+
+                        {!isCrmMode && onEditProject && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onEditProject(project.id, false)}
+                            className="edit_project_usertour"
+                            style={{
+                              borderColor: ADMIN_THEME.primary,
+                              color: ADMIN_THEME.primary,
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                ADMIN_THEME.backgroundHover;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
+                            }}
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                        )}
+
+                        {!isCrmMode && !isManagerMode && !amoWidget && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              deleteProject(project.id, project.name)
+                            }
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {crmBlocked && (
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                          <div className="min-w-0 text-xs">
+                            <p className="font-medium text-amber-900">
+                              {t("bitrix.proGuard.description")}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                window.open(
+                                  `/${language}/admin?page=subscription`,
+                                  "_blank",
+                                  "noopener,noreferrer",
+                                )
+                              }
+                              className="mt-1 font-semibold text-amber-700 underline hover:text-amber-900"
+                            >
+                              {t("bitrix.proGuard.cta")}
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 pt-2">
-                      {/* In admin mode, show details button that opens drawer */}
-                      {!isCrmMode && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenDrawer(project)}
-                          className="flex-1"
-                          style={{
-                            backgroundColor: ADMIN_THEME.primary,
-                            color: ADMIN_THEME.textOnPrimary,
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              ADMIN_THEME.primaryHover;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              ADMIN_THEME.primary;
-                          }}
-                        >
-                          <Info className="mr-2 h-4 w-4" />
-                          {t("projectList.details")}
-                        </Button>
-                      )}
-
-                      {/* In CRM mode, directly open embed */}
-                      {isCrmMode && (
-                        <Button
-                          size="sm"
-                          onClick={() => viewProject(project)}
-                          className="flex-1"
-                          style={{
-                            backgroundColor: ADMIN_THEME.primary,
-                            color: ADMIN_THEME.textOnPrimary,
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              ADMIN_THEME.primaryHover;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              ADMIN_THEME.primary;
-                          }}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          {t("managerAccounts.openLink")}
-                        </Button>
-                      )}
-
-                      {!isCrmMode && onEditProject && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onEditProject(project.id, false)}
-                          className="edit_project_usertour"
-                          style={{
-                            borderColor: ADMIN_THEME.primary,
-                            color: ADMIN_THEME.primary,
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              ADMIN_THEME.backgroundHover;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              "transparent";
-                          }}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                      )}
-
-                      {/* Кнопка удаления скрыта для менеджеров */}
-                      {!isCrmMode && !isManagerMode && !amoWidget && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            deleteProject(project.id, project.name)
-                          }
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
