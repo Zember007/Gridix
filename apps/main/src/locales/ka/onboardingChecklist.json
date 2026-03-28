@@ -4,6 +4,7 @@
   "go": "გადასვლა",
   "progress": "{{done}} / {{total}} დასრულებული",
   "allDone": "ყველა ნაბიჯი შესრულებულია.",
+  "replayInteractiveOnboarding": "სახელმძღვანელო ტურის თავიდან გაშვება",
   "admin": {
     "title": "ანგარიშის დაყენება",
     "createProject": {

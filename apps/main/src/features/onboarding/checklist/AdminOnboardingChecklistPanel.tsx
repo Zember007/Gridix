@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, CardContent, CardHeader, CardTitle } from "@gridix/ui";
 import { isOnboardingMilestoneCompleted } from "@gridix/utils/integrations";
-import { Check, X } from "lucide-react";
+import { Check, RotateCcw, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { EffectiveOwnerId } from "./onboardingDerivedQueries";
 import { ONBOARDING_MILESTONE } from "./milestoneKeys";
@@ -14,17 +14,20 @@ type AdminOnboardingChecklistPanelProps = {
   effectiveOwnerId: EffectiveOwnerId | null | undefined;
   onNavigateTab: (tab: string) => void;
   onOpenCreateProject: () => void;
+  onReplayInteractiveOnboarding?: () => void | Promise<void>;
 };
 
 export function AdminOnboardingChecklistPanel({
   effectiveOwnerId,
   onNavigateTab,
   onOpenCreateProject,
+  onReplayInteractiveOnboarding,
 }: AdminOnboardingChecklistPanelProps) {
   const { t } = useLanguage();
   const openSignal = useChecklistOpenSignal({ scope: "admin" });
 
   const [isOpen, setIsOpen] = useState(false);
+  const [replayBusy, setReplayBusy] = useState(false);
 
   const { derived, revision } = useAdminOnboardingDerivedProgress({
     effectiveOwnerId,
@@ -101,6 +104,16 @@ export function AdminOnboardingChecklistPanel({
   const total = items.length;
   const allDone = doneCount === total;
 
+  const handleReplayInteractiveOnboarding = async () => {
+    if (!onReplayInteractiveOnboarding || replayBusy) return;
+    setReplayBusy(true);
+    try {
+      await onReplayInteractiveOnboarding();
+    } finally {
+      setReplayBusy(false);
+    }
+  };
+
   return (
     <OnboardingChecklistFloatingShell
       isOpen={isOpen}
@@ -170,6 +183,20 @@ export function AdminOnboardingChecklistPanel({
             </div>
           );
         })}
+        {onReplayInteractiveOnboarding ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-full justify-center gap-2 text-muted-foreground"
+            onClick={() => void handleReplayInteractiveOnboarding()}
+            disabled={replayBusy}
+            aria-busy={replayBusy}
+          >
+            <RotateCcw className="h-3.5 w-3.5 shrink-0" />
+            {t("onboardingChecklist.replayInteractiveOnboarding")}
+          </Button>
+        ) : null}
         {allDone ? (
           <p className="text-center text-xs text-muted-foreground">
             {t("onboardingChecklist.allDone")}

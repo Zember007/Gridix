@@ -63,7 +63,12 @@ export function requestOpenChecklistPanel(
   checklistOpenListeners.forEach((cb) => cb(payload));
 }
 
-const ADMIN_CHECKLIST_AUTOPANEL_TOUR_ID = "admin_checklist_autopanel";
+/** Driver once-key for auto-opening the admin checklist panel after the main admin tour. */
+export const ADMIN_CHECKLIST_AUTOPANEL_TOUR_ID = "admin_checklist_autopanel";
+
+export function getProjectChecklistAutopanelTourId(projectId: string): string {
+  return `project_checklist_autopanel:${projectId}`;
+}
 
 /**
  * After admin main Driver tour: open the in-app account checklist once per user (not in driver dev mode).
@@ -86,7 +91,7 @@ export function tryAutoOpenProjectChecklistPanel(
 ): void {
   if (!isBrowser()) return;
   if (isDriverDevMode()) return;
-  const tourId = `project_checklist_autopanel:${projectId}`;
+  const tourId = getProjectChecklistAutopanelTourId(projectId);
   if (hasDriverTourCompletedOnce(userId, tourId)) return;
   markDriverTourCompletedOnce(userId, tourId);
   requestOpenChecklistPanel({ scope: "project", projectId });

@@ -61,6 +61,7 @@ import {
   tryAutoOpenProjectChecklistPanel,
 } from "@gridix/utils/integrations";
 import { startProjectEditorDriverTour } from "@/features/onboarding/driver";
+import { resetProjectEditorInteractiveOnboardingStorage } from "@/features/onboarding/resetInteractiveOnboardingStorage";
 import { ProjectOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import {
   DEFAULT_PROJECT_EDITOR_PROJECT,
@@ -550,6 +551,26 @@ const ProjectEditor = ({
       console.warn("Failed to open project checklist panel:", e);
     }
   }, [authLoading, isNew, project?.id, user?.id]);
+
+  const replayInteractiveProjectOnboarding = useCallback(async () => {
+    if (!user?.id || !project?.id || isNew) return;
+    resetProjectEditorInteractiveOnboardingStorage(user.id, project.id);
+    startedEditorTourRef.current = false;
+    startedEditorTourRef.current = true;
+    try {
+      await startProjectEditorDriverTour({
+        userId: user.id,
+        t,
+      });
+    } catch (e) {
+      console.warn("Failed to start project editor onboarding tour:", e);
+    }
+    try {
+      tryAutoOpenProjectChecklistPanel(user.id, project.id);
+    } catch (e) {
+      console.warn("Failed to open project checklist panel:", e);
+    }
+  }, [isNew, project?.id, t, user?.id]);
 
   // Reset per-project guard when switching projects (and allow re-run on navigation)
   useEffect(() => {
@@ -1514,6 +1535,7 @@ const ProjectEditor = ({
           projectId={project.id}
           projectType={project.project_type ?? "building"}
           onNavigateEditorTab={setActiveTab}
+          onReplayInteractiveOnboarding={replayInteractiveProjectOnboarding}
         />
       ) : null}
     </div>

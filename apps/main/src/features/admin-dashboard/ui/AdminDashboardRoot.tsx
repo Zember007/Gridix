@@ -29,6 +29,7 @@ export const AdminDashboardRoot = () => {
     handleManualCreate,
     handleEditProject,
     handleSignOut,
+    replayInteractiveOnboarding,
   } = useAdminDashboardController();
 
   if (
@@ -77,6 +78,7 @@ export const AdminDashboardRoot = () => {
           effectiveOwnerId={effectiveOwnerId}
           onNavigateTab={setActiveTab}
           onOpenCreateProject={handleCreateNew}
+          onReplayInteractiveOnboarding={replayInteractiveOnboarding}
         />
       </div>
     </div>

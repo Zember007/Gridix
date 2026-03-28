@@ -32,7 +32,7 @@ export const useAdminDashboardController = () => {
 
   useLeadsRealtime(shouldEnableLeads);
   useAdminDashboardInit(setActiveTab);
-  useAdminDashboardTours({
+  const { replayInteractiveOnboarding } = useAdminDashboardTours({
     loading,
     activeTab,
     showCreateModal,
@@ -114,5 +114,6 @@ export const useAdminDashboardController = () => {
     handleManualCreate,
     handleEditProject,
     handleSignOut,
+    replayInteractiveOnboarding,
   };
 };

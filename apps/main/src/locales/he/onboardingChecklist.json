@@ -4,6 +4,7 @@
   "go": "מעבר",
   "progress": "{{done}} מתוך {{total}} הושלמו",
   "allDone": "כל השלבים הושלמו.",
+  "replayInteractiveOnboarding": "הפעל מחדש את סיור ההדרכה",
   "admin": {
     "title": "הגדרת חשבון",
     "createProject": {

@@ -4,6 +4,7 @@
   "go": "Перейти",
   "progress": "Готово {{done}} из {{total}}",
   "allDone": "Все шаги выполнены.",
+  "replayInteractiveOnboarding": "Пройти подсказки заново",
   "admin": {
     "title": "Настройка аккаунта",
     "createProject": {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   isDriverDevMode,
@@ -12,6 +12,8 @@ import {
   startPartnersDriverTour,
   startProjectCreationDriverTour,
 } from "@/features/onboarding/driver";
+import { resetAdminInteractiveOnboardingStorage } from "@/features/onboarding/resetInteractiveOnboardingStorage";
+
 type UserMetadata = Record<string, unknown> | null | undefined;
 
 type UserLike = {
@@ -53,6 +55,43 @@ export const useAdminDashboardTours = ({
   const wasPartnersTabRef = useRef(false);
   const startedProjectCreationTourRef = useRef(false);
 
+  const runAdminMainTourAndChecklistSequence = useCallback(async () => {
+    const userId = user?.id;
+    if (!userId) return;
+
+    try {
+      const anchorsReady = await waitForSelectors(
+        [
+          ".sidebar_usertour",
+          ".projects_list_usertour",
+          ".create_project_usertour",
+          ".support_usertour",
+        ],
+        { timeoutMs: 8000, intervalMs: 100, debugLabel: "admin_onboarding" },
+      );
+
+      if (!anchorsReady) {
+        adminMainAndChecklistSequenceRef.current = false;
+        return;
+      }
+
+      try {
+        await startAdminMainDriverTour({ userId, t });
+      } catch (tourError) {
+        console.warn("Failed to start admin main driver tour:", tourError);
+      }
+
+      try {
+        tryAutoOpenAdminChecklistPanel(userId);
+      } catch (checklistError) {
+        console.warn("Failed to open admin checklist panel:", checklistError);
+      }
+    } catch (error) {
+      console.warn("Failed admin dashboard onboarding sequence:", error);
+      adminMainAndChecklistSequenceRef.current = false;
+    }
+  }, [t, user?.id]);
+
   /** Driver admin main tour, затем in-app checklist panel — без параллельного старта. */
   useEffect(() => {
     if (loading) return;
@@ -61,42 +100,8 @@ export const useAdminDashboardTours = ({
     if (adminMainAndChecklistSequenceRef.current) return;
 
     adminMainAndChecklistSequenceRef.current = true;
-    const run = async () => {
-      try {
-        const anchorsReady = await waitForSelectors(
-          [
-            ".sidebar_usertour",
-            ".projects_list_usertour",
-            ".create_project_usertour",
-            ".support_usertour",
-          ],
-          { timeoutMs: 8000, intervalMs: 100, debugLabel: "admin_onboarding" },
-        );
-
-        if (!anchorsReady) {
-          adminMainAndChecklistSequenceRef.current = false;
-          return;
-        }
-
-        try {
-          await startAdminMainDriverTour({ userId, t });
-        } catch (tourError) {
-          console.warn("Failed to start admin main driver tour:", tourError);
-        }
-
-        try {
-          tryAutoOpenAdminChecklistPanel(userId);
-        } catch (checklistError) {
-          console.warn("Failed to open admin checklist panel:", checklistError);
-        }
-      } catch (error) {
-        console.warn("Failed admin dashboard onboarding sequence:", error);
-        adminMainAndChecklistSequenceRef.current = false;
-      }
-    };
-
-    void run();
-  }, [loading, t, user, userProfile]);
+    void runAdminMainTourAndChecklistSequence();
+  }, [loading, runAdminMainTourAndChecklistSequence, user, userProfile]);
 
   useEffect(() => {
     if (loading) return;
@@ -165,4 +170,51 @@ export const useAdminDashboardTours = ({
 
     void run();
   }, [activeTab, loading, t, user?.id]);
+
+  const replayInteractiveOnboarding = useCallback(async () => {
+    if (loading) return;
+    const userId = user?.id;
+    if (!userId) return;
+
+    resetAdminInteractiveOnboardingStorage(userId);
+    destroyPartnersDriverTour();
+    destroyProjectCreationDriverTour();
+
+    adminMainAndChecklistSequenceRef.current = false;
+    startedPartnersTourRef.current = false;
+    startedProjectCreationTourRef.current = false;
+
+    adminMainAndChecklistSequenceRef.current = true;
+    await runAdminMainTourAndChecklistSequence();
+
+    if (activeTab === "partners") {
+      startedPartnersTourRef.current = true;
+      try {
+        await startPartnersDriverTour({ userId, t });
+      } catch (error) {
+        console.warn("Failed to replay partners onboarding tour:", error);
+      }
+    }
+
+    if (showCreateModal) {
+      startedProjectCreationTourRef.current = true;
+      try {
+        await startProjectCreationDriverTour({ userId, t });
+      } catch (error) {
+        console.warn(
+          "Failed to replay project creation onboarding tour:",
+          error,
+        );
+      }
+    }
+  }, [
+    activeTab,
+    loading,
+    runAdminMainTourAndChecklistSequence,
+    showCreateModal,
+    t,
+    user?.id,
+  ]);
+
+  return { replayInteractiveOnboarding };
 };

@@ -4,6 +4,7 @@
   "go": "Go",
   "progress": "{{done}} / {{total}} complete",
   "allDone": "All steps completed.",
+  "replayInteractiveOnboarding": "Replay guided tour",
   "admin": {
     "title": "Account setup",
     "createProject": {

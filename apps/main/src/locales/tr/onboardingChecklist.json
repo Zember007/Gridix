@@ -4,6 +4,7 @@
   "go": "Git",
   "progress": "{{done}} / {{total}} tamamlandı",
   "allDone": "Tüm adımlar tamamlandı.",
+  "replayInteractiveOnboarding": "Rehberli turu yeniden oynat",
   "admin": {
     "title": "Hesap kurulumu",
     "createProject": {

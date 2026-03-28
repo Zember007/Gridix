@@ -4,6 +4,7 @@
   "go": "انتقل",
   "progress": "{{done}} / {{total}} مكتمل",
   "allDone": "اكتملت جميع الخطوات.",
+  "replayInteractiveOnboarding": "إعادة جولة الإرشاد",
   "admin": {
     "title": "إعداد الحساب",
     "createProject": {
