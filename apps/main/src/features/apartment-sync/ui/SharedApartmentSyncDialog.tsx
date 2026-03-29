@@ -8,8 +8,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Progress,
+  OperationProgressCard,
 } from "@gridix/ui";
+import type { TFunction } from "i18next";
+import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { Apartment } from "@/entities/apartment/model/types";
@@ -31,6 +33,24 @@ import {
   type FloorDuplicationPreview,
   type FloorDuplicationSourceApartment,
 } from "../model/floorDuplicationPreview";
+
+const resolveOperationDescription = (
+  payload: FloorDuplicationProgressPayload,
+  t: TFunction,
+) => {
+  if (payload.currentFloor == null) return undefined;
+  if (payload.currentOperation === "floor_image") {
+    return t("apartmentsManager.syncDialog.progressFloorImageOp", {
+      floor: payload.currentFloor,
+    });
+  }
+  if (payload.currentOperation === "apartment_polygon") {
+    return t("apartmentsManager.syncDialog.progressPolygonOp", {
+      floor: payload.currentFloor,
+    });
+  }
+  return undefined;
+};
 
 interface BaseDialogProps {
   open: boolean;
@@ -497,6 +517,21 @@ const FloorDuplicationModeDialog = ({
     }
   };
 
+  const getMatchingRuleFields = (rule: FloorDuplicationMatchingRule) => {
+    switch (rule) {
+      case "number_with_floor_prefix":
+        return t(
+          "apartmentsManager.syncDialog.ruleNumberWithFloorPrefixFields",
+        );
+      case "exact_number":
+        return t("apartmentsManager.syncDialog.ruleExactNumberFields");
+      case "area_rooms_type":
+        return t("apartmentsManager.syncDialog.ruleAreaRoomsTypeFields");
+      default:
+        return "";
+    }
+  };
+
   const getFloorPlanActionLabel = (
     action: FloorDuplicationPreview["floors"][number]["floorPlanAction"],
   ) => {
@@ -693,11 +728,14 @@ const FloorDuplicationModeDialog = ({
               </div>
 
               <div className="rounded-xl border p-3.5">
-                <h4 className="mb-3 text-sm font-semibold">
-                  {t("apartmentsManager.syncDialog.matchingRulesTitle")}
+                <h4 className="text-sm font-semibold">
+                  {t("apartmentsManager.syncDialog.matchingByAttributesTitle")}
                 </h4>
-                <div className="space-y-3">
-                  {DEFAULT_MATCHING_RULES.map((rule) => (
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                  {t("apartmentsManager.syncDialog.matchingCriteriaOrderHint")}
+                </p>
+                <div className="mt-3 space-y-3">
+                  {DEFAULT_MATCHING_RULES.map((rule, ruleIndex) => (
                     <label key={rule} className="flex items-start gap-3">
                       <Checkbox
                         checked={selectedMatchingRules.includes(rule)}
@@ -710,9 +748,17 @@ const FloorDuplicationModeDialog = ({
                           !selectedCopyOptions.includes("apartment_polygons")
                         }
                       />
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium leading-tight">
-                          {getMatchingRuleLabel(rule)}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                          <span className="font-mono text-xs font-semibold tabular-nums text-muted-foreground">
+                            {ruleIndex + 1}.
+                          </span>
+                          <span className="text-sm font-medium leading-tight">
+                            {getMatchingRuleLabel(rule)}
+                          </span>
+                        </div>
+                        <div className="text-xs font-medium leading-snug text-foreground/90">
+                          {getMatchingRuleFields(rule)}
                         </div>
                         <div className="text-xs leading-relaxed text-muted-foreground">
                           {getMatchingRuleHint(rule)}
@@ -822,14 +868,18 @@ const FloorDuplicationModeDialog = ({
                               key={`${floor.floorNumber}-${match.targetApartmentId}`}
                               className="rounded-lg border border-border/70 bg-background p-3 text-sm"
                             >
-                              <div className="font-medium">
-                                {match.sourceApartmentNumber} -&gt;{" "}
-                                {match.targetApartmentNumber}
+                              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                {t("apartmentsManager.syncDialog.matchMethod")}
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {t("apartmentsManager.syncDialog.matchedBy", {
-                                  rule: getMatchingRuleLabel(match.strategy),
-                                })}
+                              <div className="mt-1 text-sm font-semibold leading-snug text-foreground">
+                                {getMatchingRuleLabel(match.strategy)}
+                              </div>
+                              <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                                {getMatchingRuleFields(match.strategy)}
+                              </div>
+                              <div className="mt-2 border-t border-border/60 pt-2 font-medium tabular-nums">
+                                {match.sourceApartmentNumber} →{" "}
+                                {match.targetApartmentNumber}
                               </div>
                             </div>
                           ))}
@@ -869,21 +919,18 @@ const FloorDuplicationModeDialog = ({
             )}
 
             {applyProgress && applyProgress.total > 0 ? (
-              <div className="rounded-xl border p-4">
-                <div className="mb-2 font-semibold">
-                  {t("apartmentsManager.syncDialog.progressTitle")}
-                </div>
-                <div className="mb-3 text-sm text-muted-foreground">
-                  {t("apartmentsManager.syncDialog.progressDescription", {
-                    completed: applyProgress.completed,
-                    total: applyProgress.total,
-                  })}
-                </div>
-                <Progress
-                  value={(applyProgress.completed / applyProgress.total) * 100}
-                  className="h-3"
-                />
-              </div>
+              <OperationProgressCard
+                title={t("apartmentsManager.syncDialog.progressTitle")}
+                description={resolveOperationDescription(applyProgress, t)}
+                current={applyProgress.completed}
+                total={applyProgress.total}
+                status={
+                  applyProgress.completed >= applyProgress.total
+                    ? "complete"
+                    : "running"
+                }
+                icon={<Copy className="h-8 w-8" />}
+              />
             ) : null}
 
             {applyResult?.errors.length ? (

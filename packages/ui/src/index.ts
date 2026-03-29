@@ -37,6 +37,7 @@ export * from "./map";
 export * from "./menubar";
 export * from "./mockup";
 export * from "./navigation-menu";
+export * from "./operation-progress-card";
 export * from "./pagination";
 export * from "./popover";
 export * from "./progress";

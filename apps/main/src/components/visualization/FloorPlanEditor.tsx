@@ -66,6 +66,7 @@ interface Apartment {
   status: "available" | "sold" | "reserved";
   polygon: Point[];
   custom_fields: Json | null;
+  type?: "apartment" | "commercial" | "parking";
 }
 
 interface PolygonSettings {
@@ -346,6 +347,9 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
           ? (apt.polygon as unknown as Point[])
           : [],
         custom_fields: apt.custom_fields as Json | null,
+        type: apt.type
+          ? (apt.type as "apartment" | "commercial" | "parking")
+          : undefined,
       }));
 
       setApartments(transformedApartments);
@@ -1811,10 +1815,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         sourceFloorNumber={floorNumber}
         allFloorNumbers={allFloors}
         sourceImageUrl={imageUrl}
-        sourceApartments={apartments.map((apartment) => ({
-          ...apartment,
-          type: "apartment" as const,
-        }))}
+        sourceApartments={apartments}
       />
     </TooltipProvider>
   );
