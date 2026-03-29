@@ -1,6 +1,8 @@
 {
   "title": "Ortak Programı",
   "subtitle": "Müşteri çekin ve her abonelikten komisyon kazanın",
+  "agencyNetwork": "Ajans ağı",
+  "agencyNetworkDesc": "Birleşik Ortak Kaydı: Ortaklık koşullarını, iletişim merkezini ve ajans satış verimliliğini yönetme",
   "becomePartner": "Ortak Olun",
   "creating": "Oluşturuluyor...",
   "overview": "Genel Bakış",
