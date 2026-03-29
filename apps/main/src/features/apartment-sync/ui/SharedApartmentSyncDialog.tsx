@@ -616,160 +616,158 @@ const FloorDuplicationModeDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenStateChange}>
       <DialogContent className="flex max-h-[85vh] max-w-5xl flex-col overflow-hidden p-0">
-        <div className="border-b px-5 py-4 sm:px-6">
+        <div className="border-b px-5 py-2.5 sm:px-6">
           <DialogHeader className="space-y-1.5 text-left">
-            <DialogTitle className="text-xl leading-tight">
+            <DialogTitle className="text-base font-semibold leading-tight">
               {t("apartmentsManager.syncDialog.floorDuplicateTitle")}
             </DialogTitle>
-            <DialogDescription className="text-sm">
+            <DialogDescription className="text-xs">
               {t("apartmentsManager.syncDialog.floorDuplicateDescription")}
             </DialogDescription>
           </DialogHeader>
         </div>
 
+        <div className="space-y-3 border-b px-5 py-3 sm:px-6">
+          <div className="grid gap-3 lg:grid-cols-3">
+            <div
+              className="rounded-xl border p-2"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.info,
+              }}
+            >
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                {t("apartmentsManager.syncDialog.sourceFloor")}
+              </div>
+              <div className="text-sm font-bold leading-none">
+                {sourceFloorNumber}
+              </div>
+            </div>
+            <div
+              className="rounded-xl border p-2"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.info,
+              }}
+            >
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                {t("apartmentsManager.syncDialog.sourceFloorPlan")}
+              </div>
+              <div className="text-sm font-bold leading-none">
+                {sourceImageUrl ? t("common.yes") : t("common.no")}
+              </div>
+            </div>
+            <div
+              className="rounded-xl border p-2"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.info,
+              }}
+            >
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                {t("apartmentsManager.syncDialog.sourcePolygons")}
+              </div>
+              <div className="text-sm font-bold leading-none">
+                {availablePolygonCount}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div className="rounded-xl border p-2.5">
+              <h4 className="mb-2 text-sm font-semibold">
+                {t("apartmentsManager.syncDialog.copyOptionsTitle")}
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedCopyOptions.includes("floor_image")}
+                    onCheckedChange={() =>
+                      setSelectedCopyOptions((previous) =>
+                        toggleValue(previous, "floor_image"),
+                      )
+                    }
+                    disabled={!sourceImageUrl}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.copyFloorImage")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.copyFloorImageHint")}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedCopyOptions.includes("apartment_polygons")}
+                    onCheckedChange={() =>
+                      setSelectedCopyOptions((previous) =>
+                        toggleValue(previous, "apartment_polygons"),
+                      )
+                    }
+                    disabled={availablePolygonCount === 0}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.copyApartmentPolygons")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t(
+                        "apartmentsManager.syncDialog.copyApartmentPolygonsHint",
+                      )}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-xl border p-2.5">
+              <h4 className="mb-2 text-sm font-semibold">
+                {t("apartmentsManager.syncDialog.matchingByAttributesTitle")}
+              </h4>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                {t("apartmentsManager.syncDialog.matchingCriteriaOrderHint")}
+              </p>
+              <div className="mt-3 space-y-3">
+                {DEFAULT_MATCHING_RULES.map((rule, ruleIndex) => (
+                  <label key={rule} className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedMatchingRules.includes(rule)}
+                      onCheckedChange={() =>
+                        setSelectedMatchingRules((previous) =>
+                          toggleValue(previous, rule),
+                        )
+                      }
+                      disabled={
+                        !selectedCopyOptions.includes("apartment_polygons")
+                      }
+                    />
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span className="font-mono text-xs font-semibold tabular-nums text-muted-foreground">
+                          {ruleIndex + 1}.
+                        </span>
+                        <span className="text-sm font-medium leading-tight">
+                          {getMatchingRuleLabel(rule)}
+                        </span>
+                      </div>
+                      <div className="text-xs font-medium leading-snug text-foreground/90">
+                        {getMatchingRuleFields(rule)}
+                      </div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">
+                        {getMatchingRuleHint(rule)}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
           <div className="space-y-4">
-            <div className="grid gap-3 lg:grid-cols-3">
-              <div
-                className="rounded-xl border p-3.5"
-                style={{
-                  backgroundColor: ADMIN_THEME.backgroundSecondary,
-                  borderColor: ADMIN_THEME.info,
-                }}
-              >
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
-                  {t("apartmentsManager.syncDialog.sourceFloor")}
-                </div>
-                <div className="text-xl font-semibold leading-none">
-                  {sourceFloorNumber}
-                </div>
-              </div>
-              <div
-                className="rounded-xl border p-3.5"
-                style={{
-                  backgroundColor: ADMIN_THEME.backgroundSecondary,
-                  borderColor: ADMIN_THEME.info,
-                }}
-              >
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
-                  {t("apartmentsManager.syncDialog.sourceFloorPlan")}
-                </div>
-                <div className="text-xl font-semibold leading-none">
-                  {sourceImageUrl ? t("common.yes") : t("common.no")}
-                </div>
-              </div>
-              <div
-                className="rounded-xl border p-3.5"
-                style={{
-                  backgroundColor: ADMIN_THEME.backgroundSecondary,
-                  borderColor: ADMIN_THEME.info,
-                }}
-              >
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
-                  {t("apartmentsManager.syncDialog.sourcePolygons")}
-                </div>
-                <div className="text-xl font-semibold leading-none">
-                  {availablePolygonCount}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-2">
-              <div className="rounded-xl border p-3.5">
-                <h4 className="mb-3 text-sm font-semibold">
-                  {t("apartmentsManager.syncDialog.copyOptionsTitle")}
-                </h4>
-                <div className="space-y-3">
-                  <label className="flex items-start gap-3">
-                    <Checkbox
-                      checked={selectedCopyOptions.includes("floor_image")}
-                      onCheckedChange={() =>
-                        setSelectedCopyOptions((previous) =>
-                          toggleValue(previous, "floor_image"),
-                        )
-                      }
-                      disabled={!sourceImageUrl}
-                    />
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium leading-tight">
-                        {t("apartmentsManager.syncDialog.copyFloorImage")}
-                      </div>
-                      <div className="text-xs leading-relaxed text-muted-foreground">
-                        {t("apartmentsManager.syncDialog.copyFloorImageHint")}
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-3">
-                    <Checkbox
-                      checked={selectedCopyOptions.includes(
-                        "apartment_polygons",
-                      )}
-                      onCheckedChange={() =>
-                        setSelectedCopyOptions((previous) =>
-                          toggleValue(previous, "apartment_polygons"),
-                        )
-                      }
-                      disabled={availablePolygonCount === 0}
-                    />
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium leading-tight">
-                        {t(
-                          "apartmentsManager.syncDialog.copyApartmentPolygons",
-                        )}
-                      </div>
-                      <div className="text-xs leading-relaxed text-muted-foreground">
-                        {t(
-                          "apartmentsManager.syncDialog.copyApartmentPolygonsHint",
-                        )}
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div className="rounded-xl border p-3.5">
-                <h4 className="text-sm font-semibold">
-                  {t("apartmentsManager.syncDialog.matchingByAttributesTitle")}
-                </h4>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                  {t("apartmentsManager.syncDialog.matchingCriteriaOrderHint")}
-                </p>
-                <div className="mt-3 space-y-3">
-                  {DEFAULT_MATCHING_RULES.map((rule, ruleIndex) => (
-                    <label key={rule} className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedMatchingRules.includes(rule)}
-                        onCheckedChange={() =>
-                          setSelectedMatchingRules((previous) =>
-                            toggleValue(previous, rule),
-                          )
-                        }
-                        disabled={
-                          !selectedCopyOptions.includes("apartment_polygons")
-                        }
-                      />
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                          <span className="font-mono text-xs font-semibold tabular-nums text-muted-foreground">
-                            {ruleIndex + 1}.
-                          </span>
-                          <span className="text-sm font-medium leading-tight">
-                            {getMatchingRuleLabel(rule)}
-                          </span>
-                        </div>
-                        <div className="text-xs font-medium leading-snug text-foreground/90">
-                          {getMatchingRuleFields(rule)}
-                        </div>
-                        <div className="text-xs leading-relaxed text-muted-foreground">
-                          {getMatchingRuleHint(rule)}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             {isLoadingPreview ? (
               <div className="rounded-xl border p-8">
                 <LoadingProgress />
