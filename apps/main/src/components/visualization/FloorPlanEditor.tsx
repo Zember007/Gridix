@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@gridix/ui";
 import { FileDropzone, UploadProgressCard } from "@gridix/ui";
 import { Input } from "@gridix/ui";
@@ -130,9 +130,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     useState(false);
   const [syncSourceApartment, setSyncSourceApartment] =
     useState<GlobalApartment | null>(null);
-  const [syncTargetApartments, setSyncTargetApartments] = useState<
-    GlobalApartment[]
-  >([]);
   const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(
     null,
   );
@@ -213,6 +210,19 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   const editorData = useProjectEditorDataContext();
   const { t } = useLanguage();
   const currencySymbol = getCurrencySymbolSafe(project?.currency ?? "USD");
+  const globalAllApartments = useMemo<GlobalApartment[]>(
+    () =>
+      apartments.map((apt) => ({
+        ...apt,
+        floor_number: floorNumber,
+        type: apt.type ?? "apartment",
+        project_id: projectId,
+        created_at: "",
+        updated_at: "",
+        floor_plan_id: null,
+      })),
+    [apartments, floorNumber, projectId],
+  );
   const selectedApartmentForPhotos =
     editingApartment && editingApartment !== "new" ? editingApartment : "";
   const {
@@ -1077,44 +1087,17 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   };
 
   const openSyncDialog = (sourceApartment: Apartment) => {
-    // Найти все квартиры с такой же площадью и количеством комнат
-    const targetApartments = apartments.filter(
-      (apt) =>
-        apt.id !== sourceApartment.id &&
-        apt.area === sourceApartment.area &&
-        apt.rooms === sourceApartment.rooms,
-    );
-
-    if (targetApartments.length === 0) {
-      toast.error(t("apartmentsManager.syncError"));
-      return;
-    }
-
-    // Преобразовать в глобальный тип для диалога
     const globalSourceApartment: GlobalApartment = {
       ...sourceApartment,
       floor_number: floorNumber,
-      type: "apartment" as const,
+      type: sourceApartment.type ?? "apartment",
       project_id: projectId,
       created_at: "",
       updated_at: "",
       floor_plan_id: null,
     };
 
-    const globalTargetApartments: GlobalApartment[] = targetApartments.map(
-      (apt) => ({
-        ...apt,
-        floor_number: floorNumber,
-        type: "apartment" as const,
-        project_id: projectId,
-        created_at: "",
-        updated_at: "",
-        floor_plan_id: null,
-      }),
-    );
-
     setSyncSourceApartment(globalSourceApartment);
-    setSyncTargetApartments(globalTargetApartments);
     setSyncDialogOpen(true);
   };
 
@@ -1143,7 +1126,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
     // Сбросить состояние диалога
     setSyncSourceApartment(null);
-    setSyncTargetApartments([]);
   };
 
   const handleDuplicateApartment = async (apartment: Apartment) => {
@@ -1801,7 +1783,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         open={syncDialogOpen}
         onOpenChange={setSyncDialogOpen}
         sourceApartment={syncSourceApartment}
-        targetApartments={syncTargetApartments}
+        allApartments={globalAllApartments}
         onSyncComplete={handleSyncComplete}
         currencySymbol={currencySymbol}
         getStatusColor={getStatusColorClass}

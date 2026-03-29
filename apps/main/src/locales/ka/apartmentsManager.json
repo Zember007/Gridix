@@ -111,6 +111,15 @@
     "floorDuplicateSuccess": "დუბლირება დასრულებულია: სართულის გეგმები {{floorPlans}}, პოლიგონები {{polygons}}, გამოტოვებული {{skipped}}",
     "partialSuccess": "დუბლირება დასრულებულია გაფრთხილებით",
     "errorsCount": "შესრულების შეცდომები: {{count}}",
+    "filterByAttributesTitle": "ფილტრი ატრიბუტებით",
+    "filterByAttributesHint": "ნაჩვენებია ბინები, რომლებიც ემთხვევა ყველა არჩეულ ატრიბუტს.",
+    "attributeArea": "ფართობით",
+    "attributeAreaHint": "ბინის ფართობი ემთხვევა საწყისს.",
+    "attributeRooms": "ოთახების რაოდენობით",
+    "attributeRoomsHint": "ოთახების რაოდენობა ემთხვევა საწყისს.",
+    "attributeType": "ერთეულის ტიპით",
+    "attributeTypeHint": "ერთეულის ტიპი ემთხვევა საწყისს.",
+    "noTargetsAfterFilter": "არც ერთი ბინა არ ემთხვევა არჩეულ ფილტრებს. გამორთეთ ნაწილი ფილტრებისა.",
     "moreMatches": "და კიდევ {{count}} შესატყვისი"
   }
 }

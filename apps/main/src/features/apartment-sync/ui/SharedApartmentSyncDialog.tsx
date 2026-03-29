@@ -52,6 +52,28 @@ const resolveOperationDescription = (
   return undefined;
 };
 
+type ApartmentMatchingAttribute = "area" | "rooms" | "type";
+
+const DEFAULT_MATCHING_ATTRIBUTES: ApartmentMatchingAttribute[] = [
+  "area",
+  "rooms",
+  "type",
+];
+
+function filterByAttributes(
+  source: Apartment,
+  all: Apartment[],
+  attrs: ApartmentMatchingAttribute[],
+): Apartment[] {
+  return all.filter(
+    (apt) =>
+      apt.id !== source.id &&
+      (!attrs.includes("area") || apt.area === source.area) &&
+      (!attrs.includes("rooms") || apt.rooms === source.rooms) &&
+      (!attrs.includes("type") || apt.type === source.type),
+  );
+}
+
 interface BaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,11 +82,20 @@ interface BaseDialogProps {
 interface ApartmentSyncModeProps extends BaseDialogProps {
   mode?: "apartment-sync";
   sourceApartment: Apartment | null;
-  targetApartments: Apartment[];
+  allApartments: Apartment[];
   onSyncComplete: (updatedApartments: Apartment[]) => void;
   getStatusColor?: (status: string) => string;
   getStatusLabel?: (status: string) => string;
   currencySymbol?: string;
+}
+
+interface PhotoDuplicateModeProps extends BaseDialogProps {
+  mode: "photo-duplicate";
+  sourceApartment: Apartment | null;
+  allApartments: Apartment[];
+  photoCountsByApartment: Record<string, number>;
+  isSubmitting: boolean;
+  onConfirm: (selectedIds: Set<string>) => Promise<void>;
 }
 
 interface FloorDuplicateModeProps extends BaseDialogProps {
@@ -79,7 +110,8 @@ interface FloorDuplicateModeProps extends BaseDialogProps {
 
 export type ApartmentSyncDialogProps =
   | ApartmentSyncModeProps
-  | FloorDuplicateModeProps;
+  | FloorDuplicateModeProps
+  | PhotoDuplicateModeProps;
 
 const DEFAULT_MATCHING_RULES: FloorDuplicationMatchingRule[] = [
   "number_with_floor_prefix",
@@ -122,21 +154,46 @@ const ApartmentDataSyncDialog = ({
   open,
   onOpenChange,
   sourceApartment,
-  targetApartments,
+  allApartments,
   onSyncComplete,
   currencySymbol = "",
   getStatusColor = defaultGetStatusColor,
   getStatusLabel = defaultGetStatusLabel,
 }: ApartmentSyncModeProps) => {
   const { t } = useLanguage();
+  const [selectedAttributes, setSelectedAttributes] = useState<
+    ApartmentMatchingAttribute[]
+  >(() => [...DEFAULT_MATCHING_ATTRIBUTES]);
+
+  const targetApartments = useMemo(() => {
+    if (!sourceApartment) {
+      return [];
+    }
+    return filterByAttributes(
+      sourceApartment,
+      allApartments,
+      selectedAttributes,
+    );
+  }, [sourceApartment, allApartments, selectedAttributes]);
+
   const [selectedApartments, setSelectedApartments] = useState<Set<string>>(
-    new Set(targetApartments.map((apartment) => apartment.id)),
+    new Set(),
   );
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
+    if (open) {
+      setSelectedAttributes([...DEFAULT_MATCHING_ATTRIBUTES]);
+    }
+  }, [open]);
+
+  useEffect(() => {
     setSelectedApartments(new Set(targetApartments.map((apt) => apt.id)));
   }, [targetApartments]);
+
+  const toggleAttribute = (attr: ApartmentMatchingAttribute) => {
+    setSelectedAttributes((previous) => toggleValue(previous, attr));
+  };
 
   const formatPrice = (price: number | null | undefined) => {
     if (price == null) {
@@ -280,7 +337,72 @@ const ApartmentDataSyncDialog = ({
               </div>
             </div>
 
-            <div className="space-y-3 lg:col-span-2 lg:row-start-2">
+            <div
+              className="space-y-3 rounded-lg border p-3 lg:col-span-2 lg:row-start-2"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.border,
+              }}
+            >
+              <h4
+                className="text-sm font-semibold"
+                style={{ color: ADMIN_THEME.textPrimary }}
+              >
+                {t("apartmentsManager.syncDialog.filterByAttributesTitle")}
+              </h4>
+              <p
+                className="text-xs leading-relaxed"
+                style={{ color: ADMIN_THEME.textMuted }}
+              >
+                {t("apartmentsManager.syncDialog.filterByAttributesHint")}
+              </p>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedAttributes.includes("area")}
+                    onCheckedChange={() => toggleAttribute("area")}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.attributeArea")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.attributeAreaHint")}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedAttributes.includes("rooms")}
+                    onCheckedChange={() => toggleAttribute("rooms")}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.attributeRooms")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.attributeRoomsHint")}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedAttributes.includes("type")}
+                    onCheckedChange={() => toggleAttribute("type")}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.attributeType")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.attributeTypeHint")}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-3 lg:col-span-2 lg:row-start-3">
               <div className="flex items-center justify-between gap-3">
                 <h4
                   className="text-sm font-semibold"
@@ -291,22 +413,33 @@ const ApartmentDataSyncDialog = ({
                     total: targetApartments.length,
                   })}
                 </h4>
-                <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  disabled={targetApartments.length === 0}
+                >
                   {selectedApartments.size === targetApartments.length
                     ? t("apartmentsManager.syncDialog.deselectAll")
                     : t("apartmentsManager.syncDialog.selectAll")}
                 </Button>
               </div>
 
-              <ApartmentSyncTargetsList
-                targetApartments={targetApartments}
-                sourceApartment={sourceApartment}
-                selectedApartments={selectedApartments}
-                onApartmentToggle={handleApartmentToggle}
-                formatPrice={formatPrice}
-                getStatusColor={getStatusColor}
-                getStatusLabel={getStatusLabel}
-              />
+              {targetApartments.length === 0 ? (
+                <p className="text-sm" style={{ color: ADMIN_THEME.textMuted }}>
+                  {t("apartmentsManager.syncDialog.noTargetsAfterFilter")}
+                </p>
+              ) : (
+                <ApartmentSyncTargetsList
+                  targetApartments={targetApartments}
+                  sourceApartment={sourceApartment}
+                  selectedApartments={selectedApartments}
+                  onApartmentToggle={handleApartmentToggle}
+                  formatPrice={formatPrice}
+                  getStatusColor={getStatusColor}
+                  getStatusLabel={getStatusLabel}
+                />
+              )}
             </div>
 
             <div
@@ -346,7 +479,11 @@ const ApartmentDataSyncDialog = ({
           <div className="flex gap-2">
             <Button
               onClick={handleConfirmSync}
-              disabled={selectedApartments.size === 0 || isSyncing}
+              disabled={
+                targetApartments.length === 0 ||
+                selectedApartments.size === 0 ||
+                isSyncing
+              }
               style={{
                 backgroundColor: ADMIN_THEME.primary,
                 color: ADMIN_THEME.textOnPrimary,
@@ -369,6 +506,290 @@ const ApartmentDataSyncDialog = ({
               variant="outline"
               onClick={() => handleOpenStateChange(false)}
               disabled={isSyncing}
+            >
+              {t("apartmentsManager.cancel")}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const PhotoDuplicateModeDialog = ({
+  open,
+  onOpenChange,
+  sourceApartment,
+  allApartments,
+  photoCountsByApartment,
+  isSubmitting,
+  onConfirm,
+}: PhotoDuplicateModeProps) => {
+  const { t } = useLanguage();
+
+  const [selectedAttributes, setSelectedAttributes] = useState<
+    ApartmentMatchingAttribute[]
+  >(() => [...DEFAULT_MATCHING_ATTRIBUTES]);
+
+  const targetApartments = useMemo(() => {
+    if (!sourceApartment) {
+      return [];
+    }
+    return filterByAttributes(
+      sourceApartment,
+      allApartments,
+      selectedAttributes,
+    );
+  }, [sourceApartment, allApartments, selectedAttributes]);
+
+  const [selectedApartments, setSelectedApartments] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    if (open) {
+      setSelectedAttributes([...DEFAULT_MATCHING_ATTRIBUTES]);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    setSelectedApartments(new Set(targetApartments.map((apt) => apt.id)));
+  }, [targetApartments]);
+
+  const toggleAttribute = (attr: ApartmentMatchingAttribute) => {
+    setSelectedAttributes((previous) => toggleValue(previous, attr));
+  };
+
+  const handleOpenStateChange = (nextOpen: boolean) => {
+    if (!nextOpen && isSubmitting) {
+      return;
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const handleApartmentToggle = (apartmentId: string) => {
+    setSelectedApartments((previous) => {
+      const next = new Set(previous);
+      if (next.has(apartmentId)) {
+        next.delete(apartmentId);
+      } else {
+        next.add(apartmentId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectedApartments(
+      selectedApartments.size === targetApartments.length
+        ? new Set()
+        : new Set(targetApartments.map((apt) => apt.id)),
+    );
+  };
+
+  const handleConfirm = async () => {
+    if (selectedApartments.size === 0) {
+      return;
+    }
+    await onConfirm(selectedApartments);
+  };
+
+  if (!sourceApartment) {
+    return null;
+  }
+
+  const sourcePhotoCount = photoCountsByApartment[sourceApartment.id] ?? 0;
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenStateChange}>
+      <DialogContent className="flex max-h-[80vh] max-w-3xl flex-col overflow-hidden p-0">
+        <div className="border-b px-5 py-4 sm:px-6">
+          <DialogHeader className="space-y-1.5 text-left">
+            <DialogTitle className="text-lg leading-tight">
+              {t("photosManager.duplicateToSimilar")}
+            </DialogTitle>
+          </DialogHeader>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+          <div className="space-y-4">
+            <div className="rounded-xl border p-3.5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("photosManager.selectApartment")}
+                  </div>
+                  <div className="text-base font-semibold leading-tight">
+                    {t("photosManager.apartmentOption", {
+                      number: sourceApartment.apartment_number,
+                      floor: sourceApartment.floor_number,
+                    })}
+                  </div>
+                </div>
+                <Badge className="bg-sky-100 text-sky-800">
+                  {sourcePhotoCount > 0
+                    ? t("photosManager.photoCountShort", {
+                        count: sourcePhotoCount,
+                      })
+                    : t("photosManager.noIndividualPhotosShort")}
+                </Badge>
+              </div>
+            </div>
+
+            <div
+              className="space-y-3 rounded-lg border p-3"
+              style={{
+                backgroundColor: ADMIN_THEME.backgroundSecondary,
+                borderColor: ADMIN_THEME.border,
+              }}
+            >
+              <h4
+                className="text-sm font-semibold"
+                style={{ color: ADMIN_THEME.textPrimary }}
+              >
+                {t("apartmentsManager.syncDialog.filterByAttributesTitle")}
+              </h4>
+              <p
+                className="text-xs leading-relaxed"
+                style={{ color: ADMIN_THEME.textMuted }}
+              >
+                {t("apartmentsManager.syncDialog.filterByAttributesHint")}
+              </p>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedAttributes.includes("area")}
+                    onCheckedChange={() => toggleAttribute("area")}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.attributeArea")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.attributeAreaHint")}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedAttributes.includes("rooms")}
+                    onCheckedChange={() => toggleAttribute("rooms")}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.attributeRooms")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.attributeRoomsHint")}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedAttributes.includes("type")}
+                    onCheckedChange={() => toggleAttribute("type")}
+                  />
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium leading-tight">
+                      {t("apartmentsManager.syncDialog.attributeType")}
+                    </div>
+                    <div className="text-xs leading-relaxed text-muted-foreground">
+                      {t("apartmentsManager.syncDialog.attributeTypeHint")}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold">
+                {t("apartmentsManager.syncDialog.targetsTitle", {
+                  selected: selectedApartments.size,
+                  total: targetApartments.length,
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAll}
+                disabled={targetApartments.length === 0}
+              >
+                {selectedApartments.size === targetApartments.length
+                  ? t("apartmentsManager.syncDialog.deselectAll")
+                  : t("apartmentsManager.syncDialog.selectAll")}
+              </Button>
+            </div>
+
+            {targetApartments.length === 0 ? (
+              <p className="text-sm" style={{ color: ADMIN_THEME.textMuted }}>
+                {t("apartmentsManager.syncDialog.noTargetsAfterFilter")}
+              </p>
+            ) : (
+              <div className="space-y-2 rounded-xl border p-3">
+                {targetApartments.map((apartment) => {
+                  const apartmentPhotoCount =
+                    photoCountsByApartment[apartment.id] ?? 0;
+
+                  return (
+                    <label
+                      key={apartment.id}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/40"
+                    >
+                      <Checkbox
+                        checked={selectedApartments.has(apartment.id)}
+                        onCheckedChange={() =>
+                          handleApartmentToggle(apartment.id)
+                        }
+                        className="mt-1"
+                      />
+                      <div className="flex-1 space-y-1">
+                        <div className="text-sm font-medium leading-tight">
+                          {t("photosManager.apartmentOption", {
+                            number: apartment.apartment_number,
+                            floor: apartment.floor_number,
+                          })}
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                          <span>
+                            {apartmentPhotoCount > 0
+                              ? t("photosManager.photoCountShort", {
+                                  count: apartmentPhotoCount,
+                                })
+                              : t("photosManager.noIndividualPhotosShort")}
+                          </span>
+                          <span>
+                            {t("apartmentsManager.areaValue", {
+                              area: apartment.area,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="border-t bg-background px-5 py-4 sm:px-6">
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                void handleConfirm();
+              }}
+              disabled={
+                targetApartments.length === 0 ||
+                selectedApartments.size === 0 ||
+                isSubmitting
+              }
+            >
+              {t("photosManager.duplicateToSimilar")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleOpenStateChange(false)}
+              disabled={isSubmitting}
             >
               {t("apartmentsManager.cancel")}
             </Button>
@@ -974,6 +1395,10 @@ const FloorDuplicationModeDialog = ({
 const SharedApartmentSyncDialog = (props: ApartmentSyncDialogProps) => {
   if (props.mode === "floor-duplicate") {
     return <FloorDuplicationModeDialog {...props} />;
+  }
+
+  if (props.mode === "photo-duplicate") {
+    return <PhotoDuplicateModeDialog {...props} />;
   }
 
   return <ApartmentDataSyncDialog {...props} />;

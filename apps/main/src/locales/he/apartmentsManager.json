@@ -111,6 +111,15 @@
     "floorDuplicateSuccess": "השכפול הושלם: תוכניות קומה {{floorPlans}}, מצולעים {{polygons}}, דילוג {{skipped}}",
     "partialSuccess": "השכפול הושלם עם אזהרות",
     "errorsCount": "שגיאות ביצוע: {{count}}",
+    "filterByAttributesTitle": "סינון לפי מאפיינים",
+    "filterByAttributesHint": "מוצגות דירות שמתאימות לכל המאפיינים שנבחרו.",
+    "attributeArea": "לפי שטח",
+    "attributeAreaHint": "שטח הדירה תואם לדירת המקור.",
+    "attributeRooms": "לפי מספר חדרים",
+    "attributeRoomsHint": "מספר החדרים תואם לדירת המקור.",
+    "attributeType": "לפי סוג יחידה",
+    "attributeTypeHint": "סוג היחידה תואם לדירת המקור.",
+    "noTargetsAfterFilter": "אין דירות שמתאימות למסננים שנבחרו. בטלו חלק מהמסננים.",
     "moreMatches": "ועוד {{count}} התאמות"
   }
 }

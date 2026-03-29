@@ -111,6 +111,15 @@
     "floorDuplicateSuccess": "Çoğaltma tamamlandı: kat planları {{floorPlans}}, poligonlar {{polygons}}, atlanan {{skipped}}",
     "partialSuccess": "Çoğaltma uyarılarla tamamlandı",
     "errorsCount": "Çalışma hataları: {{count}}",
+    "filterByAttributesTitle": "Özniteliklere göre filtre",
+    "filterByAttributesHint": "Yalnızca seçilen tüm özniteliklerle eşleşen daireler gösterilir.",
+    "attributeArea": "Alana göre",
+    "attributeAreaHint": "Daire alanı kaynakla aynı.",
+    "attributeRooms": "Oda sayısına göre",
+    "attributeRoomsHint": "Oda sayısı kaynakla aynı.",
+    "attributeType": "Ünite tipine göre",
+    "attributeTypeHint": "Ünite tipi kaynakla aynı.",
+    "noTargetsAfterFilter": "Seçilen filtrelere uyan daire yok. Bazı filtreleri kapatın.",
     "moreMatches": "Ve {{count}} eşleşme daha"
   }
 }

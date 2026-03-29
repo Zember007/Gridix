@@ -111,6 +111,15 @@
     "floorDuplicateSuccess": "Дублирование завершено: планы этажей {{floorPlans}}, полигоны {{polygons}}, пропущено {{skipped}}",
     "partialSuccess": "Дублирование завершено с предупреждениями",
     "errorsCount": "Ошибок во время выполнения: {{count}}",
+    "filterByAttributesTitle": "Фильтр по атрибутам",
+    "filterByAttributesHint": "Показываются квартиры, у которых совпадают все выбранные атрибуты.",
+    "attributeArea": "По площади",
+    "attributeAreaHint": "Площадь квартиры совпадает с исходной.",
+    "attributeRooms": "По количеству комнат",
+    "attributeRoomsHint": "Количество комнат совпадает с исходной.",
+    "attributeType": "По типу юнита",
+    "attributeTypeHint": "Тип юнита совпадает с исходной.",
+    "noTargetsAfterFilter": "Нет квартир, совпадающих по выбранным атрибутам. Снимите часть фильтров.",
     "moreMatches": "И еще {{count}} совпадений"
   }
 }

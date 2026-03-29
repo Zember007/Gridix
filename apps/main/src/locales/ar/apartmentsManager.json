@@ -111,6 +111,15 @@
     "floorDuplicateSuccess": "اكتمل التكرار: مخططات الطوابق {{floorPlans}}، المضلعات {{polygons}}، تم تخطيها {{skipped}}",
     "partialSuccess": "اكتمال الازدواجية مع التحذيرات",
     "errorsCount": "أخطاء التنفيذ: {{count}}",
+    "filterByAttributesTitle": "تصفية حسب السمات",
+    "filterByAttributesHint": "تُعرض الشقق التي تطابق جميع السمات المحددة.",
+    "attributeArea": "حسب المساحة",
+    "attributeAreaHint": "مساحة الشقة تطابق المصدر.",
+    "attributeRooms": "حسب عدد الغرف",
+    "attributeRoomsHint": "عدد الغرف يطابق المصدر.",
+    "attributeType": "حسب نوع الوحدة",
+    "attributeTypeHint": "نوع الوحدة يطابق المصدر.",
+    "noTargetsAfterFilter": "لا توجد شقق تطابق المرشحات المحددة. ألغِ بعض المرشحات.",
     "moreMatches": "و{{count}} المزيد من التطابقات"
   }
 }

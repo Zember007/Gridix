@@ -17,11 +17,10 @@ import {
   TabsTrigger,
 } from "@gridix/ui";
 import { Home, Layout } from "lucide-react";
-import { toast } from "sonner";
 import LayoutPhotosManager from "@/components/visualization/LayoutPhotosManager";
 import { useLanguage } from "@gridix/utils/react";
+import SharedApartmentSyncDialog from "@/features/apartment-sync/ui/SharedApartmentSyncDialog";
 import ApartmentPhotosCoveragePanel from "./ApartmentPhotosCoveragePanel";
-import ApartmentPhotosDuplicateDialog from "./ApartmentPhotosDuplicateDialog";
 import ApartmentPhotosUploadPanel from "./ApartmentPhotosUploadPanel";
 import ApartmentPhotosGrid from "./ApartmentPhotosGrid";
 import { useApartmentPhotosManager } from "../model/useApartmentPhotosManager";
@@ -34,8 +33,6 @@ interface ApartmentPhotosManagerProps {
 const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const { t } = useLanguage();
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
-  const [selectedDuplicateApartmentIds, setSelectedDuplicateApartmentIds] =
-    useState<Set<string>>(new Set());
   const [isDuplicating, setIsDuplicating] = useState(false);
   const {
     apartments,
@@ -68,72 +65,12 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     [apartments, selectedApartment],
   );
 
-  const similarApartments = useMemo(() => {
-    if (!sourceApartment) {
-      return [];
-    }
-
-    return apartments.filter((apartment) => {
-      return (
-        apartment.id !== sourceApartment.id &&
-        apartment.type === sourceApartment.type &&
-        apartment.area === sourceApartment.area &&
-        apartment.rooms === sourceApartment.rooms
-      );
-    });
-  }, [apartments, sourceApartment]);
-
   const handleOpenDuplicateDialog = async () => {
     if (!sourceApartment || photos.length === 0) {
       return;
     }
 
-    if (similarApartments.length === 0) {
-      toast.error(t("apartmentsManager.syncError"));
-      return;
-    }
-
-    setSelectedDuplicateApartmentIds(
-      new Set(similarApartments.map((apartment) => apartment.id)),
-    );
     setDuplicateDialogOpen(true);
-  };
-
-  const handleDuplicateApartmentToggle = (apartmentId: string) => {
-    setSelectedDuplicateApartmentIds((previous) => {
-      const next = new Set(previous);
-
-      if (next.has(apartmentId)) {
-        next.delete(apartmentId);
-      } else {
-        next.add(apartmentId);
-      }
-
-      return next;
-    });
-  };
-
-  const handleDuplicateSelectAll = () => {
-    setSelectedDuplicateApartmentIds(
-      selectedDuplicateApartmentIds.size === similarApartments.length
-        ? new Set()
-        : new Set(similarApartments.map((apartment) => apartment.id)),
-    );
-  };
-
-  const handleConfirmDuplicate = async () => {
-    const targetApartmentIds = Array.from(selectedDuplicateApartmentIds);
-    if (targetApartmentIds.length === 0) {
-      return;
-    }
-
-    setIsDuplicating(true);
-    try {
-      await duplicatePhotosToApartments(targetApartmentIds);
-      setDuplicateDialogOpen(false);
-    } finally {
-      setIsDuplicating(false);
-    }
   };
 
   if (loading) {
@@ -242,17 +179,23 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         </TabsContent>
       </Tabs>
 
-      <ApartmentPhotosDuplicateDialog
+      <SharedApartmentSyncDialog
+        mode="photo-duplicate"
         open={duplicateDialogOpen}
         onOpenChange={setDuplicateDialogOpen}
         sourceApartment={sourceApartment}
-        targetApartments={similarApartments}
-        selectedApartmentIds={selectedDuplicateApartmentIds}
+        allApartments={apartments}
         photoCountsByApartment={photoCountsByApartment}
         isSubmitting={isDuplicating}
-        onApartmentToggle={handleDuplicateApartmentToggle}
-        onSelectAll={handleDuplicateSelectAll}
-        onConfirm={handleConfirmDuplicate}
+        onConfirm={async (selectedIds) => {
+          setIsDuplicating(true);
+          try {
+            await duplicatePhotosToApartments(Array.from(selectedIds));
+            setDuplicateDialogOpen(false);
+          } finally {
+            setIsDuplicating(false);
+          }
+        }}
       />
     </div>
   );

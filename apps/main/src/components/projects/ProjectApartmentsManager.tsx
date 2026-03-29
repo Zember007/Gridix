@@ -94,9 +94,6 @@ const ProjectApartmentsManager = ({
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncSourceApartment, setSyncSourceApartment] =
     useState<Apartment | null>(null);
-  const [syncTargetApartments, setSyncTargetApartments] = useState<Apartment[]>(
-    [],
-  );
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [excelSyncDialogOpen, setExcelSyncDialogOpen] = useState(false);
   const [floorDuplicateDialogOpen, setFloorDuplicateDialogOpen] =
@@ -391,22 +388,7 @@ const ProjectApartmentsManager = ({
   };
 
   const openSyncDialog = (sourceApartment: Apartment) => {
-    // Найти все квартиры с такой же площадью и количеством комнат
-    const targetApartments = apartments.filter(
-      (apt) =>
-        apt.id !== sourceApartment.id &&
-        apt.area === sourceApartment.area &&
-        apt.rooms === sourceApartment.rooms &&
-        apt.type === sourceApartment.type,
-    );
-
-    if (targetApartments.length === 0) {
-      toast.error(t("apartmentsManager.syncError"));
-      return;
-    }
-
     setSyncSourceApartment(sourceApartment);
-    setSyncTargetApartments(targetApartments);
     setSyncDialogOpen(true);
   };
 
@@ -423,7 +405,6 @@ const ProjectApartmentsManager = ({
 
     // Сбросить состояние диалога
     setSyncSourceApartment(null);
-    setSyncTargetApartments([]);
   };
 
   const handleDuplicateApartment = async (apartment: Apartment) => {
@@ -1213,7 +1194,7 @@ const ProjectApartmentsManager = ({
         open={syncDialogOpen}
         onOpenChange={setSyncDialogOpen}
         sourceApartment={syncSourceApartment}
-        targetApartments={syncTargetApartments}
+        allApartments={apartments}
         onSyncComplete={handleSyncComplete}
         currencySymbol={currencySymbol}
         getStatusColor={getStatusColor}
