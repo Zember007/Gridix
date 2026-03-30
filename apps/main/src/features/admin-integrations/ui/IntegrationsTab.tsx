@@ -8,6 +8,7 @@ import {
 import { Package } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AmoCRMConnection } from "./AmoCRMConnection";
+import { Bitrix24Connection } from "./Bitrix24Connection";
 import { useAdminAccess } from "@/entities/admin-access";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 
@@ -44,9 +45,9 @@ export const IntegrationsTab = () => {
         <AmoCRMConnection blockedReason={blockedReason} />
 
         {/* Bitrix24 Card */}
-        {/* <Bitrix24Connection /> */}
+        <Bitrix24Connection />
 
-        <Card className="border-dashed opacity-60">
+        {/*  <Card className="border-dashed opacity-60">
           <CardHeader>
             <CardTitle className="text-xl text-muted-foreground">
               Bitrix24
@@ -59,7 +60,7 @@ export const IntegrationsTab = () => {
             </div>
           </CardContent>
         </Card>
-
+ */}
         {/* Coming Soon Card */}
         <Card className="border-dashed opacity-60">
           <CardHeader>

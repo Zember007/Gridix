@@ -208,7 +208,12 @@
     "selectFunnelDesc": "اختر قمعًا لمزامنة المراحل.",
     "statusesSynced": "مراحل تمت مزامنتها",
     "funnelSynced": "تمت مزامنة القمع",
-    "syncError": "فشل في مزامنة القمع"
+    "syncError": "فشل في مزامنة القمع",
+    "enterDomain": "أدخل عنوان Bitrix24 الخاص بك",
+    "domainPlaceholder": "b24-example.bitrix24.com",
+    "invalidDomain": "يرجى إدخال عنوان Bitrix24 صحيح",
+    "ruRegionUnavailable": "التكامل غير متاح مؤقتاً في الوصول المفتوح للمنطقة الروسية. يرجى التواصل مع الدعم الفني.",
+    "openMarketplace": "الانتقال إلى السوق"
   },
   "widgets": "الودجات",
   "documentation": "التوثيق",
