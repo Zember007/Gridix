@@ -50,7 +50,7 @@ export const AmoCRMConnection = ({
 
   return (
     <>
-      <Card className="overflow-hidden border-none shadow-md transition-all duration-300 hover:shadow-lg">
+      <Card className="flex flex-col overflow-hidden border-none shadow-md transition-all duration-300 hover:shadow-lg">
         <div className="h-2 w-full bg-[#4c8bf7]" />
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -81,7 +81,7 @@ export const AmoCRMConnection = ({
             {t("amocrm.description")}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-1 flex-col justify-end">
           {isAuthorized && !tokenExpired ? (
             <div className="space-y-4">
               <div className="flex items-start gap-3 rounded-lg border border-green-100 bg-green-50/50 p-3">

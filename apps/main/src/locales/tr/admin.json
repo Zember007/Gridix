@@ -208,7 +208,12 @@
     "selectFunnelDesc": "Aşamaları senkronize etmek için bir huni seçin.",
     "statusesSynced": "aşamalar senkronize edildi",
     "funnelSynced": "Dönüşüm hunisi senkronize edildi",
-    "syncError": "Dönüşüm hunisi senkronize edilemedi"
+    "syncError": "Dönüşüm hunisi senkronize edilemedi",
+    "enterDomain": "Bitrix24 adresinizi girin",
+    "domainPlaceholder": "b24-example.bitrix24.com",
+    "invalidDomain": "Lütfen geçerli bir Bitrix24 adresi girin",
+    "ruRegionUnavailable": "Entegrasyon, Rusya bölgesinde açık erişimde geçici olarak kullanılamıyor. Lütfen destek ile iletişime geçin.",
+    "openMarketplace": "Market'e Git"
   },
   "widgets": "Widget'lar",
   "documentation": "Dokümantasyon",
