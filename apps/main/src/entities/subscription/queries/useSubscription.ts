@@ -88,6 +88,33 @@ export interface BillingDetails {
   address: string;
 }
 
+export interface CustomerSubscription {
+  id: string;
+  stripe_subscription_id: string | null;
+  billing_interval: string;
+  billing_interval_count: number;
+  status: string;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  subscription_line_items: SubscriptionLineItem[];
+}
+
+export interface SubscriptionLineItem {
+  id: string;
+  stripe_subscription_item_id: string | null;
+  item_type: "project" | "module";
+  project_id: string | null;
+  module_slug: string | null;
+  plan_id: string | null;
+  plan_slug: string;
+  effective_price: number | null;
+  discount_percentage: number;
+  status: string;
+  created_at: string;
+}
+
 export interface SubscriptionOrder {
   id: string;
   date: string | null;

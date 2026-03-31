@@ -90,16 +90,9 @@ export const AdminDashboardContent = ({
       )}
 
       <Suspense fallback={tabFallback}>
-        {activeTab === "leads" &&
-          (adminAccess?.loading ? (
-            tabFallback
-          ) : adminAccess?.canViewLeads ? (
-            <LeadsManager showProjectColumn={!isManager} />
-          ) : (
-            <div className="h-full space-y-6">
-              <AdminAccessNotice variant="subscription" />
-            </div>
-          ))}
+        {activeTab === "leads" && (
+          <LeadsManager showProjectColumn={!isManager} />
+        )}
 
         {activeTab === "subscription" && userRole.type !== "manager" && (
           <div className="h-full space-y-6">

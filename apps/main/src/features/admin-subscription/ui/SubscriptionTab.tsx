@@ -1,5 +1,3 @@
-import { Button } from "@gridix/ui";
-import { AlertCircle, RefreshCw } from "lucide-react";
 import { ProjectSubscriptionsList } from "@/entities/subscription/ui";
 import { CheckoutModal } from "@/features/subscription-checkout";
 import { Spinner } from "@/shared/ui/Spinner";
@@ -7,6 +5,8 @@ import { useSubscriptionTabController } from "@/features/admin-subscription/mode
 import { SubscriptionHeader } from "@/features/admin-subscription/ui/SubscriptionHeader";
 import { SubscriptionPricingSection } from "@/features/admin-subscription/ui/SubscriptionPricingSection";
 import { SubscriptionHistorySection } from "@/features/admin-subscription/ui/SubscriptionHistorySection";
+import { ChangePaymentMethodModal } from "@/features/admin-subscription/ui/ChangePaymentMethodModal";
+import { StripeInvoicesSection } from "@/features/admin-subscription/ui/StripeInvoicesSection";
 
 export default function SubscriptionTab() {
   const {
@@ -19,6 +19,7 @@ export default function SubscriptionTab() {
     orders,
     billingDetails,
     isInvoiceDialogOpen,
+    isChangeCardModalOpen,
     selectedProjects,
     selectedPlanId,
     selectedDuration,
@@ -33,7 +34,10 @@ export default function SubscriptionTab() {
     setPlanChangeProjectId,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
-    handleManageSubscription,
+    handleCancelSubscriptionForProject,
+    handleResumeSubscriptionForProject,
+    handleOpenChangeCard,
+    handleCloseChangeCard,
   } = useSubscriptionTabController();
 
   if (loading) {
@@ -51,13 +55,19 @@ export default function SubscriptionTab() {
         <SubscriptionHeader
           title={t("admin.subscriptionPage.title")}
           refreshLabel={t("admin.subscriptionPage.refresh")}
+          changePaymentMethodLabel={
+            t("admin.subscriptionPage.projects.buttons.changeCard") ||
+            "Change payment method"
+          }
           onRefresh={refreshProjectSubscriptions}
+          onChangePaymentMethod={handleOpenChangeCard}
         />
 
         <ProjectSubscriptionsList
           projects={projectSubscriptions}
           onOpenInvoice={handleOpenInvoiceForProject}
-          onManageSubscription={handleManageSubscription}
+          onCancelProject={handleCancelSubscriptionForProject}
+          onResumeProject={handleResumeSubscriptionForProject}
         />
       </section>
 
@@ -91,6 +101,8 @@ export default function SubscriptionTab() {
         projects={projectSubscriptions}
       />
 
+      <StripeInvoicesSection />
+
       {isInvoiceDialogOpen && (
         <CheckoutModal
           isOpen={isInvoiceDialogOpen}
@@ -108,6 +120,13 @@ export default function SubscriptionTab() {
           onPlanChange={(planId) => setSelectedPlanId(planId)}
           onDurationChange={setSelectedDuration}
           onConfirm={handleConfirmInvoiceFromModal}
+        />
+      )}
+
+      {isChangeCardModalOpen && (
+        <ChangePaymentMethodModal
+          onClose={handleCloseChangeCard}
+          onSuccess={refreshProjectSubscriptions}
         />
       )}
     </div>
