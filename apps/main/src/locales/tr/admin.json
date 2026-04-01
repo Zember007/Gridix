@@ -408,7 +408,9 @@
       "planChanged": "Plan değiştirildi. Eski abonelik iptal edildi ve kalan dönem için para iadesi yapıldı.",
       "projectCancelled": "Proje aboneliği iptal edildi. Erişim, ödenen dönemin sonuna kadar açık kalacaktır.",
       "subscriptionResumed": "Otomatik yenileme etkinleştirildi. Abonelik dönem sonunda yenilenecek.",
-      "cardUpdated": "Ödeme yöntemi tüm aktif projeler için güncellendi."
+      "cardUpdated": "Ödeme yöntemi tüm aktif projeler için güncellendi.",
+      "planAlreadyActiveWithPeriod": "Bu plan seçilen dönem için zaten aktif.",
+      "projectsAdded": "Projeler aboneliğe eklendi."
     },
     "stripeInvoices": {
       "title": "Stripe faturaları",

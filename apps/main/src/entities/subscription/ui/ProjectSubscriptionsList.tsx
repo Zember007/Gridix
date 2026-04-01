@@ -160,8 +160,17 @@ export const ProjectSubscriptionsList: React.FC<
                 );
               const isCardPayment = sub?.payment_method === "card";
               const paymentMethod = sub?.payment_method ?? "invoice";
-              const expiresAt =
-                sub?.current_period_end ?? project.subscription_expires_at;
+              const expiresAt = (() => {
+                if (sub?.current_period_end) return sub.current_period_end;
+                if (project.subscription_expires_at)
+                  return project.subscription_expires_at;
+                if (sub?.current_period_start && sub?.duration_months) {
+                  const start = new Date(sub.current_period_start);
+                  start.setMonth(start.getMonth() + sub.duration_months);
+                  return start.toISOString();
+                }
+                return null;
+              })();
               const isEnded = expiresAt
                 ? new Date(expiresAt) <= new Date()
                 : isExpired;

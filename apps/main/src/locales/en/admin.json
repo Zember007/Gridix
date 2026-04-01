@@ -408,7 +408,9 @@
       "planChanged": "Plan changed. The old subscription was cancelled and a refund for the unused period was issued.",
       "projectCancelled": "The project subscription has been cancelled. Access will remain available until the end of the paid period.",
       "subscriptionResumed": "Auto-renewal enabled. Subscription will renew at the end of the period.",
-      "cardUpdated": "The payment method has been updated for all active projects."
+      "cardUpdated": "The payment method has been updated for all active projects.",
+      "planAlreadyActiveWithPeriod": "This plan is already active for the selected period.",
+      "projectsAdded": "Projects have been added to the subscription."
     },
     "stripeInvoices": {
       "title": "Stripe invoices",
