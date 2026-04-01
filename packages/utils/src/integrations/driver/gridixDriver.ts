@@ -17,6 +17,11 @@ export function getGridixDriverDefaults(): Partial<Config> {
     /** Клик по затемнению не закрывает тур (только кнопка «Закрыть» / программный destroy). */
     overlayClickBehavior: () => {},
     smoothScroll: true,
+    /**
+     * По умолчанию в driver.js — 10px: вырез шире элемента, справа от фиксированного
+     * сайдбара остаётся полоска фона контента (белая). 0 — вырез по границе target.
+     */
+    stagePadding: 0,
   };
 }
 
