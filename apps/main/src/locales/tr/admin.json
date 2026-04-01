@@ -397,6 +397,7 @@
       "footer": {
         "total": "Toplam:",
         "next": "Sonraki",
+        "confirmPayment": "Onayla",
         "processing": "İşleme..."
       }
     },

@@ -397,6 +397,7 @@
       "footer": {
         "total": "Total:",
         "next": "Next",
+        "confirmPayment": "Confirm",
         "processing": "Processing..."
       }
     },

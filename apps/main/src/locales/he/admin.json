@@ -382,6 +382,7 @@
         "projects": "פרויקטים:",
         "payer": "משלם:"
       },
+      "currentPlanBadge": "נוכחי",
       "planChangeSingleProject": "שינוי תוכנית זמין רק לפרויקט הפעיל שנבחר.",
       "methods": {
         "card": {
@@ -397,6 +398,7 @@
       "footer": {
         "total": "סַך הַכֹּל:",
         "next": "הַבָּא",
+        "confirmPayment": "אישור",
         "processing": "מעבד..."
       }
     },

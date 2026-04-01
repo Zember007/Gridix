@@ -397,6 +397,7 @@
       "footer": {
         "total": "სულ:",
         "next": "შემდეგი",
+        "confirmPayment": "დადასტურება",
         "processing": "დამუშავება..."
       }
     },

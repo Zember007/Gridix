@@ -60,7 +60,13 @@ export default function SubscriptionTab() {
             "Change payment method"
           }
           onRefresh={refreshProjectSubscriptions}
-          onChangePaymentMethod={handleOpenChangeCard}
+          onChangePaymentMethod={
+            projectSubscriptions.filter((p) =>
+              p.user_subscriptions.some((s) => s.status === "active"),
+            ).length > 0
+              ? handleOpenChangeCard
+              : undefined
+          }
         />
 
         <ProjectSubscriptionsList

@@ -382,6 +382,7 @@
         "projects": "المشاريع:",
         "payer": "المدفوع بواسطة:"
       },
+      "currentPlanBadge": "الحالي",
       "planChangeSingleProject": "تغيير الخطة متاح فقط للمشروع النشط المحدد.",
       "methods": {
         "card": {
@@ -397,6 +398,7 @@
       "footer": {
         "total": "الإجمالي:",
         "next": "التالي",
+        "confirmPayment": "تأكيد",
         "processing": "جاري المعالجة..."
       }
     },

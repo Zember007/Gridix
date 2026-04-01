@@ -397,6 +397,7 @@
       "footer": {
         "total": "Итого:",
         "next": "Далее",
+        "confirmPayment": "Подтвердить",
         "processing": "Обработка..."
       }
     },

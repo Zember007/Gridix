@@ -27,6 +27,47 @@ interface PlanGroup {
   projects: ProjectSubscription[];
 }
 
+function pickPrimarySubscription(project: ProjectSubscription) {
+  const subscriptions = project.user_subscriptions ?? [];
+  if (subscriptions.length === 0) return undefined;
+
+  const now = Date.now();
+  const statusRank: Record<string, number> = {
+    active: 4,
+    trialing: 3,
+    pending_payment: 2,
+    pending: 2,
+    expired: 1,
+    cancelled: 0,
+  };
+
+  return [...subscriptions].sort((a, b) => {
+    const aActiveByDate = a.current_period_end
+      ? new Date(a.current_period_end).getTime() > now
+      : false;
+    const bActiveByDate = b.current_period_end
+      ? new Date(b.current_period_end).getTime() > now
+      : false;
+    if (aActiveByDate !== bActiveByDate) return aActiveByDate ? -1 : 1;
+
+    const aStatus = statusRank[a.status] ?? 0;
+    const bStatus = statusRank[b.status] ?? 0;
+    if (aStatus !== bStatus) return bStatus - aStatus;
+
+    const aPeriodEnd = a.current_period_end
+      ? new Date(a.current_period_end).getTime()
+      : 0;
+    const bPeriodEnd = b.current_period_end
+      ? new Date(b.current_period_end).getTime()
+      : 0;
+    if (aPeriodEnd !== bPeriodEnd) return bPeriodEnd - aPeriodEnd;
+
+    const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const bCreated = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return bCreated - aCreated;
+  })[0];
+}
+
 function groupByPlan(
   projects: ProjectSubscription[],
   noActivePlanLabel: string,
@@ -100,7 +141,7 @@ export const ProjectSubscriptionsList: React.FC<
           {/* Project cards in group */}
           <div className="flex flex-col gap-3">
             {group.projects.map((project) => {
-              const sub = project.user_subscriptions?.[0];
+              const sub = pickPrimarySubscription(project);
               const hasPaidAccess = sub?.current_period_end
                 ? new Date(sub.current_period_end) > new Date()
                 : sub?.status === "active";
@@ -145,12 +186,6 @@ export const ProjectSubscriptionsList: React.FC<
                   return (
                     t("admin.subscriptionPage.projects.accessUntilLabel") ||
                     "Access until:"
-                  );
-                }
-                if (isActive && isCardPayment && !isExpired) {
-                  return (
-                    t("admin.subscriptionPage.projects.renewsOnLabel") ||
-                    "Renews on:"
                   );
                 }
                 if (isActive && !isExpired) {

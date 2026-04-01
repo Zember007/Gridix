@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   BillingDetails,
   BillingPayerType,
+  ProjectSubscription,
   SubscriptionPlan,
 } from "@/entities/subscription/queries/useSubscription";
 import { BillingErrors, CheckoutPaymentMethod, CheckoutStep } from "./types";
@@ -15,6 +16,7 @@ interface UseCheckoutFlowParams {
   selectedPlanId: string;
   selectedDuration: number;
   planChangeProjectId?: string | null;
+  projects: ProjectSubscription[];
   onConfirm: (
     payer: BillingDetails,
     projectIds: string[],
@@ -30,6 +32,7 @@ export const useCheckoutFlow = ({
   selectedPlanId,
   selectedDuration,
   planChangeProjectId,
+  projects,
   onConfirm,
 }: UseCheckoutFlowParams) => {
   const { t } = useLanguage();
@@ -39,6 +42,8 @@ export const useCheckoutFlow = ({
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>(
     initialSelectedProjectIds,
   );
+  const [chosenMethod, setChosenMethod] =
+    useState<CheckoutPaymentMethod | null>(null);
   const [formData, setFormData] = useState<BillingDetails>({
     type: "company",
     name: "",
@@ -49,6 +54,15 @@ export const useCheckoutFlow = ({
     address: "",
   });
   const [errors, setErrors] = useState<BillingErrors>({});
+
+  const previousPaymentMethod = useMemo((): CheckoutPaymentMethod | null => {
+    if (initialSelectedProjectIds.length !== 1) return null;
+    const projectId = initialSelectedProjectIds[0];
+    const project = projects.find((p) => p.id === projectId);
+    const sub = project?.user_subscriptions?.[0];
+    if (!sub?.payment_method) return null;
+    return sub.payment_method === "card" ? "card" : "invoice";
+  }, [initialSelectedProjectIds, projects]);
 
   useEffect(() => {
     if (isOpen && initialSelectedProjectIds.length > 0) {
@@ -143,19 +157,40 @@ export const useCheckoutFlow = ({
         );
         return;
       }
-      setStep("payer_info");
+
+      if (previousPaymentMethod === "card") {
+        handleConfirm("card");
+        return;
+      }
+
+      if (previousPaymentMethod === "invoice") {
+        setChosenMethod("invoice");
+        setStep("payer_info");
+        return;
+      }
+
+      setStep("payment_method");
       return;
     }
 
     if (step === "payer_info" && validateForm()) {
-      setStep("payment_method");
+      handleConfirm(chosenMethod ?? "invoice");
+    }
+  };
+
+  const handlePaymentMethodSelect = (method: CheckoutPaymentMethod) => {
+    if (method === "card") {
+      handleConfirm("card");
+    } else {
+      setChosenMethod("invoice");
+      setStep("payer_info");
     }
   };
 
   const handleBack = () => {
-    if (step === "payment_method") {
-      setStep("payer_info");
-    } else if (step === "payer_info") {
+    if (step === "payer_info") {
+      setStep(previousPaymentMethod ? "select_projects" : "payment_method");
+    } else if (step === "payment_method") {
       setStep("select_projects");
     }
   };
@@ -193,10 +228,12 @@ export const useCheckoutFlow = ({
     currentPlan,
     currentPricing,
     finalTotal,
+    previousPaymentMethod,
     handleInputChange,
     toggleProject,
     handleNext,
     handleBack,
     handleConfirm,
+    handlePaymentMethodSelect,
   };
 };

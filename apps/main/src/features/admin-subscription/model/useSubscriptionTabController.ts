@@ -282,6 +282,31 @@ export const useSubscriptionTabController = () => {
         projectIds[0] === planChangeProjectId;
 
       if (isPlanChangeFlow) {
+        const project = projectSubscriptions.find(
+          (item) => item.id === planChangeProjectId,
+        );
+        const currentSub = project?.user_subscriptions?.[0];
+        const currentPeriodEnd = currentSub?.current_period_end
+          ? new Date(currentSub.current_period_end).getTime()
+          : null;
+        const hasCurrentPaidPeriod =
+          currentPeriodEnd === null || currentPeriodEnd > Date.now();
+        const isSamePlanAndPeriod =
+          currentSub?.plan_id === selectedPlanId &&
+          currentSub?.duration_months === selectedDuration;
+
+        if (
+          hasCurrentPaidPeriod &&
+          ["active", "trialing"].includes(currentSub?.status ?? "") &&
+          isSamePlanAndPeriod
+        ) {
+          toast.error(
+            t("admin.subscriptionPage.toasts.planAlreadyActiveWithPeriod") ||
+              "The selected plan and billing period are already active for this project.",
+          );
+          return;
+        }
+
         await changeStripeSubscriptionPlan(
           planChangeProjectId,
           selectedPlanId,
