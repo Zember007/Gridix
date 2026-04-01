@@ -10,6 +10,7 @@ const idleProject: ProjectChecklistDerivedProgress = {
   projectFacadeConfigured: false,
   projectFirstApartmentCreated: false,
   projectFloorplanUploaded: false,
+  querySucceeded: false,
 };
 
 export type UseProjectOnboardingDerivedProgressOptions = {

@@ -61,9 +61,10 @@ export function ProjectOnboardingChecklistPanel({
         id: "basic",
         isDone: () =>
           derived.projectBasicInfoReady ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.projectBasicInfoReady,
-          ),
+          (!derived.querySucceeded &&
+            isOnboardingMilestoneCompleted(
+              ONBOARDING_MILESTONE.projectBasicInfoReady,
+            )),
         title: t("onboardingChecklist.project.basicInfo.title"),
         description: t("onboardingChecklist.project.basicInfo.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -76,9 +77,10 @@ export function ProjectOnboardingChecklistPanel({
         id: "facade",
         isDone: () =>
           derived.projectFacadeConfigured ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.projectFacadeConfigured,
-          ),
+          (!derived.querySucceeded &&
+            isOnboardingMilestoneCompleted(
+              ONBOARDING_MILESTONE.projectFacadeConfigured,
+            )),
         title: t("onboardingChecklist.project.facade.title"),
         description: t("onboardingChecklist.project.facade.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -91,9 +93,10 @@ export function ProjectOnboardingChecklistPanel({
         id: "apartments",
         isDone: () =>
           derived.projectFirstApartmentCreated ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.projectFirstApartmentCreated,
-          ),
+          (!derived.querySucceeded &&
+            isOnboardingMilestoneCompleted(
+              ONBOARDING_MILESTONE.projectFirstApartmentCreated,
+            )),
         title: t("onboardingChecklist.project.apartments.title"),
         description: t("onboardingChecklist.project.apartments.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -114,9 +117,10 @@ export function ProjectOnboardingChecklistPanel({
         id: "floorplan",
         isDone: () =>
           derived.projectFloorplanUploaded ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.projectFloorplanUploaded,
-          ),
+          (!derived.querySucceeded &&
+            isOnboardingMilestoneCompleted(
+              ONBOARDING_MILESTONE.projectFloorplanUploaded,
+            )),
         title: t("onboardingChecklist.project.floorplan.title"),
         description: t("onboardingChecklist.project.floorplan.description"),
         actionLabel: t("onboardingChecklist.go"),

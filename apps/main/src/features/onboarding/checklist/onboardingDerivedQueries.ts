@@ -20,6 +20,8 @@ export type ProjectChecklistDerivedProgress = {
   projectFirstApartmentCreated: boolean;
   /** Имеет смысл только для `project_type === "building"`; для `object` вызывающий может игнорировать. */
   projectFloorplanUploaded: boolean;
+  /** После успешного ответа по проекту — источник правды для шагов чеклиста; иначе можно опираться на localStorage. */
+  querySucceeded: boolean;
 };
 
 const PAID_SUBSCRIPTION_STATUSES = ["active"] as const;
@@ -138,6 +140,7 @@ const emptyProjectProgress: ProjectChecklistDerivedProgress = {
   projectFacadeConfigured: false,
   projectFirstApartmentCreated: false,
   projectFloorplanUploaded: false,
+  querySucceeded: false,
 };
 
 /**
@@ -267,5 +270,6 @@ export async function fetchProjectChecklistDerived(
     projectFacadeConfigured,
     projectFirstApartmentCreated,
     projectFloorplanUploaded,
+    querySucceeded: true,
   };
 }
