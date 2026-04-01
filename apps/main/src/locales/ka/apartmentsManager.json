@@ -116,8 +116,8 @@
     "attributeArea": "ფართობით",
     "attributeAreaHint": "ბინის ფართობი ემთხვევა საწყისს.",
     "attributeRooms": "ოთახების რაოდენობით",
+    "attributeType": "შენობის ტიპის მიხედვით",
     "attributeRoomsHint": "ოთახების რაოდენობა ემთხვევა საწყისს.",
-    "attributeType": "ერთეულის ტიპით",
     "attributeTypeHint": "ერთეულის ტიპი ემთხვევა საწყისს.",
     "noTargetsAfterFilter": "არც ერთი ბინა არ ემთხვევა არჩეულ ფილტრებს. გამორთეთ ნაწილი ფილტრებისა.",
     "moreMatches": "და კიდევ {{count}} შესატყვისი"

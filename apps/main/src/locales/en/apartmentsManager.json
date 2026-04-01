@@ -116,8 +116,8 @@
     "attributeArea": "Match area",
     "attributeAreaHint": "Apartment area matches the source.",
     "attributeRooms": "Match room count",
+    "attributeType": "By type of premises",
     "attributeRoomsHint": "Room count matches the source.",
-    "attributeType": "Match unit type",
     "attributeTypeHint": "Unit type matches the source.",
     "noTargetsAfterFilter": "No apartments match the selected filters. Turn some filters off.",
     "moreMatches": "And {{count}} more matches"

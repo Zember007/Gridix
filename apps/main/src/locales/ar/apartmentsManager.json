@@ -116,8 +116,8 @@
     "attributeArea": "حسب المساحة",
     "attributeAreaHint": "مساحة الشقة تطابق المصدر.",
     "attributeRooms": "حسب عدد الغرف",
+    "attributeType": "حسب نوع المبنى",
     "attributeRoomsHint": "عدد الغرف يطابق المصدر.",
-    "attributeType": "حسب نوع الوحدة",
     "attributeTypeHint": "نوع الوحدة يطابق المصدر.",
     "noTargetsAfterFilter": "لا توجد شقق تطابق المرشحات المحددة. ألغِ بعض المرشحات.",
     "moreMatches": "و{{count}} المزيد من التطابقات"

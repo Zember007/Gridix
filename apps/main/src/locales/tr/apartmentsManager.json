@@ -116,8 +116,8 @@
     "attributeArea": "Alana göre",
     "attributeAreaHint": "Daire alanı kaynakla aynı.",
     "attributeRooms": "Oda sayısına göre",
+    "attributeType": "Tesis türüne göre",
     "attributeRoomsHint": "Oda sayısı kaynakla aynı.",
-    "attributeType": "Ünite tipine göre",
     "attributeTypeHint": "Ünite tipi kaynakla aynı.",
     "noTargetsAfterFilter": "Seçilen filtrelere uyan daire yok. Bazı filtreleri kapatın.",
     "moreMatches": "Ve {{count}} eşleşme daha"

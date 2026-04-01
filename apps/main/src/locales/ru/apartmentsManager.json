@@ -116,8 +116,8 @@
     "attributeArea": "По площади",
     "attributeAreaHint": "Площадь квартиры совпадает с исходной.",
     "attributeRooms": "По количеству комнат",
+    "attributeType": "По типу помещения",
     "attributeRoomsHint": "Количество комнат совпадает с исходной.",
-    "attributeType": "По типу юнита",
     "attributeTypeHint": "Тип юнита совпадает с исходной.",
     "noTargetsAfterFilter": "Нет квартир, совпадающих по выбранным атрибутам. Снимите часть фильтров.",
     "moreMatches": "И еще {{count}} совпадений"
