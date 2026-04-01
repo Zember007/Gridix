@@ -62,15 +62,16 @@ export function AdminOnboardingChecklistPanel({
         id: "billing",
         isDone: () =>
           derived.billingTouched ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.billingInvoiceRequested,
-          ) ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.billingCheckoutStarted,
-          ) ||
-          isOnboardingMilestoneCompleted(
-            ONBOARDING_MILESTONE.billingPlanChanged,
-          ),
+          (!derived.billingQuerySucceeded &&
+            (isOnboardingMilestoneCompleted(
+              ONBOARDING_MILESTONE.billingInvoiceRequested,
+            ) ||
+              isOnboardingMilestoneCompleted(
+                ONBOARDING_MILESTONE.billingCheckoutStarted,
+              ) ||
+              isOnboardingMilestoneCompleted(
+                ONBOARDING_MILESTONE.billingPlanChanged,
+              ))),
         title: t("onboardingChecklist.admin.billing.title"),
         description: t("onboardingChecklist.admin.billing.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -83,7 +84,8 @@ export function AdminOnboardingChecklistPanel({
         id: "crm",
         isDone: () =>
           derived.crmConnected ||
-          isOnboardingMilestoneCompleted(ONBOARDING_MILESTONE.crmConnected),
+          (!derived.crmQuerySucceeded &&
+            isOnboardingMilestoneCompleted(ONBOARDING_MILESTONE.crmConnected)),
         title: t("onboardingChecklist.admin.crm.title"),
         description: t("onboardingChecklist.admin.crm.description"),
         actionLabel: t("onboardingChecklist.go"),

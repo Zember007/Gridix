@@ -9,7 +9,9 @@ import {
 const idleAdmin: AdminChecklistDerivedProgress = {
   projectCreated: false,
   crmConnected: false,
+  crmQuerySucceeded: false,
   billingTouched: false,
+  billingQuerySucceeded: false,
 };
 
 export type UseAdminOnboardingDerivedProgressOptions = {

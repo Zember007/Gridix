@@ -7,7 +7,11 @@ export type EffectiveOwnerId = string;
 export type AdminChecklistDerivedProgress = {
   projectCreated: boolean;
   crmConnected: boolean;
+  /** После успешного ответа по CRM — источник правды для шага CRM; иначе можно опираться на localStorage. */
+  crmQuerySucceeded: boolean;
   billingTouched: boolean;
+  /** После успешного ответа по подписке — источник правды для шага billing; иначе можно опираться на localStorage. */
+  billingQuerySucceeded: boolean;
 };
 
 export type ProjectChecklistDerivedProgress = {
@@ -18,7 +22,7 @@ export type ProjectChecklistDerivedProgress = {
   projectFloorplanUploaded: boolean;
 };
 
-const PAID_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
+const PAID_SUBSCRIPTION_STATUSES = ["active"] as const;
 
 // --- Pure predicates (совпадают с триггерами в UI, см. docs/usertour-checklist-events.md) ---
 
@@ -124,7 +128,9 @@ export function isCrmConnectionRowLive(row: {
 const emptyAdminProgress: AdminChecklistDerivedProgress = {
   projectCreated: false,
   crmConnected: false,
+  crmQuerySucceeded: false,
   billingTouched: false,
+  billingQuerySucceeded: false,
 };
 
 const emptyProjectProgress: ProjectChecklistDerivedProgress = {
@@ -166,15 +172,21 @@ export async function fetchAdminChecklistDerived(
     !crmRes.error &&
     (crmRes.data?.some((row) => isCrmConnectionRowLive(row)) ?? false);
 
+  const crmQuerySucceeded = !crmRes.error;
+
   const billingTouched =
     !subsRes.error &&
     (subsRes.data?.some((row) => isUserSubscriptionBillingTouched(row)) ??
       false);
 
+  const billingQuerySucceeded = !subsRes.error;
+
   return {
     projectCreated,
     crmConnected,
+    crmQuerySucceeded,
     billingTouched,
+    billingQuerySucceeded,
   };
 }
 
