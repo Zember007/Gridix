@@ -4,7 +4,7 @@
   "go": "გადასვლა",
   "progress": "{{done}} / {{total}} დასრულებული",
   "allDone": "ყველა ნაბიჯი შესრულებულია.",
-  "replayInteractiveOnboarding": "სახელმძღვანელო ტურის თავიდან გაშვება",
+  "retakeTraining": "განაახლეთ ვარჯიში",
   "admin": {
     "title": "ანგარიშის დაყენება",
     "createProject": {

@@ -31,7 +31,7 @@ export const AdminDashboardRoot = () => {
     handleManualCreate,
     handleEditProject,
     handleSignOut,
-    replayInteractiveOnboarding,
+    retakeTraining,
   } = useAdminDashboardController();
 
   const adminAccess = useAdminAccess();
@@ -88,7 +88,7 @@ export const AdminDashboardRoot = () => {
           effectiveOwnerId={effectiveOwnerId}
           onNavigateTab={setActiveTab}
           onOpenCreateProject={handleCreateNew}
-          onReplayInteractiveOnboarding={replayInteractiveOnboarding}
+          onReplayInteractiveOnboarding={retakeTraining}
         />
       </div>
     </div>

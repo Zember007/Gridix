@@ -196,7 +196,7 @@ export function AdminOnboardingChecklistPanel({
             aria-busy={replayBusy}
           >
             <RotateCcw className="h-3.5 w-3.5 shrink-0" />
-            {t("onboardingChecklist.replayInteractiveOnboarding")}
+            {t("onboardingChecklist.retakeTraining")}
           </Button>
         ) : null}
         {allDone ? (

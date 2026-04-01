@@ -171,7 +171,7 @@ export const useAdminDashboardTours = ({
     void run();
   }, [activeTab, loading, t, user?.id]);
 
-  const replayInteractiveOnboarding = useCallback(async () => {
+  const retakeTraining = useCallback(async () => {
     if (loading) return;
     const userId = user?.id;
     if (!userId) return;
@@ -216,5 +216,5 @@ export const useAdminDashboardTours = ({
     user?.id,
   ]);
 
-  return { replayInteractiveOnboarding };
+  return { retakeTraining };
 };
