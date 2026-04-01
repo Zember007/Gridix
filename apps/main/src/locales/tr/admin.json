@@ -221,6 +221,10 @@
       "emptyDescription": "Bir aboneliği etkinleştirmek ve tüm özelliklerin kilidini açmak için \"Projeler\" bölümünde ilk projenizi oluşturun.",
       "tariff": "Planı",
       "expiresAt": "Süresi doluyor",
+      "expiresLabel": "Süresi doldu:",
+      "renewsOnLabel": "Yenileniyor:",
+      "accessUntilLabel": "Erişim süresi:",
+      "noPlan": "Aktif plan yok",
       "notSelected": "Seçilmedi",
       "status": {
         "active": "AKTİF",
@@ -235,14 +239,10 @@
         "changePlan": "Planı değiştir",
         "changeCard": "Ödeme yöntemini değiştir",
         "cancel": "İptal et",
-        "saveCard": "Ödeme yöntemini kaydet",
-        "resume": "Devam et"
+        "resume": "Devam et",
+        "saveCard": "Ödeme yöntemini kaydet"
       },
-      "confirmCancel": "Bu proje için abonelik iptal edilsin mi? Erişim, ödenen dönemin sonuna kadar açık kalacaktır.",
-      "expiresLabel": "Süresi doldu:",
-      "renewsOnLabel": "Yenileniyor:",
-      "accessUntilLabel": "Erişim süresi:",
-      "noPlan": "Aktif plan yok"
+      "confirmCancel": "Bu proje için abonelik iptal edilsin mi? Erişim, ödenen dönemin sonuna kadar açık kalacaktır."
     },
     "durations": {
       "1": "1 ay",
@@ -406,8 +406,8 @@
       "portalUnavailable": "Abonelik yönetimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
       "planChanged": "Plan değiştirildi. Eski abonelik iptal edildi ve kalan dönem için para iadesi yapıldı.",
       "projectCancelled": "Proje aboneliği iptal edildi. Erişim, ödenen dönemin sonuna kadar açık kalacaktır.",
-      "cardUpdated": "Ödeme yöntemi tüm aktif projeler için güncellendi.",
-      "subscriptionResumed": "Otomatik yenileme etkinleştirildi. Abonelik dönem sonunda yenilenecek."
+      "subscriptionResumed": "Otomatik yenileme etkinleştirildi. Abonelik dönem sonunda yenilenecek.",
+      "cardUpdated": "Ödeme yöntemi tüm aktif projeler için güncellendi."
     },
     "stripeInvoices": {
       "title": "Stripe faturaları",
