@@ -88,11 +88,11 @@ export function SidebarButton({
   const content = (
     <>
       <div
-        className={`relative flex-shrink-0 [&_svg]:shrink-0 ${
-          isChildSize ? "[&_svg]:size-4" : "[&_svg]:size-[18px]"
+        className={`relative flex shrink-0 items-center justify-center [&_svg]:shrink-0 ${
+          isChildSize ? "h-4 w-4 [&_svg]:size-4" : "h-5 w-5 [&_svg]:size-5"
         }`}
       >
-        <span className="inline-flex">{icon}</span>
+        {icon}
         {badge && hasChildren && (
           <div style={{ top: "-5px", right: "-7px" }} className="absolute">
             {badge}
@@ -100,10 +100,12 @@ export function SidebarButton({
         )}
       </div>
       <span
-        className={`leading-tight font-medium ${
+        className={`font-medium ${
           isCollapsed
             ? "max-w-full text-center text-[11px] break-words"
-            : `min-w-0 flex-1 truncate text-left ${isChildSize ? "text-[11px]" : "text-xs"}`
+            : `flex min-w-0 flex-1 items-center truncate text-left ${
+                isChildSize ? "min-h-4 text-xs" : "min-h-5 text-sm"
+              }`
         }`}
         style={isCollapsed ? { lineHeight: "1.15" } : {}}
       >
