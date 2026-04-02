@@ -208,7 +208,12 @@
     "selectFunnelDesc": "Select a funnel to sync stages.",
     "statusesSynced": "stages synced",
     "funnelSynced": "Funnel synced",
-    "syncError": "Failed to sync funnel"
+    "syncError": "Failed to sync funnel",
+    "enterDomain": "Enter your Bitrix24 address",
+    "domainPlaceholder": "b24-example.bitrix24.com",
+    "invalidDomain": "Please enter a valid Bitrix24 address",
+    "ruRegionUnavailable": "Integration is temporarily unavailable in open access for the Russia region. Please contact support.",
+    "openMarketplace": "Go to Marketplace"
   },
   "widgets": "Widgets",
   "documentation": "Documentation",

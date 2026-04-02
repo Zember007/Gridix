@@ -175,18 +175,28 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     };
   }, []);
 
-  const ensureFloorSelected = useCallback(() => {
-    const floorIsNumber = Number.isInteger(floorNumber);
-    const hasFloorInProject =
-      allFloors.length === 0 || allFloors.includes(floorNumber);
+  const { user } = useAuth();
+  const { project } = useProjectInEditorScope(projectId);
 
-    if (floorIsNumber && hasFloorInProject) {
+  const ensureFloorSelected = useCallback(() => {
+    if (!Number.isInteger(floorNumber)) {
+      toast.error("Сначала выберите этаж");
+      return false;
+    }
+    // building_floors может быть неполным; этаж всё равно валиден, если входит в project.floors
+    const fromBuildingTable =
+      allFloors.length === 0 || allFloors.includes(floorNumber);
+    const maxFloors = project?.floors ?? 1;
+    const inProjectRange =
+      project != null && floorNumber >= 1 && floorNumber <= maxFloors;
+
+    if (fromBuildingTable || inProjectRange) {
       return true;
     }
 
     toast.error("Сначала выберите этаж");
     return false;
-  }, [allFloors, floorNumber]);
+  }, [allFloors, floorNumber, project]);
 
   const resetHistoryGesture = useCallback(() => {
     historyGestureActiveRef.current = false;
@@ -205,8 +215,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     };
   }, []);
 
-  const { user } = useAuth();
-  const { project } = useProjectInEditorScope(projectId);
   const editorData = useProjectEditorDataContext();
   const { t } = useLanguage();
   const currencySymbol = getCurrencySymbolSafe(project?.currency ?? "USD");

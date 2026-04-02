@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bitrix24ProjectList } from "@/features/admin-integrations/bitrix24-project-config";
-import { Button } from "@gridix/ui";
+import { Button, Input } from "@gridix/ui";
 import {
   Card,
   CardContent,
@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Alert, AlertDescription } from "@gridix/ui";
 import {
   Dialog,
   DialogContent,
@@ -18,13 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@gridix/ui";
-import {
-  ExternalLink,
-  CheckCircle,
-  RefreshCw,
-  Info,
-  Settings,
-} from "lucide-react";
+import { ExternalLink, CheckCircle, RefreshCw, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/shared/api/supabase";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -45,6 +38,9 @@ const useBitrix24Connection = () => {
   const [busy, setBusy] = useState(false);
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
+  const [domain, setDomain] = useState("");
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
   const checkConnection = async () => {
     try {
@@ -52,7 +48,13 @@ const useBitrix24Connection = () => {
         body: { action: "bitrix_get_state" },
       });
       if (error) throw error;
-      setConnection(data?.connection || null);
+      // Only treat as connected when tokens are valid — a pre-inserted row without
+      // tokens returns token_valid: false and must not be shown as active.
+      setConnection(
+        data?.connection && data?.token_valid !== false
+          ? data.connection
+          : null,
+      );
     } catch (error) {
       console.error("Error checking Bitrix24:", error);
     } finally {
@@ -72,6 +74,55 @@ const useBitrix24Connection = () => {
       onceKey: "gridix_crm_connected",
     });
   }, [connection]);
+
+  const handleConnect = async () => {
+    const norm = domain
+      .trim()
+      .replace(/^https?:\/\//, "")
+      .replace(/\/.*$/, "");
+    if (!norm) {
+      setDomainError(t("admin.bitrix24.invalidDomain"));
+      return;
+    }
+    if (norm.toLowerCase().endsWith(".ru")) {
+      setDomainError(t("admin.bitrix24.ruRegionUnavailable"));
+      return;
+    }
+    setDomainError(null);
+    setConnecting(true);
+    try {
+      const subdomain = norm.split(".")[0] ?? norm;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: existing } = await supabase
+        .from("crm_connections")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("crm_type", "bitrix24")
+        .eq("subdomain", subdomain)
+        .maybeSingle();
+
+      if (!existing) {
+        const { error } = await supabase.from("crm_connections").insert({
+          user_id: user.id,
+          crm_type: "bitrix24",
+          subdomain,
+          base_domain: norm,
+        });
+        if (error) throw error;
+      }
+
+      window.location.href = `https://${norm}/market/detail/gridix.live/`;
+    } catch (e) {
+      console.error(e);
+      toast.error(t("admin.bitrix24.connectError"));
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   const handleDisconnect = async () => {
     try {
@@ -104,6 +155,11 @@ const useBitrix24Connection = () => {
     showProjectsModal,
     setShowProjectsModal,
     handleDisconnect,
+    domain,
+    setDomain,
+    domainError,
+    connecting,
+    handleConnect,
   };
 };
 
@@ -118,6 +174,11 @@ export const Bitrix24Connection = () => {
     showProjectsModal,
     setShowProjectsModal,
     handleDisconnect,
+    domain,
+    setDomain,
+    domainError,
+    connecting,
+    handleConnect,
   } = useBitrix24Connection();
 
   if (loading) {
@@ -190,24 +251,34 @@ export const Bitrix24Connection = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <Alert className="border-blue-100 bg-blue-50 text-blue-800">
-                <Info className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-xs">
-                  {t("admin.bitrix24.marketplaceHint")}
-                </AlertDescription>
-              </Alert>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {t("admin.bitrix24.enterDomain")}
+              </p>
+              <Input
+                value={domain}
+                onChange={(e) => {
+                  setDomain(e.target.value);
+                }}
+                placeholder={t("admin.bitrix24.domainPlaceholder")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleConnect();
+                }}
+              />
+              {domainError && (
+                <p className="text-xs text-red-600">{domainError}</p>
+              )}
               <Button
                 className="w-full bg-[#2fc6f6] text-white hover:bg-[#20b0dd]"
-                onClick={() =>
-                  window.open(
-                    "https://www.bitrix24.kz/apps/app/gridix.live/",
-                    "_blank",
-                  )
-                }
+                onClick={() => void handleConnect()}
+                disabled={connecting}
               >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                {t("admin.bitrix24.installApp")}
+                {connecting ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                )}
+                {t("admin.bitrix24.openMarketplace")}
               </Button>
             </div>
           )}
