@@ -208,7 +208,12 @@
     "selectFunnelDesc": "Выберите воронку, чтобы синхронизировать стадии.",
     "statusesSynced": "стадий синхронизировано",
     "funnelSynced": "Воронка синхронизирована",
-    "syncError": "Не удалось синхронизировать воронку"
+    "syncError": "Не удалось синхронизировать воронку",
+    "enterDomain": "Введите адрес вашего Bitrix24",
+    "domainPlaceholder": "b24-example.bitrix24.com",
+    "invalidDomain": "Введите корректный адрес Bitrix24",
+    "ruRegionUnavailable": "Интеграция временно недоступна в открытом доступе для региона Россия. Свяжитесь с техподдержкой.",
+    "openMarketplace": "Перейти в Маркетплейс"
   },
   "widgets": "Виджеты",
   "documentation": "Документация",

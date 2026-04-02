@@ -1,6 +1,8 @@
 {
   "title": "Agency network and signature",
   "subtitle": "Attract clients and earn commission from each subscription",
+  "agencyNetwork": "Agency network",
+  "agencyNetworkDesc": "Unified Partner Registry: Managing partnership terms, communications center, and agency sales efficiency",
   "becomePartner": "Become a Partner",
   "creating": "Creating...",
   "overview": "Overview",

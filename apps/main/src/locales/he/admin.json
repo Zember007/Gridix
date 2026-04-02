@@ -208,7 +208,12 @@
     "selectFunnelDesc": "בחר משפך לסנכרון שלבים.",
     "statusesSynced": "שלבים מסונכרנים",
     "funnelSynced": "המשפך מסונכרן",
-    "syncError": "סנכרון המשפך נכשל"
+    "syncError": "סנכרון המשפך נכשל",
+    "enterDomain": "הזן את כתובת ה-Bitrix24 שלך",
+    "domainPlaceholder": "b24-example.bitrix24.com",
+    "invalidDomain": "אנא הזן כתובת Bitrix24 תקינה",
+    "ruRegionUnavailable": "האינטגרציה אינה זמינה זמנית בגישה פתוחה לאזור רוסיה. אנא צור קשר עם התמיכה.",
+    "openMarketplace": "עבור לשוק"
   },
   "widgets": "ווידג'טים",
   "documentation": "תיעוד",

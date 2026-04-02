@@ -58,8 +58,8 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
 
   useEffect(() => {
     if (project) {
-      // Инициализируем состояния для всех этажей
-      const floors = Array.from({ length: project.floors }, (_, i) => i);
+      // Инициализируем состояния для этажей 1..project.floors (номера этажей в данных — с 1)
+      const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
       const initialStates: Record<number, boolean> = {};
       floors.forEach((floor) => {
         initialStates[floor] = false;
@@ -82,7 +82,7 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
   const renderFloorPlanTabs = () => {
     if (!project) return null;
 
-    const floors = Array.from({ length: project.floors + 1 }, (_, i) => i);
+    const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
 
     return (
       <div className="space-y-2">
