@@ -119,46 +119,35 @@ export const ProtectedRoute = ({
       amoParams.has("amo_user_id") ||
       amoParams.has("amo_subdomain");
 
-    const ssoBase = (import.meta as any).env?.VITE_SSO_URL as
+    const envSsoBase = (import.meta as any).env?.VITE_SSO_URL as
       | string
       | undefined;
-    if (typeof ssoBase === "string" && ssoBase.trim()) {
-      const base = ssoBase.trim().endsWith("/")
-        ? ssoBase.trim().slice(0, -1)
-        : ssoBase.trim();
-      const fullCurrent =
-        window.location.origin + location.pathname + (location.search || "");
+    const rawSsoBase =
+      typeof envSsoBase === "string" && envSsoBase.trim()
+        ? envSsoBase.trim()
+        : "https://sso.gridix.live";
+    const base = rawSsoBase.endsWith("/")
+      ? rawSsoBase.slice(0, -1)
+      : rawSsoBase;
+    const fullCurrent =
+      window.location.origin + location.pathname + (location.search || "");
 
-      // Полный редирект на другое приложение (не Navigate — иначе остаёмся на том же origin).
-      const ssoToken = amoParams.get("sso");
-      if (ssoToken) {
-        const withoutSso = new URL(fullCurrent);
-        withoutSso.searchParams.delete("sso");
-        window.location.replace(
-          `${base}/${currentLanguage}/auth/callback?sso=${encodeURIComponent(ssoToken)}&redirect_to=${encodeURIComponent(withoutSso.toString())}`,
-        );
-        return <FullPageLoaderView />;
-      }
-
-      const authPath = hasAmoInstall ? "auth/signup" : "auth";
+    // Полный редирект на другое приложение (не Navigate — иначе остаёмся на том же origin).
+    const ssoToken = amoParams.get("sso");
+    if (ssoToken) {
+      const withoutSso = new URL(fullCurrent);
+      withoutSso.searchParams.delete("sso");
       window.location.replace(
-        `${base}/${currentLanguage}/${authPath}?redirect_to=${encodeURIComponent(fullCurrent)}`,
+        `${base}/${currentLanguage}/auth/callback?sso=${encodeURIComponent(ssoToken)}&redirect_to=${encodeURIComponent(withoutSso.toString())}`,
       );
       return <FullPageLoaderView />;
     }
 
-    // VITE_SSO_URL не задан: редирект на локальные страницы авторизации в main (legacy).
-    const authPath = addLanguageToPath(
-      hasAmoInstall ? "/auth/signup" : "/auth",
-      currentLanguage,
+    const authPath = hasAmoInstall ? "auth/signup" : "auth";
+    window.location.replace(
+      `${base}/${currentLanguage}/${authPath}?redirect_to=${encodeURIComponent(fullCurrent)}`,
     );
-    const redirectValue = location.pathname + (location.search || "");
-    return (
-      <Navigate
-        to={`${authPath}?redirect=${encodeURIComponent(redirectValue)}`}
-        replace
-      />
-    );
+    return <FullPageLoaderView />;
   }
 
   if (requireAuth && user) {

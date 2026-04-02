@@ -40,11 +40,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     currentPlan,
     currentPricing,
     finalTotal,
+    previousPaymentMethod,
     handleInputChange,
     toggleProject,
     handleNext,
     handleBack,
-    handleConfirm,
+    handlePaymentMethodSelect,
   } = useCheckoutFlow({
     isOpen,
     initialSelectedProjectIds,
@@ -53,6 +54,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     selectedPlanId,
     selectedDuration,
     planChangeProjectId,
+    projects,
     onConfirm,
   });
 
@@ -158,26 +160,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               payerType={payerType}
               formData={formData}
               isLoading={isLoading}
-              onConfirm={handleConfirm}
+              onConfirm={handlePaymentMethodSelect}
             />
           )}
         </div>
 
         <div className="flex shrink-0 items-center justify-between border-t border-slate-100 bg-slate-50/50 p-6">
-          {step !== "payment_method" ? (
-            <>
-              <div className="text-sm text-slate-500">
-                {t("admin.subscriptionPage.checkout.footer.total")}{" "}
-                <span className="font-bold text-slate-900">${finalTotal}</span>
-              </div>
-              <button
-                onClick={handleNext}
-                className="rounded-lg bg-slate-900 px-8 py-3 font-bold text-white shadow-sm transition-colors hover:bg-slate-800"
-              >
-                {t("admin.subscriptionPage.checkout.footer.next")}
-              </button>
-            </>
-          ) : (
+          {step === "payment_method" ? (
             <div className="flex w-full justify-center">
               {isLoading && (
                 <div className="flex items-center gap-2 text-slate-600">
@@ -186,6 +175,31 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
               )}
             </div>
+          ) : (
+            <>
+              <div className="text-sm text-slate-500">
+                {t("admin.subscriptionPage.checkout.footer.total")}{" "}
+                <span className="font-bold text-slate-900">${finalTotal}</span>
+              </div>
+              {isLoading ? (
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Loader2 size={20} className="animate-spin" />{" "}
+                  {t("admin.subscriptionPage.checkout.footer.processing")}
+                </div>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  disabled={isLoading}
+                  className="rounded-lg bg-slate-900 px-8 py-3 font-bold text-white shadow-sm transition-colors hover:bg-slate-800"
+                >
+                  {step === "payer_info" ||
+                  (step === "select_projects" &&
+                    previousPaymentMethod === "card")
+                    ? t("admin.subscriptionPage.checkout.footer.confirmPayment")
+                    : t("admin.subscriptionPage.checkout.footer.next")}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

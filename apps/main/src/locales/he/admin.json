@@ -226,18 +226,28 @@
       "emptyDescription": "צור את הפרויקט הראשון שלך בקטע \"פרויקטים\" כדי להפעיל מנוי ולבטל את הנעילה של כל התכונות.",
       "tariff": "לְתַכְנֵן",
       "expiresAt": "פג תוקף",
+      "expiresLabel": "פג תוקף:",
+      "renewsOnLabel": "מתחדש בתאריך:",
+      "accessUntilLabel": "גישה עד:",
+      "noPlan": "אין תוכנית פעילה",
       "notSelected": "לא נבחר",
       "status": {
         "active": "פָּעִיל",
         "expired": "פג תוקף",
-        "inactive": "לא פעיל"
+        "inactive": "לא פעיל",
+        "cancelAtPeriodEnd": "חידוש אוטומטי מושבת"
       },
       "buttons": {
         "extend": "לְהַאֲרִיך",
         "activate": "לְהַפְעִיל",
         "manage": "ניהול",
-        "changePlan": "שינוי תוכנית"
-      }
+        "changePlan": "שינוי תוכנית",
+        "changeCard": "שינוי אמצעי תשלום",
+        "cancel": "ביטול",
+        "resume": "חידוש",
+        "saveCard": "שמירת אמצעי תשלום"
+      },
+      "confirmCancel": "לבטל את המנוי עבור הפרויקט הזה? הגישה תישאר זמינה עד סוף התקופה ששולמה."
     },
     "durations": {
       "1": "1 חודש",
@@ -392,6 +402,7 @@
       "footer": {
         "total": "סַך הַכֹּל:",
         "next": "הַבָּא",
+        "confirmPayment": "אישור",
         "processing": "מעבד..."
       }
     },
@@ -399,7 +410,20 @@
       "invoiceRequestedSingle": "התקבלה בקשה לחשבונית בהצלחה. אתה יכול להוריד אותו בהיסטוריית ההזמנות.",
       "invoiceRequestedMultiple": "התבקשו חשבוניות עבור {{count}} פרויקטים",
       "portalUnavailable": "ניהול המנוי אינו זמין כרגע. נסה שוב מאוחר יותר.",
-      "planChanged": "התוכנית עודכנה בהצלחה. הפרורציה יושמה אוטומטית."
+      "planChanged": "התוכנית שונתה. המנוי הישן בוטל והוחזר תשלום עבור התקופה הנותרת.",
+      "projectCancelled": "המנוי לפרויקט בוטל. הגישה תישאר זמינה עד סוף התקופה ששולמה.",
+      "subscriptionResumed": "החידוש האוטומטי הופעל. המנוי יתחדש בסוף התקופה.",
+      "cardUpdated": "אמצעי התשלום עודכן עבור כל הפרויקטים הפעילים.",
+      "planAlreadyActiveWithPeriod": "התוכנית הזו כבר פעילה לתקופה שנבחרה.",
+      "projectsAdded": "הפרויקטים נוספו למנוי."
+    },
+    "stripeInvoices": {
+      "title": "חשבוניות Stripe",
+      "number": "מספר",
+      "date": "תאריך",
+      "amount": "סכום",
+      "status": "סטטוס",
+      "view": "צפייה"
     },
     "error": "שגיאה בטעינת מנויים"
   },

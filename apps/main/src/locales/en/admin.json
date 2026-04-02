@@ -226,18 +226,28 @@
       "emptyDescription": "Create your first project in the \"Projects\" section to activate a subscription and unlock all features.",
       "tariff": "Plan",
       "expiresAt": "Expires",
+      "expiresLabel": "Expired:",
+      "renewsOnLabel": "Renews on:",
+      "accessUntilLabel": "Access until:",
+      "noPlan": "No active plan",
       "notSelected": "Not selected",
       "status": {
         "active": "ACTIVE",
         "expired": "EXPIRED",
-        "inactive": "NOT ACTIVE"
+        "inactive": "NOT ACTIVE",
+        "cancelAtPeriodEnd": "Auto-renewal disabled"
       },
       "buttons": {
         "extend": "Extend",
         "activate": "Activate",
         "manage": "Manage",
-        "changePlan": "Change plan"
-      }
+        "changePlan": "Change plan",
+        "changeCard": "Change payment method",
+        "cancel": "Cancel",
+        "resume": "Resume",
+        "saveCard": "Save payment method"
+      },
+      "confirmCancel": "Cancel the subscription for this project? Access will remain available until the end of the paid period."
     },
     "durations": {
       "1": "1 month",
@@ -392,6 +402,7 @@
       "footer": {
         "total": "Total:",
         "next": "Next",
+        "confirmPayment": "Confirm",
         "processing": "Processing..."
       }
     },
@@ -399,7 +410,20 @@
       "invoiceRequestedSingle": "Invoice requested successfully. You can download it in the order history.",
       "invoiceRequestedMultiple": "Invoices requested for {{count}} projects",
       "portalUnavailable": "Subscription management is currently unavailable. Please try again later.",
-      "planChanged": "Plan updated successfully. Proration was applied automatically."
+      "planChanged": "Plan changed. The old subscription was cancelled and a refund for the unused period was issued.",
+      "projectCancelled": "The project subscription has been cancelled. Access will remain available until the end of the paid period.",
+      "subscriptionResumed": "Auto-renewal enabled. Subscription will renew at the end of the period.",
+      "cardUpdated": "The payment method has been updated for all active projects.",
+      "planAlreadyActiveWithPeriod": "This plan is already active for the selected period.",
+      "projectsAdded": "Projects have been added to the subscription."
+    },
+    "stripeInvoices": {
+      "title": "Stripe invoices",
+      "number": "Number",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "view": "View"
     },
     "error": "Error loading subscriptions"
   },
