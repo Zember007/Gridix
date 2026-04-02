@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage, useWorkspace } from "@gridix/utils/react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
@@ -470,7 +470,10 @@ export function SimplifiedSidebar({
   };
 
   const settingsNavItem = navItems.find((item) => item.id === "settings");
-  const primaryNavItems = navItems.filter((item) => item.id !== "settings");
+  const primaryNavItems = useMemo(
+    () => navItems.filter((item) => item.id !== "settings"),
+    [navItems],
+  );
 
   useEffect(() => {
     languageRef.current = language;
@@ -626,7 +629,7 @@ export function SimplifiedSidebar({
                 label={item.label}
                 isActive={
                   hasChildren
-                    ? Boolean(isChildActive && !isExpanded)
+                    ? Boolean(isChildActive || activeSection === item.id)
                     : activeSection === item.id
                 }
                 isCollapsed={isCollapsed}
