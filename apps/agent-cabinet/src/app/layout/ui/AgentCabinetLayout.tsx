@@ -51,7 +51,7 @@ export function AgentCabinetLayout({
       <div
         className={`flex min-w-0 flex-1 flex-col bg-background transition-all duration-300 ${
           isCollapsed && !isMobile
-            ? "md:ml-28 md:max-w-[calc(100vw-7rem)]"
+            ? "md:ml-24 md:max-w-[calc(100vw-6rem)]"
             : "md:ml-64 md:max-w-[calc(100vw-16rem)]"
         }`}
       >

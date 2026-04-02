@@ -164,7 +164,7 @@ const SuperAdminPage = () => {
       <SimplifiedSidebar {...sidebarProps} />
       {/* Main Content */}
       <div
-        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed && !isMobile ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
+        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed && !isMobile ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
         <main className="h-screen flex-1 overflow-auto bg-slate-50/50">
           {renderContent()}
