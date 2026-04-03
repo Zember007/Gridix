@@ -29,6 +29,7 @@ import {
   Copy,
   Edit2,
   FileSpreadsheet,
+  Layers,
   Plus,
   RefreshCw,
   Save,
@@ -93,11 +94,13 @@ const ProjectApartmentsManager = ({
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncSourceApartment, setSyncSourceApartment] =
     useState<Apartment | null>(null);
-  const [syncTargetApartments, setSyncTargetApartments] = useState<Apartment[]>(
-    [],
-  );
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [excelSyncDialogOpen, setExcelSyncDialogOpen] = useState(false);
+  const [floorDuplicateDialogOpen, setFloorDuplicateDialogOpen] =
+    useState(false);
+  const [floorDuplicateSourceFloor, setFloorDuplicateSourceFloor] = useState<
+    number | null
+  >(null);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(1);
   const { t } = useLanguage();
   const { project } = useProjectInEditorScope(projectId);
@@ -385,22 +388,7 @@ const ProjectApartmentsManager = ({
   };
 
   const openSyncDialog = (sourceApartment: Apartment) => {
-    // Найти все квартиры с такой же площадью и количеством комнат
-    const targetApartments = apartments.filter(
-      (apt) =>
-        apt.id !== sourceApartment.id &&
-        apt.area === sourceApartment.area &&
-        apt.rooms === sourceApartment.rooms &&
-        apt.type === sourceApartment.type,
-    );
-
-    if (targetApartments.length === 0) {
-      toast.error(t("apartmentsManager.syncError"));
-      return;
-    }
-
     setSyncSourceApartment(sourceApartment);
-    setSyncTargetApartments(targetApartments);
     setSyncDialogOpen(true);
   };
 
@@ -417,7 +405,6 @@ const ProjectApartmentsManager = ({
 
     // Сбросить состояние диалога
     setSyncSourceApartment(null);
-    setSyncTargetApartments([]);
   };
 
   const handleDuplicateApartment = async (apartment: Apartment) => {
@@ -471,6 +458,11 @@ const ProjectApartmentsManager = ({
       (a, b) => a - b,
     );
   }, [apartments]);
+
+  const openFloorDuplicateDialog = (floorNumber: number) => {
+    setFloorDuplicateSourceFloor(floorNumber);
+    setFloorDuplicateDialogOpen(true);
+  };
 
   const getUniqueRooms = useCallback(() => {
     const rooms = apartments
@@ -1097,7 +1089,14 @@ const ProjectApartmentsManager = ({
                                   )}
                                 </div>
                               </div>
-                              <div className="grid shrink-0 grid-cols-4 gap-2 max-sm:w-full sm:ml-auto sm:grid-cols-2 lg:grid-cols-4">
+                              <div
+                                className={cn(
+                                  "grid shrink-0 gap-2 max-sm:w-full sm:ml-auto",
+                                  projectType === "object"
+                                    ? "grid-cols-4 sm:grid-cols-2 lg:grid-cols-4"
+                                    : "grid-cols-5 sm:grid-cols-3 lg:grid-cols-5",
+                                )}
+                              >
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1147,6 +1146,20 @@ const ProjectApartmentsManager = ({
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
+                                {projectType !== "object" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      openFloorDuplicateDialog(
+                                        apartment.floor_number,
+                                      )
+                                    }
+                                    title={t("floorPlan.duplicateToAllFloors")}
+                                  >
+                                    <Layers className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1181,12 +1194,28 @@ const ProjectApartmentsManager = ({
         open={syncDialogOpen}
         onOpenChange={setSyncDialogOpen}
         sourceApartment={syncSourceApartment}
-        targetApartments={syncTargetApartments}
+        allApartments={apartments}
         onSyncComplete={handleSyncComplete}
         currencySymbol={currencySymbol}
         getStatusColor={getStatusColor}
         getStatusLabel={getStatusLabel}
       />
+
+      {floorDuplicateSourceFloor !== null && (
+        <ApartmentSyncDialog
+          mode="floor-duplicate"
+          open={floorDuplicateDialogOpen}
+          onOpenChange={setFloorDuplicateDialogOpen}
+          projectId={projectId}
+          sourceFloorNumber={floorDuplicateSourceFloor}
+          allFloorNumbers={getUniqueFloors()}
+          sourceImageUrl=""
+          sourceApartments={apartments.filter(
+            (a) => a.floor_number === floorDuplicateSourceFloor,
+          )}
+          onComplete={loadApartments}
+        />
+      )}
 
       {/* Диалог синхронизации через Excel */}
       <ProjectApartmentsExcelSyncDialog
