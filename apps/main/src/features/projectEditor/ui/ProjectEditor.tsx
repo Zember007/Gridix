@@ -861,7 +861,7 @@ const ProjectEditor = ({
         isSigningOut={isSigningOut}
       />
       <div
-        className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
+        className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="sticky top-0 z-10 shrink-0 border-b bg-white">

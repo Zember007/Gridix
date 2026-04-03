@@ -52,7 +52,7 @@ export function WorkspaceSwitcher({
 
   return (
     <div
-      className={["px-4 py-3", className].filter(Boolean).join(" ")}
+      className={["px-2 py-2", className].filter(Boolean).join(" ")}
       style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
     >
       <Select
