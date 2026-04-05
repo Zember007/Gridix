@@ -2,21 +2,22 @@
 
 Документ описывает **имена событий** (`eventName` / `onceKey`), которые приложение использует для **встроенного чеклиста** в админке и редакторе проекта. Код вызывает `trackOnboardingMilestone` (алиас `emitOnboardingProgress`) из `@gridix/utils/integrations`.
 
-## Источник истины в UI: БД + legacy localStorage
+## Источник истины в UI: только derived (БД)
 
-Панели чеклиста в `apps/main` считают пункт **выполненным**, если выполняется **хотя бы одно** из условий:
+Панели чеклиста (`AdminOnboardingChecklistPanel`, `ProjectOnboardingChecklistPanel`) считают пункт **выполненным** **только** по **derived** — фактическому состоянию строк в Supabase по правилам ниже. Это синхронизирует галочки между браузерами и после очистки `localStorage`.
 
-1. **Derived (Supabase)** — фактическое состояние строк в БД по правилам ниже (основной источник для синхронизации между браузерами и после очистки `localStorage`).
-2. **Legacy** — `isOnboardingMilestoneCompleted(onceKey)` читает `localStorage` с ключом `usertour_once:<onceKey>` (префикс исторический, совместимость с ранними релизами).
+**localStorage** (`isOnboardingMilestoneCompleted` / ключи `usertour_once:<onceKey>`) и вызовы `trackOnboardingMilestone` **не влияют** на отображение галочек в панели: они остаются для **аналитики**, совместимости с ранними релизами и связанных туров.
 
-Загрузка derived и повтор при смене вкладки/открытии панели: `onboardingDerivedQueries.ts`, хуки `useAdminOnboardingDerivedProgress` и `useProjectOnboardingDerivedProgress`. Оптимистичные обновления после действий пользователя по-прежнему идут через `trackOnboardingMilestone` → запись в LS и подписчиков (`useOnboardingMilestoneSync` учитывает также `revision` от derived-fetch).
+Загрузка derived и повтор при смене вкладки/открытии панели: `onboardingDerivedQueries.ts`, хуки `useAdminOnboardingDerivedProgress` и `useProjectOnboardingDerivedProgress`. Оптимистичные обновления после действий пользователя по-прежнему могут идти через `trackOnboardingMilestone` → запись в LS (для аналитики), но UI чеклиста ждёт подтверждения из БД после refetch.
+
+**UX:** при ошибке Supabase или до успешного ответа derived все соответствующие пункты остаются «не готово».
 
 ### Область видимости данных
 
 - **Аккаунтный чеклист** (`AdminOnboardingChecklistPanel`): запросы к `projects`, `crm_connections`, `user_subscriptions` фильтруются по **`effectiveOwnerId`** — логическому владельцу кабинета (как в `useAdminDashboardController`: в manager mode это `developerId`, иначе `user.id`). Прокидывается из `AdminDashboardRoot`.
 - **Проектный чеклист** (`ProjectOnboardingChecklistPanel`): все проектные проверки строго по **`project_id`** текущего проекта.
 
-`trackOnboardingMilestone` **не привязывает** ключи к `user.id` / `project.id` в LS — поэтому без derived старые клиенты и очищенный LS давали рассинхрон с БД.
+`trackOnboardingMilestone` **не привязывает** ключи к `user.id` / `project.id` в LS — поэтому для корректных галочек в UI опираемся на derived, а не на LS.
 
 ## Чеклист аккаунта
 
@@ -29,7 +30,7 @@
 - **Заполнить billing / запросить счёт** (и родственные аналитические ключи): `gridix_billing_invoice_requested`, а также при необходимости `gridix_billing_checkout_started`, `gridix_billing_plan_changed`
   - **Эмит:** после успешного запроса счёта, при старте checkout, при смене плана — см. `useSubscriptionTabController`.
   - **Derived (один флаг «billing затронут»):** в `user_subscriptions` для `user_id = effectiveOwnerId` есть строка, где заданы `invoice_requested_at` или `invoice_paid_at`, **или** статус `active` / `trialing` и при этом `current_period_end` отсутствует **или** позже «сейчас» (см. `isUserSubscriptionBillingTouched` в `onboardingDerivedQueries.ts`).
-  - **Legacy OR:** пункт считается выполненным также, если в LS отмечен любой из `gridix_billing_invoice_requested` / `gridix_billing_checkout_started` / `gridix_billing_plan_changed` — промежуточное «ушёл в Stripe без записи в БД» иначе недеривабельно.
+  - **Панель чеклиста** использует только derived; промежуточные состояния «ушёл в Stripe без записи в БД» в LS для галочки не учитываются.
 
 - **Подключить первую CRM интеграцию**: `gridix_crm_connected`
   - **Эмит**, когда любая CRM становится подключенной:
@@ -72,4 +73,4 @@
 
 ## Дополнительные события (аналитика чеклиста)
 
-В коде также эмитятся (с `onceKey`): `gridix_billing_plan_changed`, `gridix_billing_checkout_started` — при расширении панели чеклиста сверять с `useSubscriptionTabController` и с правилом **derived OR legacy** для billing выше.
+В коде также эмитятся (с `onceKey`): `gridix_billing_plan_changed`, `gridix_billing_checkout_started` — при расширении аналитики или туров сверять с `useSubscriptionTabController`; **отображение галочек** в панели по-прежнему только по derived для billing (см. выше).

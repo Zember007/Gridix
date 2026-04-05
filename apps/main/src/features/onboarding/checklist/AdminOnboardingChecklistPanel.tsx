@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, CardContent, CardHeader, CardTitle } from "@gridix/ui";
-import { isOnboardingMilestoneCompleted } from "@gridix/utils/integrations";
 import { Check, RotateCcw, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { EffectiveOwnerId } from "./onboardingDerivedQueries";
-import { ONBOARDING_MILESTONE } from "./milestoneKeys";
 import { OnboardingChecklistFloatingShell } from "./OnboardingChecklistFloatingShell";
 import { useAdminOnboardingDerivedProgress } from "./useAdminOnboardingDerivedProgress";
 import { useChecklistOpenSignal } from "./useChecklistPanelOpenRequest";
-import { useOnboardingMilestoneSync } from "./useOnboardingMilestoneSync";
 
 type AdminOnboardingChecklistPanelProps = {
   effectiveOwnerId: EffectiveOwnerId | null | undefined;
@@ -29,14 +26,10 @@ export function AdminOnboardingChecklistPanel({
   const [isOpen, setIsOpen] = useState(false);
   const [replayBusy, setReplayBusy] = useState(false);
 
-  const { derived, revision } = useAdminOnboardingDerivedProgress({
+  const { derived } = useAdminOnboardingDerivedProgress({
     effectiveOwnerId,
     panelExpanded: isOpen,
     openSignal,
-  });
-
-  const milestoneVersion = useOnboardingMilestoneSync({
-    derivedRevision: revision,
   });
 
   useEffect(() => {
@@ -47,9 +40,7 @@ export function AdminOnboardingChecklistPanel({
     () => [
       {
         id: "project",
-        isDone: () =>
-          derived.projectCreated ||
-          isOnboardingMilestoneCompleted(ONBOARDING_MILESTONE.projectCreated),
+        isDone: () => derived.projectCreated,
         title: t("onboardingChecklist.admin.createProject.title"),
         description: t("onboardingChecklist.admin.createProject.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -60,18 +51,7 @@ export function AdminOnboardingChecklistPanel({
       },
       {
         id: "billing",
-        isDone: () =>
-          derived.billingTouched ||
-          (!derived.billingQuerySucceeded &&
-            (isOnboardingMilestoneCompleted(
-              ONBOARDING_MILESTONE.billingInvoiceRequested,
-            ) ||
-              isOnboardingMilestoneCompleted(
-                ONBOARDING_MILESTONE.billingCheckoutStarted,
-              ) ||
-              isOnboardingMilestoneCompleted(
-                ONBOARDING_MILESTONE.billingPlanChanged,
-              ))),
+        isDone: () => derived.billingTouched,
         title: t("onboardingChecklist.admin.billing.title"),
         description: t("onboardingChecklist.admin.billing.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -82,10 +62,7 @@ export function AdminOnboardingChecklistPanel({
       },
       {
         id: "crm",
-        isDone: () =>
-          derived.crmConnected ||
-          (!derived.crmQuerySucceeded &&
-            isOnboardingMilestoneCompleted(ONBOARDING_MILESTONE.crmConnected)),
+        isDone: () => derived.crmConnected,
         title: t("onboardingChecklist.admin.crm.title"),
         description: t("onboardingChecklist.admin.crm.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -98,10 +75,10 @@ export function AdminOnboardingChecklistPanel({
     [derived, onNavigateTab, onOpenCreateProject, t],
   );
 
-  const doneCount = useMemo(() => {
-    void milestoneVersion;
-    return items.filter((i) => i.isDone()).length;
-  }, [items, milestoneVersion]);
+  const doneCount = useMemo(
+    () => items.filter((i) => i.isDone()).length,
+    [items],
+  );
 
   const total = items.length;
   const allDone = doneCount === total;

@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, CardContent, CardHeader, CardTitle } from "@gridix/ui";
-import { isOnboardingMilestoneCompleted } from "@gridix/utils/integrations";
 import { Check, RotateCcw, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ONBOARDING_MILESTONE } from "./milestoneKeys";
 import { OnboardingChecklistFloatingShell } from "./OnboardingChecklistFloatingShell";
 import { useChecklistOpenSignal } from "./useChecklistPanelOpenRequest";
-import { useOnboardingMilestoneSync } from "./useOnboardingMilestoneSync";
 import { useProjectOnboardingDerivedProgress } from "./useProjectOnboardingDerivedProgress";
 
 type EditorTab =
@@ -40,15 +37,11 @@ export function ProjectOnboardingChecklistPanel({
   const [isOpen, setIsOpen] = useState(false);
   const [replayBusy, setReplayBusy] = useState(false);
 
-  const { derived, revision } = useProjectOnboardingDerivedProgress({
+  const { derived } = useProjectOnboardingDerivedProgress({
     projectId,
     projectType,
     panelExpanded: isOpen,
     openSignal,
-  });
-
-  const milestoneVersion = useOnboardingMilestoneSync({
-    derivedRevision: revision,
   });
 
   useEffect(() => {
@@ -59,12 +52,7 @@ export function ProjectOnboardingChecklistPanel({
     const base = [
       {
         id: "basic",
-        isDone: () =>
-          derived.projectBasicInfoReady ||
-          (!derived.querySucceeded &&
-            isOnboardingMilestoneCompleted(
-              ONBOARDING_MILESTONE.projectBasicInfoReady,
-            )),
+        isDone: () => derived.projectBasicInfoReady,
         title: t("onboardingChecklist.project.basicInfo.title"),
         description: t("onboardingChecklist.project.basicInfo.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -75,12 +63,7 @@ export function ProjectOnboardingChecklistPanel({
       },
       {
         id: "facade",
-        isDone: () =>
-          derived.projectFacadeConfigured ||
-          (!derived.querySucceeded &&
-            isOnboardingMilestoneCompleted(
-              ONBOARDING_MILESTONE.projectFacadeConfigured,
-            )),
+        isDone: () => derived.projectFacadeConfigured,
         title: t("onboardingChecklist.project.facade.title"),
         description: t("onboardingChecklist.project.facade.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -91,12 +74,7 @@ export function ProjectOnboardingChecklistPanel({
       },
       {
         id: "apartments",
-        isDone: () =>
-          derived.projectFirstApartmentCreated ||
-          (!derived.querySucceeded &&
-            isOnboardingMilestoneCompleted(
-              ONBOARDING_MILESTONE.projectFirstApartmentCreated,
-            )),
+        isDone: () => derived.projectFirstApartmentCreated,
         title: t("onboardingChecklist.project.apartments.title"),
         description: t("onboardingChecklist.project.apartments.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -115,12 +93,7 @@ export function ProjectOnboardingChecklistPanel({
       ...base,
       {
         id: "floorplan",
-        isDone: () =>
-          derived.projectFloorplanUploaded ||
-          (!derived.querySucceeded &&
-            isOnboardingMilestoneCompleted(
-              ONBOARDING_MILESTONE.projectFloorplanUploaded,
-            )),
+        isDone: () => derived.projectFloorplanUploaded,
         title: t("onboardingChecklist.project.floorplan.title"),
         description: t("onboardingChecklist.project.floorplan.description"),
         actionLabel: t("onboardingChecklist.go"),
@@ -132,10 +105,10 @@ export function ProjectOnboardingChecklistPanel({
     ];
   }, [derived, onNavigateEditorTab, projectType, t]);
 
-  const doneCount = useMemo(() => {
-    void milestoneVersion;
-    return items.filter((i) => i.isDone()).length;
-  }, [items, milestoneVersion]);
+  const doneCount = useMemo(
+    () => items.filter((i) => i.isDone()).length,
+    [items],
+  );
 
   const total = items.length;
   const allDone = doneCount === total;

@@ -7,10 +7,10 @@ export type EffectiveOwnerId = string;
 export type AdminChecklistDerivedProgress = {
   projectCreated: boolean;
   crmConnected: boolean;
-  /** После успешного ответа по CRM — источник правды для шага CRM; иначе можно опираться на localStorage. */
+  /** После успешного ответа по CRM — запрос к Supabase прошёл (для диагностики; панель чеклиста смотрит только на `crmConnected`). */
   crmQuerySucceeded: boolean;
   billingTouched: boolean;
-  /** После успешного ответа по подписке — источник правды для шага billing; иначе можно опираться на localStorage. */
+  /** После успешного ответа по подписке — запрос к Supabase прошёл (для диагностики; панель чеклиста смотрит только на `billingTouched`). */
   billingQuerySucceeded: boolean;
 };
 
@@ -20,7 +20,7 @@ export type ProjectChecklistDerivedProgress = {
   projectFirstApartmentCreated: boolean;
   /** Имеет смысл только для `project_type === "building"`; для `object` вызывающий может игнорировать. */
   projectFloorplanUploaded: boolean;
-  /** После успешного ответа по проекту — источник правды для шагов чеклиста; иначе можно опираться на localStorage. */
+  /** После успешного ответа по проекту — запрос к Supabase прошёл; галочки в панели чеклиста завязаны только на булевы флаги шагов выше (milestones в LS не используются). */
   querySucceeded: boolean;
 };
 
