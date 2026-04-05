@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
+  hasDriverTourCompletedOnce,
   isDriverDevMode,
   tryAutoOpenAdminChecklistPanel,
   waitForSelectors,
 } from "@gridix/utils/integrations";
 import {
+  ADMIN_MAIN_DRIVER_TOUR_ID,
   destroyPartnersDriverTour,
   destroyProjectCreationDriverTour,
   startAdminMainDriverTour,
@@ -50,6 +52,8 @@ export const useAdminDashboardTours = ({
   userProfile,
 }: UseAdminDashboardToursParams) => {
   const { t } = useLanguage();
+  const [suppressAdminChecklistChrome, setSuppressAdminChecklistChrome] =
+    useState(false);
   const adminMainAndChecklistSequenceRef = useRef(false);
   const startedPartnersTourRef = useRef(false);
   const wasPartnersTabRef = useRef(false);
@@ -75,10 +79,30 @@ export const useAdminDashboardTours = ({
         return;
       }
 
+      const willRunAdminMainTour = !hasDriverTourCompletedOnce(
+        userId,
+        ADMIN_MAIN_DRIVER_TOUR_ID,
+      );
+      if (willRunAdminMainTour) {
+        setSuppressAdminChecklistChrome(true);
+      }
+
       try {
         await startAdminMainDriverTour({ userId, t });
       } catch (tourError) {
         console.warn("Failed to start admin main driver tour:", tourError);
+      } finally {
+        if (willRunAdminMainTour) {
+          setSuppressAdminChecklistChrome(false);
+        }
+      }
+
+      if (typeof window !== "undefined") {
+        await new Promise<void>((resolve) => {
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => resolve());
+          });
+        });
       }
 
       try {
@@ -216,5 +240,5 @@ export const useAdminDashboardTours = ({
     user?.id,
   ]);
 
-  return { retakeTraining };
+  return { retakeTraining, suppressAdminChecklistChrome };
 };

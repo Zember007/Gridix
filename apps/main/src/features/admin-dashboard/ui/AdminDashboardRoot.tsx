@@ -32,6 +32,7 @@ export const AdminDashboardRoot = () => {
     handleEditProject,
     handleSignOut,
     retakeTraining,
+    suppressAdminChecklistChrome,
   } = useAdminDashboardController();
 
   const adminAccess = useAdminAccess();
@@ -89,6 +90,7 @@ export const AdminDashboardRoot = () => {
           onNavigateTab={setActiveTab}
           onOpenCreateProject={handleCreateNew}
           onReplayInteractiveOnboarding={retakeTraining}
+          suppressChrome={suppressAdminChecklistChrome}
         />
       </div>
     </div>

@@ -19,6 +19,8 @@ type AdminOnboardingChecklistPanelProps = {
   onNavigateTab: (tab: string) => void;
   onOpenCreateProject: () => void;
   onReplayInteractiveOnboarding?: () => void | Promise<void>;
+  /** Скрыть FAB и панель (например, пока идёт welcome-тур первого входа). */
+  suppressChrome?: boolean;
 };
 
 export function AdminOnboardingChecklistPanel({
@@ -26,6 +28,7 @@ export function AdminOnboardingChecklistPanel({
   onNavigateTab,
   onOpenCreateProject,
   onReplayInteractiveOnboarding,
+  suppressChrome = false,
 }: AdminOnboardingChecklistPanelProps) {
   const { t } = useLanguage();
   const openSignal = useChecklistOpenSignal({ scope: "admin" });
@@ -109,6 +112,8 @@ export function AdminOnboardingChecklistPanel({
       setReplayBusy(false);
     }
   };
+
+  if (suppressChrome) return null;
 
   return (
     <OnboardingChecklistFloatingShell

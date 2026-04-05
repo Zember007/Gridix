@@ -12,13 +12,6 @@ export const ADMIN_MAIN_DRIVER_TOUR_ID = "admin_main";
 
 type Translate = (key: string) => string;
 
-function nextAnimationFrame(): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
-  return new Promise((resolve) =>
-    window.requestAnimationFrame(() => resolve()),
-  );
-}
-
 function filterStepsWithDomTargets(steps: DriveStep[]): DriveStep[] {
   return steps.filter((step) => {
     const el = step.element;
@@ -103,24 +96,34 @@ export async function startAdminMainDriverTour(params: {
   if (!readySteps.length) return;
 
   await withOnboardingUiBlocked(async () => {
-    const driver = createGridixDriver({
-      showProgress: true,
-      nextBtnText: t("driverOnboarding.buttons.next"),
-      prevBtnText: t("driverOnboarding.buttons.previous"),
-      doneBtnText: t("driverOnboarding.buttons.done"),
-      showButtons: ["next", "previous", "close"],
-      disableActiveInteraction: true,
-      onDestroyed: () => {
-        markDriverTourCompletedOnce(userId, ADMIN_MAIN_DRIVER_TOUR_ID);
-      },
-    });
+    await new Promise<void>((resolve) => {
+      let finished = false;
+      const complete = () => {
+        if (finished) return;
+        finished = true;
+        resolve();
+      };
 
-    try {
-      driver.setSteps(readySteps);
-      driver.drive(0);
-      await nextAnimationFrame();
-    } catch (error) {
-      console.warn("Admin main driver tour: drive failed", error);
-    }
+      const driver = createGridixDriver({
+        showProgress: true,
+        nextBtnText: t("driverOnboarding.buttons.next"),
+        prevBtnText: t("driverOnboarding.buttons.previous"),
+        doneBtnText: t("driverOnboarding.buttons.done"),
+        showButtons: ["next", "previous", "close"],
+        disableActiveInteraction: true,
+        onDestroyed: () => {
+          markDriverTourCompletedOnce(userId, ADMIN_MAIN_DRIVER_TOUR_ID);
+          complete();
+        },
+      });
+
+      try {
+        driver.setSteps(readySteps);
+        driver.drive(0);
+      } catch (error) {
+        console.warn("Admin main driver tour: drive failed", error);
+        complete();
+      }
+    });
   });
 }

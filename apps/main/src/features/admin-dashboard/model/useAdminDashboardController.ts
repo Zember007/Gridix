@@ -32,13 +32,14 @@ export const useAdminDashboardController = () => {
 
   useLeadsRealtime(shouldEnableLeads);
   useAdminDashboardInit(setActiveTab);
-  const { retakeTraining } = useAdminDashboardTours({
-    loading,
-    activeTab,
-    showCreateModal,
-    user,
-    userProfile,
-  });
+  const { retakeTraining, suppressAdminChecklistChrome } =
+    useAdminDashboardTours({
+      loading,
+      activeTab,
+      showCreateModal,
+      user,
+      userProfile,
+    });
 
   const crmUnreadCount = useMemo(
     () => allLeadsForUnread.filter((lead) => !lead.read_at).length,
@@ -115,5 +116,6 @@ export const useAdminDashboardController = () => {
     handleEditProject,
     handleSignOut,
     retakeTraining,
+    suppressAdminChecklistChrome,
   };
 };
