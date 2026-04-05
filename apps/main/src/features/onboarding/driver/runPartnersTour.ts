@@ -1,5 +1,6 @@
 import type { DriveStep, Driver, Side } from "@gridix/utils/integrations";
 import {
+  GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
   GRIDIX_DRIVER_STAGE_RADIUS_MAX,
   createGridixDriver,
   hasDriverTourCompletedOnce,
@@ -8,9 +9,6 @@ import {
   waitForSelectors,
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
-
-/** Дефолтный `stageRadius` в driver.js (как в admin main tour). */
-const DRIVER_JS_DEFAULT_STAGE_RADIUS = 6;
 
 export const PARTNERS_DRIVER_TOUR_ID = "partners";
 
@@ -248,7 +246,7 @@ function buildPartnerSteps(t: Translate): DriveStep[] {
       onDeselected: (_el, _step, { driver: d }) => {
         d.setConfig({
           ...d.getConfig(),
-          stageRadius: DRIVER_JS_DEFAULT_STAGE_RADIUS,
+          stageRadius: GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
         });
         d.refresh();
       },

@@ -4,14 +4,17 @@ import { driver as driverFactory } from "driver.js";
 import "driver.js/dist/driver.css";
 import "./gridix-driver-overrides.css";
 
-/** Класс на popover для кастомных стилей в приложении (z-index в базовом CSS driver.js уже очень высокий). */
-export const GRIDIX_DRIVER_POPOVER_CLASS = "gridix-driver-popover";
+import {
+  GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
+  GRIDIX_DRIVER_POPOVER_CLASS,
+} from "./gridixDriverConstants";
+import { startGridixDriverSpotlightObserver } from "./gridixDriverSpotlight";
 
-/**
- * Driver.js ограничивает радиус: `min(stageRadius, stageWidth/2, stageHeight/2)`.
- * Передавайте в `setConfig` только на шагах с круглой целью (например FAB), иначе оставляйте дефолт driver.js (5).
- */
-export const GRIDIX_DRIVER_STAGE_RADIUS_MAX = 9999;
+export {
+  GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
+  GRIDIX_DRIVER_POPOVER_CLASS,
+  GRIDIX_DRIVER_STAGE_RADIUS_MAX,
+} from "./gridixDriverConstants";
 
 /**
  * Базовые опции Driver.js для админки Gridix.
@@ -21,14 +24,13 @@ export function getGridixDriverDefaults(): Partial<Config> {
   return {
     popoverClass: GRIDIX_DRIVER_POPOVER_CLASS,
     allowClose: true,
-    /** Клик по затемнению не закрывает тур (только кнопка «Закрыть» / программный destroy). */
     overlayClickBehavior: () => {},
     smoothScroll: true,
-    /**
-     * По умолчанию в driver.js — 10px: вырез шире элемента, справа от фиксированного
-     * сайдбара остаётся полоска фона контента (белая). 0 — вырез по границе target.
-     */
-    stagePadding: -1,
+    stageRadius: GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
+    /** Отступ выреза: border 2px + outline 4px + воздух. */
+    stagePadding: 10,
+    /** Расстояние от подсвеченного элемента до поповера (дефолт driver.js — 10). */
+    popoverOffset: 28,
   };
 }
 
@@ -42,6 +44,7 @@ function mergePopoverClass(base?: string, extra?: string): string | undefined {
 
 /**
  * Фабрика инстанса Driver.js с импортом стилей и дефолтами Gridix.
+ * Автоматически запускает MutationObserver для белого бордера на подсвеченном элементе.
  */
 export function createGridixDriver(options?: Config): Driver {
   const defaults = getGridixDriverDefaults();
@@ -53,6 +56,9 @@ export function createGridixDriver(options?: Config): Driver {
       mergePopoverClass(defaults.popoverClass, userPopoverClass) ??
       GRIDIX_DRIVER_POPOVER_CLASS,
   };
+
+  startGridixDriverSpotlightObserver();
+
   return driverFactory(merged);
 }
 

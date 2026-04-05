@@ -1,5 +1,12 @@
-import { type ReactNode, useSyncExternalStore } from "react";
+import { type ReactNode, useEffect, useSyncExternalStore } from "react";
 
+import "driver.js/dist/driver.css";
+import "./driver/gridix-driver-overrides.css";
+
+import {
+  startGridixDriverSpotlightObserver,
+  stopGridixDriverSpotlightObserver,
+} from "./driver/gridixDriverSpotlight";
 import {
   getOnboardingUiBlocked,
   subscribeOnboardingUiBlocked,
@@ -15,6 +22,11 @@ function useOnboardingUiBlocked(): boolean {
 
 export function OnboardingBlockingGate({ children }: { children: ReactNode }) {
   const blocked = useOnboardingUiBlocked();
+
+  useEffect(() => {
+    startGridixDriverSpotlightObserver();
+    return stopGridixDriverSpotlightObserver;
+  }, []);
 
   return (
     <div className="relative min-h-screen">

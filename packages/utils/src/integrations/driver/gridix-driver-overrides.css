@@ -1,7 +1,19 @@
 /**
  * Доп. стили к Driver.js (после driver.css).
- * Кольцо вокруг FAB поддержки; круглый вырез — только на шаге `.support_usertour` в runAdminMainTour.
+ * Основная подсветка — MutationObserver (gridixDriverSpotlight.ts).
+ * Это правило — fallback.
  */
-.driver-active .support_usertour.driver-active-element {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95);
+
+/* Сайдбар: border + outline (box-shadow обрезается overflow:hidden) */
+body.driver-active .sidebar_usertour .driver-active-element {
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  outline: 4px solid rgba(255, 255, 255, 0.18) !important;
+  outline-offset: -1px !important;
+}
+
+/* Остальные элементы: мягкий box-shadow glow */
+body.driver-active .driver-active-element:not(.sidebar_usertour *) {
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.5),
+    0 0 16px 4px rgba(255, 255, 255, 0.25) !important;
 }
