@@ -1,11 +1,16 @@
 import type { DriveStep, Driver, Side } from "@gridix/utils/integrations";
 import {
+  GRIDIX_DRIVER_STAGE_RADIUS_MAX,
   createGridixDriver,
   hasDriverTourCompletedOnce,
   markDriverTourCompletedOnce,
+  queryFirstVisibleElement,
   waitForSelectors,
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
+
+/** Дефолтный `stageRadius` в driver.js (как в admin main tour). */
+const DRIVER_JS_DEFAULT_STAGE_RADIUS = 6;
 
 export const PARTNERS_DRIVER_TOUR_ID = "partners";
 
@@ -132,8 +137,27 @@ function buildPartnerSteps(t: Translate): DriveStep[] {
     },
   });
 
+  const mkTab = (
+    selector: string,
+    titleKey: string,
+    descKey: string,
+    side: Side,
+    extraPopover?: Partial<DriveStep["popover"]>,
+  ): DriveStep => ({
+    element: (): Element =>
+      queryFirstVisibleElement(selector) ??
+      document.querySelector(selector) ??
+      document.documentElement,
+    popover: {
+      title: t(`driverOnboarding.partners.${titleKey}`),
+      description: t(`driverOnboarding.partners.${descKey}`),
+      side,
+      ...extraPopover,
+    },
+  });
+
   return [
-    mk(
+    mkTab(
       ".partners_overview_tab_usertour",
       "partnerOverviewTitle",
       "partnerOverviewDescription",
@@ -165,7 +189,7 @@ function buildPartnerSteps(t: Translate): DriveStep[] {
         },
       },
     ),
-    mk(
+    mkTab(
       ".partners_referrals_tab_usertour",
       "partnerReferralsTabTitle",
       "partnerReferralsTabDescription",
@@ -175,7 +199,7 @@ function buildPartnerSteps(t: Translate): DriveStep[] {
       ".partners_copy_link_usertour",
       "partnerCopyLinkTitle",
       "partnerCopyLinkDescription",
-      "top",
+      "left",
     ),
     mk(
       ".partners_utm_toggle_usertour",
@@ -192,7 +216,7 @@ function buildPartnerSteps(t: Translate): DriveStep[] {
         },
       },
     ),
-    mk(
+    mkTab(
       ".partners_clients_tab_usertour",
       "partnerClientsTabTitle",
       "partnerClientsTabDescription",
@@ -207,17 +231,36 @@ function buildPartnerSteps(t: Translate): DriveStep[] {
         },
       },
     ),
-    mk(
-      ".partners_account_tab_usertour",
-      "partnerAccountTabTitle",
-      "partnerAccountTabDescription",
-      "bottom",
-    ),
+    {
+      ...mkTab(
+        ".partners_account_tab_usertour",
+        "partnerAccountTabTitle",
+        "partnerAccountTabDescription",
+        "left",
+      ),
+      onHighlightStarted: (_el, _step, { driver: d }) => {
+        d.setConfig({
+          ...d.getConfig(),
+          stageRadius: GRIDIX_DRIVER_STAGE_RADIUS_MAX,
+        });
+        d.refresh();
+      },
+      onDeselected: (_el, _step, { driver: d }) => {
+        d.setConfig({
+          ...d.getConfig(),
+          stageRadius: DRIVER_JS_DEFAULT_STAGE_RADIUS,
+        });
+        d.refresh();
+      },
+    },
   ];
 }
 
 function clickPartnersTab(selector: string): void {
-  document.querySelector<HTMLElement>(selector)?.click();
+  const el =
+    queryFirstVisibleElement(selector) ??
+    document.querySelector<HTMLElement>(selector);
+  el?.click();
 }
 
 /**

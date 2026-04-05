@@ -28,7 +28,7 @@ export function getGridixDriverDefaults(): Partial<Config> {
      * По умолчанию в driver.js — 10px: вырез шире элемента, справа от фиксированного
      * сайдбара остаётся полоска фона контента (белая). 0 — вырез по границе target.
      */
-    stagePadding: -0.5,
+    stagePadding: -1,
   };
 }
 
