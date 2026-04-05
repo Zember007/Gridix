@@ -169,7 +169,7 @@ export function OnboardingChecklistFloatingShell({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: cardDuration, ease: cardEase }}
-            className="w-[min(100vw-2rem,22rem)] border shadow-lg"
+            className="w-[min(100vw-2rem,19rem)] border shadow-lg"
           >
             {children}
           </MotionCard>
@@ -202,10 +202,10 @@ export function OnboardingChecklistFloatingShell({
           onMouseEnter={(e) => applyFabPointerStyle(e.currentTarget, "hover")}
           onMouseLeave={(e) => applyFabPointerStyle(e.currentTarget, "base")}
           className={cn(
-            "inline-flex h-12 min-h-12 shrink-0 items-center gap-0 overflow-hidden rounded-full shadow-lg hover:shadow-xl",
+            "inline-flex h-10 min-h-10 shrink-0 items-center gap-0 overflow-hidden rounded-full shadow-lg hover:shadow-xl",
             fabExpanded
-              ? "min-w-12 max-w-[min(calc(100vw-2rem),20rem)] justify-start px-4 py-0"
-              : "w-12 min-w-12 max-w-12 justify-center p-0",
+              ? "min-w-10 max-w-[min(calc(100vw-2rem),19rem)] justify-start px-3 py-0"
+              : "w-10 min-w-10 max-w-10 justify-center p-0",
           )}
           style={{
             ...fabBaseStyle,
@@ -216,12 +216,12 @@ export function OnboardingChecklistFloatingShell({
             transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
-          <ListChecks className="h-5 w-5 shrink-0" aria-hidden />
+          <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
           <span
             className={cn(
-              "flex min-w-0 items-center overflow-hidden whitespace-nowrap text-sm font-medium",
+              "flex min-w-0 items-center overflow-hidden whitespace-nowrap text-xs font-medium",
               fabExpanded
-                ? "ml-2 max-w-[min(calc(100vw-2rem-4rem),17rem)] opacity-100"
+                ? "ml-2 max-w-[min(calc(100vw-2rem-3.5rem),15.5rem)] opacity-100"
                 : "ml-0 max-w-0 opacity-0",
             )}
             style={{
