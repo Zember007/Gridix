@@ -1,5 +1,6 @@
 import type { DriveStep, Side } from "@gridix/utils/integrations";
 import {
+  GRIDIX_DRIVER_STAGE_RADIUS_MAX,
   createGridixDriver,
   hasDriverTourCompletedOnce,
   markDriverTourCompletedOnce,
@@ -7,6 +8,9 @@ import {
 } from "@gridix/utils/integrations";
 
 export const ADMIN_MAIN_DRIVER_TOUR_ID = "admin_main";
+
+/** Дефолтный `stageRadius` в driver.js (не задаём в Gridix defaults — только локально на FAB). */
+const DRIVER_JS_DEFAULT_STAGE_RADIUS = 6;
 
 type Translate = (key: string) => string;
 
@@ -55,7 +59,23 @@ function buildAdminMainSteps(t: Translate): DriveStep[] {
   steps.push(
     step(".widgets_usertour", "step5Title", "step5Description", "right"),
     step(".partners_usertour", "step6Title", "step6Description", "right"),
-    step(".support_usertour", "step7Title", "step7Description", "left"),
+    {
+      ...step(".support_usertour", "step7Title", "step7Description", "left"),
+      onHighlightStarted: (_el, _s, { driver: d }) => {
+        d.setConfig({
+          ...d.getConfig(),
+          stageRadius: GRIDIX_DRIVER_STAGE_RADIUS_MAX,
+        });
+        d.refresh();
+      },
+      onDeselected: (_el, _s, { driver: d }) => {
+        d.setConfig({
+          ...d.getConfig(),
+          stageRadius: DRIVER_JS_DEFAULT_STAGE_RADIUS,
+        });
+        d.refresh();
+      },
+    },
     step(
       ".create_project_usertour",
       "step8Title",

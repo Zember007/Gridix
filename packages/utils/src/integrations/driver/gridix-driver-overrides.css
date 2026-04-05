@@ -1,0 +1,7 @@
+/**
+ * Доп. стили к Driver.js (после driver.css).
+ * Кольцо вокруг FAB поддержки; круглый вырез — только на шаге `.support_usertour` в runAdminMainTour.
+ */
+.driver-active .support_usertour.driver-active-element {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95);
+}
