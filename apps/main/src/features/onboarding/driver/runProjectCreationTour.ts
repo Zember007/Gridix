@@ -1,4 +1,9 @@
-import type { DriveStep, Driver, Side } from "@gridix/utils/integrations";
+import type {
+  DriveStep,
+  Driver,
+  DriverHook,
+  Side,
+} from "@gridix/utils/integrations";
 import {
   createGridixDriver,
   hasDriverTourCompletedOnce,
@@ -10,6 +15,14 @@ import {
 export const PROJECT_CREATION_DRIVER_TOUR_ID = "project_creation";
 
 type Translate = (key: string) => string;
+
+type TourPopoverButtons = NonNullable<
+  NonNullable<DriveStep["popover"]>["showButtons"]
+>;
+
+const PHASE1_NAV_BUTTONS: TourPopoverButtons = ["next", "previous"];
+/** Шаги «клик по подсветке»: только Назад и закрытие тура (без «Далее»). */
+const CLICK_ADVANCE_STEP_BUTTONS: TourPopoverButtons = ["previous", "close"];
 
 let activeProjectCreationDriver: Driver | null = null;
 
@@ -26,6 +39,41 @@ function filterStepsWithDomTargets(steps: DriveStep[]): DriveStep[] {
     if (typeof el === "string") return !!document.querySelector(el);
     return true;
   });
+}
+
+function chainHighlighted(...hooks: (DriverHook | undefined)[]): DriverHook {
+  const list = hooks.filter(Boolean) as DriverHook[];
+  return (element, step, opts) => {
+    for (const fn of list) fn(element, step, opts);
+  };
+}
+
+/**
+ * Переход на следующий шаг только после клика по подсвеченному элементу.
+ * `once` + отложенный вызов, чтобы нативное действие кнопки/input успело выполниться.
+ */
+function clickToAdvanceOnHighlight(
+  onAdvance: (driver: Driver) => void,
+): Pick<DriveStep, "onHighlighted" | "onDeselected"> {
+  let detach: (() => void) | undefined;
+
+  return {
+    onHighlighted: (element, _step, { driver }) => {
+      detach?.();
+      detach = undefined;
+      if (!element || !(element instanceof HTMLElement)) return;
+
+      const handler = () => {
+        window.setTimeout(() => onAdvance(driver), 0);
+      };
+      element.addEventListener("click", handler, { once: true });
+      detach = () => element.removeEventListener("click", handler);
+    },
+    onDeselected: () => {
+      detach?.();
+      detach = undefined;
+    },
+  };
 }
 
 function selectBuildingProjectTypeAndAdvance(driver: Driver): void {
@@ -47,137 +95,187 @@ function buildPhase1Steps(
   t: Translate,
   onAwaitMapperThenContinue: (driver: Driver) => void,
 ): DriveStep[] {
-  const step = (
-    selector: string,
-    titleKey: string,
-    descKey: string,
-    side: Side,
-    extraPopover?: Partial<DriveStep["popover"]>,
-  ): DriveStep => ({
-    element: selector,
-    popover: {
-      title: t(`driverOnboarding.projectCreation.${titleKey}`),
-      description: t(`driverOnboarding.projectCreation.${descKey}`),
-      side,
-      ...extraPopover,
-    },
-  });
+  const navOnlyPopover = {
+    showButtons: PHASE1_NAV_BUTTONS,
+  };
+
+  const openClosePopover = {
+    showButtons: CLICK_ADVANCE_STEP_BUTTONS,
+  };
+
+  /** Driver.js `setConfig` заменяет конфиг целиком; без spread теряется `steps` → «No steps to drive through». */
+  const phase1AllowCloseHook: DriverHook = (_el, _s, { driver }) => {
+    driver.setConfig({ ...driver.getConfig(), allowClose: false });
+  };
+
+  const phase1OpenHook: DriverHook = (_el, _s, { driver }) => {
+    driver.setConfig({ ...driver.getConfig(), allowClose: true });
+  };
 
   return [
-    step(
-      ".project_creation_modal_usertour",
-      "phase1Step1Title",
-      "phase1Step1Description",
-      "bottom",
-    ),
-    step(
-      ".project_import_excel_usertour",
-      "phase1Step2Title",
-      "phase1Step2Description",
-      "bottom",
-    ),
-    step(
-      ".project_import_demo_usertour",
-      "phase1Step3Title",
-      "phase1Step3Description",
-      "bottom",
-    ),
-    step(
-      ".project_import_upload_usertour",
-      "phase1Step4Title",
-      "phase1Step4Description",
-      "bottom",
-      {
-        onNextClick: (_el, _s, { driver }) => {
-          onAwaitMapperThenContinue(driver);
-        },
+    {
+      element: ".project_creation_modal_usertour",
+      disableActiveInteraction: true,
+      onHighlighted: chainHighlighted(phase1AllowCloseHook),
+      popover: {
+        title: t("driverOnboarding.projectCreation.phase1Step1Title"),
+        description: t(
+          "driverOnboarding.projectCreation.phase1Step1Description",
+        ),
+        side: "bottom" as Side,
+        ...navOnlyPopover,
       },
-    ),
+    },
+    {
+      element: ".project_import_excel_usertour",
+      disableActiveInteraction: true,
+      onHighlighted: chainHighlighted(phase1AllowCloseHook),
+      popover: {
+        title: t("driverOnboarding.projectCreation.phase1Step2Title"),
+        description: t(
+          "driverOnboarding.projectCreation.phase1Step2Description",
+        ),
+        side: "bottom" as Side,
+        ...navOnlyPopover,
+      },
+    },
+    (() => {
+      const clickAdvance = clickToAdvanceOnHighlight((d) => d.moveNext());
+      return {
+        element: ".project_import_demo_usertour",
+        onHighlighted: chainHighlighted(
+          phase1OpenHook,
+          clickAdvance.onHighlighted,
+        ),
+        onDeselected: clickAdvance.onDeselected,
+        popover: {
+          title: t("driverOnboarding.projectCreation.phase1Step3Title"),
+          description: t(
+            "driverOnboarding.projectCreation.phase1Step3Description",
+          ),
+          side: "bottom" as Side,
+          ...openClosePopover,
+        },
+      } satisfies DriveStep;
+    })(),
+    (() => {
+      const clickAdvance = clickToAdvanceOnHighlight(onAwaitMapperThenContinue);
+      return {
+        element: ".project_import_upload_usertour",
+        onHighlighted: chainHighlighted(
+          phase1OpenHook,
+          clickAdvance.onHighlighted,
+        ),
+        onDeselected: clickAdvance.onDeselected,
+        popover: {
+          title: t("driverOnboarding.projectCreation.phase1Step4Title"),
+          description: t(
+            "driverOnboarding.projectCreation.phase1Step4Description",
+          ),
+          side: "bottom" as Side,
+          ...openClosePopover,
+        },
+      } satisfies DriveStep;
+    })(),
   ];
 }
 
 function buildPhase2Steps(t: Translate): DriveStep[] {
-  const step = (
+  const popoverBase = {
+    showButtons: CLICK_ADVANCE_STEP_BUTTONS,
+  };
+
+  const withClickAdvance = (
     selector: string,
     titleKey: string,
     descKey: string,
     side: Side,
-    extraPopover?: Partial<DriveStep["popover"]>,
-  ): DriveStep => ({
-    element: selector,
-    popover: {
-      title: t(`driverOnboarding.projectCreation.${titleKey}`),
-      description: t(`driverOnboarding.projectCreation.${descKey}`),
-      side,
-      ...extraPopover,
-    },
-  });
+    advance: (driver: Driver) => void,
+  ): DriveStep => {
+    const { onHighlighted, onDeselected } = clickToAdvanceOnHighlight(advance);
+    return {
+      element: selector,
+      onHighlighted,
+      onDeselected,
+      popover: {
+        title: t(`driverOnboarding.projectCreation.${titleKey}`),
+        description: t(`driverOnboarding.projectCreation.${descKey}`),
+        side,
+        ...popoverBase,
+      },
+    };
+  };
 
   return [
-    step(
+    withClickAdvance(
       ".excel_project_type_usertour",
       "phase2ProjectTypeTitle",
       "phase2ProjectTypeDescription",
       "bottom",
-      {
-        onNextClick: (_el, _s, { driver }) => {
-          selectBuildingProjectTypeAndAdvance(driver);
-        },
-      },
+      selectBuildingProjectTypeAndAdvance,
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_required_usertour",
       "phase2MappingOverviewTitle",
       "phase2MappingOverviewDescription",
       "top",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_apartmentNumber_usertour",
       "phase2MapApartmentTitle",
       "phase2MapApartmentDescription",
       "bottom",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_floor_usertour",
       "phase2MapFloorTitle",
       "phase2MapFloorDescription",
       "bottom",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_rooms_usertour",
       "phase2MapRoomsTitle",
       "phase2MapRoomsDescription",
       "bottom",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_area_usertour",
       "phase2MapAreaTitle",
       "phase2MapAreaDescription",
       "bottom",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_price_usertour",
       "phase2MapPriceTitle",
       "phase2MapPriceDescription",
       "bottom",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_mapping_status_usertour",
       "phase2MapStatusTitle",
       "phase2MapStatusDescription",
       "bottom",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_validation_usertour",
       "phase2ValidationTitle",
       "phase2ValidationDescription",
       "top",
+      (d) => d.moveNext(),
     ),
-    step(
+    withClickAdvance(
       ".excel_create_project_usertour",
       "phase2CreateTitle",
       "phase2CreateDescription",
       "top",
+      (d) => d.moveNext(),
     ),
   ];
 }
@@ -223,6 +321,8 @@ function startPhase2Driver(params: {
 
   void withOnboardingUiBlocked(async () => {
     const driver = createGridixDriver({
+      allowClose: true,
+      allowKeyboardControl: false,
       disableActiveInteraction: false,
       showProgress: true,
       nextBtnText: t("driverOnboarding.buttons.next"),
@@ -340,6 +440,8 @@ export function startProjectCreationDriverTour(params: {
       destroyActiveInstance();
 
       const driver = createGridixDriver({
+        allowClose: false,
+        allowKeyboardControl: false,
         disableActiveInteraction: false,
         showProgress: true,
         nextBtnText: t("driverOnboarding.buttons.next"),

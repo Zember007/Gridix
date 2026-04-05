@@ -35,6 +35,34 @@ const ExcelUrlImporter = lazy(
 import { adminThemeClasses as admin } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+/**
+ * Radix закрывает Dialog при outside-dismiss. Во время Driver.js это ломает тур двумя способами:
+ * 1) Попап тура в `body` — клики по «Далее»/«Назад» считаются снаружи контента.
+ * 2) У шага с `disableActiveInteraction` контент модалки с `pointer-events: none` — клик
+ *    «по модалке» проходит на оверлей и тоже даёт dismiss.
+ *
+ * Пока на `body` есть `driver-active`, внешние закрытия для этого окна отключаем (выход — кнопка
+ * закрытия в хедере модалки или завершение тура).
+ */
+function suppressDialogOutsideDismissWhileDriverTour(event: {
+  preventDefault: () => void;
+  target: EventTarget | null;
+}): void {
+  if (
+    event.target instanceof Element &&
+    event.target.closest(".driver-popover")
+  ) {
+    event.preventDefault();
+    return;
+  }
+  if (
+    typeof document !== "undefined" &&
+    document.body.classList.contains("driver-active")
+  ) {
+    event.preventDefault();
+  }
+}
+
 interface ProjectCreationModalProps {
   open: boolean;
   onClose: () => void;
@@ -233,7 +261,11 @@ const ProjectCreationModal = ({
   if (showColumnMapper) {
     return (
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
+        <DialogContent
+          className="max-h-[90vh] max-w-6xl overflow-y-auto"
+          onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
+          onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+        >
           <DialogHeader></DialogHeader>
           <Suspense>
             <ExcelColumnMapper
@@ -250,7 +282,11 @@ const ProjectCreationModal = ({
   if (showUrlImporter) {
     return (
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogContent
+          className="max-h-[90vh] max-w-4xl overflow-y-auto"
+          onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
+          onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+        >
           <DialogHeader>
             <div className="flex">
               <Button
@@ -276,7 +312,11 @@ const ProjectCreationModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCloseModal}>
-      <DialogContent className="project_creation_modal_usertour max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className="project_creation_modal_usertour max-h-[90vh] max-w-2xl overflow-y-auto"
+        onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
+        onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
