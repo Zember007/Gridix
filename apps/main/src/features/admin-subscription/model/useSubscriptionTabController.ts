@@ -355,7 +355,7 @@ export const useSubscriptionTabController = () => {
             t("admin.subscriptionPage.toasts.projectsAdded") ||
               "Projects added to existing subscription",
           );
-          void trackUsertourEvent({
+          void trackOnboardingMilestone({
             eventName: "gridix_billing_checkout_started",
             properties: {
               project_ids: eligibleProjectIds,
