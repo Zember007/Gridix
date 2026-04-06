@@ -325,17 +325,19 @@ export async function uploadFloorPlan(
   projectId: string,
   floorNumber: number,
   file: File,
-  options: UploadWithProgressOptions = {},
+  options: UploadWithProgressOptions & { subProjectId?: string } = {},
 ): Promise<{ publicUrl: string }> {
+  const { subProjectId, ...uploadOptions } = options;
   const form = new FormData();
   form.set("action", "uploadFloorPlan");
   form.set("projectId", projectId);
   form.set("floorNumber", String(floorNumber));
+  if (subProjectId) form.set("subProjectId", subProjectId);
   form.set("file", file);
 
   const response = await invokeFunctionUploadWithProgress<{
     publicUrl?: string;
-  }>(form, options);
+  }>(form, uploadOptions);
 
   if (!response.publicUrl) throw new Error("No URL returned");
 

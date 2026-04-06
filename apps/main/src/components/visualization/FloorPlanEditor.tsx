@@ -96,9 +96,14 @@ interface PolygonSettings {
 interface FloorPlanEditorProps {
   projectId: string;
   floorNumber: number;
+  subProjectId?: string;
 }
 
-const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
+const FloorPlanEditor = ({
+  projectId,
+  floorNumber,
+  subProjectId,
+}: FloorPlanEditorProps) => {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<string | null>(null);
@@ -324,12 +329,13 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
   const loadFloorPlan = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("floor_plans")
         .select("image_url")
         .eq("project_id", project?.id || projectId)
-        .eq("floor_number", floorNumber)
-        .maybeSingle();
+        .eq("floor_number", floorNumber);
+      if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+      const { data, error } = await query.maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
 
@@ -346,11 +352,13 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
   const loadApartments = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("apartments")
         .select("*")
         .eq("project_id", project?.id || projectId)
         .eq("floor_number", floorNumber);
+      if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -502,6 +510,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         floorNumber,
         file,
         {
+          subProjectId,
           signal: abortController.signal,
           onProgress: (progress) => {
             if (floorPlanUploadRequestIdRef.current !== requestId) return;
@@ -829,6 +838,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             status: apartmentData.status,
             polygon: points as unknown as Json,
             custom_fields: customFieldsData as Json,
+            ...(subProjectId && { sub_project_id: subProjectId }),
           })
           .select()
           .single();
@@ -1164,6 +1174,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
           status: apartment.status,
           polygon: apartment.polygon as unknown as Json,
           custom_fields: apartment.custom_fields as Json,
+          ...(subProjectId && { sub_project_id: subProjectId }),
         })
         .select()
         .single();

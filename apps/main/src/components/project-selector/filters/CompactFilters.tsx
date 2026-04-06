@@ -44,6 +44,7 @@ interface CompactFiltersProps {
   themeColor?: string;
   visibleFilterFields: Record<FilterFieldKey, boolean>;
   hasAnyVisibleFilter: boolean;
+  projectType?: "building" | "object" | null;
 }
 
 export const CompactFilters = ({
@@ -78,6 +79,7 @@ export const CompactFilters = ({
   themeColor = "#000000",
   visibleFilterFields,
   hasAnyVisibleFilter,
+  projectType,
 }: CompactFiltersProps) => {
   const { t } = useLanguage();
 
@@ -134,6 +136,7 @@ export const CompactFilters = ({
             formatPrice={formatPrice}
             visibleFilterFields={visibleFilterFields}
             hasAnyVisibleFilter={hasAnyVisibleFilter}
+            projectType={projectType}
           />
         </PopoverContent>
       </Popover>

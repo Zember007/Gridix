@@ -21,6 +21,7 @@
   "errorSaving": "Proje kaydedilirken hata oluştu",
   "fields": "Alanlar",
   "fieldsTab": "Alanlar",
+  "settingsTab": "Ayarlar",
   "fileTooLarge": "Dosya çok büyük (en fazla 10 MB)",
   "floor": "Zemin",
   "floorplan": "Kat planları",
@@ -68,6 +69,7 @@
   "availableLanguagesDesc": "Bu proje için dil değiştiricide hangi dillerin mevcut olduğunu seçin",
   "atLeastOneLanguage": "En az bir dil seçin",
   "save": "Kaydetmek",
+  "saveError": "Ayarlar kaydedilirken hata oluştu",
   "save&continue": "Kaydet ve devam et",
   "saveProjectFirst": "Lütfen önce projeyi kaydedin",
   "saveProjectFirstNote": "Önce projeyi kaydedin",
@@ -100,5 +102,6 @@
   "priceUpdateNegativeValue": "Değer pozitif olmalıdır",
   "priceUpdateSuccess": "Fiyatlar başarıyla güncellendi",
   "priceUpdateError": "Fiyatlar güncellenemedi",
-  "clickOrDrop": "Tıkla veya bırak"
+  "clickOrDrop": "Tıkla veya bırak",
+  "genplan": "Site planı"
 }

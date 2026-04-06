@@ -21,6 +21,7 @@
   "errorSaving": "პროექტის შენახვის შეცდომა",
   "fields": "ველები",
   "fieldsTab": "ველები",
+  "settingsTab": "პარამეტრები",
   "fileTooLarge": "ფაილი ძალიან დიდია (მაქს. 10MB)",
   "floor": "სართული",
   "floorplan": "გეგმები",
@@ -68,6 +69,7 @@
   "availableLanguagesDesc": "აირჩიეთ, რომელი ენები იქნება ხელმისაწვდომი ამ პროექტის ენის გადამრთველში",
   "atLeastOneLanguage": "მინიმუმ ერთი ენა უნდა აირჩიოთ",
   "save": "შენახვა",
+  "saveError": "პარამეტრების შენახვის შეცდომა",
   "save&continue": "შეინახოთ და გაგაგრძელოთ",
   "saveProjectFirst": "ჯერ შეინახეთ პროექტი",
   "saveProjectFirstNote": "ჯერ შეინახეთ პროექტი",
@@ -100,5 +102,6 @@
   "priceUpdateNegativeValue": "მნიშვნელობა უნდა იყოს დადებითი",
   "priceUpdateSuccess": "ფასები წარმატებით განახლდა",
   "priceUpdateError": "ფასების განახლება ვერ მოხერხდა",
-  "clickOrDrop": "დააჭირეთ ან გადაათრიეთ"
+  "clickOrDrop": "დააჭირეთ ან გადაათრიეთ",
+  "genplan": "გენგეგმა"
 }

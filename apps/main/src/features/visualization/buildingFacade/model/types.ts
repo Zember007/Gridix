@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { FieldSetting } from "@/hooks/useFields";
 
@@ -23,7 +24,12 @@ export interface FacadeNavItem {
 }
 
 export interface FacadeSettings {
-  colors: { building: string };
+  colors: {
+    building: string;
+    available?: string;
+    sold?: string;
+    reserved?: string;
+  };
   opacity: { normal: number; hover: number };
   hoverEffects: {
     glow: boolean;
@@ -31,10 +37,20 @@ export interface FacadeSettings {
     opacityChange?: boolean;
     scale?: boolean;
   };
-  display: { showNumbers: boolean; showTooltip: boolean };
+  display: {
+    showNumbers: boolean;
+    showTooltip: boolean;
+    showArea?: boolean;
+    showPrice?: boolean;
+  };
 }
 
-export interface BuildingFacadeViewProps {
+export type MasterplanPolygonItem = {
+  id: string;
+  polygon: { x: number; y: number }[];
+};
+
+export interface PolygonPlanImageViewProps {
   projectId: string;
   themeColor: string;
   project: BuildingFacadeProject;
@@ -54,4 +70,16 @@ export interface BuildingFacadeViewProps {
   facades?: FacadeNavItem[];
   activeFacadeIndex?: number;
   onFacadeChange?: (nextIndex: number) => void;
+  /** Facade (default) or masterplan / genplan polygons in the same viewer shell. */
+  planKind?: "facade" | "masterplan";
+  /** Polygons in **percent** coordinates 0–100 (same as facade floors). */
+  masterplanPolygons?: MasterplanPolygonItem[];
+  onMasterplanAreaClick?: (areaId: string) => void;
+  /** Tooltip/popup body when `facadeSettings.display.showTooltip` and hovering a masterplan polygon. */
+  masterplanRenderTooltip?: (areaId: string) => ReactNode;
+  /** Short labels on masterplan polygons (when `planKind === "masterplan"` and `display.showNumbers`). */
+  masterplanPolygonLabels?: Record<string, string>;
 }
+
+/** @deprecated Use PolygonPlanImageViewProps */
+export type BuildingFacadeViewProps = PolygonPlanImageViewProps;

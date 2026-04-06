@@ -21,6 +21,7 @@
   "errorSaving": "שגיאה בשמירת הפרויקט",
   "fields": "שדות",
   "fieldsTab": "שדות",
+  "settingsTab": "הגדרות",
   "fileTooLarge": "הקובץ גדול מדי (מקסימום 10MB)",
   "floor": "קוֹמָה",
   "floorplan": "תוכניות קומה",
@@ -68,6 +69,7 @@
   "availableLanguagesDesc": "בחר אילו שפות זמינות במחליף השפות עבור פרויקט זה",
   "atLeastOneLanguage": "בחר שפה אחת לפחות",
   "save": "לְהַצִיל",
+  "saveError": "שגיאה בשמירת ההגדרות",
   "save&continue": "שמור והמשך",
   "saveProjectFirst": "נא לשמור את הפרויקט תחילה",
   "saveProjectFirstNote": "תחילה שמור את הפרויקט",
@@ -100,5 +102,6 @@
   "priceUpdateNegativeValue": "הערך חייב להיות חיובי",
   "priceUpdateSuccess": "המחירים עודכנו בהצלחה",
   "priceUpdateError": "עדכון המחירים נכשל",
-  "clickOrDrop": "לחץ או גרור"
+  "clickOrDrop": "לחץ או גרור",
+  "genplan": "תוכנית אתר"
 }

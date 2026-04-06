@@ -9,14 +9,20 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@gridix/ui";
+import type { Tables } from "@gridix/types/database";
 import type { Project } from "@/entities/project/queries/useProjects";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@gridix/utils/react";
 import type { LayoutPhoto } from "./types";
+import type {
+  SubProjectListItem,
+  MasterplanListItem,
+} from "@/features/projectSelector/api/projectSelectorApi";
 import { FilterFieldKey, useProjectFilters } from "./hooks/useProjectFilters";
 import type { FieldVisibility } from "./types";
 import LoaderView from "./views/LoaderView";
 import { useProjectSelectorInitial } from "./hooks/useProjectSelectorInitial";
+import { useProjectSelectorSubProject } from "./hooks/useProjectSelectorSubProject";
 import { useBuildingImage } from "./hooks/useBuildingImage";
 import { useFloorPolygons } from "./hooks/useFloorPolygons";
 import { useWidgetScroll } from "./hooks/useWidgetScroll";
@@ -28,6 +34,7 @@ import { useFacadeData } from "./hooks/useFacadeData";
 import { useUrlState } from "./hooks/useUrlState";
 import { useSelectorUIState } from "./hooks/useSelectorUIState";
 import { SubscriptionAlert } from "./SubscriptionAlert";
+import { normalizeSubProjectKind } from "./lib/subProjectDisplay";
 import { ProjectHeader } from "./ProjectHeader";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { useFields } from "@/hooks/useFields";
@@ -61,17 +68,32 @@ const FloorPlanSection = lazy(() =>
     default: module.FloorPlanSection,
   })),
 );
+const MasterplanSection = lazy(() =>
+  import("./sections/MasterplanSection").then((module) => ({
+    default: module.MasterplanSection,
+  })),
+);
+const SubProjectsListView = lazy(() =>
+  import("./views/SubProjectsListView").then((module) => ({
+    default: module.SubProjectsListView,
+  })),
+);
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
   isWidget?: boolean;
   showFullProjectInWidget?: boolean;
+  subProjectSlug?: string;
 }
+
+type ModeContext = "project-multi-sub" | "default";
 
 interface ProjectApartmentSelectorLoadedProps {
   projectId: string;
   isWidget: boolean;
   project: Project;
+  subProject?: Tables<"sub_projects"> | null;
+  subProjectId?: string | null;
   apartments: Apartment[];
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
   apartmentsLoaded: boolean;
@@ -79,6 +101,9 @@ interface ProjectApartmentSelectorLoadedProps {
   rawFieldSettings: Array<Record<string, unknown>>;
   rawCustomFields: Array<Record<string, unknown>>;
   customDomain: string | null;
+  modeContext: ModeContext;
+  subProjects: SubProjectListItem[];
+  masterplansList: MasterplanListItem[];
 }
 
 const loaderBlock = (themeColor: string) => (
@@ -91,6 +116,8 @@ function ProjectApartmentSelectorLoaded({
   projectId,
   isWidget,
   project,
+  subProject,
+  subProjectId,
   apartments,
   setApartments,
   apartmentsLoaded,
@@ -98,6 +125,9 @@ function ProjectApartmentSelectorLoaded({
   rawFieldSettings,
   rawCustomFields,
   customDomain,
+  modeContext,
+  subProjects,
+  masterplansList,
 }: ProjectApartmentSelectorLoadedProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
@@ -141,8 +171,11 @@ function ProjectApartmentSelectorLoaded({
     [visibleFilterFields],
   );
 
-  // Facade data (TanStack Query)
-  const shouldLoadFacadeData = viewMode === "facade" && !!project?.id;
+  // Facade data (TanStack Query) — not used on project hub when genplan multi-sub mode
+  const shouldLoadFacadeData =
+    viewMode === "facade" &&
+    !!project?.id &&
+    modeContext !== "project-multi-sub";
 
   const {
     facades,
@@ -152,6 +185,7 @@ function ProjectApartmentSelectorLoaded({
     settingsLoading,
   } = useFacadeData({
     projectId: project?.id,
+    subProjectId: subProjectId ?? undefined,
     enabled: shouldLoadFacadeData,
   });
 
@@ -255,6 +289,16 @@ function ProjectApartmentSelectorLoaded({
 
   const showContent = apartmentsLoaded;
 
+  const effectiveProjectType = useMemo((): "building" | "object" | null => {
+    if (subProject) {
+      return normalizeSubProjectKind(subProject.type);
+    }
+    const pt = (project?.project_type ?? "").toLowerCase().trim();
+    if (pt === "object") return "object";
+    if (pt === "building") return "building";
+    return null;
+  }, [subProject, project?.project_type]);
+
   const { isSubscriptionInactive, isOwner } = useSubscriptionStatus({
     project,
     user,
@@ -338,6 +382,7 @@ function ProjectApartmentSelectorLoaded({
 
   useFloorPolygons({
     projectId: project?.id,
+    subProjectId: subProjectId ?? undefined,
     viewMode,
     selectedFloorForPlan,
     setApartments,
@@ -391,11 +436,12 @@ function ProjectApartmentSelectorLoaded({
             setViewMode={setViewMode}
             favoritesCount={favoritesCount}
             mapVisible={!!project?.latitude && !!project?.longitude}
-            projectType={project?.project_type as "building" | "object" | null}
+            projectType={effectiveProjectType}
             themeColor={themeColor}
             filters={filters}
             isFiltersOpen={ui.isFiltersOpen}
             setIsFiltersOpen={ui.setFiltersOpen}
+            modeContext={modeContext}
           />
 
           {/* Main content area */}
@@ -427,6 +473,7 @@ function ProjectApartmentSelectorLoaded({
                         convertPrice={filters.convertPrice}
                         formatPrice={formatPrice}
                         project={project}
+                        projectType={effectiveProjectType}
                         selectedCurrency={filters.selectedCurrency}
                         isMobile={isMobile ?? false}
                         themeColor={themeColor}
@@ -434,18 +481,27 @@ function ProjectApartmentSelectorLoaded({
                       />
                     </Suspense>
                   ) : viewMode === "chess" ? (
-                    <Suspense fallback={loaderFallback}>
-                      <ChessView
-                        project={project as Project}
-                        apartments={filters.filteredApartments}
-                        onApartmentSelect={openApartmentPreview}
-                        onOpenFloorPlan={openFloorPlanFromPanel}
-                        themeColor={themeColor}
-                        selectedCurrency={filters.selectedCurrency}
-                        fieldVisibility={fieldVisibility}
-                        language={language}
-                      />
-                    </Suspense>
+                    modeContext === "project-multi-sub" ? (
+                      <Suspense fallback={loaderFallback}>
+                        <SubProjectsListView
+                          subProjects={subProjects}
+                          themeColor={themeColor}
+                        />
+                      </Suspense>
+                    ) : (
+                      <Suspense fallback={loaderFallback}>
+                        <ChessView
+                          project={project as Project}
+                          apartments={filters.filteredApartments}
+                          onApartmentSelect={openApartmentPreview}
+                          onOpenFloorPlan={openFloorPlanFromPanel}
+                          themeColor={themeColor}
+                          selectedCurrency={filters.selectedCurrency}
+                          fieldVisibility={fieldVisibility}
+                          language={language}
+                        />
+                      </Suspense>
+                    )
                   ) : viewMode === "map" ? (
                     <Suspense fallback={loaderFallback}>
                       <InteractiveProjectsMap
@@ -470,34 +526,49 @@ function ProjectApartmentSelectorLoaded({
                   ) : (
                     <div className="relative h-full min-w-0 flex-1">
                       {viewMode === "facade" ? (
-                        <Suspense fallback={loaderFallback}>
-                          <FacadeSection
-                            project={project as Project}
-                            themeColor={themeColor}
-                            imageUrl={activeFacadeImageUrl}
-                            filtersRef={filtersRef}
-                            buildingImageLoaded={buildingImageLoaded}
-                            buildingImageNaturalSize={buildingImageNaturalSize}
-                            visibleFields={visibleFields}
-                            buildingFloors={buildingFloors}
-                            facadeSettings={facadeSettings}
-                            loading={floorsAllLoading || settingsLoading}
-                            facades={facades.map((f) => ({
-                              id: f.id,
-                              name: f.name,
-                            }))}
-                            activeFacadeIndex={ui.activeFacadeIndex}
-                            onFacadeChange={ui.setActiveFacadeIndex}
-                            onFloorSelect={openFloorPreview}
-                            onApartmentSelect={openApartmentPreview}
-                            filters={filters}
-                            setViewMode={setViewMode}
-                            preloadedLayoutPhotosByRooms={
-                              preloadedLayoutPhotosByRooms
-                            }
-                            isMobile={isMobile ?? false}
-                          />
-                        </Suspense>
+                        modeContext === "project-multi-sub" ? (
+                          <Suspense fallback={loaderFallback}>
+                            <MasterplanSection
+                              project={project as Project}
+                              projectId={project.id}
+                              themeColor={themeColor}
+                              masterplansList={masterplansList}
+                              subProjects={subProjects}
+                            />
+                          </Suspense>
+                        ) : (
+                          <Suspense fallback={loaderFallback}>
+                            <FacadeSection
+                              project={project as Project}
+                              projectType={effectiveProjectType}
+                              themeColor={themeColor}
+                              imageUrl={activeFacadeImageUrl}
+                              filtersRef={filtersRef}
+                              buildingImageLoaded={buildingImageLoaded}
+                              buildingImageNaturalSize={
+                                buildingImageNaturalSize
+                              }
+                              visibleFields={visibleFields}
+                              buildingFloors={buildingFloors}
+                              facadeSettings={facadeSettings}
+                              loading={floorsAllLoading || settingsLoading}
+                              facades={facades.map((f) => ({
+                                id: f.id,
+                                name: f.name,
+                              }))}
+                              activeFacadeIndex={ui.activeFacadeIndex}
+                              onFacadeChange={ui.setActiveFacadeIndex}
+                              onFloorSelect={openFloorPreview}
+                              onApartmentSelect={openApartmentPreview}
+                              filters={filters}
+                              setViewMode={setViewMode}
+                              preloadedLayoutPhotosByRooms={
+                                preloadedLayoutPhotosByRooms
+                              }
+                              isMobile={isMobile ?? false}
+                            />
+                          </Suspense>
+                        )
                       ) : (
                         <Suspense fallback={loaderFallback}>
                           <FloorPlanSection
@@ -562,16 +633,19 @@ function ProjectApartmentSelectorLoaded({
   );
 }
 
-const ProjectApartmentSelector = ({
+const ProjectApartmentSelectorWithSubProject = ({
   projectId,
-  isWidget: isWidgetProp = false,
-}: ProjectApartmentSelectorProps) => {
-  const [searchParams] = useSearchParams();
-  const isWidgetFromUrl = searchParams.get("isWidget") === "true";
-  const isWidget = isWidgetProp || isWidgetFromUrl;
-
+  subProjectSlug,
+  isWidget,
+}: {
+  projectId: string;
+  subProjectSlug: string;
+  isWidget: boolean;
+}) => {
   const {
     project,
+    subProject,
+    subProjectId,
     apartments,
     setApartments,
     apartmentsLoaded,
@@ -579,9 +653,18 @@ const ProjectApartmentSelector = ({
     fieldSettings: rawFieldSettings,
     customFields: rawCustomFields,
     customDomain,
-  } = useProjectSelectorInitial(projectId);
+    subProjectNotFound,
+  } = useProjectSelectorSubProject(projectId, subProjectSlug);
 
   const themeColor = project?.theme_color ?? "#000000";
+
+  if (subProjectNotFound) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">Building not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-white">
@@ -591,6 +674,8 @@ const ProjectApartmentSelector = ({
           projectId={projectId}
           isWidget={isWidget}
           project={project}
+          subProject={subProject}
+          subProjectId={subProjectId}
           apartments={apartments}
           setApartments={setApartments}
           apartmentsLoaded={apartmentsLoaded}
@@ -598,6 +683,9 @@ const ProjectApartmentSelector = ({
           rawFieldSettings={rawFieldSettings}
           rawCustomFields={rawCustomFields}
           customDomain={customDomain}
+          modeContext="default"
+          subProjects={[]}
+          masterplansList={[]}
         />
       ) : (
         <div className="flex min-h-screen items-center justify-center">
@@ -605,6 +693,91 @@ const ProjectApartmentSelector = ({
         </div>
       )}
     </div>
+  );
+};
+
+const ProjectApartmentSelectorDefault = ({
+  projectId,
+  isWidget,
+}: {
+  projectId: string;
+  isWidget: boolean;
+}) => {
+  const {
+    project,
+    apartments,
+    setApartments,
+    apartmentsLoaded,
+    preloadedLayoutPhotosByRooms,
+    fieldSettings: rawFieldSettings,
+    customFields: rawCustomFields,
+    customDomain,
+    subProjects,
+    masterplansList,
+  } = useProjectSelectorInitial(projectId);
+
+  const themeColor = project?.theme_color ?? "#000000";
+
+  // Plan: multi-sub when genplan is on and there is more than one sub-project total
+  // (not "more than one non-default" — 1 default + 1 building must still use genplan hub UX)
+  const modeContext: ModeContext =
+    Boolean(project?.has_masterplan) && subProjects.length > 1
+      ? "project-multi-sub"
+      : "default";
+
+  return (
+    <div className="relative min-h-screen bg-white">
+      <LoaderView color={themeColor} loading={!project || !apartmentsLoaded} />
+      {project ? (
+        <ProjectApartmentSelectorLoaded
+          projectId={projectId}
+          isWidget={isWidget}
+          project={project}
+          subProject={null}
+          apartments={apartments}
+          setApartments={setApartments}
+          apartmentsLoaded={apartmentsLoaded}
+          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+          rawFieldSettings={rawFieldSettings}
+          rawCustomFields={rawCustomFields}
+          customDomain={customDomain}
+          modeContext={modeContext}
+          subProjects={subProjects}
+          masterplansList={masterplansList}
+        />
+      ) : (
+        <div className="flex min-h-screen items-center justify-center">
+          <Spinner size="md" color={themeColor} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ProjectApartmentSelector = ({
+  projectId,
+  isWidget: isWidgetProp = false,
+  subProjectSlug,
+}: ProjectApartmentSelectorProps) => {
+  const [searchParams] = useSearchParams();
+  const isWidgetFromUrl = searchParams.get("isWidget") === "true";
+  const isWidget = isWidgetProp || isWidgetFromUrl;
+
+  if (subProjectSlug) {
+    return (
+      <ProjectApartmentSelectorWithSubProject
+        projectId={projectId}
+        subProjectSlug={subProjectSlug}
+        isWidget={isWidget}
+      />
+    );
+  }
+
+  return (
+    <ProjectApartmentSelectorDefault
+      projectId={projectId}
+      isWidget={isWidget}
+    />
   );
 };
 

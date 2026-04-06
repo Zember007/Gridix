@@ -542,6 +542,9 @@ const ExcelColumnMapper = ({
         facade_open: true,
         polygon_settings_facade: {},
         polygon_settings_floor: {},
+        has_masterplan: false,
+        parent_project_id: null,
+        root_project_id: null,
       };
 
       const project = await createProject(projectDataForCreation);

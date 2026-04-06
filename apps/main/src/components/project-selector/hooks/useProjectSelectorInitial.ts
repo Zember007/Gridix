@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   loadSelectorInitial,
   type SelectorInitialResult,
+  type SubProjectListItem,
+  type MasterplanListItem,
 } from "@/features/projectSelector/api/projectSelectorApi";
 import {
   type Apartment,
@@ -25,6 +27,8 @@ interface UseProjectSelectorInitialResult {
   fieldSettings: Array<Record<string, unknown>>;
   customFields: Array<Record<string, unknown>>;
   customDomain: string | null;
+  subProjects: SubProjectListItem[];
+  masterplansList: MasterplanListItem[];
 }
 
 function requestIdle(cb: () => void, timeoutMs = 1500) {
@@ -90,5 +94,7 @@ export const useProjectSelectorInitial = (
     fieldSettings,
     customFields,
     customDomain: query.data?.customDomain ?? null,
+    subProjects: query.data?.subProjects ?? [],
+    masterplansList: query.data?.masterplansList ?? [],
   };
 };

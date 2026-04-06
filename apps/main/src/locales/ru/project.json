@@ -69,5 +69,12 @@
   "viewDetails": "Посмотреть детали",
   "openMenu": "Открыть меню",
   "closeMenu": "Закрыть меню",
-  "plan_floor": "План {{floor}} этажа"
+  "plan_floor": "План {{floor}} этажа",
+  "masterplans": "Генпланы",
+  "objects": "Объекты",
+  "building": "Корпус",
+  "object": "Объект",
+  "priceFrom": "Цена от",
+  "noMasterplan": "Генплан не настроен",
+  "noObjects": "Объекты не найдены"
 }

@@ -69,5 +69,12 @@
   "viewDetails": "צפה בפרטים",
   "openMenu": "פתח תפריט",
   "closeMenu": "סגור תפריט",
-  "plan_floor": "תוכנית קומה {{קומה}}"
+  "plan_floor": "תוכנית קומה {{קומה}}",
+  "masterplans": "תוכניות אב",
+  "objects": "אובייקטים",
+  "building": "בניין",
+  "object": "אובייקט",
+  "priceFrom": "מחיר מ-",
+  "noMasterplan": "אין תוכנית אב זמינה",
+  "noObjects": "אין אובייקטים זמינים"
 }

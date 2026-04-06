@@ -2,22 +2,27 @@ import { supabase } from "@gridix/utils/api";
 import { compressToWebP } from "@gridix/utils/lib";
 import type { ProjectFacade } from "../model/types";
 
-export async function fetchFacades(projectId: string) {
-  const { data, error } = await supabase
+export async function fetchFacades(projectId: string, subProjectId?: string) {
+  let query = supabase
     .from("project_facades")
     .select("*")
-    .eq("project_id", projectId)
-    .order("order_index");
+    .eq("project_id", projectId);
+  if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+  const { data, error } = await query.order("order_index");
   if (error) throw error;
   return (data as unknown as ProjectFacade[]) || [];
 }
 
-export async function fetchApartmentNumbers(projectId: string) {
-  const { data } = await supabase
+export async function fetchApartmentNumbers(
+  projectId: string,
+  subProjectId?: string,
+) {
+  let query = supabase
     .from("apartments")
     .select("apartment_number")
-    .eq("project_id", projectId)
-    .order("apartment_number");
+    .eq("project_id", projectId);
+  if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+  const { data } = await query.order("apartment_number");
 
   const numbers = (data || [])
     .map((a) =>
@@ -45,11 +50,16 @@ export async function fetchBuildingFloors(projectId: string, facadeId: string) {
   }));
 }
 
-export async function fetchFacadeDisplaySettings(projectId: string) {
+export async function fetchFacadeDisplaySettings(
+  projectId: string,
+  subProjectId?: string,
+) {
+  const table = subProjectId ? "sub_projects" : "projects";
+  const id = subProjectId ?? projectId;
   const { data, error } = await supabase
-    .from("projects")
+    .from(table)
     .select("polygon_settings_facade")
-    .eq("id", projectId)
+    .eq("id", id)
     .single();
   if (error) throw error;
 
@@ -118,6 +128,7 @@ export async function insertFacade(
   projectId: string,
   name: string,
   orderIndex: number,
+  subProjectId?: string,
 ) {
   const { data, error } = await supabase
     .from("project_facades")
@@ -126,6 +137,7 @@ export async function insertFacade(
       name,
       image_url: null,
       order_index: orderIndex,
+      ...(subProjectId && { sub_project_id: subProjectId }),
     })
     .select("*")
     .single();
@@ -176,6 +188,17 @@ export async function syncProjectBuildingImage(
   if (error) throw error;
 }
 
+export async function syncSubProjectBuildingImage(
+  subProjectId: string,
+  imageUrl: string | null,
+) {
+  const { error } = await supabase
+    .from("sub_projects")
+    .update({ building_image_url: imageUrl })
+    .eq("id", subProjectId);
+  if (error) throw error;
+}
+
 export async function uploadFacadeImageToStorage(
   projectId: string,
   file: File,
@@ -200,6 +223,7 @@ export async function upsertFloorPolygon(params: {
   floorNumber: number;
   polygon: { x: number; y: number }[];
   color: string;
+  subProjectId?: string;
 }) {
   const { error } = await supabase.from("building_floors").upsert(
     {
@@ -208,6 +232,7 @@ export async function upsertFloorPolygon(params: {
       floor_number: params.floorNumber,
       polygon: params.polygon,
       color: params.color,
+      ...(params.subProjectId && { sub_project_id: params.subProjectId }),
     },
     { onConflict: "project_id,facade_id,floor_number" },
   );
@@ -239,5 +264,16 @@ export async function updateProjectFloors(projectId: string, floors: number) {
     .from("projects")
     .update({ floors })
     .eq("id", projectId);
+  if (error) throw error;
+}
+
+export async function updateSubProjectFloors(
+  subProjectId: string,
+  floors: number,
+) {
+  const { error } = await supabase
+    .from("sub_projects")
+    .update({ floors })
+    .eq("id", subProjectId);
   if (error) throw error;
 }

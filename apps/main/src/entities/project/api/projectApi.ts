@@ -99,6 +99,16 @@ export const createProject = async (
 
   if (error) throw error;
 
+  // Auto-create default sub_project for the new project
+  await supabase.from("sub_projects").insert({
+    project_id: data.id,
+    name: data.name,
+    slug: "default",
+    type: data.project_type === "object" ? "object" : "building",
+    sort_order: 0,
+    is_default: true,
+  });
+
   return data as Project;
 };
 

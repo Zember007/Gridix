@@ -5,6 +5,7 @@ import { EmbedProviders } from "@/app/providers";
 
 // Lazy load pages
 const ProjectWidgetPage = lazy(() => import("@/pages/ProjectWidgetPage"));
+const SubProjectWidgetPage = lazy(() => import("@/pages/SubProjectWidgetPage"));
 const ApartmentDetailsPage = lazy(() => import("@/pages/ApartmentDetailsPage"));
 const AuthRedirectPage = lazy(() => import("@/pages/AuthRedirectPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
@@ -46,6 +47,20 @@ export function PublicRoutes() {
       <Route
         path="project/:projectSlug/apartment/:apartmentNumber/pdf"
         element={withLocalSuspense(<PDFTemplatePage />)}
+      />
+
+      {/* Sub-project routes */}
+      <Route
+        path="widget/:projectSlug/p/:subSlug"
+        element={withLocalSuspense(<SubProjectWidgetPage />)}
+      />
+      <Route
+        path="project/:projectSlug/p/:subSlug"
+        element={withLocalSuspense(<SubProjectWidgetPage />)}
+      />
+      <Route
+        path="project/:projectSlug/p/:subSlug/apartment/:apartmentNumber"
+        element={withLocalSuspense(<ApartmentDetailsPage />)}
       />
 
       {/* Auth routes */}

@@ -12,8 +12,11 @@ export interface ApartmentPhoto {
 
 export type CoverageFilter = "all" | "with" | "without";
 
-export const useApartmentPhotosManager = (projectId: string) => {
-  const data = useApartmentPhotosData(projectId);
+export const useApartmentPhotosManager = (
+  projectId: string,
+  subProjectId?: string,
+) => {
+  const data = useApartmentPhotosData(projectId, subProjectId);
 
   const upload = useApartmentPhotosUpload({
     selectedApartment: data.selectedApartment,

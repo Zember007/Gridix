@@ -15,7 +15,10 @@ type CustomField = {
   is_visible: boolean;
 };
 
-export const useAllFieldsManager = (projectId: string) => {
+export const useAllFieldsManager = (
+  projectId: string,
+  subProjectId?: string,
+) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | null>(null);
@@ -65,7 +68,7 @@ export const useAllFieldsManager = (projectId: string) => {
     updateFieldVisibility,
     deleteField,
     refreshFields,
-  } = useFields(projectIdForFields, initialFieldsData);
+  } = useFields(projectIdForFields, initialFieldsData, subProjectId);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);

@@ -69,5 +69,12 @@
   "viewDetails": "عرض التفاصيل",
   "openMenu": "فتح القائمة",
   "closeMenu": "إغلاق القائمة",
-  "plan_floor": "مخطط الطابق {{الطابق}}."
+  "plan_floor": "مخطط الطابق {{الطابق}}.",
+  "masterplans": "المخططات العامة",
+  "objects": "الكائنات",
+  "building": "مبنى",
+  "object": "كائن",
+  "priceFrom": "السعر من",
+  "noMasterplan": "لا يوجد مخطط عام متاح",
+  "noObjects": "لا توجد كائنات متاحة"
 }

@@ -25,7 +25,50 @@
     "objectNumber": "אובייקט מס' {{number}}",
     "plan": "תוכנית חפצים",
     "polygonsDescription": "סמן אזורים בתוכנית עבור כל אובייקט (וילות, בתים עירוניים)",
-    "polygonsTitle": "מצולעי אובייקט"
+    "polygonsTitle": "מצולעי אובייקט",
+    "description": "העלה תמונת תכנית להגדרת פולגונים של אובייקטים",
+    "guided": {
+      "toggle": "הצע את האובייקט הבא",
+      "progress": {
+        "floorRange": "טווח אובייקטים:",
+        "missingFloors": "אובייקטים חסרים:",
+        "allConfigured": "כל האובייקטים מוגדרים"
+      },
+      "helper": {
+        "savedAndNext": "אובייקט #{{floor}} נשמר. האובייקט הבא החסר: {{nextFloor}}",
+        "goNext": "לך לאובייקט הבא"
+      }
+    }
+  },
+  "genplan": {
+    "description": "העלו תמונת תכנית עיר, וסמנו כל תת־פרויקט עם אותם כלי פוליגון כמו בעורך חזיתות.",
+    "noEntities": "הוסיפו תחילה תתי־פרויקטים או אזורי תשתית — ואז אפשר לצייר את האזורים על התכנית.",
+    "polygonsTitle": "פוליגונים לתתי־פרויקטים",
+    "polygonsDescription": "בחרו תת־פרויקט או אזור תשתית, ואז ציירו או ערכו את הפוליגון על תכנית העיר.",
+    "selectLabel": "תת־פרויקט / אזור",
+    "selectPlaceholder": "בחרו תת־פרויקט או אזור",
+    "addNew": "התחלת ציור",
+    "canvas": "תכנית עיר",
+    "creating": "ציור אזור: {{name}}",
+    "delete": "מחיקת אזור",
+    "hoverCaption": "אזור",
+    "guided": {
+      "toggle": "להציע את תת־הפרויקט הבא",
+      "progress": {
+        "rangeLabel": "תתי־פרויקטים:",
+        "missingList": "חסר פוליגון:",
+        "allConfigured": "לכל תתי־הפרויקטים יש פוליגון"
+      },
+      "helper": {
+        "savedAndNext": "«{{name}}» נשמר. הבא: {{nextName}}",
+        "goNext": "לעבור לבא"
+      }
+    },
+    "polygon": {
+      "createSuccess": "נוצר אזור עבור {{name}}",
+      "saveSuccess": "נשמר אזור עבור {{name}}",
+      "deleteSuccess": "האזור נמחק"
+    }
   },
   "polygon": {
     "cancel": "לְבַטֵל",

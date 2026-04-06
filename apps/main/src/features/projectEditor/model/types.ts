@@ -21,6 +21,7 @@ export interface ProjectEditorProject {
   project_type?: "building" | "object" | null;
   facade_open: boolean;
   available_languages: Language[];
+  has_masterplan: boolean;
 }
 
 export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
@@ -43,4 +44,5 @@ export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
   project_type: "building",
   facade_open: false,
   available_languages: SUPPORTED_LANGUAGES,
+  has_masterplan: false,
 };

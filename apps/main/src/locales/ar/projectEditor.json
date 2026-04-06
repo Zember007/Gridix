@@ -21,6 +21,7 @@
   "errorSaving": "خطأ في حفظ المشروع",
   "fields": "الحقول",
   "fieldsTab": "الحقول",
+  "settingsTab": "الإعدادات",
   "fileTooLarge": "الملف كبير جداً (الحد الأقصى 10 ميجابايت)",
   "floor": "الطابق",
   "floorplan": "المخططات",
@@ -68,6 +69,7 @@
   "availableLanguagesDesc": "اختر اللغات التي ستكون متاحة في مُبدّل اللغة لهذا المشروع",
   "atLeastOneLanguage": "يرجى اختيار لغة واحدة على الأقل",
   "save": "حفظ",
+  "saveError": "خطأ في حفظ الإعدادات",
   "save&continue": "احفظ و استمر",
   "saveProjectFirst": "يرجى حفظ المشروع أولاً",
   "saveProjectFirstNote": "احفظ المشروع أولاً",
@@ -100,5 +102,6 @@
   "priceUpdateNegativeValue": "يجب أن تكون القيمة موجبة",
   "priceUpdateSuccess": "تم تحديث الأسعار بنجاح",
   "priceUpdateError": "فشل في تحديث الأسعار",
-  "clickOrDrop": "انقر أو اسحب"
+  "clickOrDrop": "انقر أو اسحب",
+  "genplan": "المخطط العام"
 }

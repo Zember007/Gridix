@@ -51,7 +51,11 @@ import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
 import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/ApartmentPhotosManager";
 
 import ProjectDomainSettings from "@/features/admin-project-domain-settings";
+import { lazy, Suspense } from "react";
 import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
+const GenplanEditorTab = lazy(
+  () => import("@/features/genplan/ui/GenplanEditorTab"),
+);
 import { useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
@@ -97,6 +101,7 @@ type EditorProjectSource = {
   project_type?: "building" | "object" | null;
   facade_open?: boolean | null;
   available_languages?: unknown;
+  has_masterplan?: boolean | null;
   user_id?: string | null;
 };
 
@@ -441,6 +446,7 @@ const ProjectEditor = ({
         "floors",
         "photos",
         "fields",
+        "genplan",
         "domains",
       ];
       if (validTabs.includes(page)) {
@@ -484,6 +490,7 @@ const ProjectEditor = ({
           ((row as unknown as Record<string, unknown>)
             .facade_open as boolean) || false,
         available_languages: parseAvailableLanguages(row.available_languages),
+        has_masterplan: Boolean(row.has_masterplan),
       });
     },
     [],
@@ -514,6 +521,15 @@ const ProjectEditor = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, projectSource?.id, isNew, mapDbProjectToEditor]);
+
+  // When genplan mode is active, hidden tabs should redirect to general
+  const GENPLAN_HIDDEN_TABS = ["apartments", "floors", "photos", "fields"];
+  useEffect(() => {
+    if (project.has_masterplan && GENPLAN_HIDDEN_TABS.includes(activeTab)) {
+      setActiveTab("basic");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.has_masterplan, activeTab]);
 
   // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
   useEffect(() => {
@@ -699,6 +715,20 @@ const ProjectEditor = ({
 
         if (error) throw error;
 
+        await supabase.from("sub_projects").insert({
+          project_id: data.id,
+          name: data.name,
+          slug: "default",
+          type: data.project_type === "object" ? "object" : "building",
+          sort_order: 0,
+          is_default: true,
+          floors: data.floors ?? 1,
+          has_parking: data.has_parking ?? false,
+          has_commercial: data.has_commercial ?? false,
+          facade_open: data.facade_open ?? false,
+          building_image_url: data.building_image_url ?? null,
+        });
+
         setProject((prev) => ({ ...prev, id: data.id }));
         toast.success(t("projectEditor.projectCreated"));
         void trackUsertourEvent({
@@ -728,6 +758,23 @@ const ProjectEditor = ({
           .eq("id", project.id);
 
         if (error) throw error;
+
+        if (!project.has_masterplan) {
+          await supabase
+            .from("sub_projects")
+            .update({
+              name: project.name.trim(),
+              type: project.project_type === "object" ? "object" : "building",
+              floors: project.floors,
+              has_parking: project.has_parking,
+              has_commercial: project.has_commercial,
+              facade_open: project.facade_open,
+              building_image_url: project.building_image_url,
+            })
+            .eq("project_id", project.id)
+            .eq("is_default", true);
+        }
+
         toast.success(t("projectEditor.projectSaved"));
       }
     } catch (error) {
@@ -799,6 +846,8 @@ const ProjectEditor = ({
         return "photos";
       case "fields":
         return "fields";
+      case "genplan":
+        return "genplan";
       case "domains":
         return "domains";
       default:
@@ -822,6 +871,9 @@ const ProjectEditor = ({
         break;
       case "fields":
         setActiveTab("fields");
+        break;
+      case "genplan":
+        setActiveTab("genplan");
         break;
       case "domains":
         setActiveTab("domains");
@@ -853,6 +905,7 @@ const ProjectEditor = ({
         activeTab={getSidebarSection(activeTab ?? "basic")}
         userEmail={userProfile?.email || user?.email || "Unknown user"}
         projectType={project.project_type ?? "building"}
+        hasMasterplan={project.has_masterplan}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
         isCollapsed={isCollapsed}
@@ -988,7 +1041,7 @@ const ProjectEditor = ({
 
               {(activeTab === "basic" || activeTab === "building") && (
                 <div className="space-y-6">
-                  {/* Sub-navigation for basic/building sections - only on desktop */}
+                  {/* Sub-navigation for basic/building sections - only on desktop. Hide building tab when genplan is active (facade belongs to subprojects) */}
                   <div className="mb-6 hidden gap-2 lg:flex">
                     <Button
                       variant={activeTab === "basic" ? "default" : "outline"}
@@ -998,17 +1051,21 @@ const ProjectEditor = ({
                       <Building2 className="h-4 w-4" />
                       {t("projectEditor.basicInfo")}
                     </Button>
-                    <Button
-                      variant={activeTab === "building" ? "default" : "outline"}
-                      onClick={() => setActiveTab("building")}
-                      disabled={isNew}
-                      className="flex items-center gap-2"
-                    >
-                      <Image className="h-4 w-4" />
-                      {project.project_type === "object"
-                        ? "Object Image"
-                        : t("projectEditor.buildingImage")}
-                    </Button>
+                    {!project.has_masterplan && (
+                      <Button
+                        variant={
+                          activeTab === "building" ? "default" : "outline"
+                        }
+                        onClick={() => setActiveTab("building")}
+                        disabled={isNew}
+                        className="flex items-center gap-2"
+                      >
+                        <Image className="h-4 w-4" />
+                        {project.project_type === "object"
+                          ? "Object Image"
+                          : t("projectEditor.buildingImage")}
+                      </Button>
+                    )}
                   </div>
 
                   {activeTab === "basic" && (
@@ -1146,107 +1203,110 @@ const ProjectEditor = ({
                               })}
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                              <Label htmlFor="project-type-desktop">
-                                {t("projectEditor.projectType")}
-                              </Label>
-                              <Select
-                                value={project.project_type || "building"}
-                                onValueChange={(v: "building" | "object") =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    project_type: v,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger id="project-type-desktop">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="building">
-                                    {t("projectEditor.typeBuilding")}
-                                  </SelectItem>
-                                  <SelectItem value="object">
-                                    {t("projectEditor.typeObject")}
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {project.project_type !== "object" && (
-                              <div>
-                                <Label htmlFor="floors">
-                                  {t("projectEditor.floors")} *
-                                </Label>
-                                <Input
-                                  id="floors"
-                                  type="number"
-                                  min="1"
-                                  value={project.floors}
-                                  onChange={(e) =>
-                                    setProject((prev) => ({
-                                      ...prev,
-                                      floors: parseInt(e.target.value) || 1,
-                                    }))
-                                  }
-                                />
+                          {!project.has_masterplan && (
+                            <>
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                  <Label htmlFor="project-type-desktop">
+                                    {t("projectEditor.projectType")}
+                                  </Label>
+                                  <Select
+                                    value={project.project_type || "building"}
+                                    onValueChange={(v: "building" | "object") =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        project_type: v,
+                                      }))
+                                    }
+                                  >
+                                    <SelectTrigger id="project-type-desktop">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="building">
+                                        {t("projectEditor.typeBuilding")}
+                                      </SelectItem>
+                                      <SelectItem value="object">
+                                        {t("projectEditor.typeObject")}
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                {project.project_type !== "object" && (
+                                  <div>
+                                    <Label htmlFor="floors">
+                                      {t("projectEditor.floors")} *
+                                    </Label>
+                                    <Input
+                                      id="floors"
+                                      type="number"
+                                      min="1"
+                                      value={project.floors}
+                                      onChange={(e) =>
+                                        setProject((prev) => ({
+                                          ...prev,
+                                          floors: parseInt(e.target.value) || 1,
+                                        }))
+                                      }
+                                    />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
 
-                          {/* Дополнительные типы помещений */}
-                          <div className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="has-parking"
-                                checked={project.has_parking}
-                                onCheckedChange={(checked) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    has_parking: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor="has-parking">
-                                {t("projectEditor.hasParking")}
-                              </Label>
-                            </div>
+                              <div className="space-y-4">
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    id="has-parking"
+                                    checked={project.has_parking}
+                                    onCheckedChange={(checked) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        has_parking: checked,
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor="has-parking">
+                                    {t("projectEditor.hasParking")}
+                                  </Label>
+                                </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="has-commercial"
-                                checked={project.has_commercial}
-                                onCheckedChange={(checked) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    has_commercial: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor="has-commercial">
-                                {t("projectEditor.hasCommercial")}
-                              </Label>
-                            </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    id="has-commercial"
+                                    checked={project.has_commercial}
+                                    onCheckedChange={(checked) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        has_commercial: checked,
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor="has-commercial">
+                                    {t("projectEditor.hasCommercial")}
+                                  </Label>
+                                </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="facade-open-desktop"
-                                checked={project.facade_open}
-                                onCheckedChange={(checked) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    facade_open: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor="facade-open-desktop">
-                                {t("projectEditor.facadeOpen")}
-                              </Label>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              {t("projectEditor.facadeOpenDesc")}
-                            </p>
-                          </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    id="facade-open-desktop"
+                                    checked={project.facade_open}
+                                    onCheckedChange={(checked) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        facade_open: checked,
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor="facade-open-desktop">
+                                    {t("projectEditor.facadeOpen")}
+                                  </Label>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  {t("projectEditor.facadeOpenDesc")}
+                                </p>
+                              </div>
+                            </>
+                          )}
                           <div>
                             <Label htmlFor="latitude">
                               {t("projectEditor.latitude")}
@@ -1524,7 +1584,7 @@ const ProjectEditor = ({
                     </>
                   )}
 
-                  {activeTab === "building" && (
+                  {activeTab === "building" && !project.has_masterplan && (
                     <BuildingImageEditor
                       projectId={project.id}
                       currentImageUrl={project.building_image_url}
@@ -1539,11 +1599,13 @@ const ProjectEditor = ({
                 </div>
               )}
 
-              {activeTab === "floors" && project.project_type !== "object" && (
-                <ProjectFloorsManager projectId={project.id} />
-              )}
+              {activeTab === "floors" &&
+                project.project_type !== "object" &&
+                !project.has_masterplan && (
+                  <ProjectFloorsManager projectId={project.id} />
+                )}
 
-              {activeTab === "apartments" && (
+              {activeTab === "apartments" && !project.has_masterplan && (
                 <div className="space-y-4">
                   <ProjectApartmentsManager
                     projectId={project.id}
@@ -1552,13 +1614,31 @@ const ProjectEditor = ({
                 </div>
               )}
 
-              {activeTab === "fields" && (
+              {activeTab === "fields" && !project.has_masterplan && (
                 <AllFieldsManager projectId={project.id} />
               )}
 
-              {activeTab === "photos" && (
+              {activeTab === "photos" && !project.has_masterplan && (
                 <ApartmentPhotosManager projectId={project.id} />
               )}
+
+              {activeTab === "genplan" &&
+                (bootstrapProject?.plan_tier === "pro" &&
+                bootstrapProject?.access_status === "active" ? (
+                  <Suspense fallback={null}>
+                    <GenplanEditorTab
+                      projectId={project.id}
+                      onMasterplanToggled={(active) =>
+                        setProject((prev) => ({
+                          ...prev,
+                          has_masterplan: active,
+                        }))
+                      }
+                    />
+                  </Suspense>
+                ) : (
+                  <AdminAccessNotice variant="pro" />
+                ))}
 
               {activeTab === "domains" && (
                 <ProjectDomainSettings

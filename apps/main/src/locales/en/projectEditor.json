@@ -21,6 +21,7 @@
   "errorSaving": "Error saving project",
   "fields": "Fields",
   "fieldsTab": "Fields",
+  "settingsTab": "Settings",
   "fileTooLarge": "File is too large (max 10MB)",
   "floor": "Floor",
   "floorplan": "Floor plans",
@@ -68,6 +69,7 @@
   "availableLanguagesDesc": "Select which languages are available in the language switcher for this project",
   "atLeastOneLanguage": "Select at least one language",
   "save": "Save",
+  "saveError": "Error saving settings",
   "save&continue": "Save and continue",
   "saveProjectFirst": "Please save the project first",
   "saveProjectFirstNote": "Save the project first",
@@ -100,5 +102,6 @@
   "priceUpdateNegativeValue": "Value must be positive",
   "priceUpdateSuccess": "Prices updated successfully",
   "priceUpdateError": "Failed to update prices",
-  "clickOrDrop": "Click or drop"
+  "clickOrDrop": "Click or drop",
+  "genplan": "Site plan"
 }

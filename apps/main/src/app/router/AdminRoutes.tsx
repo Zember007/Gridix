@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/features/auth";
 // Lazy load admin pages
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const ProjectEditorPage = lazy(() => import("@/pages/ProjectEditorPage"));
+const SubProjectEditorPage = lazy(() => import("@/pages/SubProjectEditorPage"));
 
 const AdminAnalyticsPage = lazy(() => import("@/pages/AdminAnalyticsPage"));
 const AmoCrmLeadLinkPage = lazy(() => import("@/pages/AmoCrmLeadLinkPage"));
@@ -38,6 +39,16 @@ export function AdminRoutes() {
         element={
           <ProtectedRoute>
             <ProjectEditorPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Sub-project editor */}
+      <Route
+        path="project/:projectSlug/sub/:subProjectSlug"
+        element={
+          <ProtectedRoute>
+            <SubProjectEditorPage />
           </ProtectedRoute>
         }
       />

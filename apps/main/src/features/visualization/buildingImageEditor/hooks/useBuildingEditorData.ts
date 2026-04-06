@@ -6,10 +6,19 @@ import { useFloorPolygonEditor } from "./useFloorPolygonEditor";
 
 export function useBuildingEditorData({
   projectId,
+  subProjectId,
+  initialFloors,
+  subProjectType,
   currentImageUrl,
   onImageUpdate,
 }: BuildingImageEditorProps) {
-  const loader = useBuildingDataLoader({ projectId, currentImageUrl });
+  const loader = useBuildingDataLoader({
+    projectId,
+    subProjectId,
+    initialFloors,
+    subProjectType: subProjectType === "genplan" ? undefined : subProjectType,
+    currentImageUrl,
+  });
 
   const facade = useFacadeCrud({
     facades: loader.facades,
@@ -21,6 +30,7 @@ export function useBuildingEditorData({
     activeFacade: loader.activeFacade,
     loadBuildingData: loader.loadBuildingData,
     projectId,
+    subProjectId,
     project: loader.project,
     user: loader.user,
     t: loader.t,
@@ -33,6 +43,7 @@ export function useBuildingEditorData({
     facadeDisplaySettings: loader.facadeDisplaySettings,
     loadBuildingData: loader.loadBuildingData,
     projectId,
+    subProjectId,
     project: loader.project,
     t: loader.t,
   });

@@ -17,6 +17,23 @@ export interface SelectorSummaryResult {
   customDomain: string | null;
 }
 
+export interface SubProjectListItem {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  sort_order: number;
+  is_default: boolean;
+  building_image_url: string | null;
+}
+
+export interface MasterplanListItem {
+  id: string;
+  name: string;
+  background_asset_url: string | null;
+  is_default: boolean;
+}
+
 export interface SelectorInitialResult {
   project: Tables<"projects">;
   apartments: Array<Record<string, unknown>>;
@@ -24,6 +41,8 @@ export interface SelectorInitialResult {
   fieldSettings: Tables<"project_field_settings">[];
   customFields: Tables<"project_custom_fields">[];
   customDomain: string | null;
+  subProjects: SubProjectListItem[];
+  masterplansList: MasterplanListItem[];
 }
 
 export interface SelectorFacadeResult {
@@ -110,6 +129,43 @@ export async function loadSelectorSummary(
   }
 }
 
+export interface SelectorSubProjectResult extends SelectorInitialResult {
+  subProjectId: string | null;
+  subProject: Tables<"sub_projects"> | null;
+}
+
+export async function loadSelectorSubProject(
+  projectId: string,
+  subProjectSlug: string,
+): Promise<SelectorSubProjectResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "load-sub-project",
+      projectSlug: projectId,
+      subProjectSlug,
+    },
+  });
+
+  const result = unwrap(data, error);
+  if (!result.project) throw new Error("Sub-project not found");
+
+  return {
+    project: result.project,
+    apartments: result.apartments ?? [],
+    layoutPhotosByRooms: result.layoutPhotosByRooms ?? {},
+    fieldSettings: result.fieldSettings ?? [],
+    customFields: result.customFields ?? [],
+    customDomain: result.customDomain ?? null,
+    subProjectId:
+      (result.subProjectId as string | undefined) ??
+      result.subProject?.id ??
+      null,
+    subProject: result.subProject ?? null,
+    subProjects: [],
+    masterplansList: [],
+  };
+}
+
 export async function loadSelectorInitial(
   projectId: string,
 ): Promise<SelectorInitialResult> {
@@ -127,14 +183,21 @@ export async function loadSelectorInitial(
     fieldSettings: result.fieldSettings ?? [],
     customFields: result.customFields ?? [],
     customDomain: result.customDomain ?? null,
+    subProjects: result.subProjects ?? [],
+    masterplansList: result.masterplansList ?? [],
   };
 }
 
 export async function loadSelectorFacade(
   projectId: string,
+  subProjectId?: string,
 ): Promise<SelectorFacadeResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
-    body: { action: "load-facade", projectId },
+    body: {
+      action: "load-facade",
+      projectId,
+      ...(subProjectId && { subProjectId }),
+    },
   });
 
   const result = unwrap(data, error);
@@ -149,9 +212,15 @@ export async function loadSelectorFacade(
 export async function loadSelectorFloorPolygons(
   projectId: string,
   floors: number[],
+  subProjectId?: string,
 ): Promise<SelectorFloorPolygonsResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
-    body: { action: "load-floor-polygons", projectId, floors },
+    body: {
+      action: "load-floor-polygons",
+      projectId,
+      floors,
+      ...(subProjectId && { subProjectId }),
+    },
   });
 
   const result = unwrap(data, error);
@@ -164,9 +233,15 @@ export async function loadSelectorFloorPolygons(
 export async function loadSelectorFloorPlan(
   projectId: string,
   floorNumber: number,
+  subProjectId?: string,
 ): Promise<SelectorFloorPlanResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
-    body: { action: "load-floor-plan", projectId, floorNumber },
+    body: {
+      action: "load-floor-plan",
+      projectId,
+      floorNumber,
+      ...(subProjectId && { subProjectId }),
+    },
   });
 
   const result = unwrap(data, error);
@@ -197,9 +272,14 @@ export interface SelectorFloorsLightResult {
 
 export async function loadSelectorFloorsLight(
   projectId: string,
+  subProjectId?: string,
 ): Promise<SelectorFloorsLightResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
-    body: { action: "load-floors-light", projectId },
+    body: {
+      action: "load-floors-light",
+      projectId,
+      ...(subProjectId && { subProjectId }),
+    },
   });
 
   const result = unwrap(data, error);
@@ -376,6 +456,64 @@ export async function loadPdfTemplateData(
     projectDomains: result.projectDomains ?? [],
     companyName: result.companyName ?? null,
     companyLogoUrl: result.companyLogoUrl ?? null,
+  };
+}
+
+// ── Masterplan data (public viewer) ──
+
+export interface MasterplanArea {
+  id: string;
+  area_type: string;
+  geometry: unknown;
+  geometry_type: string;
+  label: string | null;
+  short_label: string | null;
+  linked_entity_type: string;
+  linked_entity_id: string | null;
+  is_clickable: boolean;
+  sort_order: number;
+  z_index: number;
+  status: string;
+  ui_payload: unknown;
+  open_behavior: string | null;
+  building_summary?: {
+    available_count: number;
+    price_from: number | null;
+    currency: string | null;
+  } | null;
+  infrastructure_zone?: Record<string, unknown> | null;
+}
+
+export interface SelectorMasterplanResult {
+  masterplan: {
+    id: string;
+    name: string;
+    background_asset_url: string | null;
+    background_asset_width: number | null;
+    background_asset_height: number | null;
+    polygon_display_settings: unknown;
+    viewport_default: unknown;
+  } | null;
+  areas: MasterplanArea[];
+}
+
+export async function loadSelectorMasterplan(
+  projectId: string,
+  masterplanId?: string,
+): Promise<SelectorMasterplanResult> {
+  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
+    body: {
+      action: "load-masterplan-preview",
+      projectId,
+      ...(masterplanId && { masterplanId }),
+    },
+  });
+
+  const result = unwrap(data, error);
+
+  return {
+    masterplan: result.masterplan ?? null,
+    areas: result.areas ?? [],
   };
 }
 

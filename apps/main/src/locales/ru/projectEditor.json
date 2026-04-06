@@ -21,6 +21,7 @@
   "errorSaving": "Ошибка сохранения проекта",
   "fields": "Поля",
   "fieldsTab": "Поля",
+  "settingsTab": "Настройки",
   "fileTooLarge": "Файл слишком большой (макс. 10 МБ)",
   "floor": "Этаж",
   "floorplan": "Планировки",
@@ -68,6 +69,7 @@
   "availableLanguagesDesc": "Выберите языки, которые будут доступны в переключателе языка для этого проекта",
   "atLeastOneLanguage": "Нужно выбрать хотя бы один язык",
   "save": "Сохранить",
+  "saveError": "Ошибка сохранения настроек",
   "save&continue": "Сохранить и продолжить",
   "saveProjectFirst": "Сначала сохраните проект",
   "saveProjectFirstNote": "Сначала сохраните проект",
@@ -100,5 +102,6 @@
   "priceUpdateNegativeValue": "Значение должно быть положительным",
   "priceUpdateSuccess": "Цены успешно обновлены",
   "priceUpdateError": "Не удалось обновить цены",
-  "clickOrDrop": "Нажмите или перетащите"
+  "clickOrDrop": "Нажмите или перетащите",
+  "genplan": "Генплан"
 }

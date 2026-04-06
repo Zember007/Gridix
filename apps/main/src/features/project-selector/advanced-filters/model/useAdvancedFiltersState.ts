@@ -51,6 +51,8 @@ export type AdvancedFiltersProps = {
   formatPrice: (price: number) => string;
   visibleFilterFields: Record<FilterFieldKey, boolean>;
   hasAnyVisibleFilter: boolean;
+  /** Sub-project page: use `sub_projects.type` instead of parent `projects.project_type`. */
+  projectType?: "building" | "object" | null;
 };
 
 export const useAdvancedFiltersState = ({

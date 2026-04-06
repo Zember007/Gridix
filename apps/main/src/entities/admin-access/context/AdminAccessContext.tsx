@@ -38,6 +38,7 @@ interface AdminAccessContextValue {
   canUsePartnerModule: (projectId?: string | null) => boolean;
   canUseMassActions: (projectId?: string | null) => boolean;
   canUseAdvancedAnalytics: (projectId?: string | null) => boolean;
+  canUseGenplan: (projectId?: string | null) => boolean;
 }
 
 const AdminAccessContext = createContext<AdminAccessContextValue | null>(null);
@@ -124,6 +125,13 @@ export function AdminAccessProvider({ children }: AdminAccessProviderProps) {
         projectId
           ? hasInList(capabilities?.advanced_analytics_project_ids, projectId)
           : (capabilities?.advanced_analytics_project_ids.length ?? 0) > 0,
+      canUseGenplan: (projectId) =>
+        projects.some(
+          (project) =>
+            project.id === projectId &&
+            project.access_status === "active" &&
+            project.plan_tier === "pro",
+        ),
     };
   }, [query.data, query.error, query.isLoading, query.refetch]);
 

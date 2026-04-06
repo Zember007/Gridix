@@ -69,5 +69,12 @@
   "viewDetails": "Detayları görüntüle",
   "openMenu": "Menüyü aç",
   "closeMenu": "Menüyü kapat",
-  "plan_floor": "Kat {{kat}} planı"
+  "plan_floor": "Kat {{kat}} planı",
+  "masterplans": "Genel Planlar",
+  "objects": "Nesneler",
+  "building": "Bina",
+  "object": "Nesne",
+  "priceFrom": "Fiyat",
+  "noMasterplan": "Genel plan mevcut değil",
+  "noObjects": "Nesne bulunamadı"
 }
