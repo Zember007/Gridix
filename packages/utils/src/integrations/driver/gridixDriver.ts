@@ -28,9 +28,9 @@ export function getGridixDriverDefaults(): Partial<Config> {
     smoothScroll: true,
     stageRadius: GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
     /** Отступ выреза: border 2px + outline 4px + воздух. */
-    stagePadding: 10,
+    stagePadding: -1,
     /** Расстояние от подсвеченного элемента до поповера (дефолт driver.js — 10). */
-    popoverOffset: 28,
+    popoverOffset: 20,
   };
 }
 
