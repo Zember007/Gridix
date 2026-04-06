@@ -34,7 +34,7 @@ import { useFacadeData } from "./hooks/useFacadeData";
 import { useUrlState } from "./hooks/useUrlState";
 import { useSelectorUIState } from "./hooks/useSelectorUIState";
 import { SubscriptionAlert } from "./SubscriptionAlert";
-import { normalizeSubProjectKind } from "./lib/subProjectDisplay";
+import { resolveSelectorEntityKind } from "./lib/subProjectDisplay";
 import { ProjectHeader } from "./ProjectHeader";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { useFields } from "@/hooks/useFields";
@@ -289,15 +289,11 @@ function ProjectApartmentSelectorLoaded({
 
   const showContent = apartmentsLoaded;
 
-  const effectiveProjectType = useMemo((): "building" | "object" | null => {
-    if (subProject) {
-      return normalizeSubProjectKind(subProject.type);
-    }
-    const pt = (project?.project_type ?? "").toLowerCase().trim();
-    if (pt === "object") return "object";
-    if (pt === "building") return "building";
-    return null;
-  }, [subProject, project?.project_type]);
+  const effectiveProjectType = useMemo(
+    (): "building" | "object" =>
+      resolveSelectorEntityKind(subProject, subProjects),
+    [subProject, subProjects],
+  );
 
   const { isSubscriptionInactive, isOwner } = useSubscriptionStatus({
     project,

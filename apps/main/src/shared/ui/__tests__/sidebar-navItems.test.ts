@@ -18,7 +18,7 @@ function simulateGetNavItems(
   projectType?: "building" | "object" | null,
   hasMasterplan?: boolean,
 ): string[] {
-  let items = ALL_IDS;
+  const items = ALL_IDS;
 
   if (hasMasterplan) {
     return items.filter((id) => !GENPLAN_HIDDEN.has(id));
