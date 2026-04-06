@@ -7,7 +7,6 @@ export type BuildingFacadeProject = {
   name: string;
   building_image_url: string | null;
   currency?: string | null;
-  facade_open?: boolean | null;
 };
 
 export interface BuildingFloor {

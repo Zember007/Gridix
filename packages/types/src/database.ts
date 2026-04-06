@@ -3042,7 +3042,6 @@ export type Database = {
           created_at: string;
           currency: Database["public"]["Enums"]["currency_type"] | null;
           description: string | null;
-          facade_open: boolean;
           floors: number;
           has_commercial: boolean | null;
           has_masterplan: boolean;
@@ -3078,7 +3077,6 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["currency_type"] | null;
           description?: string | null;
-          facade_open?: boolean;
           floors?: number;
           has_commercial?: boolean | null;
           has_masterplan?: boolean;
@@ -3114,7 +3112,6 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["currency_type"] | null;
           description?: string | null;
-          facade_open?: boolean;
           floors?: number;
           has_commercial?: boolean | null;
           has_masterplan?: boolean;
@@ -3218,7 +3215,6 @@ export type Database = {
         Row: {
           building_image_url: string | null;
           created_at: string;
-          facade_open: boolean;
           floors: number;
           has_commercial: boolean;
           has_parking: boolean;
@@ -3236,7 +3232,6 @@ export type Database = {
         Insert: {
           building_image_url?: string | null;
           created_at?: string;
-          facade_open?: boolean;
           floors?: number;
           has_commercial?: boolean;
           has_parking?: boolean;
@@ -3254,7 +3249,6 @@ export type Database = {
         Update: {
           building_image_url?: string | null;
           created_at?: string;
-          facade_open?: boolean;
           floors?: number;
           has_commercial?: boolean;
           has_parking?: boolean;

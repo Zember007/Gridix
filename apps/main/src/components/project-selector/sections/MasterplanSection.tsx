@@ -152,9 +152,6 @@ export function MasterplanSection({
       return (
         <div className="pointer-events-none w-56 rounded-lg border bg-white p-3 shadow-lg">
           <div className="mb-1 text-sm font-semibold">{sp.name}</div>
-          <div className="mb-2 text-xs text-gray-500">
-            {kind === "object" ? t("project.object") : t("project.building")}
-          </div>
           {area.building_summary && (
             <div className="space-y-0.5 text-xs">
               <div>
@@ -178,16 +175,10 @@ export function MasterplanSection({
               )}
             </div>
           )}
-          <div
-            className="mt-2 text-xs font-medium"
-            style={{ color: themeColor }}
-          >
-            {t("project.viewDetails")} →
-          </div>
         </div>
       );
     },
-    [buildingAreas, subProjectsById, t, themeColor],
+    [buildingAreas, subProjectsById, t],
   );
 
   const facadeNavItems = useMemo(
@@ -213,7 +204,6 @@ export function MasterplanSection({
       name: masterplan?.name ?? activeMasterplanItem?.name ?? project.name,
       building_image_url: project.building_image_url,
       currency: project.currency,
-      facade_open: project.facade_open ?? false,
     }),
     [project, masterplan?.name, activeMasterplanItem?.name],
   );

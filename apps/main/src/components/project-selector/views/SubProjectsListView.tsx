@@ -39,7 +39,7 @@ export function SubProjectsListView({
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {orderedSubProjects.map((sp) => {
           const kind = normalizeSubProjectKind(sp.type);
           return (

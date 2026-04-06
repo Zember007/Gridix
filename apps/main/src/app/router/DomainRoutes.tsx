@@ -12,11 +12,14 @@ export function DomainRoutes() {
     <Routes>
       {/* Custom domain routes - for when site is accessed via custom domain */}
       <Route index element={<DomainProjectPage />} />
-      <Route path="apartment/:apartmentId" element={<DomainApartmentPage />} />
+      <Route
+        path="apartment/:apartmentNumber"
+        element={<DomainApartmentPage />}
+      />
       {/* Sub-project routes on custom domain */}
       <Route path="p/:subSlug" element={<DomainSubProjectPage />} />
       <Route
-        path="p/:subSlug/apartment/:apartmentId"
+        path="p/:subSlug/apartment/:apartmentNumber"
         element={<DomainApartmentPage />}
       />
       <Route path="*" element={<NotFound />} />

@@ -10,7 +10,7 @@ import {
   type TouchEvent,
   type ImgHTMLAttributes,
 } from "react";
-import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -36,8 +36,6 @@ import {
 } from "@/features/visualization/buildingFacade/lib/popupPosition";
 // import { HandTap } from "@phosphor-icons/react";
 import InteractionHint from "@/components/visualization/InteractionHint";
-
-const COLLAPSED_HEIGHT = 280;
 
 const MobileFloorInfoBar = ({
   selectedFloor,
@@ -191,7 +189,6 @@ const PolygonPlanImageView = ({
 }: PolygonPlanImageViewProps) => {
   const isObjectLayout = entityKind === "object";
   const isMobile = useIsMobile();
-  const [isExpanded, setIsExpanded] = useState(project.facade_open);
   const [imageRect, setImageRect] = useState<{
     offset: { x: number; y: number };
     size: { width: number; height: number };
@@ -337,12 +334,11 @@ const PolygonPlanImageView = ({
     (size: { width: number; height: number }) =>
       computeMobileDockPositionUtil({
         containerEl: containerRef.current,
-        isExpanded: isExpanded ?? false,
         imageRect,
         visibleFloors: floorsWithPolygon,
         size,
       }),
-    [floorsWithPolygon, imageRect, isExpanded],
+    [floorsWithPolygon, imageRect],
   );
 
   const computePopupPositionForPolygon = useCallback(
@@ -357,17 +353,15 @@ const PolygonPlanImageView = ({
     ) =>
       computePopupPositionForPolygonUtil({
         containerEl: containerRef.current,
-        isExpanded: isExpanded ?? false,
         imageRect,
         polygonBoundsPct,
         size,
       }),
-    [imageRect, isExpanded],
+    [imageRect],
   );
 
   const handleFloorHover = useCallback(
     (floorNumber: number) => {
-      if (!isExpanded) return;
       if (!containerRef.current) return;
 
       // Находим полигон для данного этажа
@@ -430,7 +424,6 @@ const PolygonPlanImageView = ({
       computePopupPositionForPolygon,
       facadeSettings?.display?.showTooltip,
       floorsWithPolygon,
-      isExpanded,
       isMobile,
       mobilePopupDockPosition,
       popupSize,
@@ -484,7 +477,7 @@ const PolygonPlanImageView = ({
   useLayoutEffect(() => {
     // After any layout-affecting change, measure the real image-area container.
     measureImageRect();
-  }, [measureImageRect, isExpanded, isMobile, facadeImageUrl]);
+  }, [measureImageRect, isMobile, facadeImageUrl]);
 
   useEffect(() => {
     const containerEl = containerRef.current;
@@ -530,7 +523,6 @@ const PolygonPlanImageView = ({
 
   useEffect(() => {
     if (
-      !isExpanded ||
       !imageRect ||
       imageRect.size.width === 0 ||
       imageRect.size.height === 0
@@ -563,14 +555,7 @@ const PolygonPlanImageView = ({
         setPopupPosition(null);
       }
     }
-  }, [
-    floorsWithPolygon,
-    handleFloorHover,
-    imageRect,
-    isExpanded,
-    isMobile,
-    selectedFloor,
-  ]);
+  }, [floorsWithPolygon, handleFloorHover, imageRect, isMobile, selectedFloor]);
 
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
@@ -596,16 +581,6 @@ const PolygonPlanImageView = ({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [showPopup]);
-
-  // Close popup when switching between expanded/collapsed modes
-  useEffect(() => {
-    if (showPopup && !isExpanded) {
-      setShowPopup(false);
-      setPopupAnchor(null);
-      setPopupPosition(null);
-      setSelectedFloor(null);
-    }
-  }, [isExpanded, showPopup]);
 
   const getFloorApartments = (floorNumber: number) => {
     return apartments.filter((apt) => apt.floor_number === floorNumber);
@@ -725,12 +700,7 @@ const PolygonPlanImageView = ({
 
   useLayoutEffect(() => {
     if (!showPopup || !containerRef.current || !popupRef.current) return;
-    if (
-      !isExpanded ||
-      !imageRect ||
-      imageRect.size.width === 0 ||
-      imageRect.size.height === 0
-    )
+    if (!imageRect || imageRect.size.width === 0 || imageRect.size.height === 0)
       return;
 
     const rect = popupRef.current.getBoundingClientRect();
@@ -792,7 +762,6 @@ const PolygonPlanImageView = ({
     computeMobileDockPosition,
     computePopupPositionForPolygon,
     imageRect,
-    isExpanded,
     isMobile,
     mobilePopupDockPosition,
     popupAnchor,
@@ -824,7 +793,6 @@ const PolygonPlanImageView = ({
   };
 
   const handleFloorLeave = () => {
-    if (!isExpanded) return;
     setHoveredFloor(null);
     setMasterplanTooltipAreaId(null);
     if (!isMobile) {
@@ -851,8 +819,6 @@ const PolygonPlanImageView = ({
   };
 
   const handleSVGFloorHover = (floorNumber: number) => {
-    if (!isExpanded) return;
-
     setHoveredFloor(floorNumber);
     handleFloorHover(floorNumber);
   };
@@ -870,12 +836,7 @@ const PolygonPlanImageView = ({
   // чтобы он по возможности не перекрывал полигоны.
   // Приоритет: сверху слева → сверху справа → другие доступные места.
   useEffect(() => {
-    if (
-      !isMobile ||
-      !isExpanded ||
-      floorsWithPolygon.length === 0 ||
-      !containerRef.current
-    ) {
+    if (!isMobile || floorsWithPolygon.length === 0 || !containerRef.current) {
       return;
     }
 
@@ -975,7 +936,7 @@ const PolygonPlanImageView = ({
       return !noOverlap;
     };
     void intersectsPolygons;
-  }, [floorsWithPolygon, imageRect, isExpanded, isMobile]);
+  }, [floorsWithPolygon, imageRect, isMobile]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const isCarouselInteractingRef = useRef(false);
@@ -1100,25 +1061,19 @@ const PolygonPlanImageView = ({
     <>
       <div
         ref={outerRef}
-        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
+        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isMobile ? "touch-manipulation" : ""}`}
         style={{
-          minHeight: isExpanded ? (isMobile ? "auto" : 600) : "auto",
-          height: isExpanded
-            ? isMobile
-              ? "auto"
-              : "calc(100dvh - 200px)"
-            : isMobile
-              ? "200px"
-              : `${COLLAPSED_HEIGHT}px`,
-          width: isExpanded ? "100%" : "100%",
-          maxWidth: isExpanded ? "100%" : undefined,
-          boxShadow: isExpanded ? "0 8px 32px rgba(0,0,0,0.12)" : undefined,
+          minHeight: isMobile ? "auto" : 600,
+          height: isMobile ? "auto" : "calc(100dvh - 200px)",
+          width: "100%",
+          maxWidth: "100%",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
         }}
       >
         {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
         <div
           ref={containerRef}
-          className={`relative flex min-h-0 w-full items-center justify-center overflow-hidden ${isMobile && isExpanded ? "" : "flex-1"}`}
+          className={`relative flex min-h-0 w-full items-center justify-center overflow-hidden ${isMobile ? "" : "flex-1"}`}
           style={{ touchAction: isTouchZooming ? "none" : "manipulation" }}
         >
           {/* Blurred background – visible on sm+ (≥640px); hidden on small phones */}
@@ -1208,15 +1163,11 @@ const PolygonPlanImageView = ({
                           data-floor={floor.floor_number}
                           onClick={() => handlePolygonSvgClick(floor)}
                           onMouseEnter={() => {
-                            if (isExpanded) {
-                              handleSVGFloorHover(floor.floor_number);
-                            }
+                            handleSVGFloorHover(floor.floor_number);
                           }}
                           onMouseLeave={() => {
-                            if (isExpanded) {
-                              setHoveredFloor(null);
-                              handleFloorLeave();
-                            }
+                            setHoveredFloor(null);
+                            handleFloorLeave();
                           }}
                           style={{
                             pointerEvents: "auto",
@@ -1232,24 +1183,6 @@ const PolygonPlanImageView = ({
                             transformOrigin: "center",
                           }}
                         />
-                        {labelText && (
-                          <text
-                            x={labelCx}
-                            y={labelCy}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="#fff"
-                            fontSize={3.5}
-                            fontWeight="bold"
-                            style={{
-                              pointerEvents: "none",
-                              textShadow:
-                                "0 1px 3px rgba(0,0,0,0.6), 0 0 6px rgba(0,0,0,0.3)",
-                            }}
-                          >
-                            {labelText}
-                          </text>
-                        )}
                       </g>
                     );
                   })}
@@ -1283,20 +1216,6 @@ const PolygonPlanImageView = ({
                 />
               </button>
             </>
-          )}
-
-          {!isExpanded && (
-            <button
-              className={`absolute ${showFacadeNav ? "bottom-12" : "bottom-4"} left-1/2 z-10 -translate-x-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-all hover:bg-white ${
-                isMobile ? "p-3 active:scale-95" : "p-4 hover:scale-105"
-              }`}
-              onClick={() => setIsExpanded(true)}
-              style={{ touchAction: "manipulation" }}
-            >
-              <Maximize2
-                className={`text-gray-900 ${isMobile ? "h-4 w-4" : "h-7 w-7"}`}
-              />
-            </button>
           )}
 
           {showFacadeNav && (
@@ -1354,38 +1273,23 @@ const PolygonPlanImageView = ({
           <InteractionHint storageKey="building" />
         </div>
 
-        {/*    {isExpanded && (
-          <button
-            className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
-              }`}
-            aria-label={'Close'}
-            onClick={() => setIsExpanded(false)}
-            style={{ touchAction: 'manipulation' }}
-          >
-            <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
-          </button>
-        )} */}
-        {planKind !== "masterplan" &&
-          isMobile &&
-          isExpanded &&
-          selectedFloor !== null && (
-            <MobileFloorInfoBar
-              selectedFloor={selectedFloor}
-              project={project}
-              isObjectLayout={isObjectLayout}
-              apartments={apartments}
-              facadeSettings={facadeSettings}
-              visibleFields={visibleFields}
-              selectedCurrency={selectedCurrency}
-              themeColor={themeColor}
-              onFloorClick={handleFloorClick}
-              getFloorStats={getFloorStats}
-            />
-          )}
+        {planKind !== "masterplan" && isMobile && selectedFloor !== null && (
+          <MobileFloorInfoBar
+            selectedFloor={selectedFloor}
+            project={project}
+            isObjectLayout={isObjectLayout}
+            apartments={apartments}
+            facadeSettings={facadeSettings}
+            visibleFields={visibleFields}
+            selectedCurrency={selectedCurrency}
+            themeColor={themeColor}
+            onFloorClick={handleFloorClick}
+            getFloorStats={getFloorStats}
+          />
+        )}
 
         {planKind !== "masterplan" &&
           isMobile &&
-          isExpanded &&
           floorsWithPolygon.length > 0 && (
             <div className="flex h-20 w-full flex-row items-center justify-center p-4">
               <div className="flex w-full flex-row items-center gap-4">
@@ -1468,4 +1372,3 @@ const PolygonPlanImageView = ({
 };
 
 export default PolygonPlanImageView;
-export { PolygonPlanImageView as BuildingFacadeView };

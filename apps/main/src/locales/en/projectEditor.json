@@ -83,8 +83,6 @@
   "uploading": "Uploading...",
   "uploadPdf": "Upload PDF",
   "view": "View",
-  "facadeOpen": "Open Facade",
-  "facadeOpenDesc": "Display the building with an open facade view",
   "priceManagement": "Price Management",
   "priceManagementDesc": "Mass update prices for all apartments in this project.",
   "operation": "Operation",

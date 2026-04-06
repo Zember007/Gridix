@@ -409,6 +409,7 @@ export async function loadApartmentDetails(
   projectId: string,
   apartmentIdentifier: string,
   useId = false,
+  subProjectSlug?: string,
 ): Promise<ApartmentDetailsResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
     body: {
@@ -416,6 +417,7 @@ export async function loadApartmentDetails(
       projectId,
       apartmentIdentifier,
       useId,
+      ...(subProjectSlug ? { subProjectSlug } : {}),
     },
   });
 

@@ -539,7 +539,6 @@ const ExcelColumnMapper = ({
         subscription_expires_at: null,
         subscription_status: "active",
         view_count: 0,
-        facade_open: true,
         polygon_settings_facade: {},
         polygon_settings_floor: {},
         has_masterplan: false,

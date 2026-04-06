@@ -106,6 +106,26 @@ interface ProjectApartmentSelectorLoadedProps {
   masterplansList: MasterplanListItem[];
 }
 
+/** Slug for `/p/:slug/apartment/...` — текущий подпроект или дефолтный / единственный из списка. */
+function resolveSubProjectSlugForApartmentUrl(
+  subProject: Tables<"sub_projects"> | null | undefined,
+  subProjects: SubProjectListItem[],
+): string | null {
+  if (subProject?.slug) return subProject.slug;
+
+  const defaultSp = subProjects.find((s) => s.is_default);
+  if (defaultSp) return defaultSp.slug;
+
+  if (subProjects.length === 1) return subProjects[0]!.slug;
+
+  if (subProjects.length > 0) {
+    return [...subProjects].sort((a, b) => a.sort_order - b.sort_order)[0]!
+      .slug;
+  }
+
+  return null;
+}
+
 const loaderBlock = (themeColor: string) => (
   <div className="absolute inset-0 grid h-full w-full place-items-center">
     <Spinner size="md" color={themeColor} />
@@ -311,10 +331,33 @@ function ProjectApartmentSelectorLoaded({
 
     if (!isWidget) {
       try {
-        const projectPath = project?.slug
-          ? project.slug
-          : `id/${project?.id || projectId}`;
-        const path = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+        const aptSeg = encodeURIComponent(apartment.apartment_number);
+        const subSlugRaw = resolveSubProjectSlugForApartmentUrl(
+          subProject,
+          subProjects,
+        );
+
+        let path: string;
+        if (subSlugRaw) {
+          const subSeg = encodeURIComponent(subSlugRaw);
+          if (customDomain) {
+            path = `/p/${subSeg}/apartment/${aptSeg}`;
+          } else {
+            const projectPath = project?.slug
+              ? project.slug
+              : `id/${project?.id || projectId}`;
+            path = `/${language}/project/${projectPath}/p/${subSeg}/apartment/${aptSeg}`;
+          }
+        } else {
+          if (customDomain) {
+            path = `/apartment/${aptSeg}`;
+          } else {
+            const projectPath = project?.slug
+              ? project.slug
+              : `id/${project?.id || projectId}`;
+            path = `/${language}/project/${projectPath}/apartment/${aptSeg}`;
+          }
+        }
 
         const baseOrigin = customDomain
           ? `https://${customDomain}`
@@ -327,7 +370,7 @@ function ProjectApartmentSelectorLoaded({
         });
 
         window.history.pushState(
-          { apartmentId: apartment.id },
+          { apartmentNumber: apartment.apartment_number },
           "",
           newUrl.toString(),
         );

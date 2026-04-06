@@ -55,20 +55,29 @@ const ApartmentDetailsPage = ({
 }: ApartmentDetailsPageProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { projectId, projectSlug, apartmentId, apartmentNumber, lang } =
-    useParams<{
-      projectId?: string;
-      projectSlug?: string;
-      apartmentId?: string;
-      apartmentNumber?: string;
-      lang?: string;
-    }>();
+  const {
+    projectId,
+    projectSlug,
+    apartmentId,
+    apartmentNumber,
+    lang,
+    subSlug,
+  } = useParams<{
+    projectId?: string;
+    projectSlug?: string;
+    apartmentId?: string;
+    apartmentNumber?: string;
+    lang?: string;
+    subSlug?: string;
+  }>();
 
   const [overrideApartmentId, setOverrideApartmentId] = useState<string | null>(
     null,
   );
 
-  const projectIdentifier = useId ? projectIdProp : projectSlug || projectId;
+  const projectIdentifier = useId
+    ? projectIdProp
+    : projectSlug || projectId || projectIdProp;
   const apartmentIdentifier =
     overrideApartmentId ||
     (useId ? apartmentIdProp : apartmentNumber || apartmentId);
@@ -354,6 +363,7 @@ const ApartmentDetailsPage = ({
           projectIdentifier,
           apartmentIdentifier,
           effectiveUseId,
+          subSlug,
         );
 
         if (cancelled) return;
@@ -447,7 +457,7 @@ const ApartmentDetailsPage = ({
     return () => {
       cancelled = true;
     };
-  }, [projectIdentifier, apartmentIdentifier, effectiveUseId]);
+  }, [projectIdentifier, apartmentIdentifier, effectiveUseId, subSlug]);
 
   // View tracking (fire-and-forget writes, kept separate)
   useEffect(() => {

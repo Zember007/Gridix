@@ -100,7 +100,6 @@ type EditorProjectSource = {
   pdf_presentation_url?: string | null;
   theme_color?: string | null;
   project_type?: "building" | "object" | null;
-  facade_open?: boolean | null;
   available_languages?: unknown;
   has_masterplan?: boolean | null;
   user_id?: string | null;
@@ -492,9 +491,6 @@ const ProjectEditor = ({
             | "building"
             | "object"
             | null) || "building",
-        facade_open:
-          ((row as unknown as Record<string, unknown>)
-            .facade_open as boolean) || false,
         available_languages: parseAvailableLanguages(row.available_languages),
         has_masterplan: Boolean(row.has_masterplan),
       });
@@ -706,7 +702,6 @@ const ProjectEditor = ({
         pdf_presentation_url: project.pdf_presentation_url,
         theme_color: project.theme_color,
         project_type: project.project_type || "building",
-        facade_open: project.facade_open,
         available_languages: project.available_languages,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }), // Добавляем user_id только при создании
@@ -731,7 +726,6 @@ const ProjectEditor = ({
           floors: data.floors ?? 1,
           has_parking: data.has_parking ?? false,
           has_commercial: data.has_commercial ?? false,
-          facade_open: data.facade_open ?? false,
           building_image_url: data.building_image_url ?? null,
         });
 
@@ -774,7 +768,6 @@ const ProjectEditor = ({
               floors: project.floors,
               has_parking: project.has_parking,
               has_commercial: project.has_commercial,
-              facade_open: project.facade_open,
               building_image_url: project.building_image_url,
             })
             .eq("project_id", project.id)
@@ -1282,25 +1275,6 @@ const ProjectEditor = ({
                                     {t("projectEditor.hasCommercial")}
                                   </Label>
                                 </div>
-
-                                <div className="flex items-center space-x-2">
-                                  <Switch
-                                    id="facade-open-desktop"
-                                    checked={project.facade_open}
-                                    onCheckedChange={(checked) =>
-                                      setProject((prev) => ({
-                                        ...prev,
-                                        facade_open: checked,
-                                      }))
-                                    }
-                                  />
-                                  <Label htmlFor="facade-open-desktop">
-                                    {t("projectEditor.facadeOpen")}
-                                  </Label>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  {t("projectEditor.facadeOpenDesc")}
-                                </p>
                               </div>
                             </>
                           )}

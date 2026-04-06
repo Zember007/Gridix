@@ -106,7 +106,6 @@ export default function SubProjectEditorPage() {
           floors: subProject.floors,
           has_parking: subProject.has_parking,
           has_commercial: subProject.has_commercial,
-          facade_open: subProject.facade_open,
         })
         .eq("id", subProject.id);
       if (error) throw error;
@@ -311,20 +310,6 @@ export default function SubProjectEditorPage() {
                         />
                         <Label>{t("projectEditor.hasCommercial")}</Label>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          checked={subProject.facade_open ?? false}
-                          onCheckedChange={(v) =>
-                            setSubProject((prev) =>
-                              prev ? { ...prev, facade_open: v } : prev,
-                            )
-                          }
-                        />
-                        <Label>{t("projectEditor.facadeOpen")}</Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t("projectEditor.facadeOpenDesc")}
-                      </p>
                     </div>
                   </CardContent>
                 </Card>
