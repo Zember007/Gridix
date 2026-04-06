@@ -63,8 +63,8 @@ interface ListViewProps {
   ) => number;
   formatPrice: (price: number) => string;
   project?: Project;
-  /** When set (e.g. sub-project page), overrides `project.project_type` for list UX. */
-  projectType?: "building" | "object" | null;
+  /** From `sub_projects.type` for current scope (default or selected sub-project). */
+  projectType: "building" | "object";
   selectedCurrency: string;
   isMobile: boolean;
   themeColor?: string;
@@ -96,7 +96,7 @@ export const ListView = ({
   fieldVisibility,
 }: ListViewProps) => {
   const { t } = useLanguage();
-  const isObjectProject = (projectType ?? project?.project_type) === "object";
+  const isObjectProject = projectType === "object";
   const listScrollAreaRef = useRef<HTMLDivElement | null>(null);
   const [listMaxHeight, setListMaxHeight] = useState<number | null>(null);
   const [isPageScrolledToBottom, setIsPageScrolledToBottom] = useState(false);

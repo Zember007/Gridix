@@ -23,7 +23,7 @@ interface UseBuildingDataLoaderParams {
   subProjectId?: string;
   /** Override floors count (e.g. from sub_project.floors). Defaults to project.floors. */
   initialFloors?: number;
-  /** Override project type for subproject context. Defaults to project.project_type. */
+  /** Layout kind for this editor scope (`sub_projects.type`). */
   subProjectType?: "building" | "object";
   currentImageUrl?: string | null;
 }
@@ -64,11 +64,7 @@ export function useBuildingDataLoader({
   const { project } = useProjectInEditorScope(projectId);
   const { t } = useLanguage();
 
-  // In subproject context use the subproject type; fall back to main project type.
-  const isObjectProject =
-    subProjectType !== undefined
-      ? subProjectType === "object"
-      : project?.project_type === "object";
+  const isObjectProject = subProjectType === "object";
 
   const activeFacade = useMemo(
     () => facades.find((f) => f.id === selectedFacadeId) ?? facades[0] ?? null,

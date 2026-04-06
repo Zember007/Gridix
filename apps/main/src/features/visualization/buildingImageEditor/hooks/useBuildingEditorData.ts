@@ -16,7 +16,10 @@ export function useBuildingEditorData({
     projectId,
     subProjectId,
     initialFloors,
-    subProjectType: subProjectType === "genplan" ? undefined : subProjectType,
+    subProjectType:
+      subProjectType === "genplan"
+        ? "building"
+        : (subProjectType ?? "building"),
     currentImageUrl,
   });
 

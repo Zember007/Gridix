@@ -65,6 +65,7 @@
   "projectNameRequired": "Project name is required",
   "projectSaved": "Project saved",
   "projectType": "Project Type",
+  "subProjectTypeHint": "Shown from the default sub-project. Change type in each sub-project’s settings.",
   "availableLanguages": "Available languages",
   "availableLanguagesDesc": "Select which languages are available in the language switcher for this project",
   "atLeastOneLanguage": "Select at least one language",

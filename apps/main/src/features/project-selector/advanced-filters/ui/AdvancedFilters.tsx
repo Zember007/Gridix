@@ -29,7 +29,7 @@ export const AdvancedFilters = (props: AdvancedFiltersProps) => {
     projectType,
   } = props;
 
-  const isObjectProject = (projectType ?? project?.project_type) === "object";
+  const isObjectProject = projectType === "object";
 
   const {
     t,

@@ -65,6 +65,7 @@
   "projectNameRequired": "נדרש שם הפרויקט",
   "projectSaved": "הפרויקט נשמר",
   "projectType": "סוג פרויקט",
+  "subProjectTypeHint": "מוצג לפי תת־הפרויקט ברירת המחדל. שינוי הסוג — בהגדרות כל תת־פרויקט.",
   "availableLanguages": "שפות זמינות",
   "availableLanguagesDesc": "בחר אילו שפות זמינות במחליף השפות עבור פרויקט זה",
   "atLeastOneLanguage": "בחר שפה אחת לפחות",

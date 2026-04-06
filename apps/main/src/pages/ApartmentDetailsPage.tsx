@@ -30,6 +30,7 @@ import {
   normalizeApartmentData,
 } from "@/entities/apartment/model/types";
 import { loadApartmentDetails } from "@/features/projectSelector/api/projectSelectorApi";
+import { normalizeSubProjectKind } from "@/components/project-selector/lib/subProjectDisplay";
 import type { FieldSetting } from "@/hooks/useFields";
 import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
 import RecommendedApartmentCard from "@/pages/components/RecommendedApartmentCard";
@@ -333,6 +334,9 @@ const ApartmentDetailsPage = ({
     type: "layout" | "apartment";
   }
   const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
+  const [subProjectEntityKind, setSubProjectEntityKind] = useState<
+    "building" | "object"
+  >("building");
 
   // Single edge function call for ALL read data
   useEffect(() => {
@@ -361,6 +365,7 @@ const ApartmentDetailsPage = ({
         }
 
         setProject(result.project);
+        setSubProjectEntityKind(normalizeSubProjectKind(result.subProjectType));
 
         if (result.apartment) {
           setApartment(normalizeApartmentData(result.apartment));
@@ -779,8 +784,7 @@ const ApartmentDetailsPage = ({
               <div className="flex items-center justify-between">
                 <h1 className="mb-1 text-2xl font-bold text-gray-900">
                   {apartment.type === "apartment"
-                    ? (project as unknown as Record<string, unknown>)
-                        ?.project_type === "object"
+                    ? subProjectEntityKind === "object"
                       ? `${t("apartment.objectUnit")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                       : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
@@ -865,8 +869,7 @@ const ApartmentDetailsPage = ({
             {getVisibleFields().length > 0 && (
               <div className="mt-6 border-t border-gray-100 pt-6">
                 <h3 className="mb-3 text-lg font-semibold text-gray-900">
-                  {(project as unknown as Record<string, unknown>)
-                    ?.project_type === "object"
+                  {subProjectEntityKind === "object"
                     ? t("apartment.objectDetails")
                     : t("apartment.details")}
                 </h3>
@@ -957,8 +960,7 @@ const ApartmentDetailsPage = ({
                 </Button>
                 <h1 className="font-poppins text-2xl font-semibold text-gray-900">
                   {apartment.type === "apartment"
-                    ? (project as unknown as Record<string, unknown>)
-                        ?.project_type === "object"
+                    ? subProjectEntityKind === "object"
                       ? `${t("apartment.objectUnit")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                       : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
@@ -1008,8 +1010,7 @@ const ApartmentDetailsPage = ({
                 {getVisibleFields().length > 0 && (
                   <div className="space-y-6">
                     <h2 className="font-poppins text-3xl font-medium text-gray-900">
-                      {(project as unknown as Record<string, unknown>)
-                        ?.project_type === "object"
+                      {subProjectEntityKind === "object"
                         ? t("apartment.objectDetails")
                         : t("apartment.details")}
                     </h2>
@@ -1284,8 +1285,7 @@ const ApartmentDetailsPage = ({
                   {recommendedApartments.map((recApartment) => {
                     const cardTitle =
                       recApartment.type === "apartment"
-                        ? (project as unknown as Record<string, unknown>)
-                            ?.project_type === "object"
+                        ? subProjectEntityKind === "object"
                           ? `${t("apartment.objectUnit")} № ${recApartment.apartment_number}`
                           : `${t("apartment.apartment")} № ${recApartment.apartment_number}`
                         : `${recApartment.type} № ${recApartment.apartment_number}`;

@@ -6,7 +6,6 @@ export type BuildingFacadeProject = {
   id: string;
   name: string;
   building_image_url: string | null;
-  project_type?: "building" | "object" | null;
   currency?: string | null;
   facade_open?: boolean | null;
 };
@@ -54,6 +53,8 @@ export interface PolygonPlanImageViewProps {
   projectId: string;
   themeColor: string;
   project: BuildingFacadeProject;
+  /** Building vs villa layout — from `sub_projects.type` in scope (not `projects.project_type`). */
+  entityKind: "building" | "object";
   imageUrl?: string | null;
   apartments: Apartment[];
   onFloorSelect?: (floor: number) => void;

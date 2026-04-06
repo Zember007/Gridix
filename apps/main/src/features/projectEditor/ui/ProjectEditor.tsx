@@ -60,6 +60,7 @@ import { useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { useDefaultSubProjectKind } from "@/features/projectEditor/hooks/useDefaultSubProjectKind";
 import {
   isDevTourMode,
   startProjectChecklist,
@@ -425,6 +426,11 @@ const ProjectEditor = ({
 
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const defaultSubProjectKind = useDefaultSubProjectKind(
+    !isNew && project.id ? project.id : null,
+  );
+  const editorScopeKind = isNew ? "building" : defaultSubProjectKind;
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -904,7 +910,7 @@ const ProjectEditor = ({
         onSectionChange={handleSidebarSectionChange}
         activeTab={getSidebarSection(activeTab ?? "basic")}
         userEmail={userProfile?.email || user?.email || "Unknown user"}
-        projectType={project.project_type ?? "building"}
+        projectType={editorScopeKind}
         hasMasterplan={project.has_masterplan}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
@@ -1012,7 +1018,7 @@ const ProjectEditor = ({
                       <Label>{t("projectEditor.projectType")}</Label>
                       <Input
                         value={
-                          project.project_type === "object"
+                          editorScopeKind === "object"
                             ? t("projectEditor.typeObject")
                             : t("projectEditor.typeBuilding")
                         }
@@ -1061,7 +1067,7 @@ const ProjectEditor = ({
                         className="flex items-center gap-2"
                       >
                         <Image className="h-4 w-4" />
-                        {project.project_type === "object"
+                        {editorScopeKind === "object"
                           ? "Object Image"
                           : t("projectEditor.buildingImage")}
                       </Button>
@@ -1210,29 +1216,20 @@ const ProjectEditor = ({
                                   <Label htmlFor="project-type-desktop">
                                     {t("projectEditor.projectType")}
                                   </Label>
-                                  <Select
-                                    value={project.project_type || "building"}
-                                    onValueChange={(v: "building" | "object") =>
-                                      setProject((prev) => ({
-                                        ...prev,
-                                        project_type: v,
-                                      }))
+                                  <Input
+                                    id="project-type-desktop"
+                                    readOnly
+                                    value={
+                                      editorScopeKind === "object"
+                                        ? t("projectEditor.typeObject")
+                                        : t("projectEditor.typeBuilding")
                                     }
-                                  >
-                                    <SelectTrigger id="project-type-desktop">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="building">
-                                        {t("projectEditor.typeBuilding")}
-                                      </SelectItem>
-                                      <SelectItem value="object">
-                                        {t("projectEditor.typeObject")}
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  />
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {t("projectEditor.subProjectTypeHint")}
+                                  </p>
                                 </div>
-                                {project.project_type !== "object" && (
+                                {editorScopeKind !== "object" && (
                                   <div>
                                     <Label htmlFor="floors">
                                       {t("projectEditor.floors")} *
@@ -1587,6 +1584,7 @@ const ProjectEditor = ({
                   {activeTab === "building" && !project.has_masterplan && (
                     <BuildingImageEditor
                       projectId={project.id}
+                      subProjectType={editorScopeKind}
                       currentImageUrl={project.building_image_url}
                       onImageUpdate={(imageUrl) =>
                         setProject((prev) => ({
@@ -1600,7 +1598,7 @@ const ProjectEditor = ({
               )}
 
               {activeTab === "floors" &&
-                project.project_type !== "object" &&
+                editorScopeKind !== "object" &&
                 !project.has_masterplan && (
                   <ProjectFloorsManager projectId={project.id} />
                 )}
@@ -1609,7 +1607,7 @@ const ProjectEditor = ({
                 <div className="space-y-4">
                   <ProjectApartmentsManager
                     projectId={project.id}
-                    projectType={project.project_type ?? "building"}
+                    projectType={editorScopeKind}
                   />
                 </div>
               )}

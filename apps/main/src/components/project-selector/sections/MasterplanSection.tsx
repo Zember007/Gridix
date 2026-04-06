@@ -212,7 +212,6 @@ export function MasterplanSection({
       id: project.id,
       name: masterplan?.name ?? activeMasterplanItem?.name ?? project.name,
       building_image_url: project.building_image_url,
-      project_type: "building" as const,
       currency: project.currency,
       facade_open: project.facade_open ?? false,
     }),
@@ -242,6 +241,7 @@ export function MasterplanSection({
           projectId={projectId}
           themeColor={themeColor}
           project={planProject}
+          entityKind="building"
           imageUrl={imageUrl}
           apartments={[]}
           onApartmentSelect={noopApartment}

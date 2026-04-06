@@ -20,7 +20,7 @@ interface ProjectHeaderProps {
   setViewMode: (mode: ProjectHeaderProps["viewMode"]) => void;
   favoritesCount: number;
   mapVisible: boolean;
-  projectType: "building" | "object" | null;
+  projectType: "building" | "object";
   themeColor: string;
   filters: ProjectFilters;
   isFiltersOpen: boolean;

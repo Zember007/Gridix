@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import type { SubProject } from "@/features/genplan/model/types";
+import { normalizeSubProjectKind } from "@/components/project-selector/lib/subProjectDisplay";
 
 type Tab =
   | "general"
@@ -52,9 +53,6 @@ export default function SubProjectEditorPage() {
 
   const [subProject, setSubProject] = useState<SubProject | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [projectType, setProjectType] = useState<"building" | "object">(
-    "building",
-  );
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -72,15 +70,12 @@ export default function SubProjectEditorPage() {
 
       const { data: project } = await supabase
         .from("projects")
-        .select("id, project_type")
+        .select("id")
         .eq(isUUID ? "id" : "slug", projectSlug)
         .maybeSingle();
 
       if (!project) return;
       setProjectId(project.id);
-      setProjectType(
-        (project.project_type as "building" | "object") ?? "building",
-      );
 
       const { data: sp } = await supabase
         .from("sub_projects")
@@ -132,8 +127,7 @@ export default function SubProjectEditorPage() {
     setActiveTab(section as Tab);
   };
 
-  const subProjectType =
-    (subProject?.type as "building" | "object" | null) ?? projectType;
+  const subProjectType = normalizeSubProjectKind(subProject?.type);
 
   if (loading) return <LoadingProgress />;
   if (!subProject || !projectId) {

@@ -65,6 +65,7 @@
   "projectNameRequired": "Proje adı gerekli",
   "projectSaved": "Proje kaydedildi",
   "projectType": "Proje Türü",
+  "subProjectTypeHint": "Varsayılan alt projeden alınır. Türü her alt projenin ayarlarından değiştirin.",
   "availableLanguages": "Mevcut diller",
   "availableLanguagesDesc": "Bu proje için dil değiştiricide hangi dillerin mevcut olduğunu seçin",
   "atLeastOneLanguage": "En az bir dil seçin",

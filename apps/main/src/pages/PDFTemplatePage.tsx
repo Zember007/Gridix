@@ -8,6 +8,7 @@ import { Apartment } from "@/entities/apartment/model/types";
 import { Badge } from "@gridix/ui";
 import type { Tables } from "@gridix/types/database";
 import { loadPdfTemplateData } from "@/features/projectSelector/api/projectSelectorApi";
+import { normalizeSubProjectKind } from "@/components/project-selector/lib/subProjectDisplay";
 
 interface PDFTemplatePageProps {
   useId?: boolean;
@@ -73,6 +74,9 @@ const PDFTemplatePage = ({
   } | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [subProjectEntityKind, setSubProjectEntityKind] = useState<
+    "building" | "object"
+  >("building");
 
   useEffect(() => {
     const loadData = async () => {
@@ -93,6 +97,7 @@ const PDFTemplatePage = ({
         );
 
         setProject(result.project);
+        setSubProjectEntityKind(normalizeSubProjectKind(result.subProjectType));
         setApartment(result.apartment as Apartment | null);
         setFieldSettings(
           (result.fieldSettings ?? []) as unknown as PdfFieldSetting[],
@@ -337,8 +342,7 @@ const PDFTemplatePage = ({
               </h2>
               <p className="text-gray-600">
                 {apartment.type === "apartment"
-                  ? (project as unknown as Record<string, unknown>)
-                      ?.project_type === "object"
+                  ? subProjectEntityKind === "object"
                     ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                   : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
@@ -398,8 +402,7 @@ const PDFTemplatePage = ({
         {getVisibleFields().length > 0 && (
           <>
             <h3 className="text-xl font-semibold text-gray-900">
-              {(project as unknown as Record<string, unknown>)?.project_type ===
-              "object"
+              {subProjectEntityKind === "object"
                 ? "Object details"
                 : t("apartment.details")}
             </h3>

@@ -42,6 +42,7 @@ const COLLAPSED_HEIGHT = 280;
 const MobileFloorInfoBar = ({
   selectedFloor,
   project,
+  isObjectLayout,
   apartments,
   facadeSettings,
   visibleFields,
@@ -52,6 +53,7 @@ const MobileFloorInfoBar = ({
 }: {
   selectedFloor: number;
   project: PolygonPlanImageViewProps["project"];
+  isObjectLayout: boolean;
   apartments: PolygonPlanImageViewProps["apartments"];
   facadeSettings: PolygonPlanImageViewProps["facadeSettings"];
   visibleFields: PolygonPlanImageViewProps["visibleFields"];
@@ -67,7 +69,7 @@ const MobileFloorInfoBar = ({
 }) => {
   const { t } = useLanguage();
 
-  if (project.project_type === "object") {
+  if (isObjectLayout) {
     const apartment = apartments.find(
       (apt) => apt.apartment_number === selectedFloor.toString(),
     );
@@ -163,6 +165,7 @@ const MobileFloorInfoBar = ({
 
 const PolygonPlanImageView = ({
   project,
+  entityKind,
   imageUrl,
   apartments,
   onFloorSelect,
@@ -186,6 +189,7 @@ const PolygonPlanImageView = ({
   masterplanRenderTooltip,
   masterplanPolygonLabels,
 }: PolygonPlanImageViewProps) => {
+  const isObjectLayout = entityKind === "object";
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState(project.facade_open);
   const [imageRect, setImageRect] = useState<{
@@ -273,7 +277,7 @@ const PolygonPlanImageView = ({
     if (planKind === "masterplan") {
       return floorsSource;
     }
-    if (project.project_type === "object") {
+    if (isObjectLayout) {
       return floorsSource;
     }
 
@@ -293,13 +297,7 @@ const PolygonPlanImageView = ({
     }
 
     return floorsSource;
-  }, [
-    planKind,
-    floorsSource,
-    apartments,
-    project.project_type,
-    _showOnlyAvailable,
-  ]);
+  }, [planKind, floorsSource, apartments, isObjectLayout, _showOnlyAvailable]);
 
   const floorsWithPolygon = useMemo(
     () =>
@@ -645,8 +643,8 @@ const PolygonPlanImageView = ({
   }) => {
     const { t } = useLanguage();
 
-    // For project_type = object, Number is apartment number, not floor number
-    if (project.project_type === "object") {
+    // For object layout, Number is apartment number, not floor number
+    if (isObjectLayout) {
       const apartment = apartments.find(
         (apt) => apt.apartment_number === Number.toString(),
       );
@@ -687,7 +685,7 @@ const PolygonPlanImageView = ({
       );
     }
 
-    // For project_type = building, Number is floor number
+    // For building layout, Number is floor number
     const stats = getFloorStats(Number);
 
     return (
@@ -804,8 +802,8 @@ const PolygonPlanImageView = ({
   ]);
 
   const handleFloorClick = (floorNumber: number) => {
-    // For project_type = object, floorNumber is actually apartment number
-    if (project.project_type === "object") {
+    // For object layout, floorNumber is actually apartment number
+    if (isObjectLayout) {
       const apartment = apartments.find(
         (apt) => apt.apartment_number === floorNumber.toString(),
       );
@@ -1374,6 +1372,7 @@ const PolygonPlanImageView = ({
             <MobileFloorInfoBar
               selectedFloor={selectedFloor}
               project={project}
+              isObjectLayout={isObjectLayout}
               apartments={apartments}
               facadeSettings={facadeSettings}
               visibleFields={visibleFields}

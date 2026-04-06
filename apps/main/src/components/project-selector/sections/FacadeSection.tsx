@@ -63,6 +63,7 @@ export const FacadeSection = ({
         themeColor={themeColor}
         projectId={project.id}
         project={project}
+        entityKind={projectType ?? "building"}
         imageUrl={imageUrl}
         apartments={filters.filteredApartments}
         onFloorSelect={onFloorSelect}
@@ -83,7 +84,7 @@ export const FacadeSection = ({
       />
     </div>
 
-    {(projectType ?? project?.project_type) !== "object" && (
+    {projectType !== "object" && (
       <LayoutGallery
         apartments={filters.filteredApartments}
         selectedRooms={filters.selectedRooms}

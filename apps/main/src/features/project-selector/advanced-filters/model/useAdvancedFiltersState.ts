@@ -10,7 +10,6 @@ export type ProjectLike = {
   currency?: string | null;
   has_commercial?: boolean | null;
   has_parking?: boolean | null;
-  project_type?: string | null;
 };
 
 export type AdvancedFiltersProps = {
@@ -51,8 +50,8 @@ export type AdvancedFiltersProps = {
   formatPrice: (price: number) => string;
   visibleFilterFields: Record<FilterFieldKey, boolean>;
   hasAnyVisibleFilter: boolean;
-  /** Sub-project page: use `sub_projects.type` instead of parent `projects.project_type`. */
-  projectType?: "building" | "object" | null;
+  /** `sub_projects.type` for current selector scope. */
+  projectType: "building" | "object";
 };
 
 export const useAdvancedFiltersState = ({
@@ -81,6 +80,7 @@ export const useAdvancedFiltersState = ({
   getUniqueFloors,
   hasFreeLayout,
   project,
+  projectType: _selectorEntityKind,
   setViewMode,
 }: AdvancedFiltersProps) => {
   const { t } = useLanguage();

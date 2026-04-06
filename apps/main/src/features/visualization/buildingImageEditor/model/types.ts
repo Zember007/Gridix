@@ -21,8 +21,7 @@ export interface BuildingImageEditorProps {
   subProjectId?: string;
   /** Floors count for this scope (subproject.floors). Overrides project.floors. */
   initialFloors?: number;
-  /** Project type for this scope (subproject.type). Overrides project.project_type.
-   *  Use "genplan" to render the genplan polygon editor instead of the building/floor editor. */
+  /** Scope kind: `sub_projects.type`, or "genplan" for the genplan polygon editor. */
   subProjectType?: "building" | "object" | "genplan";
   currentImageUrl?: string | null;
   onImageUpdate?: (imageUrl: string) => void;

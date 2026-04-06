@@ -362,6 +362,8 @@ export async function loadRecommendedApartments(
 export interface ApartmentDetailsResult {
   project: Tables<"projects"> | null;
   apartment: Record<string, unknown> | null;
+  /** Resolved `sub_projects.type` for this apartment's scope (not `projects.project_type`). */
+  subProjectType: string | null;
   fieldSettings: Tables<"project_field_settings">[];
   customFields: Tables<"project_custom_fields">[];
   apartmentPhotos: {
@@ -383,6 +385,7 @@ export interface ApartmentDetailsResult {
 export interface PdfTemplateDataResult {
   project: Tables<"projects"> | null;
   apartment: Record<string, unknown> | null;
+  subProjectType: string | null;
   fieldSettings: Tables<"project_field_settings">[];
   apartmentPhotos: {
     id: string;
@@ -421,6 +424,7 @@ export async function loadApartmentDetails(
   return {
     project: result.project ?? null,
     apartment: result.apartment ?? null,
+    subProjectType: (result.subProjectType as string | null) ?? null,
     fieldSettings: result.fieldSettings ?? [],
     customFields: result.customFields ?? [],
     apartmentPhotos: result.apartmentPhotos ?? [],
@@ -449,6 +453,7 @@ export async function loadPdfTemplateData(
   return {
     project: result.project ?? null,
     apartment: result.apartment ?? null,
+    subProjectType: (result.subProjectType as string | null) ?? null,
     fieldSettings: result.fieldSettings ?? [],
     apartmentPhotos: result.apartmentPhotos ?? [],
     layoutPhotos: result.layoutPhotos ?? [],

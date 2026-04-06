@@ -44,7 +44,7 @@ interface CompactFiltersProps {
   themeColor?: string;
   visibleFilterFields: Record<FilterFieldKey, boolean>;
   hasAnyVisibleFilter: boolean;
-  projectType?: "building" | "object" | null;
+  projectType: "building" | "object";
 }
 
 export const CompactFilters = ({

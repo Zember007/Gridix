@@ -25,7 +25,7 @@ interface ViewModeButtonsProps {
   setViewMode: (mode: ViewMode) => void;
   favoritesCount: number;
   isMobile: boolean;
-  projectType?: "building" | "object" | null;
+  projectType: "building" | "object";
   themeColor?: string;
   mapVisible?: boolean;
   isWidget?: boolean;
