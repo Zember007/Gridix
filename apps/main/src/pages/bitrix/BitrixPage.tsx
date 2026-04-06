@@ -92,6 +92,7 @@ function BitrixPageInner() {
   );
   const [dealId, setDealId] = useState<number | null>(initialDealId);
   const [ssoAttempted, setSsoAttempted] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const { data: sessionQuery, isLoading: isSessionLoading } =
     useCurrentSession();
 
@@ -143,6 +144,7 @@ function BitrixPageInner() {
       if (sessionQuery?.user) return;
 
       setSsoAttempted(true);
+      setSsoLoading(true);
       try {
         const { data: ssoData, error: ssoErr } =
           await supabase.functions.invoke("sso-login", {
@@ -175,6 +177,8 @@ function BitrixPageInner() {
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        setSsoLoading(false);
       }
     };
     void run();
@@ -186,13 +190,39 @@ function BitrixPageInner() {
     ssoAttempted,
   ]);
 
-  const loading = status === "loading";
+  const showProjects = !!user && status === "claimed";
+
+  useEffect(() => {
+    const reloadGuardKey = "bitrix:connected-reloaded";
+    if (!showProjects) {
+      try {
+        sessionStorage.removeItem(reloadGuardKey);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    try {
+      const alreadyReloaded = sessionStorage.getItem(reloadGuardKey) === "1";
+      if (!alreadyReloaded) {
+        sessionStorage.setItem(reloadGuardKey, "1");
+        window.location.reload();
+      }
+    } catch {
+      window.location.reload();
+    }
+  }, [showProjects]);
+
+  const loading =
+    status === "loading" ||
+    isSessionLoading ||
+    (status === "claimed" && !user && (!ssoAttempted || ssoLoading));
   const needsConnect =
     !user &&
     (status === "pending" ||
       status === "needs_install" ||
       status === "claimed");
-  const showProjects = !!user && status === "claimed";
 
   if (loading) {
     return (

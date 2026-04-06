@@ -10,9 +10,10 @@ import { fetchCurrentSession } from "@gridix/utils";
 import { toast } from "sonner";
 import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import {
+  cancelStripeSubscriptionForProject,
+  resumeStripeSubscriptionForProject,
   changeStripeSubscriptionPlan,
   createStripeCheckoutSession,
-  createStripePortalSession,
   fetchProjectSubscriptions as fetchProjectSubscriptionsApi,
 } from "@/entities/subscription/api/subscriptionApi";
 import { CheckoutPaymentMethod } from "@/features/subscription-checkout/model/types";
@@ -39,6 +40,7 @@ export const useSubscriptionTabController = () => {
   const [planChangeProjectId, setPlanChangeProjectId] = useState<string | null>(
     null,
   );
+  const [isChangeCardModalOpen, setIsChangeCardModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -280,6 +282,31 @@ export const useSubscriptionTabController = () => {
         projectIds[0] === planChangeProjectId;
 
       if (isPlanChangeFlow) {
+        const project = projectSubscriptions.find(
+          (item) => item.id === planChangeProjectId,
+        );
+        const currentSub = project?.user_subscriptions?.[0];
+        const currentPeriodEnd = currentSub?.current_period_end
+          ? new Date(currentSub.current_period_end).getTime()
+          : null;
+        const hasCurrentPaidPeriod =
+          currentPeriodEnd === null || currentPeriodEnd > Date.now();
+        const isSamePlanAndPeriod =
+          currentSub?.plan_id === selectedPlanId &&
+          currentSub?.duration_months === selectedDuration;
+
+        if (
+          hasCurrentPaidPeriod &&
+          ["active", "trialing"].includes(currentSub?.status ?? "") &&
+          isSamePlanAndPeriod
+        ) {
+          toast.error(
+            t("admin.subscriptionPage.toasts.planAlreadyActiveWithPeriod") ||
+              "The selected plan and billing period are already active for this project.",
+          );
+          return;
+        }
+
         await changeStripeSubscriptionPlan(
           planChangeProjectId,
           selectedPlanId,
@@ -321,6 +348,30 @@ export const useSubscriptionTabController = () => {
           selectedPlanId,
           selectedDuration,
         );
+
+        // If projects were added to an existing subscription (no redirect needed)
+        if (checkoutResult?.added) {
+          toast.success(
+            t("admin.subscriptionPage.toasts.projectsAdded") ||
+              "Projects added to existing subscription",
+          );
+          void trackUsertourEvent({
+            eventName: "gridix_billing_checkout_started",
+            properties: {
+              project_ids: eligibleProjectIds,
+              plan_id: selectedPlanId,
+              duration_months: selectedDuration,
+              payment_method: "card",
+              added_to_existing: true,
+            },
+            onceKey: "gridix_billing_checkout_started",
+          });
+          await refreshProjectSubscriptions();
+          setIsInvoiceDialogOpen(false);
+          setSelectedProjects([]);
+          setPlanChangeProjectId(null);
+          return;
+        }
 
         if (!checkoutResult?.url) {
           toast.error("Stripe checkout is not available for selected plan");
@@ -422,18 +473,52 @@ export const useSubscriptionTabController = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
+  const handleCancelSubscriptionForProject = async (projectId: string) => {
+    const project = projectSubscriptions.find((p) => p.id === projectId);
+    const sub = project?.user_subscriptions?.[0];
+    if (!sub || sub.payment_method !== "card") return;
+
     try {
-      const result = await createStripePortalSession();
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        toast.error(t("admin.subscriptionPage.toasts.portalUnavailable"));
-      }
+      await cancelStripeSubscriptionForProject(projectId);
+      toast.success(
+        t("admin.subscriptionPage.toasts.projectCancelled") ||
+          "Subscription cancelled. Access continues until end of paid period.",
+      );
+      await refreshProjectSubscriptions();
     } catch (err) {
-      console.error("Error opening Stripe portal:", err);
-      toast.error(t("admin.subscriptionPage.toasts.portalUnavailable"));
+      console.error("Error cancelling subscription:", err);
+      toast.error(
+        t("common.operationFailed") || "Failed to cancel subscription",
+      );
     }
+  };
+
+  const handleResumeSubscriptionForProject = async (projectId: string) => {
+    const project = projectSubscriptions.find((p) => p.id === projectId);
+    const sub = project?.user_subscriptions?.[0];
+    if (!sub || sub.payment_method !== "card") return;
+
+    try {
+      await resumeStripeSubscriptionForProject(projectId);
+      toast.success(
+        t("admin.subscriptionPage.toasts.subscriptionResumed") ||
+          "Auto-renewal enabled. Subscription will renew at the end of the period.",
+      );
+      await refreshProjectSubscriptions();
+    } catch (err) {
+      console.error("Error resuming subscription:", err);
+      toast.error(
+        t("common.operationFailed") || "Failed to resume subscription",
+      );
+    }
+  };
+
+  const handleOpenChangeCard = () => {
+    setIsChangeCardModalOpen(true);
+  };
+
+  const handleCloseChangeCard = () => {
+    setIsChangeCardModalOpen(false);
   };
 
   return {
@@ -446,6 +531,7 @@ export const useSubscriptionTabController = () => {
     orders,
     billingDetails,
     isInvoiceDialogOpen,
+    isChangeCardModalOpen,
     selectedPlanId,
     selectedDuration,
     selectedProjects,
@@ -460,6 +546,9 @@ export const useSubscriptionTabController = () => {
     setPlanChangeProjectId,
     handleOpenInvoiceForProject,
     handleConfirmInvoiceFromModal,
-    handleManageSubscription,
+    handleCancelSubscriptionForProject,
+    handleResumeSubscriptionForProject,
+    handleOpenChangeCard,
+    handleCloseChangeCard,
   };
 };

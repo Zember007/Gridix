@@ -80,17 +80,19 @@ export function SidebarButton({
 
   const className = `w-full flex relative ${
     isCollapsed
-      ? "flex-col items-center gap-1 px-1 py-2"
-      : `items-center gap-3 px-3 ${isChildSize ? "py-1.5" : "py-2"}`
+      ? "flex-col items-center gap-0.5 px-0.5 py-1"
+      : `items-center gap-2 px-2 ${isChildSize ? "py-1" : "py-1.5"}`
   } rounded-lg ${isCollapsed ? "text-center" : "text-left"} transition-colors duration-200`;
   const displayTitle = title || (isCollapsed ? label : undefined);
 
   const content = (
     <>
-      <div className="relative flex-shrink-0">
-        <span className={isChildSize ? "origin-center scale-90" : ""}>
-          {icon}
-        </span>
+      <div
+        className={`relative flex shrink-0 items-center justify-center [&_svg]:shrink-0 ${
+          isChildSize ? "h-4 w-4 [&_svg]:size-4" : "h-5 w-5 [&_svg]:size-5"
+        }`}
+      >
+        {icon}
         {badge && hasChildren && (
           <div style={{ top: "-5px", right: "-7px" }} className="absolute">
             {badge}
@@ -100,10 +102,12 @@ export function SidebarButton({
       <span
         className={`font-medium ${
           isCollapsed
-            ? "text-center text-xs break-words"
-            : `min-w-0 flex-1 truncate text-left ${isChildSize ? "text-xs" : "text-sm"}`
+            ? "max-w-full text-center text-[11px] break-words"
+            : `flex min-w-0 flex-1 items-center truncate text-left ${
+                isChildSize ? "min-h-4 text-xs" : "min-h-5 text-sm"
+              }`
         }`}
-        style={isCollapsed ? { lineHeight: "1.2" } : {}}
+        style={isCollapsed ? { lineHeight: "1.15" } : {}}
       >
         {label}
       </span>
@@ -114,8 +118,8 @@ export function SidebarButton({
 
       {hasChildren && !isCollapsed && (
         <ChevronDown
-          size={14}
-          className={`ml-auto transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+          size={12}
+          className={`ml-auto shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
         />
       )}
     </>
@@ -158,7 +162,7 @@ export function SidebarButton({
       </button>
 
       {hasChildren && !isCollapsed && isExpanded && (
-        <div className="animate-in slide-in-from-top-1 mt-1 ml-4 space-y-1 duration-200">
+        <div className="animate-in slide-in-from-top-1 mt-0.5 ml-3 space-y-0.5 duration-200">
           {items?.map((child) => (
             <SidebarButton
               key={child.id}

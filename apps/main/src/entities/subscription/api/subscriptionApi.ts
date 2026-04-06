@@ -132,6 +132,7 @@ export const createStripeCheckoutSession = async (
     success: boolean;
     url?: string;
     session_id?: string;
+    added?: boolean;
     error?: string;
   };
 };
@@ -188,6 +189,150 @@ export const createStripePortalSession = async (): Promise<{
   if (error) throw error;
 
   return data as { success: boolean; url?: string; error?: string };
+};
+
+export const fetchCustomerSubscriptions = async () => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: { action: "get-customer-subscriptions" },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+
+  return data as {
+    success: boolean;
+    subscriptions: CustomerSubscriptionResponse[];
+  };
+};
+
+export interface CustomerSubscriptionResponse {
+  id: string;
+  stripe_subscription_id: string | null;
+  billing_interval: string;
+  billing_interval_count: number;
+  status: string;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  subscription_line_items: SubscriptionLineItemResponse[];
+}
+
+export interface SubscriptionLineItemResponse {
+  id: string;
+  stripe_subscription_item_id: string | null;
+  item_type: "project" | "module";
+  project_id: string | null;
+  module_slug: string | null;
+  plan_id: string | null;
+  plan_slug: string;
+  effective_price: number | null;
+  discount_percentage: number;
+  status: string;
+  created_at: string;
+}
+
+export interface StripeInvoiceItem {
+  id: string;
+  number: string | null;
+  status: string;
+  total: number;
+  currency: string;
+  created: number;
+  hosted_invoice_url: string | null;
+  invoice_pdf: string | null;
+  period_start: number;
+  period_end: number;
+  subscription: string | { id: string } | null;
+}
+
+export const fetchStripeInvoices = async (): Promise<{
+  success: boolean;
+  invoices: StripeInvoiceItem[];
+}> => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: { action: "get-stripe-invoices" },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+  return data as { success: boolean; invoices: StripeInvoiceItem[] };
+};
+
+export const createSetupIntent = async (): Promise<{
+  success: boolean;
+  client_secret: string;
+}> => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: { action: "create-setup-intent" },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+  return data as { success: boolean; client_secret: string };
+};
+
+export const setDefaultPaymentMethod = async (
+  paymentMethodId: string,
+): Promise<{ success: boolean }> => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: {
+      action: "set-default-payment-method",
+      payment_method_id: paymentMethodId,
+    },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+  return data as { success: boolean };
+};
+
+export const cancelStripeSubscriptionForProject = async (
+  projectId: string,
+): Promise<{ success: boolean }> => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: { action: "remove-projects", project_ids: [projectId] },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+  return data as { success: boolean };
+};
+
+export const resumeStripeSubscriptionForProject = async (
+  projectId: string,
+): Promise<{ success: boolean }> => {
+  const sessionData = await fetchCurrentSession();
+
+  const { data, error } = await supabase.functions.invoke("stripe-billing", {
+    body: { action: "resume-subscription", project_id: projectId },
+    headers: {
+      Authorization: `Bearer ${sessionData.session?.access_token}`,
+    },
+  });
+
+  if (error) throw error;
+  return data as { success: boolean };
 };
 
 export const fetchBillingDetails = async (userId: string) => {

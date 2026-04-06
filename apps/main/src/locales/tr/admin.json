@@ -226,18 +226,28 @@
       "emptyDescription": "Bir aboneliği etkinleştirmek ve tüm özelliklerin kilidini açmak için \"Projeler\" bölümünde ilk projenizi oluşturun.",
       "tariff": "Planı",
       "expiresAt": "Süresi doluyor",
+      "expiresLabel": "Süresi doldu:",
+      "renewsOnLabel": "Yenileniyor:",
+      "accessUntilLabel": "Erişim süresi:",
+      "noPlan": "Aktif plan yok",
       "notSelected": "Seçilmedi",
       "status": {
         "active": "AKTİF",
         "expired": "GÜNÜ GEÇMİŞ",
-        "inactive": "AKTİF DEĞİL"
+        "inactive": "AKTİF DEĞİL",
+        "cancelAtPeriodEnd": "Otomatik yenileme devre dışı"
       },
       "buttons": {
         "extend": "Uzatmak",
         "activate": "Etkinleştir",
         "manage": "Yönet",
-        "changePlan": "Planı değiştir"
-      }
+        "changePlan": "Planı değiştir",
+        "changeCard": "Ödeme yöntemini değiştir",
+        "cancel": "İptal et",
+        "resume": "Devam et",
+        "saveCard": "Ödeme yöntemini kaydet"
+      },
+      "confirmCancel": "Bu proje için abonelik iptal edilsin mi? Erişim, ödenen dönemin sonuna kadar açık kalacaktır."
     },
     "durations": {
       "1": "1 ay",
@@ -392,6 +402,7 @@
       "footer": {
         "total": "Toplam:",
         "next": "Sonraki",
+        "confirmPayment": "Onayla",
         "processing": "İşleme..."
       }
     },
@@ -399,7 +410,20 @@
       "invoiceRequestedSingle": "Fatura başarıyla talep edildi. Sipariş geçmişinden indirebilirsiniz.",
       "invoiceRequestedMultiple": "{{count}} proje için faturalar istendi",
       "portalUnavailable": "Abonelik yönetimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
-      "planChanged": "Plan başarıyla güncellendi. Prorasyon otomatik uygulandı."
+      "planChanged": "Plan değiştirildi. Eski abonelik iptal edildi ve kalan dönem için para iadesi yapıldı.",
+      "projectCancelled": "Proje aboneliği iptal edildi. Erişim, ödenen dönemin sonuna kadar açık kalacaktır.",
+      "subscriptionResumed": "Otomatik yenileme etkinleştirildi. Abonelik dönem sonunda yenilenecek.",
+      "cardUpdated": "Ödeme yöntemi tüm aktif projeler için güncellendi.",
+      "planAlreadyActiveWithPeriod": "Bu plan seçilen dönem için zaten aktif.",
+      "projectsAdded": "Projeler aboneliğe eklendi."
+    },
+    "stripeInvoices": {
+      "title": "Stripe faturaları",
+      "number": "Numara",
+      "date": "Tarih",
+      "amount": "Tutar",
+      "status": "Durum",
+      "view": "Aç"
     },
     "error": "Abonelikler yüklenirken hata oluştu"
   },
