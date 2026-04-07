@@ -60,6 +60,7 @@ import {
 interface ProjectApartmentsManagerProps {
   projectId: string;
   projectType?: "building" | "object" | null;
+  subProjectId?: string;
 }
 
 // Helper function to convert our polygon type to database type
@@ -70,6 +71,7 @@ const convertPolygonToDb = (polygon: { x: number; y: number }[]): Json => {
 const ProjectApartmentsManager = ({
   projectId,
   projectType,
+  subProjectId,
 }: ProjectApartmentsManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [filteredApartments, setFilteredApartments] = useState<Apartment[]>([]);
@@ -121,11 +123,12 @@ const ProjectApartmentsManager = ({
   const loadApartments = useCallback(async () => {
     if (!projectId) return;
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("apartments")
         .select("*")
-        .eq("project_id", projectId)
-        .order("apartment_number");
+        .eq("project_id", projectId);
+      if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+      const { data, error } = await query.order("apartment_number");
 
       if (error) throw error;
 
@@ -280,6 +283,7 @@ const ProjectApartmentsManager = ({
         project_id: projectId,
         updated_at: new Date().toISOString(),
         type: currentType,
+        ...(subProjectId && { sub_project_id: subProjectId }),
       };
 
       if (isNew) {
@@ -432,6 +436,7 @@ const ProjectApartmentsManager = ({
         project_id: projectId,
         type: apartment.type,
         updated_at: new Date().toISOString(),
+        ...(subProjectId && { sub_project_id: subProjectId }),
       };
 
       const { data, error } = await supabase
@@ -595,7 +600,6 @@ const ProjectApartmentsManager = ({
     }
 
     try {
-      // Create building floor for visualization
       const { error: buildingFloorError } = await supabase
         .from("building_floors")
         .insert({
@@ -603,6 +607,7 @@ const ProjectApartmentsManager = ({
           floor_number: newFloorNumber,
           polygon: [],
           color: "#3b82f6",
+          ...(subProjectId && { sub_project_id: subProjectId }),
         });
 
       if (buildingFloorError) throw buildingFloorError;

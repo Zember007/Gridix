@@ -9,6 +9,8 @@ import type { Project } from "@/entities/project/queries/useProjects";
 import type { ProjectFilters } from "./hooks/useProjectFilters";
 import { cn, Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
 
+type ModeContext = "project-multi-sub" | "default";
+
 interface ProjectHeaderProps {
   project: Project;
   filtersRef: RefObject<HTMLDivElement>;
@@ -18,11 +20,12 @@ interface ProjectHeaderProps {
   setViewMode: (mode: ProjectHeaderProps["viewMode"]) => void;
   favoritesCount: number;
   mapVisible: boolean;
-  projectType: "building" | "object" | null;
+  projectType: "building" | "object";
   themeColor: string;
   filters: ProjectFilters;
   isFiltersOpen: boolean;
   setIsFiltersOpen: (open: boolean) => void;
+  modeContext?: ModeContext;
 }
 
 export const ProjectHeader = ({
@@ -39,6 +42,7 @@ export const ProjectHeader = ({
   filters,
   isFiltersOpen,
   setIsFiltersOpen,
+  modeContext = "default",
 }: ProjectHeaderProps) => {
   const { language, setLanguage } = useLanguage();
 
@@ -89,6 +93,7 @@ export const ProjectHeader = ({
                 getUniqueFloors={filters.getUniqueFloors}
                 hasFreeLayout={filters.hasFreeLayout}
                 project={project}
+                projectType={projectType}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 themeColor={themeColor}
@@ -108,6 +113,7 @@ export const ProjectHeader = ({
                 mapVisible={mapVisible}
                 projectType={projectType}
                 themeColor={themeColor}
+                modeContext={modeContext}
               />
             </div>
           )}
@@ -159,6 +165,7 @@ export const ProjectHeader = ({
                         formatPrice={formatPrice}
                         visibleFilterFields={filters.visibleFilterFields}
                         hasAnyVisibleFilter={filters.hasAnyVisibleFilter}
+                        projectType={projectType}
                       />
                     </div>
                   </SheetContent>
@@ -177,6 +184,7 @@ export const ProjectHeader = ({
                   mapVisible={mapVisible}
                   projectType={projectType}
                   themeColor={themeColor}
+                  modeContext={modeContext}
                 />
               </div>
             )}
@@ -199,6 +207,7 @@ export const ProjectHeader = ({
               mapVisible={mapVisible}
               projectType={projectType}
               themeColor={themeColor}
+              modeContext={modeContext}
             />
           </div>
         )}

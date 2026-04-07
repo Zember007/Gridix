@@ -8,6 +8,8 @@ interface ApartmentPdfButtonProps {
   apartment: Apartment;
   project: Pick<Project, "id" | "slug" | "pdf_presentation_url">;
   language: string;
+  /** При дубликатах номеров между подпроектами — slug из `/p/:subSlug/`. */
+  subProjectSlug?: string | null;
   label?: string;
 }
 
@@ -15,6 +17,7 @@ export function ApartmentPdfButton({
   apartment,
   project,
   language,
+  subProjectSlug,
   label = "PDF",
 }: ApartmentPdfButtonProps) {
   const { run, isRunning } = useAsyncAction(generateApartmentPdf, {
@@ -24,7 +27,7 @@ export function ApartmentPdfButton({
   });
 
   const handleClick = async () => {
-    await run({ apartment, project, language });
+    await run({ apartment, project, language, subProjectSlug });
   };
 
   return (

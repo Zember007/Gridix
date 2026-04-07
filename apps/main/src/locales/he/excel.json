@@ -1,7 +1,15 @@
 {
   "mapper": {
     "actions": {
-      "createProject": "צור פרויקט עם נתונים"
+      "createProject": "צור פרויקט עם נתונים",
+      "createSubProject": "צור בניין וייבא",
+      "importApartments": "ייבא דירות"
+    },
+    "subProject": {
+      "infoTitle": "פרטי הבניין",
+      "infoDescription": "שם וסוג הבניין החדש; נתוני הדירות מהקובץ.",
+      "name": "שם הבניין*",
+      "type": "סוג הבניין*"
     },
     "preview": {
       "description": "כיצד ייבוא ​​הנתונים שלך ({{count}} רשומות)",
@@ -140,6 +148,10 @@
       "linkAccessible": "הקישור נגיש לייבוא",
       "projectCreated": "פרויקט \"{{name}}\" נוצר עם {{count}} דירות ב-{{floors}} קומות",
       "projectCreatedObjects": "הפרויקט \"{{name}}\" נוצר עם {{count}} אובייקטים",
+      "subProjectCreatedBuilding": "הבניין \"{{name}}\" נוצר עם {{count}} דירות ב-{{floors}} קומות",
+      "subProjectCreatedObjects": "הבניין \"{{name}}\" נוצר עם {{count}} אובייקטים",
+      "apartmentsImportedBuilding": "יובאו {{count}} דירות ב-{{floors}} קומות",
+      "apartmentsImportedObjects": "יובאו {{count}} אובייקטים",
       "projectCreationError": "שגיאה ביצירת הפרויקט"
     }
   }

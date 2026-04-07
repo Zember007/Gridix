@@ -1,7 +1,15 @@
 {
   "mapper": {
     "actions": {
-      "createProject": "Создать проект с данными"
+      "createProject": "Создать проект с данными",
+      "createSubProject": "Создать корпус и импортировать",
+      "importApartments": "Импортировать квартиры"
+    },
+    "subProject": {
+      "infoTitle": "Данные корпуса",
+      "infoDescription": "Название и тип нового корпуса; данные квартир — из вашего файла.",
+      "name": "Название корпуса*",
+      "type": "Тип корпуса*"
     },
     "preview": {
       "description": "Как будут импортированы ваши данные ({{count}} записей)",
@@ -140,6 +148,10 @@
       "linkAccessible": "Ссылка доступна для импорта",
       "projectCreated": "Проект \"{{name}}\" создан с {{count}} квартирами на {{floors}} этажах",
       "projectCreatedObjects": "Проект \"{{name}}\" создан с {{count}} объектами",
+      "subProjectCreatedBuilding": "Корпус \"{{name}}\" создан с {{count}} квартирами на {{floors}} этажах",
+      "subProjectCreatedObjects": "Корпус \"{{name}}\" создан с {{count}} объектами",
+      "apartmentsImportedBuilding": "Импортировано {{count}} квартир на {{floors}} этажах",
+      "apartmentsImportedObjects": "Импортировано {{count}} объектов",
       "projectCreationError": "Ошибка при создании проекта"
     }
   }

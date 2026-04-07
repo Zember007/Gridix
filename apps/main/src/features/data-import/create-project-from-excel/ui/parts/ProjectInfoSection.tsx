@@ -27,39 +27,49 @@ export function ProjectInfoSection({
   t,
   projectData,
   setProjectData,
+  titleKey = "excel.mapper.projectInfo.title",
+  descriptionKey = "excel.mapper.projectInfo.description",
+  nameLabelKey = "excel.mapper.project.name",
+  typeLabelKey = "excel.mapper.project.type",
+  lockNameAndType = false,
 }: {
-  t: any;
+  t: (key: string) => string;
   projectData: ProjectData;
   setProjectData: React.Dispatch<React.SetStateAction<ProjectData>>;
+  titleKey?: string;
+  descriptionKey?: string;
+  nameLabelKey?: string;
+  typeLabelKey?: string;
+  lockNameAndType?: boolean;
 }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("excel.mapper.projectInfo.title")}</CardTitle>
-        <CardDescription>
-          {t("excel.mapper.projectInfo.description")}
-        </CardDescription>
+        <CardTitle>{t(titleKey)}</CardTitle>
+        <CardDescription>{t(descriptionKey)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="projectName">{t("excel.mapper.project.name")}</Label>
+          <Label htmlFor="projectName">{t(nameLabelKey)}</Label>
           <Input
             id="projectName"
             value={projectData.name}
             onChange={(e) =>
               setProjectData((prev) => ({ ...prev, name: e.target.value }))
             }
+            disabled={lockNameAndType}
             className="excel_project_name_usertour mt-1"
           />
         </div>
 
         <div>
-          <Label htmlFor="projectType">{t("excel.mapper.project.type")}</Label>
+          <Label htmlFor="projectType">{t(typeLabelKey)}</Label>
           <Select
             value={projectData.type}
             onValueChange={(value: "building" | "object") =>
               setProjectData((prev) => ({ ...prev, type: value }))
             }
+            disabled={lockNameAndType}
           >
             <SelectTrigger className="excel_project_type_usertour mt-1">
               <SelectValue />

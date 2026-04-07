@@ -16,6 +16,7 @@ interface UseFacadeCrudParams {
   activeFacade: ProjectFacade | null;
   loadBuildingData: () => Promise<void>;
   projectId: string;
+  subProjectId?: string;
   project: {
     id?: string;
     floors?: number;
@@ -36,6 +37,7 @@ export function useFacadeCrud({
   activeFacade,
   loadBuildingData,
   projectId,
+  subProjectId,
   project,
   user,
   t,
@@ -55,22 +57,21 @@ export function useFacadeCrud({
       const list = nextFacades ?? facades;
       const sorted = list.slice().sort((a, b) => a.order_index - b.order_index);
       const primary = sorted[0];
-      // Preview should not be blank if ANY facade already has an image.
       const fallbackWithImage =
         sorted.find((f) => !!f.image_url)?.image_url ?? null;
       const primaryUrl = primary?.image_url ?? fallbackWithImage ?? null;
 
       try {
-        await api.syncProjectBuildingImage(
-          project?.id || projectId,
-          primaryUrl,
-        );
+        if (subProjectId) {
+          await api.syncSubProjectBuildingImage(subProjectId, primaryUrl);
+        }
+        // projects.building_image_url is updated only from Project Editor → Basic tab
         if (primaryUrl) onImageUpdate?.(primaryUrl);
       } catch (e) {
         console.error("Error syncing primary facade to project:", e);
       }
     },
-    [facades, onImageUpdate, project?.id, projectId],
+    [facades, onImageUpdate, subProjectId],
   );
 
   const normalizeFacadeOrder = useCallback(async (list: ProjectFacade[]) => {
@@ -166,6 +167,7 @@ export function useFacadeCrud({
         project?.id || projectId,
         newFacadeName.trim(),
         nextOrderIndex,
+        subProjectId,
       );
 
       const publicUrl = await api.uploadFacadeImageToStorage(

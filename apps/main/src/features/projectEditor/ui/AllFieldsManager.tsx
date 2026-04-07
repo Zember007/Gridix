@@ -14,9 +14,13 @@ import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface AllFieldsManagerProps {
   projectId: string;
+  subProjectId?: string;
 }
 
-const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
+const AllFieldsManager = ({
+  projectId,
+  subProjectId,
+}: AllFieldsManagerProps) => {
   const {
     t,
     fields,
@@ -36,7 +40,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     openAddForm,
     closeEditor,
     onFieldsChange,
-  } = useAllFieldsManager(projectId);
+  } = useAllFieldsManager(projectId, subProjectId);
 
   if (showAddForm || editingField) {
     return (
@@ -49,6 +53,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
         </div>
         <CustomFieldsManager
           projectId={projectId}
+          subProjectId={subProjectId}
           onFieldsChange={onFieldsChange}
           editingField={editingField}
           onClose={closeEditor}

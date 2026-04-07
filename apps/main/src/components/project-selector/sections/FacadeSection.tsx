@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import BuildingFacadeView from "@/features/visualization/buildingFacade/ui/BuildingFacadeView";
+import PolygonPlanImageView from "@/features/visualization/buildingFacade/ui/PolygonPlanImageView";
 import type {
   BuildingFloor,
   FacadeSettings,
@@ -13,6 +13,8 @@ import type { ProjectFilters } from "../hooks/useProjectFilters";
 
 interface FacadeSectionProps {
   project: Project;
+  /** Building vs object (villa): prefer sub-project `type` when in sub-project context. */
+  projectType: "building" | "object" | null;
   themeColor: string;
   imageUrl: string | null;
   filtersRef: RefObject<HTMLDivElement>;
@@ -35,6 +37,7 @@ interface FacadeSectionProps {
 
 export const FacadeSection = ({
   project,
+  projectType,
   themeColor,
   imageUrl,
   filtersRef,
@@ -56,10 +59,11 @@ export const FacadeSection = ({
 }: FacadeSectionProps) => (
   <div className="relative flex h-full w-full flex-col overflow-hidden bg-white">
     <div className="relative min-h-0 flex-1 overflow-hidden">
-      <BuildingFacadeView
+      <PolygonPlanImageView
         themeColor={themeColor}
         projectId={project.id}
         project={project}
+        entityKind={projectType ?? "building"}
         imageUrl={imageUrl}
         apartments={filters.filteredApartments}
         onFloorSelect={onFloorSelect}
@@ -76,10 +80,11 @@ export const FacadeSection = ({
         selectedCurrency={filters.selectedCurrency}
         activeFacadeIndex={activeFacadeIndex}
         onFacadeChange={onFacadeChange}
+        planKind="facade"
       />
     </div>
 
-    {project?.project_type !== "object" && (
+    {projectType !== "object" && (
       <LayoutGallery
         apartments={filters.filteredApartments}
         selectedRooms={filters.selectedRooms}

@@ -34,11 +34,15 @@ const ExcelUrlImporter = lazy(
 );
 import { adminThemeClasses as admin } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { Tables } from "@gridix/types/database";
 
 interface ProjectCreationModalProps {
   open: boolean;
   onClose: () => void;
   onManualCreate: () => void;
+  /** When set, Excel import creates a sub-project (or imports into it) under this project instead of a new root project. */
+  parentProjectId?: string;
+  onSubProjectImportSuccess?: (subProject: Tables<"sub_projects">) => void;
 }
 
 type ImportedCell = string | number | null | undefined;
@@ -50,6 +54,8 @@ const ProjectCreationModal = ({
   open,
   onClose,
   onManualCreate,
+  parentProjectId,
+  onSubProjectImportSuccess,
 }: ProjectCreationModalProps) => {
   const { t } = useLanguage();
   const [importedData, setImportedData] = useState<ImportedRow[]>([]);
@@ -240,6 +246,8 @@ const ProjectCreationModal = ({
               excelColumns={excelColumns}
               importedData={importedData}
               onComplete={handleCloseModal}
+              parentProjectId={parentProjectId}
+              onSubProjectImportSuccess={onSubProjectImportSuccess}
             />
           </Suspense>
         </DialogContent>
@@ -280,10 +288,14 @@ const ProjectCreationModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
-            {t("admin.project.create.title")}
+            {parentProjectId
+              ? t("genplan.subProjects.createFlow.title")
+              : t("admin.project.create.title")}
           </DialogTitle>
           <DialogDescription>
-            {t("admin.project.create.description")}
+            {parentProjectId
+              ? t("genplan.subProjects.createFlow.description")
+              : t("admin.project.create.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -347,7 +359,7 @@ const ProjectCreationModal = ({
                 </TabsList>
 
                 <TabsContent value="file" className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2">
                     <Button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isProcessing}

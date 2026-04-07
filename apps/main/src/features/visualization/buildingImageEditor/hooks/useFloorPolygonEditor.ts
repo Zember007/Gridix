@@ -16,6 +16,7 @@ interface UseFloorPolygonEditorParams {
   facadeDisplaySettings: FacadeDisplaySettings;
   loadBuildingData: () => Promise<void>;
   projectId: string;
+  subProjectId?: string;
   project: { id?: string; floors?: number } | null;
   t: (key: string, params?: Record<string, unknown>) => string;
 }
@@ -26,6 +27,7 @@ export function useFloorPolygonEditor({
   facadeDisplaySettings,
   loadBuildingData,
   projectId,
+  subProjectId,
   project,
   t,
 }: UseFloorPolygonEditorParams) {
@@ -252,13 +254,18 @@ export function useFloorPolygonEditor({
             floorNumber: selectedFloor,
             polygon: shapeToSave.points as { x: number; y: number }[],
             color: shapeToSave.color,
+            subProjectId,
           });
 
           if (project && selectedFloor > (project.floors ?? 0)) {
-            await api.updateProjectFloors(
-              project?.id || projectId,
-              selectedFloor,
-            );
+            if (subProjectId) {
+              await api.updateSubProjectFloors(subProjectId, selectedFloor);
+            } else {
+              await api.updateProjectFloors(
+                project?.id || projectId,
+                selectedFloor,
+              );
+            }
           }
 
           if (!silent) {
@@ -322,6 +329,7 @@ export function useFloorPolygonEditor({
       persistExistingPolygon,
       project,
       projectId,
+      subProjectId,
       resetStacks,
       selectedFloor,
       setCurrentShape,

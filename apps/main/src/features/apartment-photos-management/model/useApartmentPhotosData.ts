@@ -7,7 +7,10 @@ import {
 import { useProjectEditorDataContext } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import { ApartmentPhoto, CoverageFilter } from "./useApartmentPhotosManager";
 
-export const useApartmentPhotosData = (projectId: string) => {
+export const useApartmentPhotosData = (
+  projectId: string,
+  subProjectId?: string,
+) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<string>("");
   const [photos, setPhotos] = useState<ApartmentPhoto[]>([]);
@@ -21,13 +24,16 @@ export const useApartmentPhotosData = (projectId: string) => {
 
   const loadApartments = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("apartments")
         .select("*")
-        .eq("project_id", projectId)
+        .eq("project_id", projectId);
+      if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+      query = query
         .order("floor_number", { ascending: true })
         .order("apartment_number", { ascending: true });
 
+      const { data, error } = await query;
       if (error) throw error;
       setApartments((data || []).map(normalizeApartmentData));
     } catch (error) {
@@ -35,7 +41,7 @@ export const useApartmentPhotosData = (projectId: string) => {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, subProjectId]);
 
   useEffect(() => {
     if (editorData) {

@@ -36,7 +36,11 @@ export interface PolygonSettings {
 
 interface PolygonCustomizationSettingsProps {
   projectId: string;
-  type: "building" | "floor";
+  type: "building" | "floor" | "genplan";
+  /** Required when type="genplan" — identifies the masterplan record. */
+  masterplanId?: string;
+  /** When provided, load/save settings from sub_projects instead of projects. */
+  subProjectId?: string;
   onSettingsChange?: (settings: PolygonSettings) => void;
   initialSettings?: PolygonSettings | null;
 }
@@ -69,7 +73,7 @@ const defaultSettings: PolygonSettings = {
 // Функция для валидации и дополнения настроек дефолтными значениями
 const validateAndMergeSettings = (
   loadedSettings: unknown,
-  type: "building" | "floor",
+  type: "building" | "floor" | "genplan",
 ): PolygonSettings => {
   const merged = { ...defaultSettings };
 
@@ -122,6 +126,8 @@ const validateAndMergeSettings = (
 const PolygonCustomizationSettings = ({
   projectId,
   type,
+  masterplanId,
+  subProjectId,
   onSettingsChange,
   initialSettings,
 }: PolygonCustomizationSettingsProps) => {
@@ -135,11 +141,29 @@ const PolygonCustomizationSettings = ({
 
   const loadSettings = useCallback(async () => {
     try {
-      if (type === "building") {
+      if (type === "genplan") {
+        if (!masterplanId) return;
         const { data, error } = await supabase
-          .from("projects")
+          .from("project_masterplans")
+          .select("polygon_display_settings")
+          .eq("id", masterplanId)
+          .single();
+        if (error) throw error;
+        if (data?.polygon_display_settings) {
+          setSettings(
+            validateAndMergeSettings(
+              data.polygon_display_settings as unknown as PolygonSettings,
+              "building",
+            ),
+          );
+        }
+      } else if (type === "building") {
+        const table = subProjectId ? "sub_projects" : "projects";
+        const id = subProjectId ?? projectId;
+        const { data, error } = await supabase
+          .from(table)
           .select("polygon_settings_facade")
-          .eq("id", projectId)
+          .eq("id", id)
           .single();
 
         if (error) throw error;
@@ -154,10 +178,12 @@ const PolygonCustomizationSettings = ({
           setSettings(validatedSettings);
         }
       } else {
+        const table = subProjectId ? "sub_projects" : "projects";
+        const id = subProjectId ?? projectId;
         const { data, error } = await supabase
-          .from("projects")
+          .from(table)
           .select("polygon_settings_floor")
-          .eq("id", projectId)
+          .eq("id", id)
           .single();
 
         if (error) throw error;
@@ -175,7 +201,7 @@ const PolygonCustomizationSettings = ({
     } catch (error) {
       console.error("Error loading polygon settings:", error);
     }
-  }, [projectId, type]);
+  }, [projectId, subProjectId, masterplanId, type]);
 
   useEffect(() => {
     if (initialSettings) {
@@ -188,17 +214,29 @@ const PolygonCustomizationSettings = ({
   const saveSettings = async () => {
     setLoading(true);
     try {
-      if (type === "building") {
+      if (type === "genplan") {
+        if (!masterplanId)
+          throw new Error("masterplanId required for genplan settings");
         const { error } = await supabase
-          .from("projects")
+          .from("project_masterplans")
+          .update({ polygon_display_settings: settings as unknown as Json })
+          .eq("id", masterplanId);
+        if (error) throw error;
+      } else if (type === "building") {
+        const table = subProjectId ? "sub_projects" : "projects";
+        const id = subProjectId ?? projectId;
+        const { error } = await supabase
+          .from(table)
           .update({ polygon_settings_facade: settings as unknown as Json })
-          .eq("id", projectId);
+          .eq("id", id);
         if (error) throw error;
       } else {
+        const table = subProjectId ? "sub_projects" : "projects";
+        const id = subProjectId ?? projectId;
         const { error } = await supabase
-          .from("projects")
+          .from(table)
           .update({ polygon_settings_floor: settings as unknown as Json })
-          .eq("id", projectId);
+          .eq("id", id);
         if (error) throw error;
       }
 
@@ -240,16 +278,16 @@ const PolygonCustomizationSettings = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          {type === "building"
-            ? t("polygonSettings.buildingTitle")
-            : t("polygonSettings.floorTitle")}
+          {type === "floor"
+            ? t("polygonSettings.floorTitle")
+            : t("polygonSettings.buildingTitle")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Цвета - для здания один цвет, для этажа - по статусам */}
         <div className="space-y-4">
           <h4 className="font-medium">{t("polygonSettings.colors")}</h4>
-          {type === "building" ? (
+          {type !== "floor" ? (
             <div className="space-y-2">
               <Label>{t("polygonSettings.buildingColor")}</Label>
               <div className="flex items-center gap-2">

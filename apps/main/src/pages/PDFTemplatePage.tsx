@@ -8,6 +8,7 @@ import { Apartment } from "@/entities/apartment/model/types";
 import { Badge } from "@gridix/ui";
 import type { Tables } from "@gridix/types/database";
 import { loadPdfTemplateData } from "@/features/projectSelector/api/projectSelectorApi";
+import { normalizeSubProjectKind } from "@/components/project-selector/lib/subProjectDisplay";
 
 interface PDFTemplatePageProps {
   useId?: boolean;
@@ -31,13 +32,15 @@ const PDFTemplatePage = ({
   apartmentIdProp = "",
   projectIdProp = "",
 }: PDFTemplatePageProps) => {
-  const { projectSlug, projectId, apartmentNumber, apartmentId } = useParams<{
-    projectSlug?: string;
-    projectId?: string;
-    apartmentNumber?: string;
-    apartmentId?: string;
-    lang?: string;
-  }>();
+  const { projectSlug, projectId, apartmentNumber, apartmentId, subSlug } =
+    useParams<{
+      projectSlug?: string;
+      projectId?: string;
+      apartmentNumber?: string;
+      apartmentId?: string;
+      lang?: string;
+      subSlug?: string;
+    }>();
 
   // Определяем идентификаторы в зависимости от типа маршрута
   const projectIdentifier = useId ? projectIdProp : projectSlug || projectId;
@@ -73,6 +76,9 @@ const PDFTemplatePage = ({
   } | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [subProjectEntityKind, setSubProjectEntityKind] = useState<
+    "building" | "object"
+  >("building");
 
   useEffect(() => {
     const loadData = async () => {
@@ -90,9 +96,11 @@ const PDFTemplatePage = ({
           projectIdentifier,
           apartmentIdentifier,
           useId,
+          subSlug,
         );
 
         setProject(result.project);
+        setSubProjectEntityKind(normalizeSubProjectKind(result.subProjectType));
         setApartment(result.apartment as Apartment | null);
         setFieldSettings(
           (result.fieldSettings ?? []) as unknown as PdfFieldSetting[],
@@ -132,7 +140,7 @@ const PDFTemplatePage = ({
     };
 
     loadData();
-  }, [projectIdentifier, apartmentIdentifier, t, useId]);
+  }, [projectIdentifier, apartmentIdentifier, t, useId, subSlug]);
 
   // Initialize currency from project if available
   useEffect(() => {
@@ -162,7 +170,13 @@ const PDFTemplatePage = ({
           : primaryDomain
             ? "https://" + primaryDomain
             : fallbackDomain;
-        const url = `${baseDomain}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}`;
+        const projectPath = project.slug || `id/${project.id}`;
+        const aptSeg = encodeURIComponent(String(apartment.apartment_number));
+        const subSeg =
+          subSlug != null && subSlug !== ""
+            ? `p/${encodeURIComponent(subSlug)}/`
+            : "";
+        const url = `${baseDomain}/${language}/project/${projectPath}/${subSeg}apartment/${aptSeg}`;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
         setQrCodeUrl(qrUrl);
       } catch (err) {
@@ -172,7 +186,7 @@ const PDFTemplatePage = ({
     };
 
     updateQRCode();
-  }, [project, apartment, language, projectDomains]);
+  }, [project, apartment, language, projectDomains, subSlug]);
 
   const getFieldLabel = (field: {
     field_label: string;
@@ -337,8 +351,7 @@ const PDFTemplatePage = ({
               </h2>
               <p className="text-gray-600">
                 {apartment.type === "apartment"
-                  ? (project as unknown as Record<string, unknown>)
-                      ?.project_type === "object"
+                  ? subProjectEntityKind === "object"
                     ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                     : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
                   : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
@@ -398,8 +411,7 @@ const PDFTemplatePage = ({
         {getVisibleFields().length > 0 && (
           <>
             <h3 className="text-xl font-semibold text-gray-900">
-              {(project as unknown as Record<string, unknown>)?.project_type ===
-              "object"
+              {subProjectEntityKind === "object"
                 ? "Object details"
                 : t("apartment.details")}
             </h3>

@@ -18,9 +18,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import FloorPlanEditor from "@/components/visualization/FloorPlanEditor";
 import PolygonCustomizationSettings from "@/components/visualization/PolygonCustomizationSettings";
+import { supabase } from "@gridix/utils/api";
 
 interface ProjectFloorsManagerProps {
   projectId: string;
+  subProjectId?: string;
 }
 
 interface PolygonSettings {
@@ -47,26 +49,44 @@ interface PolygonSettings {
   };
 }
 
-const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
+const ProjectFloorsManager = ({
+  projectId,
+  subProjectId,
+}: ProjectFloorsManagerProps) => {
   const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
   const [showSettings, setShowSettings] = useState(false);
   const [polygonSettings, setPolygonSettings] =
     useState<PolygonSettings | null>(null);
+  const [subProjectFloors, setSubProjectFloors] = useState<number | null>(null);
 
   const { t } = useLanguage();
   const { project } = useProjectInEditorScope(projectId);
 
   useEffect(() => {
-    if (project) {
-      // Инициализируем состояния для этажей 1..project.floors (номера этажей в данных — с 1)
-      const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
-      const initialStates: Record<number, boolean> = {};
-      floors.forEach((floor) => {
-        initialStates[floor] = false;
-      });
-      setFloorStates(initialStates);
+    if (subProjectId) {
+      supabase
+        .from("sub_projects")
+        .select("floors")
+        .eq("id", subProjectId)
+        .single()
+        .then(({ data }) => {
+          if (data?.floors) setSubProjectFloors(data.floors as number);
+        });
     }
-  }, [project]);
+  }, [subProjectId]);
+
+  const floorsCount = subProjectId
+    ? (subProjectFloors ?? 1)
+    : (project?.floors ?? 1);
+
+  useEffect(() => {
+    const floors = Array.from({ length: floorsCount }, (_, i) => i + 1);
+    const initialStates: Record<number, boolean> = {};
+    floors.forEach((floor) => {
+      initialStates[floor] = false;
+    });
+    setFloorStates(initialStates);
+  }, [floorsCount]);
 
   const toggleFloorCollapse = (floor: number) => {
     setFloorStates((prev) => ({
@@ -80,9 +100,9 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
   };
 
   const renderFloorPlanTabs = () => {
-    if (!project) return null;
+    if (!subProjectId && !project) return null;
 
-    const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
+    const floors = Array.from({ length: floorsCount }, (_, i) => i + 1);
 
     return (
       <div className="space-y-2">
@@ -128,6 +148,7 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
                     <FloorPlanEditor
                       projectId={projectId}
                       floorNumber={floor}
+                      subProjectId={subProjectId}
                     />
                   </CardContent>
                 </CollapsibleContent>
@@ -156,6 +177,7 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
           {showSettings && (
             <PolygonCustomizationSettings
               projectId={projectId}
+              subProjectId={subProjectId}
               type="floor"
               onSettingsChange={handleSettingsChange}
             />

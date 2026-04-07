@@ -8,14 +8,20 @@ export function ActionsBar({
   projectName,
   isCreating,
   admin,
+  creatingLabel,
+  primaryActionLabel,
 }: {
-  t: any;
+  t: (key: string) => string;
   onComplete: () => void;
   createProjectWithData: () => void | Promise<void>;
   isValidWithCustom: boolean;
   projectName: string;
   isCreating: boolean;
   admin: { primary: string; primaryHover: string };
+  /** Overrides `state.creatingProject` while the primary action runs */
+  creatingLabel?: string;
+  /** Overrides `excel.mapper.actions.createProject` */
+  primaryActionLabel?: string;
 }) {
   return (
     <div className="flex justify-end gap-4">
@@ -28,8 +34,8 @@ export function ActionsBar({
         className={`${admin.primary} ${admin.primaryHover} excel_create_project_usertour`}
       >
         {isCreating
-          ? t("state.creatingProject")
-          : t("excel.mapper.actions.createProject")}
+          ? (creatingLabel ?? t("state.creatingProject"))
+          : (primaryActionLabel ?? t("excel.mapper.actions.createProject"))}
       </Button>
     </div>
   );

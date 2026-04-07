@@ -103,6 +103,7 @@ function areFieldSettingsEqual(a: FieldSetting[], b: FieldSetting[]): boolean {
 export const useFields = (
   projectId: string | null,
   initialData?: UseFieldsInitialData | null,
+  subProjectId?: string,
 ) => {
   const [fields, setFields] = useState<FieldSetting[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,22 +118,26 @@ export const useFields = (
     }
 
     try {
-      // Загружаем настройки полей
-      const { data: settingsData, error: settingsError } = await supabase
+      let settingsQuery = supabase
         .from("project_field_settings")
         .select("*")
         .eq("project_id", projectId)
         .order("sort_order");
+      if (subProjectId)
+        settingsQuery = settingsQuery.eq("sub_project_id", subProjectId);
 
+      const { data: settingsData, error: settingsError } = await settingsQuery;
       if (settingsError) throw settingsError;
 
-      // Загружаем кастомные поля
-      const { data: customData, error: customError } = await supabase
+      let customQuery = supabase
         .from("project_custom_fields")
         .select("*")
         .eq("project_id", projectId)
         .order("sort_order");
+      if (subProjectId)
+        customQuery = customQuery.eq("sub_project_id", subProjectId);
 
+      const { data: customData, error: customError } = await customQuery;
       if (customError) throw customError;
 
       const allFields = mergeFieldsFromRaw(
@@ -146,7 +151,7 @@ export const useFields = (
     } finally {
       setLoading(false);
     }
-  }, [projectId, t]);
+  }, [projectId, subProjectId, t]);
 
   const updateFieldOrder = useCallback(
     async (updatedFields: FieldSetting[]) => {
