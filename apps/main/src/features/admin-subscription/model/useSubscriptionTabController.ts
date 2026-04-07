@@ -130,8 +130,9 @@ export const useSubscriptionTabController = () => {
       : null;
     const hasActivePaidPeriod = periodEnd !== null && periodEnd > Date.now();
 
+    // Abandoned Stripe checkout leaves pending_payment with no paid period — user must retry.
     if (sub.status === "pending_payment") {
-      return false;
+      return !hasActivePaidPeriod;
     }
 
     if (

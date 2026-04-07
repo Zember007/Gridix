@@ -45,7 +45,7 @@ export const CheckoutStepSelectProjects: React.FC<Props> = ({
     const hasActivePaidPeriod = periodEnd !== null && periodEnd > now;
 
     if (sub.status === "pending_payment") {
-      return false;
+      return !hasActivePaidPeriod;
     }
 
     if (
