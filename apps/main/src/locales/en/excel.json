@@ -1,7 +1,15 @@
 {
   "mapper": {
     "actions": {
-      "createProject": "Create project with data"
+      "createProject": "Create project with data",
+      "createSubProject": "Create building and import",
+      "importApartments": "Import apartments"
+    },
+    "subProject": {
+      "infoTitle": "Building information",
+      "infoDescription": "Name and type for the new building; apartment data comes from your file.",
+      "name": "Building name*",
+      "type": "Building type*"
     },
     "preview": {
       "description": "How your data will be imported ({{count}} records)",
@@ -140,6 +148,10 @@
       "linkAccessible": "Link is accessible for import",
       "projectCreated": "Project \"{{name}}\" created with {{count}} apartments on {{floors}} floors",
       "projectCreatedObjects": "Project \"{{name}}\" created with {{count}} objects",
+      "subProjectCreatedBuilding": "Building \"{{name}}\" created with {{count}} apartments on {{floors}} floors",
+      "subProjectCreatedObjects": "Building \"{{name}}\" created with {{count}} objects",
+      "apartmentsImportedBuilding": "Imported {{count}} apartments on {{floors}} floors",
+      "apartmentsImportedObjects": "Imported {{count}} objects",
       "projectCreationError": "Error creating project"
     }
   }

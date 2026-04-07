@@ -7,6 +7,8 @@ import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { useLanguage } from "@gridix/utils/react";
 import { adminThemeClasses as admin, Language } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Tables } from "@gridix/types/database";
+import { createSubProject } from "@/features/genplan/api/genplanApi";
 
 import { Button } from "@gridix/ui";
 import {
@@ -43,6 +45,12 @@ interface ExcelColumnMapperProps {
   excelColumns: string[];
   importedData: ImportedRowData[];
   onComplete: () => void;
+  /** Parent project: create a new sub-project + apartments (genplan “add building”). */
+  parentProjectId?: string;
+  /** Import apartments into this existing sub-project (sub-project editor). */
+  targetSubProjectId?: string;
+  /** After a new sub-project is created from import, or after import into an existing one. */
+  onSubProjectImportSuccess?: (subProject: Tables<"sub_projects">) => void;
 }
 
 interface ColumnMapping {
@@ -97,10 +105,21 @@ const ExcelColumnMapper = ({
   excelColumns,
   importedData,
   onComplete,
+  parentProjectId,
+  targetSubProjectId,
+  onSubProjectImportSuccess,
 }: ExcelColumnMapperProps) => {
   const { createProject } = useProjectCRUD();
   const { t, language } = useLanguage();
   const { userProfile } = useAuth();
+  const { navigate } = useLanguageNavigation();
+
+  const isNewSubProjectUnderParent = Boolean(
+    parentProjectId && !targetSubProjectId,
+  );
+  const isImportIntoExistingSubProject = Boolean(
+    parentProjectId && targetSubProjectId,
+  );
 
   // Функция для получения локализованного названия поля
   const getFieldLabel = useCallback(
@@ -137,7 +156,6 @@ const ExcelColumnMapper = ({
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const { navigate } = useLanguageNavigation();
 
   // Status validation states
   const [statusMapping, setStatusMapping] = useState<StatusMapping>({
@@ -497,7 +515,6 @@ const ExcelColumnMapper = ({
 
     setIsCreating(true);
     try {
-      // Вычисляем максимальный этаж из данных (только для типа building)
       let maxFloor = 1;
       if (
         projectData.type === "building" &&
@@ -513,54 +530,85 @@ const ExcelColumnMapper = ({
         );
       }
 
-      // Создаем реальный проект
-      const projectDataForCreation = {
-        name: projectData.name.trim(),
-        description: projectData.description.trim() || null,
-        floors: Math.max(maxFloor, projectData.floors),
-        has_parking: false,
-        has_commercial: false,
-        address: null,
-        building_image_url: null,
-        latitude: null,
-        longitude: null,
-        slug: null,
-        currency: "USD" as const,
-        available_languages: ["ru", "en"],
-        is_public: true,
-        is_featured: false,
-        installment_enabled: false,
-        min_down_payment_percent: null,
-        max_installment_months: null,
-        pdf_presentation_url: null,
-        theme_color: null,
-        is_public_visible: true,
-        project_type: projectData.type,
-        subscription_expires_at: null,
-        subscription_status: "active",
-        view_count: 0,
-        polygon_settings_facade: {},
-        polygon_settings_floor: {},
-        has_masterplan: false,
-        parent_project_id: null,
-        root_project_id: null,
-      };
+      let resolvedProjectId: string;
+      let resolvedSubProjectId: string | null = null;
+      let subProjectForCallback: Tables<"sub_projects"> | null = null;
 
-      const project = await createProject(projectDataForCreation);
+      if (
+        isImportIntoExistingSubProject &&
+        parentProjectId &&
+        targetSubProjectId
+      ) {
+        const { data: spRow, error: spLookupError } = await supabase
+          .from("sub_projects")
+          .select("*")
+          .eq("id", targetSubProjectId)
+          .eq("project_id", parentProjectId)
+          .maybeSingle();
+        if (spLookupError || !spRow) {
+          throw new Error("Sub-project not found");
+        }
+        resolvedProjectId = parentProjectId;
+        resolvedSubProjectId = spRow.id;
+        subProjectForCallback = spRow;
+      } else if (isNewSubProjectUnderParent && parentProjectId) {
+        const sp = await createSubProject(parentProjectId, {
+          name: projectData.name.trim(),
+          type: projectData.type,
+        });
+        resolvedProjectId = parentProjectId;
+        resolvedSubProjectId = sp.id;
+        subProjectForCallback = sp;
+      } else {
+        const projectDataForCreation = {
+          name: projectData.name.trim(),
+          description: projectData.description.trim() || null,
+          floors: Math.max(maxFloor, projectData.floors),
+          has_parking: false,
+          has_commercial: false,
+          address: null,
+          building_image_url: null,
+          latitude: null,
+          longitude: null,
+          slug: null,
+          currency: "USD" as const,
+          available_languages: ["ru", "en"],
+          is_public: true,
+          is_featured: false,
+          installment_enabled: false,
+          min_down_payment_percent: null,
+          max_installment_months: null,
+          pdf_presentation_url: null,
+          theme_color: null,
+          is_public_visible: true,
+          project_type: projectData.type,
+          subscription_expires_at: null,
+          subscription_status: "active",
+          view_count: 0,
+          polygon_settings_facade: {},
+          polygon_settings_floor: {},
+          has_masterplan: false,
+          parent_project_id: null,
+          root_project_id: null,
+        };
 
-      if (!project) throw new Error("Failed to create project");
+        const project = await createProject(projectDataForCreation);
+        if (!project) throw new Error("Failed to create project");
 
-      // usertour uses `once: true` internally, so we don't persist onboarding state in Supabase.
-      void trackUsertourEvent({
-        eventName: "gridix_project_created",
-        properties: { project_id: project.id, source: "excel_import" },
-        onceKey: "gridix_project_created",
-      });
+        void trackUsertourEvent({
+          eventName: "gridix_project_created",
+          properties: { project_id: project.id, source: "excel_import" },
+          onceKey: "gridix_project_created",
+        });
 
-      // Сохраняем кастомные поля в реальный проект
+        resolvedProjectId = project.id;
+        resolvedSubProjectId = null;
+      }
+
       if (customFields.length > 0) {
         const customFieldsData = customFields.map((field) => ({
-          project_id: project.id,
+          project_id: resolvedProjectId,
+          sub_project_id: resolvedSubProjectId,
           field_name: field.field_name,
           field_label: field.field_label,
           field_type: field.field_type,
@@ -577,12 +625,12 @@ const ExcelColumnMapper = ({
         }
       }
 
-      // Создаем этажи здания для визуализации (только для типа building)
       if (projectData.type === "building") {
         const floorData = [];
         for (let i = 1; i <= Math.max(maxFloor, projectData.floors); i++) {
           floorData.push({
-            project_id: project.id,
+            project_id: resolvedProjectId,
+            sub_project_id: resolvedSubProjectId,
             floor_number: i,
             polygon: [],
             color: "#3b82f6",
@@ -598,7 +646,6 @@ const ExcelColumnMapper = ({
         }
       }
 
-      // Обрабатываем и вставляем данные квартир
       const usedApartmentNumbers = new Set<string>();
       const apartmentData = importedData.map((row, index) => {
         const floorNumber =
@@ -694,7 +741,8 @@ const ExcelColumnMapper = ({
         });
 
         return {
-          project_id: project.id,
+          project_id: resolvedProjectId,
+          sub_project_id: resolvedSubProjectId,
           apartment_number: apartmentNumber,
           floor_number: floorNumber,
           rooms: String(rooms),
@@ -714,42 +762,63 @@ const ExcelColumnMapper = ({
         console.error("Ошибка при создании квартир:", apartmentError);
         if (
           apartmentError.code === "23505" &&
-          apartmentError.message.includes(
+          (apartmentError.message.includes(
             "apartments_project_id_apartment_number_key",
-          )
+          ) ||
+            apartmentError.message.includes(
+              "apartments_sub_project_apartment_number",
+            ))
         ) {
           throw new Error(t("excel.mapper.errors.duplicateApartmentNumbers"));
         }
         throw apartmentError;
       }
 
-      // Группируем квартиры по этажам для отчета
-      const apartmentsByFloor = apartmentData.reduce(
-        (acc, apt) => {
-          acc[apt.floor_number] = (acc[apt.floor_number] || 0) + 1;
-          return acc;
-        },
-        {} as Record<number, number>,
-      );
+      if (isNewSubProjectUnderParent || isImportIntoExistingSubProject) {
+        const floorsCount = Math.max(maxFloor, projectData.floors);
+        const successMessage = isImportIntoExistingSubProject
+          ? projectData.type === "building"
+            ? t("excel.url.toast.apartmentsImportedBuilding", {
+                count: apartmentData.length,
+                floors: floorsCount,
+              })
+            : t("excel.url.toast.apartmentsImportedObjects", {
+                count: apartmentData.length,
+              })
+          : projectData.type === "building"
+            ? t("excel.url.toast.subProjectCreatedBuilding", {
+                name: projectData.name,
+                count: apartmentData.length,
+                floors: floorsCount,
+              })
+            : t("excel.url.toast.subProjectCreatedObjects", {
+                name: projectData.name,
+                count: apartmentData.length,
+              });
 
-      const successMessage =
-        projectData.type === "building"
-          ? t("excel.url.toast.projectCreated", {
-              name: projectData.name,
-              count: apartmentData.length,
-              floors: Math.max(maxFloor, projectData.floors),
-            })
-          : t("excel.url.toast.projectCreatedObjects", {
-              name: projectData.name,
-              count: apartmentData.length,
-            });
+        toast.success(successMessage);
+        if (subProjectForCallback) {
+          onSubProjectImportSuccess?.(subProjectForCallback);
+        }
+        onComplete();
+      } else {
+        const successMessage =
+          projectData.type === "building"
+            ? t("excel.url.toast.projectCreated", {
+                name: projectData.name,
+                count: apartmentData.length,
+                floors: Math.max(maxFloor, projectData.floors),
+              })
+            : t("excel.url.toast.projectCreatedObjects", {
+                name: projectData.name,
+                count: apartmentData.length,
+              });
 
-      toast.success(successMessage);
-
-      // Перенаправляем на созданный проект
-      setTimeout(() => {
-        navigate(`/admin/project/${project.id}`);
-      }, 1000);
+        toast.success(successMessage);
+        setTimeout(() => {
+          navigate(`/admin/project/${resolvedProjectId}`);
+        }, 1000);
+      }
     } catch (error) {
       console.error("Ошибка создания проекта:", error);
       toast.error(t("excel.url.toast.projectCreationError"));
@@ -772,7 +841,43 @@ const ExcelColumnMapper = ({
     createProject,
     navigate,
     t,
+    parentProjectId,
+    targetSubProjectId,
+    isImportIntoExistingSubProject,
+    isNewSubProjectUnderParent,
+    onSubProjectImportSuccess,
+    onComplete,
   ]);
+
+  useEffect(() => {
+    if (
+      !isImportIntoExistingSubProject ||
+      !parentProjectId ||
+      !targetSubProjectId
+    ) {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("sub_projects")
+        .select("name, type")
+        .eq("id", targetSubProjectId)
+        .eq("project_id", parentProjectId)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      const normalizedType =
+        String(data.type).toLowerCase() === "object" ? "object" : "building";
+      setProjectData((prev) => ({
+        ...prev,
+        name: data.name,
+        type: normalizedType,
+      }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isImportIntoExistingSubProject, parentProjectId, targetSubProjectId]);
 
   // Объединяем стандартные поля и кастомные поля для маппинга
   const allFields = useMemo(() => {
@@ -797,6 +902,27 @@ const ExcelColumnMapper = ({
         t={t}
         projectData={projectData}
         setProjectData={setProjectData}
+        titleKey={
+          isNewSubProjectUnderParent || isImportIntoExistingSubProject
+            ? "excel.mapper.subProject.infoTitle"
+            : "excel.mapper.projectInfo.title"
+        }
+        descriptionKey={
+          isNewSubProjectUnderParent || isImportIntoExistingSubProject
+            ? "excel.mapper.subProject.infoDescription"
+            : "excel.mapper.projectInfo.description"
+        }
+        nameLabelKey={
+          isNewSubProjectUnderParent || isImportIntoExistingSubProject
+            ? "excel.mapper.subProject.name"
+            : "excel.mapper.project.name"
+        }
+        typeLabelKey={
+          isNewSubProjectUnderParent || isImportIntoExistingSubProject
+            ? "excel.mapper.subProject.type"
+            : "excel.mapper.project.type"
+        }
+        lockNameAndType={isImportIntoExistingSubProject}
       />
 
       <CustomFieldsSection onFieldsChange={handleCustomFieldsChange} />
@@ -1248,6 +1374,20 @@ const ExcelColumnMapper = ({
         projectName={projectData.name}
         isCreating={isCreating}
         admin={admin}
+        creatingLabel={
+          isNewSubProjectUnderParent
+            ? t("genplan.subProjects.creatingBuilding")
+            : isImportIntoExistingSubProject
+              ? t("genplan.subProjects.importingApartments")
+              : undefined
+        }
+        primaryActionLabel={
+          isNewSubProjectUnderParent
+            ? t("excel.mapper.actions.createSubProject")
+            : isImportIntoExistingSubProject
+              ? t("excel.mapper.actions.importApartments")
+              : undefined
+        }
       />
     </div>
   );

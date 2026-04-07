@@ -42,6 +42,10 @@ import {
   removeProjectPdf,
 } from "@/features/projectEditor/api/projectEditorApi";
 import {
+  syncProjectBuildingImage,
+  uploadFacadeImageToStorage,
+} from "@/features/visualization/buildingImageEditor/api/buildingImageEditorApi";
+import {
   ProjectEditorDataProvider,
   useProjectEditorDataContext,
 } from "@/features/projectEditor/context/ProjectEditorDataContext";
@@ -61,6 +65,7 @@ import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import { useDefaultSubProjectKind } from "@/features/projectEditor/hooks/useDefaultSubProjectKind";
+import { useDefaultSubProjectBuildingScope } from "@/features/projectEditor/hooks/useDefaultSubProjectBuildingScope";
 import {
   isDevTourMode,
   startProjectChecklist,
@@ -120,6 +125,172 @@ interface ProjectPdfPresentationSectionProps {
   hasUser: boolean;
   onPdfUrlChange: (pdfUrl: string | null) => void;
 }
+
+interface ProjectBuildingImageSectionProps {
+  projectId: string;
+  buildingImageUrl: string | null;
+  isNew: boolean;
+  hasUser: boolean;
+  onUrlChange: (url: string | null) => void;
+}
+
+const ProjectBuildingImageSection = memo(
+  ({
+    projectId,
+    buildingImageUrl,
+    isNew,
+    hasUser,
+    onUrlChange,
+  }: ProjectBuildingImageSectionProps) => {
+    const { t } = useLanguage();
+    const [uploading, setUploading] = useState(false);
+    const [removing, setRemoving] = useState(false);
+
+    const handleUpload = useCallback(
+      async (file: File) => {
+        if (!hasUser || isNew) {
+          toast.error(t("projectEditor.saveProjectFirst"));
+          return;
+        }
+        if (!file.type.startsWith("image/")) {
+          toast.error(t("projectEditor.buildingImageOnlyImages"));
+          return;
+        }
+        const maxSize = 15 * 1024 * 1024;
+        if (file.size > maxSize) {
+          toast.error(t("projectEditor.buildingImageTooLarge"));
+          return;
+        }
+        setUploading(true);
+        try {
+          const publicUrl = await uploadFacadeImageToStorage(projectId, file);
+          await syncProjectBuildingImage(projectId, publicUrl);
+          onUrlChange(publicUrl);
+          toast.success(t("projectEditor.buildingImageUploadSuccess"));
+        } catch (e) {
+          console.error("Building image upload failed:", e);
+          toast.error(t("projectEditor.buildingImageUploadError"));
+        } finally {
+          setUploading(false);
+        }
+      },
+      [hasUser, isNew, onUrlChange, projectId, t],
+    );
+
+    const handleRemove = useCallback(async () => {
+      if (!hasUser || isNew || !buildingImageUrl || removing || uploading) {
+        return;
+      }
+      setRemoving(true);
+      onUrlChange(null);
+      try {
+        await syncProjectBuildingImage(projectId, null);
+        toast.success(t("projectEditor.buildingImageRemoveSuccess"));
+      } catch (e) {
+        onUrlChange(buildingImageUrl);
+        console.error("Building image remove failed:", e);
+        toast.error(t("projectEditor.buildingImageRemoveError"));
+      } finally {
+        setRemoving(false);
+      }
+    }, [
+      buildingImageUrl,
+      hasUser,
+      isNew,
+      onUrlChange,
+      projectId,
+      removing,
+      t,
+      uploading,
+    ]);
+
+    return (
+      <div className="space-y-4 border-t pt-4">
+        <h4 className="flex items-center gap-2 text-sm font-medium">
+          <Image className="h-4 w-4" />
+          {t("projectEditor.buildingImage")}
+        </h4>
+        <p className="text-xs text-muted-foreground">
+          {t("projectEditor.buildingImageDesc")}
+        </p>
+
+        {buildingImageUrl ? (
+          <div className="flex flex-col gap-3 rounded-lg border bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src={buildingImageUrl}
+                alt=""
+                className="h-16 w-24 rounded-md border object-cover"
+              />
+              <span className="text-sm text-muted-foreground">
+                {t("projectEditor.buildingImageUploaded")}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                disabled={uploading || removing}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/*";
+                  input.onchange = () => {
+                    const f = input.files?.[0];
+                    if (f) void handleUpload(f);
+                  };
+                  input.click();
+                }}
+              >
+                {t("projectEditor.buildingImageReplace")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                type="button"
+                disabled={removing || uploading}
+                onClick={() => void handleRemove()}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 text-center">
+            {!uploading && (
+              <FileDropzone
+                accept="image/*"
+                disabled={isNew}
+                multiple={false}
+                heading={t("projectEditor.buildingImageUploadHeading")}
+                description={t("projectEditor.buildingImageUploadHint")}
+                dropLabel={t("projectEditor.clickOrDrop")}
+                idleLabel={t("projectEditor.clickOrDrop")}
+                className="p-0"
+                onFilesSelected={async (files) => {
+                  const file = files[0];
+                  if (!file) return;
+                  await handleUpload(file);
+                }}
+              />
+            )}
+            {uploading && (
+              <p className="p-6 text-sm text-muted-foreground">
+                {t("projectEditor.uploading")}
+              </p>
+            )}
+            {isNew && (
+              <p className="mt-2 px-3 pb-3 text-xs text-muted-foreground">
+                {t("projectEditor.saveProjectFirstNote")}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 const ProjectPdfPresentationSection = memo(
   ({
@@ -429,6 +600,8 @@ const ProjectEditor = ({
   const defaultSubProjectKind = useDefaultSubProjectKind(
     !isNew && project.id ? project.id : null,
   );
+  const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
+    useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
   const editorScopeKind = isNew ? "building" : defaultSubProjectKind;
 
   // Применяем CSS переменные темы
@@ -692,7 +865,6 @@ const ProjectEditor = ({
         floors: project.floors,
         has_parking: project.has_parking,
         has_commercial: project.has_commercial,
-        building_image_url: project.building_image_url,
         latitude: project.latitude,
         longitude: project.longitude,
         currency: project.currency,
@@ -726,7 +898,6 @@ const ProjectEditor = ({
           floors: data.floors ?? 1,
           has_parking: data.has_parking ?? false,
           has_commercial: data.has_commercial ?? false,
-          building_image_url: data.building_image_url ?? null,
           address: data.address ?? null,
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
@@ -771,7 +942,6 @@ const ProjectEditor = ({
               floors: project.floors,
               has_parking: project.has_parking,
               has_commercial: project.has_commercial,
-              building_image_url: project.building_image_url,
               address: project.address || null,
               latitude: project.latitude,
               longitude: project.longitude,
@@ -806,6 +976,10 @@ const ProjectEditor = ({
   };
   const handlePdfUrlChange = useCallback((pdfUrl: string | null) => {
     setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
+  }, []);
+
+  const handleBuildingImageUrlChange = useCallback((url: string | null) => {
+    setProject((prev) => ({ ...prev, building_image_url: url }));
   }, []);
 
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -1432,6 +1606,14 @@ const ProjectEditor = ({
                             </p>
                           </div>
 
+                          <ProjectBuildingImageSection
+                            projectId={project.id}
+                            buildingImageUrl={project.building_image_url}
+                            isNew={isNew}
+                            hasUser={Boolean(user)}
+                            onUrlChange={handleBuildingImageUrlChange}
+                          />
+
                           <ProjectPdfPresentationSection
                             projectId={project.id}
                             pdfPresentationUrl={project.pdf_presentation_url}
@@ -1563,17 +1745,30 @@ const ProjectEditor = ({
                   )}
 
                   {activeTab === "building" && !project.has_masterplan && (
-                    <BuildingImageEditor
-                      projectId={project.id}
-                      subProjectType={editorScopeKind}
-                      currentImageUrl={project.building_image_url}
-                      onImageUpdate={(imageUrl) =>
-                        setProject((prev) => ({
-                          ...prev,
-                          building_image_url: imageUrl,
-                        }))
-                      }
-                    />
+                    <>
+                      {!defaultBuildingScopeReady ? (
+                        <div className="flex min-h-[200px] items-center justify-center">
+                          <LoadingProgress />
+                        </div>
+                      ) : !defaultBuildingScope ? (
+                        <p className="text-sm text-destructive">
+                          {t(
+                            "projectEditor.facadeEditorDefaultSubProjectMissing",
+                          )}
+                        </p>
+                      ) : (
+                        <BuildingImageEditor
+                          projectId={project.id}
+                          subProjectId={defaultBuildingScope.subProjectId}
+                          initialFloors={defaultBuildingScope.floors}
+                          subProjectType={editorScopeKind}
+                          currentImageUrl={
+                            defaultBuildingScope.buildingImageUrl ??
+                            project.building_image_url
+                          }
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               )}

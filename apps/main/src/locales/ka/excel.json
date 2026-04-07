@@ -1,7 +1,15 @@
 {
   "mapper": {
     "actions": {
-      "createProject": "პროექტის შექმნა მონაცემებით"
+      "createProject": "პროექტის შექმნა მონაცემებით",
+      "createSubProject": "კორპუსის შექმნა და იმპორტი",
+      "importApartments": "ბინების იმპორტი"
+    },
+    "subProject": {
+      "infoTitle": "კორპუსის ინფორმაცია",
+      "infoDescription": "ახალი კორპუსის სახელი და ტიპი; ბინების მონაცემები ფაილიდან.",
+      "name": "კორპუსის სახელი*",
+      "type": "კორპუსის ტიპი*"
     },
     "preview": {
       "description": "როგორ იქნება თქვენი მონაცემები იმპორტირებული ({{count}} ჩანაწერი)",
@@ -140,6 +148,10 @@
       "linkAccessible": "ბმული ხელმისაწვდომია იმპორტისთვის",
       "projectCreated": "პროექტი \"{{name}}\" შეიქმნა {{count}} ბინით {{floors}} სართულზე",
       "projectCreatedObjects": "პროექტი \"{{name}}\" შეიქმნა {{count}} ობიექტით",
+      "subProjectCreatedBuilding": "კორპუსი \"{{name}}\" შეიქმნა {{count}} ბინით {{floors}} სართულზე",
+      "subProjectCreatedObjects": "კორპუსი \"{{name}}\" შეიქმნა {{count}} ობიექტით",
+      "apartmentsImportedBuilding": "იმპორტირებულია {{count}} ბინა {{floors}} სართულზე",
+      "apartmentsImportedObjects": "იმპორტირებულია {{count}} ობიექტი",
       "projectCreationError": "პროექტის შექმნის შეცდომა"
     }
   }

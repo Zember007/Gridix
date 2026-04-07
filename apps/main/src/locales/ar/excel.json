@@ -1,7 +1,15 @@
 {
   "mapper": {
     "actions": {
-      "createProject": "إنشاء مشروع بالبيانات"
+      "createProject": "إنشاء مشروع بالبيانات",
+      "createSubProject": "إنشاء مبنى واستيراد",
+      "importApartments": "استيراد الشقق"
+    },
+    "subProject": {
+      "infoTitle": "معلومات المبنى",
+      "infoDescription": "اسم ونوع المبنى الجديد؛ بيانات الشقق من الملف.",
+      "name": "اسم المبنى*",
+      "type": "نوع المبنى*"
     },
     "preview": {
       "description": "كيفية استيراد بياناتك ({{count}} سجل)",
@@ -140,6 +148,10 @@
       "linkAccessible": "الرابط متاح للاستيراد",
       "projectCreated": "تم إنشاء المشروع \"{{name}}\" مع {{count}} شقة في {{floors}} طوابق",
       "projectCreatedObjects": "تم إنشاء المشروع \"{{name}}\" مع {{count} } كائن",
+      "subProjectCreatedBuilding": "تم إنشاء المبنى \"{{name}}\" مع {{count}} شقة في {{floors}} طوابق",
+      "subProjectCreatedObjects": "تم إنشاء المبنى \"{{name}}\" مع {{count}} كائنًا",
+      "apartmentsImportedBuilding": "تم استيراد {{count}} شقة في {{floors}} طوابق",
+      "apartmentsImportedObjects": "تم استيراد {{count}} كائن",
       "projectCreationError": "خطأ في إنشاء المشروع"
     }
   }

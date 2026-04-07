@@ -13,7 +13,11 @@
     "warning": "The site plan will be hidden from visitors. You can reactivate it at any time.",
     "button": "Deactivate",
     "success": "Site plan deactivated",
-    "error": "Failed to deactivate site plan"
+    "error": "Failed to deactivate site plan",
+    "multiDescription": "This project has several buildings. Choose which one to keep. Apartments, floor plans, facades, and layout photos from the other buildings will be moved into it. Site-plan zones drawn for removed buildings will be deleted.",
+    "pickKeepLabel": "Building to keep",
+    "othersDeletedWarning": "All other sub-projects will be permanently deleted. This cannot be undone.",
+    "pickKeepError": "Select a building to keep"
   },
   "editor": {
     "title": "Site plan",
@@ -87,6 +91,12 @@
     "notFound": "Building not found",
     "editor": "Building editor",
     "addApartments": "Add apartments",
-    "addApartmentsDesc": "Choose how to add apartments to this building"
+    "addApartmentsDesc": "Choose how to add apartments to this building",
+    "createFlow": {
+      "title": "Add building",
+      "description": "Add manually or import apartment data from a file or link (Excel, CSV, Google Sheets)."
+    },
+    "creatingBuilding": "Creating building…",
+    "importingApartments": "Importing apartments…"
   }
 }

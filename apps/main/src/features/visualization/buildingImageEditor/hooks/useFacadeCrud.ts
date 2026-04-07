@@ -64,18 +64,14 @@ export function useFacadeCrud({
       try {
         if (subProjectId) {
           await api.syncSubProjectBuildingImage(subProjectId, primaryUrl);
-        } else {
-          await api.syncProjectBuildingImage(
-            project?.id || projectId,
-            primaryUrl,
-          );
         }
+        // projects.building_image_url is updated only from Project Editor → Basic tab
         if (primaryUrl) onImageUpdate?.(primaryUrl);
       } catch (e) {
         console.error("Error syncing primary facade to project:", e);
       }
     },
-    [facades, onImageUpdate, project?.id, projectId, subProjectId],
+    [facades, onImageUpdate, subProjectId],
   );
 
   const normalizeFacadeOrder = useCallback(async (list: ProjectFacade[]) => {

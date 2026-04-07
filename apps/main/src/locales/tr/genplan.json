@@ -13,7 +13,11 @@
     "warning": "Site planı ziyaretçilerden gizlenecek. İstediğiniz zaman yeniden etkinleştirebilirsiniz.",
     "button": "Devre Dışı Bırak",
     "success": "Site planı devre dışı bırakıldı",
-    "error": "Site planı devre dışı bırakılamadı"
+    "error": "Site planı devre dışı bırakılamadı",
+    "multiDescription": "Projede birden fazla bina var. Tutulacak binayı seçin. Diğer binalardaki daireler, kat planları, cepheler ve düzen fotoğrafları seçilen binaya taşınır. Kaldırılan binalar için çizilen site planı bölgeleri silinir.",
+    "pickKeepLabel": "Tutulacak bina",
+    "othersDeletedWarning": "Diğer alt projeler kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    "pickKeepError": "Tutulacak bir bina seçin"
   },
   "editor": {
     "title": "Site planı",
@@ -87,6 +91,12 @@
     "notFound": "Bina bulunamadı",
     "editor": "Bina editörü",
     "addApartments": "Daire ekle",
-    "addApartmentsDesc": "Bu binaya daire ekleme yöntemini seçin"
+    "addApartmentsDesc": "Bu binaya daire ekleme yöntemini seçin",
+    "createFlow": {
+      "title": "Bina ekle",
+      "description": "Manuel ekleyin veya daire verilerini dosya veya bağlantıdan içe aktarın (Excel, CSV, Google Sheets)."
+    },
+    "creatingBuilding": "Bina oluşturuluyor…",
+    "importingApartments": "Daireler içe aktarılıyor…"
   }
 }
