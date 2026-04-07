@@ -727,6 +727,9 @@ const ProjectEditor = ({
           has_parking: data.has_parking ?? false,
           has_commercial: data.has_commercial ?? false,
           building_image_url: data.building_image_url ?? null,
+          address: data.address ?? null,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
         });
 
         setProject((prev) => ({ ...prev, id: data.id }));
@@ -769,6 +772,9 @@ const ProjectEditor = ({
               has_parking: project.has_parking,
               has_commercial: project.has_commercial,
               building_image_url: project.building_image_url,
+              address: project.address || null,
+              latitude: project.latitude,
+              longitude: project.longitude,
             })
             .eq("project_id", project.id)
             .eq("is_default", true);
@@ -911,6 +917,7 @@ const ProjectEditor = ({
         setIsCollapsed={setIsCollapsed}
         onSignOut={handleSignOut}
         isSigningOut={isSigningOut}
+        isNavLoading={isEditorDataLoading}
       />
       <div
         className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}

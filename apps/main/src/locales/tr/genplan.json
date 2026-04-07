@@ -34,8 +34,15 @@
     "selectSubProjectFirst": "Bölgeyi kaydetmeden önce bir bina seçin",
     "drawHint": "Nokta eklemek için tıklayın, ardından bölgeyi kaydedin",
     "addMasterplan": "Plan ekle",
+    "createTitle": "Yeni plan",
+    "name": "Ad",
     "masterplanCreated": "Plan oluşturuldu",
-    "masterplanCreateError": "Plan oluşturma hatası"
+    "masterplanCreateError": "Plan oluşturma hatası",
+    "deleteMasterplan": "Planı sil",
+    "deleteMasterplanTitle": "Planı sil",
+    "deleteMasterplanWarning": "Bu plana ait tüm bölgeler kalıcı olarak silinecek.",
+    "deleteMasterplanSuccess": "Plan silindi",
+    "deleteMasterplanError": "Plan silinirken hata"
   },
   "infraZones": {
     "title": "Site planındaki nesneler",

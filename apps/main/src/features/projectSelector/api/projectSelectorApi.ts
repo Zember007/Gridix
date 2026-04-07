@@ -25,6 +25,42 @@ export interface SubProjectListItem {
   sort_order: number;
   is_default: boolean;
   building_image_url: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  available_count: number;
+  min_price: number | null;
+}
+
+/** Ensures new list fields exist when talking to an older project-selector deployment. */
+function normalizeSubProjectListItem(sp: {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  sort_order: number;
+  is_default: boolean;
+  building_image_url: string | null;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  available_count?: number;
+  min_price?: number | null;
+}): SubProjectListItem {
+  return {
+    id: sp.id,
+    name: sp.name,
+    slug: sp.slug,
+    type: sp.type,
+    sort_order: sp.sort_order,
+    is_default: sp.is_default,
+    building_image_url: sp.building_image_url,
+    address: sp.address ?? null,
+    latitude: sp.latitude ?? null,
+    longitude: sp.longitude ?? null,
+    available_count: sp.available_count ?? 0,
+    min_price: sp.min_price ?? null,
+  };
 }
 
 export interface MasterplanListItem {
@@ -183,7 +219,7 @@ export async function loadSelectorInitial(
     fieldSettings: result.fieldSettings ?? [],
     customFields: result.customFields ?? [],
     customDomain: result.customDomain ?? null,
-    subProjects: result.subProjects ?? [],
+    subProjects: (result.subProjects ?? []).map(normalizeSubProjectListItem),
     masterplansList: result.masterplansList ?? [],
   };
 }
@@ -440,6 +476,7 @@ export async function loadPdfTemplateData(
   projectId: string,
   apartmentIdentifier: string,
   useId = false,
+  subProjectSlug?: string,
 ): Promise<PdfTemplateDataResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
     body: {
@@ -447,6 +484,7 @@ export async function loadPdfTemplateData(
       projectId,
       apartmentIdentifier,
       useId,
+      ...(subProjectSlug ? { subProjectSlug } : {}),
     },
   });
 

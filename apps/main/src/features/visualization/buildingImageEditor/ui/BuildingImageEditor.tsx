@@ -325,7 +325,7 @@ function GenplanEditorPanel({
             />
             {data.uploading && (
               <p className="text-center text-sm text-muted-foreground">
-                {t("common.uploading")}…
+                {t("projectEditor.uploading")}…
               </p>
             )}
           </CardContent>

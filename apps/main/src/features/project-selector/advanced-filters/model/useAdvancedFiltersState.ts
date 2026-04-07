@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { convertPrice } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
+  ApartmentTypeFilter,
   FilterFieldKey,
   normalizePriceRangeForCurrencyChange,
 } from "@/components/project-selector/hooks/useProjectFilters";
@@ -19,10 +20,8 @@ export type AdvancedFiltersProps = {
   setSelectedRooms: (value: string) => void;
   selectedFloor: string;
   setSelectedFloor: (value: string) => void;
-  selectedType: "all" | "apartment" | "commercial" | "parking";
-  setSelectedType: (
-    value: "all" | "apartment" | "commercial" | "parking",
-  ) => void;
+  selectedType: ApartmentTypeFilter;
+  setSelectedType: (value: ApartmentTypeFilter) => void;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   selectedCurrency: string;

@@ -11,6 +11,7 @@ import {
 export type ApartmentTypeFilter =
   | "all"
   | "apartment"
+  | "object"
   | "commercial"
   | "parking";
 
@@ -24,6 +25,8 @@ interface UseProjectFiltersProps {
   apartments: Apartment[];
   project?: Project;
   visibleFilterFields?: FilterVisibilityOptions;
+  /** Map of sub_project_id → "building" | "object" for filtering by object kind. */
+  subProjectKinds?: Record<string, "building" | "object">;
 }
 
 export type FilterFieldKey =
@@ -268,6 +271,7 @@ export function filterApartments(
   state: FiltersState,
   projectCurrency: string | undefined | null,
   visibility: FilterVisibilityOptions = {},
+  subProjectKinds: Record<string, "building" | "object"> = {},
 ): Apartment[] {
   const {
     selectedFloor,
@@ -324,7 +328,26 @@ export function filterApartments(
   }
 
   if (visible.type && selectedType !== "all") {
-    result = result.filter((apt) => apt.type === selectedType);
+    const hasObjectKinds = Object.values(subProjectKinds).some(
+      (k) => k === "object",
+    );
+    if (selectedType === "object") {
+      result = result.filter(
+        (apt) =>
+          apt.sub_project_id != null &&
+          subProjectKinds[apt.sub_project_id] === "object",
+      );
+    } else if (selectedType === "apartment" && hasObjectKinds) {
+      // Exclude units from "object"-kind sub-projects so they only appear in the Objects tab
+      result = result.filter(
+        (apt) =>
+          apt.type === "apartment" &&
+          (apt.sub_project_id == null ||
+            subProjectKinds[apt.sub_project_id] !== "object"),
+      );
+    } else {
+      result = result.filter((apt) => apt.type === selectedType);
+    }
   }
 
   if (visible.status && showOnlyAvailable) {
@@ -389,6 +412,7 @@ export const useProjectFilters = ({
   apartments,
   project,
   visibleFilterFields = DEFAULT_FILTER_VISIBILITY,
+  subProjectKinds = {},
 }: UseProjectFiltersProps) => {
   const visibility = useMemo(
     () => ({ ...DEFAULT_FILTER_VISIBILITY, ...visibleFilterFields }),
@@ -595,8 +619,15 @@ export const useProjectFilters = ({
   ]);
 
   const filteredApartments = useMemo(
-    () => filterApartments(apartments, state, project?.currency, visibility),
-    [apartments, project?.currency, state, visibility],
+    () =>
+      filterApartments(
+        apartments,
+        state,
+        project?.currency,
+        visibility,
+        subProjectKinds,
+      ),
+    [apartments, project?.currency, state, visibility, subProjectKinds],
   );
 
   const getUniqueFloors = useCallback(

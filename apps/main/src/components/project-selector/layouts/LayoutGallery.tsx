@@ -4,6 +4,7 @@ import { Badge } from "@gridix/ui";
 import { Ruler, Building2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Apartment } from "@/entities/apartment/model/types";
+import type { ApartmentTypeFilter } from "../hooks/useProjectFilters";
 import { formatMoney } from "@gridix/utils/lib";
 import { FieldSetting } from "@/hooks/useFields";
 import { Project } from "@/entities/project/queries/useProjectsManager";
@@ -22,11 +23,9 @@ interface LayoutPhoto {
 interface LayoutGalleryProps {
   apartments: Apartment[];
   selectedRooms: string;
-  selectedType: "all" | "apartment" | "commercial" | "parking";
+  selectedType: ApartmentTypeFilter;
   setSelectedRooms: (value: string) => void;
-  setSelectedType: (
-    value: "all" | "apartment" | "commercial" | "parking",
-  ) => void;
+  setSelectedType: (value: ApartmentTypeFilter) => void;
   setViewMode: (
     mode: "facade" | "floor-plan" | "list" | "map" | "favorites",
   ) => void;

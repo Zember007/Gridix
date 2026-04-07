@@ -3213,6 +3213,7 @@ export type Database = {
       };
       sub_projects: {
         Row: {
+          address: string | null;
           building_image_url: string | null;
           created_at: string;
           floors: number;
@@ -3220,6 +3221,8 @@ export type Database = {
           has_parking: boolean;
           id: string;
           is_default: boolean;
+          latitude: number | null;
+          longitude: number | null;
           name: string;
           polygon_settings_facade: Json | null;
           polygon_settings_floor: Json | null;
@@ -3230,6 +3233,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          address?: string | null;
           building_image_url?: string | null;
           created_at?: string;
           floors?: number;
@@ -3237,6 +3241,8 @@ export type Database = {
           has_parking?: boolean;
           id?: string;
           is_default?: boolean;
+          latitude?: number | null;
+          longitude?: number | null;
           name: string;
           polygon_settings_facade?: Json | null;
           polygon_settings_floor?: Json | null;
@@ -3247,6 +3253,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          address?: string | null;
           building_image_url?: string | null;
           created_at?: string;
           floors?: number;
@@ -3254,6 +3261,8 @@ export type Database = {
           has_parking?: boolean;
           id?: string;
           is_default?: boolean;
+          latitude?: number | null;
+          longitude?: number | null;
           name?: string;
           polygon_settings_facade?: Json | null;
           polygon_settings_floor?: Json | null;

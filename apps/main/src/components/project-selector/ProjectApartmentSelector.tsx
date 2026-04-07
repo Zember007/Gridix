@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@gridix/ui";
+import { formatMoney } from "@gridix/utils/lib";
 import type { Tables } from "@gridix/types/database";
 import type { Project } from "@/entities/project/queries/useProjects";
 import { Apartment } from "@/entities/apartment/model/types";
@@ -34,7 +35,11 @@ import { useFacadeData } from "./hooks/useFacadeData";
 import { useUrlState } from "./hooks/useUrlState";
 import { useSelectorUIState } from "./hooks/useSelectorUIState";
 import { SubscriptionAlert } from "./SubscriptionAlert";
-import { resolveSelectorEntityKind } from "./lib/subProjectDisplay";
+import {
+  normalizeSubProjectKind,
+  resolveSelectorEntityKind,
+} from "./lib/subProjectDisplay";
+import { resolveSubProjectSlugForApartmentUrl } from "./lib/resolveSubProjectSlugForApartmentUrl";
 import { ProjectHeader } from "./ProjectHeader";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { useFields } from "@/hooks/useFields";
@@ -104,26 +109,6 @@ interface ProjectApartmentSelectorLoadedProps {
   modeContext: ModeContext;
   subProjects: SubProjectListItem[];
   masterplansList: MasterplanListItem[];
-}
-
-/** Slug for `/p/:slug/apartment/...` — текущий подпроект или дефолтный / единственный из списка. */
-function resolveSubProjectSlugForApartmentUrl(
-  subProject: Tables<"sub_projects"> | null | undefined,
-  subProjects: SubProjectListItem[],
-): string | null {
-  if (subProject?.slug) return subProject.slug;
-
-  const defaultSp = subProjects.find((s) => s.is_default);
-  if (defaultSp) return defaultSp.slug;
-
-  if (subProjects.length === 1) return subProjects[0]!.slug;
-
-  if (subProjects.length > 0) {
-    return [...subProjects].sort((a, b) => a.sort_order - b.sort_order)[0]!
-      .slug;
-  }
-
-  return null;
 }
 
 const loaderBlock = (themeColor: string) => (
@@ -247,12 +232,27 @@ function ProjectApartmentSelectorLoaded({
     );
   }, [isWidget]);
 
+  const subProjectKinds = useMemo(
+    () =>
+      Object.fromEntries(
+        subProjects.map((sp) => [sp.id, normalizeSubProjectKind(sp.type)]),
+      ) as Record<string, "building" | "object">,
+    [subProjects],
+  );
+
+  const hasObjects = useMemo(
+    () =>
+      subProjects.some((sp) => normalizeSubProjectKind(sp.type) === "object"),
+    [subProjects],
+  );
+
   // ── Filters ──
 
   const filters = useProjectFilters({
     apartments,
     project: project ?? undefined,
     visibleFilterFields,
+    subProjectKinds,
   });
 
   const { getFieldLabel, getCustomFieldValue, formatFieldValue, formatPrice } =
@@ -313,6 +313,43 @@ function ProjectApartmentSelectorLoaded({
     (): "building" | "object" =>
       resolveSelectorEntityKind(subProject, subProjects),
     [subProject, subProjects],
+  );
+
+  const mapDisplayProject = useMemo((): Tables<"projects"> | null => {
+    if (!project) return null;
+    const useSubCoords =
+      subProject != null &&
+      subProject.latitude != null &&
+      subProject.longitude != null;
+    const lat = useSubCoords ? subProject.latitude : (project.latitude ?? null);
+    const lon = useSubCoords
+      ? subProject.longitude
+      : (project.longitude ?? null);
+    if (lat == null || lon == null) return null;
+    return {
+      ...project,
+      latitude: lat,
+      longitude: lon,
+      name: useSubCoords ? subProject.name : project.name,
+      address: useSubCoords
+        ? (subProject.address ?? null)
+        : (project.address ?? null),
+      building_image_url: useSubCoords
+        ? (subProject.building_image_url ?? project.building_image_url ?? null)
+        : (project.building_image_url ?? null),
+    };
+  }, [project, subProject]);
+
+  const mapVisible = mapDisplayProject != null;
+
+  const { convertPrice, selectedCurrency } = filters;
+  const formatListingPrice = useCallback(
+    (price: number) =>
+      formatMoney(
+        convertPrice(price, project?.currency, selectedCurrency),
+        selectedCurrency,
+      ),
+    [convertPrice, selectedCurrency, project?.currency],
   );
 
   const { isSubscriptionInactive, isOwner } = useSubscriptionStatus({
@@ -474,7 +511,7 @@ function ProjectApartmentSelectorLoaded({
             viewMode={viewMode}
             setViewMode={setViewMode}
             favoritesCount={favoritesCount}
-            mapVisible={!!project?.latitude && !!project?.longitude}
+            mapVisible={mapVisible}
             projectType={effectiveProjectType}
             themeColor={themeColor}
             filters={filters}
@@ -517,6 +554,7 @@ function ProjectApartmentSelectorLoaded({
                         isMobile={isMobile ?? false}
                         themeColor={themeColor}
                         fieldVisibility={fieldVisibility}
+                        hasObjects={hasObjects}
                       />
                     </Suspense>
                   ) : viewMode === "chess" ? (
@@ -525,6 +563,7 @@ function ProjectApartmentSelectorLoaded({
                         <SubProjectsListView
                           subProjects={subProjects}
                           themeColor={themeColor}
+                          formatListingPrice={formatListingPrice}
                         />
                       </Suspense>
                     ) : (
@@ -543,10 +582,16 @@ function ProjectApartmentSelectorLoaded({
                     )
                   ) : viewMode === "map" ? (
                     <Suspense fallback={loaderFallback}>
-                      <InteractiveProjectsMap
-                        project={project}
-                        onProjectSelect={() => setViewMode("list")}
-                      />
+                      {mapDisplayProject ? (
+                        <InteractiveProjectsMap
+                          project={mapDisplayProject}
+                          onProjectSelect={() => setViewMode("list")}
+                        />
+                      ) : (
+                        <div className="flex h-[80vh] items-center justify-center px-4 text-center text-sm text-muted-foreground">
+                          {t("project.mapNoCoordinates")}
+                        </div>
+                      )}
                     </Suspense>
                   ) : viewMode === "favorites" ? (
                     <div className="container mx-auto grow py-8">
@@ -656,6 +701,8 @@ function ProjectApartmentSelectorLoaded({
           onOpenFloorPlan={openFloorPlanFromPanel}
           selectedCurrency={filters.selectedCurrency}
           fieldVisibility={fieldVisibility}
+          subProject={subProject}
+          subProjects={subProjects}
         />
       </div>
 

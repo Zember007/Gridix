@@ -34,8 +34,15 @@
     "selectSubProjectFirst": "Select a building before saving the zone",
     "drawHint": "Click to add points, then save the zone",
     "addMasterplan": "Add plan",
+    "createTitle": "New plan",
+    "name": "Name",
     "masterplanCreated": "Plan created",
-    "masterplanCreateError": "Error creating plan"
+    "masterplanCreateError": "Error creating plan",
+    "deleteMasterplan": "Delete plan",
+    "deleteMasterplanTitle": "Delete plan",
+    "deleteMasterplanWarning": "All zones of this plan will be permanently deleted.",
+    "deleteMasterplanSuccess": "Plan deleted",
+    "deleteMasterplanError": "Error deleting plan"
   },
   "infraZones": {
     "title": "Objects on site plan",

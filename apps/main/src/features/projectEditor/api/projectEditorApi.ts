@@ -368,12 +368,32 @@ export async function removeFloorPlan(
   projectId: string,
   floorNumber: number,
   imageUrl?: string | null,
+  options?: { subProjectId?: string },
 ): Promise<void> {
-  const { error: dbError } = await supabase
+  let deleteQuery = supabase
     .from("floor_plans")
     .delete()
     .eq("project_id", projectId)
     .eq("floor_number", floorNumber);
+
+  if (options?.subProjectId) {
+    deleteQuery = deleteQuery.eq("sub_project_id", options.subProjectId);
+  } else {
+    const { data: defaultSp, error: spError } = await supabase
+      .from("sub_projects")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("is_default", true)
+      .maybeSingle();
+    if (spError) throw spError;
+    if (defaultSp?.id) {
+      deleteQuery = deleteQuery.eq("sub_project_id", defaultSp.id);
+    } else {
+      deleteQuery = deleteQuery.is("sub_project_id", null);
+    }
+  }
+
+  const { error: dbError } = await deleteQuery;
 
   if (dbError) throw dbError;
 

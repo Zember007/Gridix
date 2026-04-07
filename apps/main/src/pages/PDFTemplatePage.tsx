@@ -32,13 +32,15 @@ const PDFTemplatePage = ({
   apartmentIdProp = "",
   projectIdProp = "",
 }: PDFTemplatePageProps) => {
-  const { projectSlug, projectId, apartmentNumber, apartmentId } = useParams<{
-    projectSlug?: string;
-    projectId?: string;
-    apartmentNumber?: string;
-    apartmentId?: string;
-    lang?: string;
-  }>();
+  const { projectSlug, projectId, apartmentNumber, apartmentId, subSlug } =
+    useParams<{
+      projectSlug?: string;
+      projectId?: string;
+      apartmentNumber?: string;
+      apartmentId?: string;
+      lang?: string;
+      subSlug?: string;
+    }>();
 
   // Определяем идентификаторы в зависимости от типа маршрута
   const projectIdentifier = useId ? projectIdProp : projectSlug || projectId;
@@ -94,6 +96,7 @@ const PDFTemplatePage = ({
           projectIdentifier,
           apartmentIdentifier,
           useId,
+          subSlug,
         );
 
         setProject(result.project);
@@ -137,7 +140,7 @@ const PDFTemplatePage = ({
     };
 
     loadData();
-  }, [projectIdentifier, apartmentIdentifier, t, useId]);
+  }, [projectIdentifier, apartmentIdentifier, t, useId, subSlug]);
 
   // Initialize currency from project if available
   useEffect(() => {
@@ -167,7 +170,13 @@ const PDFTemplatePage = ({
           : primaryDomain
             ? "https://" + primaryDomain
             : fallbackDomain;
-        const url = `${baseDomain}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}`;
+        const projectPath = project.slug || `id/${project.id}`;
+        const aptSeg = encodeURIComponent(String(apartment.apartment_number));
+        const subSeg =
+          subSlug != null && subSlug !== ""
+            ? `p/${encodeURIComponent(subSlug)}/`
+            : "";
+        const url = `${baseDomain}/${language}/project/${projectPath}/${subSeg}apartment/${aptSeg}`;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
         setQrCodeUrl(qrUrl);
       } catch (err) {
@@ -177,7 +186,7 @@ const PDFTemplatePage = ({
     };
 
     updateQRCode();
-  }, [project, apartment, language, projectDomains]);
+  }, [project, apartment, language, projectDomains, subSlug]);
 
   const getFieldLabel = (field: {
     field_label: string;

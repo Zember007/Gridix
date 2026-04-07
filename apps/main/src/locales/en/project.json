@@ -75,6 +75,8 @@
   "building": "Building",
   "object": "Object",
   "priceFrom": "Price from",
+  "addressNotSet": "Address not specified",
+  "mapNoCoordinates": "Map location is not set for this view",
   "noMasterplan": "No master plan available",
   "noObjects": "No objects available"
 }

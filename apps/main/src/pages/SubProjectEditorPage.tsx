@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ClipboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Button,
@@ -60,6 +60,28 @@ export default function SubProjectEditorPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  const handlePasteCoords = useCallback(
+    (e: ClipboardEvent<HTMLInputElement>) => {
+      const text = e.clipboardData.getData("Text");
+      const parts = text.split(",").map((part) => part.trim());
+
+      if (parts.length === 2) {
+        const [parsedLat, parsedLon] = parts;
+        setSubProject((prev) =>
+          prev
+            ? {
+                ...prev,
+                latitude: parseFloat(parsedLat ?? "0"),
+                longitude: parseFloat(parsedLon ?? "0"),
+              }
+            : prev,
+        );
+        e.preventDefault();
+      }
+    },
+    [],
+  );
+
   const load = useCallback(async () => {
     if (!projectSlug || !subProjectSlug) return;
     setLoading(true);
@@ -106,10 +128,13 @@ export default function SubProjectEditorPage() {
           floors: subProject.floors,
           has_parking: subProject.has_parking,
           has_commercial: subProject.has_commercial,
+          address: subProject.address?.trim() || null,
+          latitude: subProject.latitude,
+          longitude: subProject.longitude,
         })
         .eq("id", subProject.id);
       if (error) throw error;
-      toast.success(t("projectEditor.saveSuccess"));
+      toast.success(t("projectEditor.projectSaved"));
     } catch (err) {
       console.error("Error saving sub-project:", err);
       toast.error(t("projectEditor.saveError"));
@@ -167,17 +192,11 @@ export default function SubProjectEditorPage() {
                       {t("projectEditor.back")}
                     </span>
                   </Button>
-
-                  <div className="hidden lg:block">
-                    <h1 className="text-xl font-bold leading-tight">
+                  <div>
+                    <h1 className="text-base font-bold lg:text-xl lg:leading-tight">
                       {subProject.name}
                     </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {t("genplan.subProjects.editor")}
-                    </p>
-                  </div>
-                  <div className="lg:hidden">
-                    <h1 className="text-base font-bold">{subProject.name}</h1>
+
                     <p className="text-xs text-muted-foreground">
                       {t("genplan.subProjects.editor")}
                     </p>
@@ -216,9 +235,6 @@ export default function SubProjectEditorPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>{t("projectEditor.general")}</CardTitle>
-                    <CardDescription>
-                      {t("genplan.subProjects.editor")}
-                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Name */}
@@ -235,6 +251,81 @@ export default function SubProjectEditorPage() {
                           )
                         }
                       />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="sp-address">
+                        {t("projectEditor.address")}
+                      </Label>
+                      <Input
+                        id="sp-address"
+                        value={subProject.address ?? ""}
+                        onChange={(e) =>
+                          setSubProject((prev) =>
+                            prev ? { ...prev, address: e.target.value } : prev,
+                          )
+                        }
+                        placeholder={t("projectEditor.address")}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div>
+                        <Label htmlFor="sp-latitude">
+                          {t("projectEditor.latitude")}
+                        </Label>
+                        <Input
+                          id="sp-latitude"
+                          type="number"
+                          step="0.000001"
+                          value={subProject.latitude ?? ""}
+                          onPaste={handlePasteCoords}
+                          onChange={(e) =>
+                            setSubProject((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    latitude: e.target.value
+                                      ? parseFloat(e.target.value)
+                                      : null,
+                                  }
+                                : prev,
+                            )
+                          }
+                          placeholder={t("projectEditor.latitudePlaceholder")}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          {t("projectEditor.latitudeExample")}
+                        </p>
+                      </div>
+                      <div>
+                        <Label htmlFor="sp-longitude">
+                          {t("projectEditor.longitude")}
+                        </Label>
+                        <Input
+                          id="sp-longitude"
+                          type="number"
+                          step="0.000001"
+                          value={subProject.longitude ?? ""}
+                          onPaste={handlePasteCoords}
+                          onChange={(e) =>
+                            setSubProject((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    longitude: e.target.value
+                                      ? parseFloat(e.target.value)
+                                      : null,
+                                  }
+                                : prev,
+                            )
+                          }
+                          placeholder={t("projectEditor.longitudePlaceholder")}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          {t("projectEditor.longitudeExample")}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

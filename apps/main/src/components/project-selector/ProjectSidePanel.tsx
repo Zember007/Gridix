@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
+import type { Tables } from "@gridix/types/database";
+import type { SubProjectListItem } from "@/features/projectSelector/api/projectSelectorApi";
+import { resolveSubProjectSlugForPdf } from "./lib/resolveSubProjectSlugForApartmentUrl";
 import type { UseApartmentsDataResult } from "./hooks/useApartmentsData";
 import type { FieldVisibility } from "./types";
 import { Button } from "@gridix/ui";
@@ -40,6 +43,8 @@ type Props = {
   onOpenFloorPlan: (floorNumber: number) => void;
   selectedCurrency: string;
   fieldVisibility: FieldVisibility;
+  subProject?: Tables<"sub_projects"> | null;
+  subProjects: SubProjectListItem[];
 };
 
 const statusBadgeClass = (status: Apartment["status"]) => {
@@ -82,6 +87,8 @@ export const ProjectSidePanel = ({
   onOpenFloorPlan,
   selectedCurrency,
   fieldVisibility,
+  subProject,
+  subProjects,
 }: Props) => {
   const { toggleFavorite, isFavorite } = useFavorites(project.id);
   const [apartmentCoverPhotoById, setApartmentCoverPhotoById] = useState<
@@ -312,7 +319,17 @@ export const ProjectSidePanel = ({
 
   const handleGeneratePDF = async () => {
     if (state?.kind !== "apartment") return;
-    await runGeneratePdf({ apartment: state.apartment, project, language });
+    const subProjectSlug = resolveSubProjectSlugForPdf(
+      state.apartment,
+      subProject,
+      subProjects,
+    );
+    await runGeneratePdf({
+      apartment: state.apartment,
+      project,
+      language,
+      subProjectSlug,
+    });
   };
 
   if (!state) return null;

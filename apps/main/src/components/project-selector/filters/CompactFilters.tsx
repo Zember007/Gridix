@@ -4,7 +4,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Tables } from "@gridix/types/database";
 import { useState } from "react";
 import { AdvancedFilters } from "@/features/project-selector/advanced-filters";
-import type { FilterFieldKey } from "../hooks/useProjectFilters";
+import type {
+  ApartmentTypeFilter,
+  FilterFieldKey,
+} from "../hooks/useProjectFilters";
 
 type Project = Tables<"projects">;
 
@@ -13,10 +16,8 @@ interface CompactFiltersProps {
   setSelectedRooms: (value: string) => void;
   selectedFloor: string;
   setSelectedFloor: (value: string) => void;
-  selectedType: "all" | "apartment" | "commercial" | "parking";
-  setSelectedType: (
-    value: "all" | "apartment" | "commercial" | "parking",
-  ) => void;
+  selectedType: ApartmentTypeFilter;
+  setSelectedType: (value: ApartmentTypeFilter) => void;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   selectedCurrency: string;

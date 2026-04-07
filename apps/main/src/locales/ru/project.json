@@ -75,6 +75,8 @@
   "building": "Корпус",
   "object": "Объект",
   "priceFrom": "Цена от",
+  "addressNotSet": "Адрес не указан",
+  "mapNoCoordinates": "Для этого объекта не задано расположение на карте",
   "noMasterplan": "Генплан не настроен",
   "noObjects": "Объекты не найдены"
 }

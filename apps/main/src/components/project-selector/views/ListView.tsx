@@ -41,10 +41,11 @@ interface ListViewProps {
   filteredApartments: Apartment[];
   listViewMode: "list" | "grid";
   setListViewMode: (mode: "list" | "grid") => void;
-  selectedType: "all" | "apartment" | "commercial" | "parking";
+  selectedType: "all" | "apartment" | "object" | "commercial" | "parking";
   setSelectedType: (
-    value: "all" | "apartment" | "commercial" | "parking",
+    value: "all" | "apartment" | "object" | "commercial" | "parking",
   ) => void;
+  hasObjects?: boolean;
   openApartmentDetails: (apartment: Apartment) => void;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
   getVisibleFields: () => FieldSetting[];
@@ -94,6 +95,7 @@ export const ListView = ({
   themeColor = "#000000",
   hideViewToggle = false,
   fieldVisibility,
+  hasObjects = false,
 }: ListViewProps) => {
   const { t } = useLanguage();
   const isObjectProject = projectType === "object";
@@ -307,14 +309,19 @@ export const ListView = ({
             listMaxHeight ? { maxHeight: `${listMaxHeight}px` } : undefined
           }
         >
-          {/* Type selector tabs - only show if project has commercial or parking */}
-          {(project?.has_commercial || project?.has_parking) && (
+          {/* Type selector tabs - show if project has commercial, parking, or object sub-projects */}
+          {(project?.has_commercial || project?.has_parking || hasObjects) && (
             <div className="sticky top-0 z-20 bg-white pb-2 pt-1">
               <Tabs
                 value={selectedType}
                 onValueChange={(value) =>
                   setSelectedType(
-                    value as "all" | "apartment" | "commercial" | "parking",
+                    value as
+                      | "all"
+                      | "apartment"
+                      | "object"
+                      | "commercial"
+                      | "parking",
                   )
                 }
               >
@@ -328,6 +335,14 @@ export const ListView = ({
                       value: "apartment" as const,
                       label: t("apartmentsManager.typeApartment"),
                     },
+                    ...(hasObjects
+                      ? [
+                          {
+                            value: "object" as const,
+                            label: t("project.objects"),
+                          },
+                        ]
+                      : []),
                     ...(project?.has_commercial
                       ? [
                           {

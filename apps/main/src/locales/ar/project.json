@@ -75,6 +75,8 @@
   "building": "مبنى",
   "object": "كائن",
   "priceFrom": "السعر من",
+  "addressNotSet": "لم يتم تحديد العنوان",
+  "mapNoCoordinates": "لم يتم تعيين الموقع على الخريطة لهذا العرض",
   "noMasterplan": "لا يوجد مخطط عام متاح",
   "noObjects": "لا توجد كائنات متاحة"
 }

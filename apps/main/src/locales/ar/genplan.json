@@ -34,8 +34,15 @@
     "selectSubProjectFirst": "اختر مبنى قبل حفظ المنطقة",
     "drawHint": "انقر لإضافة نقاط ثم احفظ المنطقة",
     "addMasterplan": "إضافة مخطط",
+    "createTitle": "مخطط جديد",
+    "name": "الاسم",
     "masterplanCreated": "تم إنشاء المخطط",
-    "masterplanCreateError": "خطأ في إنشاء المخطط"
+    "masterplanCreateError": "خطأ في إنشاء المخطط",
+    "deleteMasterplan": "حذف المخطط",
+    "deleteMasterplanTitle": "حذف المخطط",
+    "deleteMasterplanWarning": "ستُحذف جميع مناطق هذا المخطط نهائياً.",
+    "deleteMasterplanSuccess": "تم حذف المخطط",
+    "deleteMasterplanError": "خطأ في حذف المخطط"
   },
   "infraZones": {
     "title": "العناصر على مخطط الموقع",

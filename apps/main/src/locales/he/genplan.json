@@ -34,8 +34,15 @@
     "selectSubProjectFirst": "בחר בניין לפני שמירת האזור",
     "drawHint": "לחץ להוספת נקודות ולאחר מכן שמור את האזור",
     "addMasterplan": "הוסף תוכנית",
+    "createTitle": "תוכנית חדשה",
+    "name": "שם",
     "masterplanCreated": "התוכנית נוצרה",
-    "masterplanCreateError": "שגיאה ביצירת התוכנית"
+    "masterplanCreateError": "שגיאה ביצירת התוכנית",
+    "deleteMasterplan": "מחק תוכנית",
+    "deleteMasterplanTitle": "מחק תוכנית",
+    "deleteMasterplanWarning": "כל האזורים של תוכנית זו יימחקו לצמיתות.",
+    "deleteMasterplanSuccess": "התוכנית נמחקה",
+    "deleteMasterplanError": "שגיאה במחיקת התוכנית"
   },
   "infraZones": {
     "title": "אובייקטים בתוכנית האתר",

@@ -9,6 +9,8 @@ export { type BuildingFloor } from "@/features/visualization/buildingFacade/mode
 
 export interface GenplanEditorConfig {
   masterplanId?: string;
+  masterplanName?: string;
+  masterplanIsDefault?: boolean;
   areas: MasterplanArea[];
   subProjects: GenplanSubProject[];
   infrastructureZones: InfrastructureZone[];

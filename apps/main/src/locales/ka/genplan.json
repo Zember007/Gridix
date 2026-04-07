@@ -34,8 +34,15 @@
     "selectSubProjectFirst": "ზონის შენახვამდე აირჩიეთ კორპუსი",
     "drawHint": "დააჭირეთ წერტილების დასამატებლად, შემდეგ შეინახეთ ზონა",
     "addMasterplan": "გეგმის დამატება",
+    "createTitle": "ახალი გეგმა",
+    "name": "სახელი",
     "masterplanCreated": "გეგმა შეიქმნა",
-    "masterplanCreateError": "გეგმის შექმნის შეცდომა"
+    "masterplanCreateError": "გეგმის შექმნის შეცდომა",
+    "deleteMasterplan": "გეგმის წაშლა",
+    "deleteMasterplanTitle": "გეგმის წაშლა",
+    "deleteMasterplanWarning": "ამ გეგმის ყველა ზონა სამუდამოდ წაიშლება.",
+    "deleteMasterplanSuccess": "გეგმა წაშლილია",
+    "deleteMasterplanError": "გეგმის წაშლის შეცდომა"
   },
   "infraZones": {
     "title": "ობიექტები გენგეგმაზე",

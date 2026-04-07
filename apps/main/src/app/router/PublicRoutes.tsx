@@ -62,6 +62,10 @@ export function PublicRoutes() {
         path="project/:projectSlug/p/:subSlug/apartment/:apartmentNumber"
         element={withLocalSuspense(<ApartmentDetailsPage />)}
       />
+      <Route
+        path="project/:projectSlug/p/:subSlug/apartment/:apartmentNumber/pdf"
+        element={withLocalSuspense(<PDFTemplatePage />)}
+      />
 
       {/* Auth routes */}
       <Route path="auth" element={withLocalSuspense(<AuthRedirectPage />)} />

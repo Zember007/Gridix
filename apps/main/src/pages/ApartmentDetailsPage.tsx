@@ -701,7 +701,12 @@ const ApartmentDetailsPage = ({
 
   const handleGeneratePDF = async () => {
     if (!apartment || !project?.id) return;
-    await runGeneratePdf({ apartment, project, language });
+    await runGeneratePdf({
+      apartment,
+      project,
+      language,
+      subProjectSlug: subSlug || undefined,
+    });
   };
 
   const fieldVisibility = useMemo(

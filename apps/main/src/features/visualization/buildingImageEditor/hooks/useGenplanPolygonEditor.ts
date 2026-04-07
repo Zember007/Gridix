@@ -189,8 +189,8 @@ export function useGenplanPolygonEditor({
         projectId,
         {
           id: genplan.masterplanId,
-          name: "Site plan",
-          is_default: true,
+          name: genplan.masterplanName ?? "",
+          is_default: genplan.masterplanIsDefault ?? false,
           background_asset_url: getBackgroundUrlForUpsert(),
         },
         [
@@ -403,8 +403,8 @@ export function useGenplanPolygonEditor({
             projectId,
             {
               id: genplan.masterplanId,
-              name: "Site plan",
-              is_default: true,
+              name: genplan.masterplanName ?? "",
+              is_default: genplan.masterplanIsDefault ?? false,
               background_asset_url: bgUrl,
             },
             [
@@ -444,8 +444,8 @@ export function useGenplanPolygonEditor({
             projectId,
             {
               id: genplan.masterplanId,
-              name: "Site plan",
-              is_default: true,
+              name: genplan.masterplanName ?? "",
+              is_default: genplan.masterplanIsDefault ?? false,
               background_asset_url: bgUrl,
             },
             [
@@ -643,8 +643,8 @@ export function useGenplanPolygonEditor({
               projectId,
               {
                 id: genplan.masterplanId,
-                name: "Site plan",
-                is_default: true,
+                name: genplan.masterplanName ?? "",
+                is_default: genplan.masterplanIsDefault ?? false,
                 background_asset_url: getBackgroundUrlForUpsert(),
               },
               [

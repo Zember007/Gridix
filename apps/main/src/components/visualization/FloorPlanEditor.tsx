@@ -457,7 +457,9 @@ const FloorPlanEditor = ({
     setImageUrl("");
 
     try {
-      await removeFloorPlan(project?.id || projectId, floorNumber, imageUrl);
+      await removeFloorPlan(project?.id || projectId, floorNumber, imageUrl, {
+        subProjectId,
+      });
       toast.success(t("floorPlan.upload.removeSuccess"));
     } catch (error) {
       setImageUrl(previousImageUrl);
@@ -473,6 +475,7 @@ const FloorPlanEditor = ({
     project?.id,
     projectId,
     removingFloorPlan,
+    subProjectId,
     t,
   ]);
 
@@ -877,6 +880,48 @@ const FloorPlanEditor = ({
       resetEditing();
     } catch (error) {
       console.error("Error saving apartment:", error);
+      toast.error(t("floorPlan.apartments.saveError"));
+    }
+  };
+
+  const handleSavePolygonExplicitly = async () => {
+    if (!ensureFloorSelected()) return;
+
+    const apartmentId = selectedApartmentId;
+    if (!apartmentId || !currentShape) return;
+
+    const shapeToSave = await getActualCurrentShape(currentShape);
+    if (shapeToSave.points.length < 3) {
+      toast.error(t("floorPlan.apartments.fillAllFields"));
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("apartments")
+        .update({ polygon: shapeToSave.points as unknown as Json })
+        .eq("id", apartmentId);
+
+      if (error) throw error;
+
+      setApartments((prev) =>
+        prev.map((apt) =>
+          apt.id === apartmentId
+            ? { ...apt, polygon: shapeToSave.points as Point[] }
+            : apt,
+        ),
+      );
+      setShapes((prev) =>
+        prev.map((shape) =>
+          shape.id === apartmentId
+            ? { ...shape, points: shapeToSave.points }
+            : shape,
+        ),
+      );
+      toast.success(t("floorPlan.apartments.saveSuccess"));
+      resetEditing();
+    } catch (error) {
+      console.error("Error saving polygon:", error);
       toast.error(t("floorPlan.apartments.saveError"));
     }
   };
@@ -1671,16 +1716,17 @@ const FloorPlanEditor = ({
                           : t("floorPlan.title")}
                     </CardTitle>
                     {(editingApartment || currentShape) && (
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1">
+                        {/* История */}
                         <Button
                           onClick={handleUndo}
                           variant="outline"
                           size="sm"
                           disabled={undoStackRef.current.length === 0}
                           title="Undo (Ctrl+Z)"
+                          className="h-7 w-7 p-0"
                         >
                           <Undo2 className="h-3.5 w-3.5" />
-                          <span className="ml-1">Undo</span>
                         </Button>
                         <Button
                           onClick={handleRedo}
@@ -1688,19 +1734,24 @@ const FloorPlanEditor = ({
                           size="sm"
                           disabled={redoStackRef.current.length === 0}
                           title="Redo (Ctrl+Shift+Z)"
+                          className="h-7 w-7 p-0"
                         >
                           <Redo2 className="h-3.5 w-3.5" />
-                          <span className="ml-1">Redo</span>
                         </Button>
+
+                        <div className="mx-1 h-5 w-px bg-border" />
+
+                        {/* Навигация по вершинам */}
                         <Button
                           onClick={selectPrevVertex}
                           variant="outline"
                           size="sm"
                           disabled={!canSelectVertex}
+                          className="h-7 w-7 p-0"
                         >
                           <ChevronLeft className="h-3.5 w-3.5" />
                         </Button>
-                        <span className="min-w-[56px] text-center text-xs text-muted-foreground">
+                        <span className="min-w-[44px] text-center text-xs text-muted-foreground">
                           {selectedVertexDisplayIndex}/{pointCount}
                         </span>
                         <Button
@@ -1708,9 +1759,14 @@ const FloorPlanEditor = ({
                           variant="outline"
                           size="sm"
                           disabled={!canSelectVertex}
+                          className="h-7 w-7 p-0"
                         >
                           <ChevronRight className="h-3.5 w-3.5" />
                         </Button>
+
+                        <div className="mx-1 h-5 w-px bg-border" />
+
+                        {/* Удаление */}
                         <Button
                           onClick={() => {
                             void handleDeletePoint();
@@ -1723,11 +1779,10 @@ const FloorPlanEditor = ({
                             currentShape.points.length <= 3
                           }
                           title={t("floorPlan.apartments.deletePoint")}
+                          className="h-7 px-2 text-xs"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span className="ml-1">
-                            {t("floorPlan.apartments.deletePoint")}
-                          </span>
+                          <Trash2 className="mr-1 h-3 w-3" />
+                          {t("floorPlan.apartments.deletePoint")}
                         </Button>
                         <Button
                           onClick={handleDeletePolygon}
@@ -1735,13 +1790,29 @@ const FloorPlanEditor = ({
                           size="sm"
                           disabled={!currentShape || pointCount === 0}
                           title={t("floorPlan.apartments.deletePolygon")}
-                          className="text-destructive hover:text-destructive"
+                          className="h-7 px-2 text-xs text-destructive hover:text-destructive"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span className="ml-1">
-                            {t("floorPlan.apartments.deletePolygon")}
-                          </span>
+                          <Trash2 className="mr-1 h-3 w-3" />
+                          {t("floorPlan.apartments.deletePolygon")}
                         </Button>
+
+                        {/* Сохранить */}
+                        {selectedApartmentId && !editingApartment && (
+                          <>
+                            <div className="mx-1 h-5 w-px bg-border" />
+                            <Button
+                              onClick={() => {
+                                void handleSavePolygonExplicitly();
+                              }}
+                              size="sm"
+                              disabled={!currentShape || pointCount < 3}
+                              className="h-7 px-2 text-xs"
+                            >
+                              <Save className="mr-1 h-3 w-3" />
+                              {t("buildingImage.polygon.save")}
+                            </Button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

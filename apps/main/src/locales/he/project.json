@@ -75,6 +75,8 @@
   "building": "בניין",
   "object": "אובייקט",
   "priceFrom": "מחיר מ-",
+  "addressNotSet": "הכתובת לא צוינה",
+  "mapNoCoordinates": "לא הוגדר מיקום במפה לתצוגה זו",
   "noMasterplan": "אין תוכנית אב זמינה",
   "noObjects": "אין אובייקטים זמינים"
 }

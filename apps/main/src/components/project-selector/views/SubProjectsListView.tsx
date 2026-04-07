@@ -8,11 +8,13 @@ import { normalizeSubProjectKind } from "../lib/subProjectDisplay";
 interface SubProjectsListViewProps {
   subProjects: SubProjectListItem[];
   themeColor: string;
+  formatListingPrice: (price: number) => string;
 }
 
 export function SubProjectsListView({
   subProjects,
   themeColor,
+  formatListingPrice,
 }: SubProjectsListViewProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ export function SubProjectsListView({
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6">
+    <div className="container mx-auto flex grow py-3 md:px-6">
       <div className="mx-auto grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {orderedSubProjects.map((sp) => {
           const kind = normalizeSubProjectKind(sp.type);
@@ -73,17 +75,19 @@ export function SubProjectsListView({
                 <h3 className="mb-1 text-sm font-semibold text-gray-900">
                   {sp.name}
                 </h3>
-                <p className="text-xs text-gray-500">
-                  {kind === "building"
-                    ? t("project.building")
-                    : t("project.object")}
+                <p className="line-clamp-2 text-xs text-gray-600">
+                  {sp.address?.trim() ? sp.address : t("project.addressNotSet")}
                 </p>
-                <div className="mt-auto pt-3">
-                  <span
-                    className="text-xs font-medium transition-colors"
-                    style={{ color: themeColor }}
-                  >
-                    {t("project.viewDetails")} →
+                <div className="mt-2 border-t border-gray-100 pt-2 text-xs text-gray-600">
+                  <span className="tabular-nums">{sp.available_count}</span>
+                  <span className="mx-1.5 text-gray-300" aria-hidden>
+                    ·
+                  </span>
+                  <span>
+                    {t("project.priceFrom")}{" "}
+                    {sp.min_price != null
+                      ? formatListingPrice(sp.min_price)
+                      : "—"}
                   </span>
                 </div>
               </div>

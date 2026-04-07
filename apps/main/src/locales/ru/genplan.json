@@ -34,8 +34,15 @@
     "selectSubProjectFirst": "Выберите корпус перед сохранением зоны",
     "drawHint": "Кликайте для добавления точек, затем сохраните зону",
     "addMasterplan": "Добавить план",
+    "createTitle": "Новый план",
+    "name": "Название",
     "masterplanCreated": "План создан",
-    "masterplanCreateError": "Ошибка создания плана"
+    "masterplanCreateError": "Ошибка создания плана",
+    "deleteMasterplan": "Удалить план",
+    "deleteMasterplanTitle": "Удалить план",
+    "deleteMasterplanWarning": "Все зоны этого плана будут удалены без возможности восстановления.",
+    "deleteMasterplanSuccess": "План удалён",
+    "deleteMasterplanError": "Ошибка удаления плана"
   },
   "infraZones": {
     "title": "Объекты на генплане",

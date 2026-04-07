@@ -60,7 +60,8 @@ export function useGenplanEditorData({
       setUploading(true);
       try {
         const compressed = await compressToWebP(file);
-        const path = `projects/${projectId}/genplan/masterplan.webp`;
+        const fileName = genplan.masterplanId ?? "masterplan";
+        const path = `projects/${projectId}/genplan/${fileName}.webp`;
         const { error } = await supabase.storage
           .from("project-images")
           .upload(path, compressed, { upsert: true });
@@ -71,11 +72,11 @@ export function useGenplanEditorData({
         uploadedUrlRef.current = urlData.publicUrl;
         await upsertMasterplan(projectId, {
           id: genplan.masterplanId,
-          name: "Site plan",
+          name: genplan.masterplanName ?? "",
           background_asset_url: uploadedUrlRef.current,
           background_asset_width: null,
           background_asset_height: null,
-          is_default: true,
+          is_default: genplan.masterplanIsDefault ?? false,
         });
         toast.success(t("genplan.editor.imageSaved"));
         genplan.onMasterplanUpdated();
