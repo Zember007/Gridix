@@ -44,4 +44,5 @@ dist-ssr
 
 tsconfig.tsbuildinfo
 
-genplan
+# Do not use bare "genplan" — it ignores apps/main/src/features/genplan/ and breaks CI/Vercel.
+# To ignore a root-level genplan folder only, use: /genplan/
