@@ -116,7 +116,25 @@
         "fields": "Apartment numbers, floors, rooms, area, price, status"
       },
       "supportedFormats": "Supported formats:",
-      "title": "Create new project"
+      "title": "Create new project",
+      "kind": {
+        "stepDescription": "Choose the layout that matches your development. You can still change details later in the editor.",
+        "question": "What kind of project is this?",
+        "back": "Change project type",
+        "selectedLabel": "Type",
+        "building": {
+          "title": "Apartment building",
+          "description": "One building with floors and units — one facade preview for the whole house."
+        },
+        "object": {
+          "title": "Villas / townhouses",
+          "description": "Detached or row units — preview and polygons per object."
+        },
+        "genplan": {
+          "title": "Master plan — several sub-projects",
+          "description": "Site plan with multiple buildings; each sub-project has its own facade and apartments. Set up manually in the editor."
+        }
+      }
     }
   },
   "demo": {

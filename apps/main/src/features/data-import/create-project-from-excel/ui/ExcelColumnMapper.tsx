@@ -9,6 +9,7 @@ import { adminThemeClasses as admin, Language } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@gridix/types/database";
 import { createSubProject } from "@/features/genplan/api/genplanApi";
+import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
 
 import { Button } from "@gridix/ui";
 import {
@@ -51,6 +52,8 @@ interface ExcelColumnMapperProps {
   targetSubProjectId?: string;
   /** After a new sub-project is created from import, or after import into an existing one. */
   onSubProjectImportSuccess?: (subProject: Tables<"sub_projects">) => void;
+  /** Root project only: preset from creation modal (building / object / genplan). */
+  rootProjectKind?: MainProjectCreationKind;
 }
 
 interface ColumnMapping {
@@ -108,6 +111,7 @@ const ExcelColumnMapper = ({
   parentProjectId,
   targetSubProjectId,
   onSubProjectImportSuccess,
+  rootProjectKind,
 }: ExcelColumnMapperProps) => {
   const { createProject } = useProjectCRUD();
   const { t, language } = useLanguage();
@@ -153,6 +157,15 @@ const ExcelColumnMapper = ({
     floors: 1,
     type: "building",
   });
+
+  useEffect(() => {
+    if (parentProjectId || !rootProjectKind) return;
+    if (rootProjectKind === "object") {
+      setProjectData((p) => ({ ...p, type: "object" }));
+    } else {
+      setProjectData((p) => ({ ...p, type: "building" }));
+    }
+  }, [parentProjectId, rootProjectKind]);
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -587,7 +600,7 @@ const ExcelColumnMapper = ({
           view_count: 0,
           polygon_settings_facade: {},
           polygon_settings_floor: {},
-          has_masterplan: false,
+          has_masterplan: rootProjectKind === "genplan",
           parent_project_id: null,
           root_project_id: null,
         };

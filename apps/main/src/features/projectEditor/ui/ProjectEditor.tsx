@@ -60,11 +60,10 @@ import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 const GenplanEditorTab = lazy(
   () => import("@/features/genplan/ui/GenplanEditorTab"),
 );
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
-import { useDefaultSubProjectKind } from "@/features/projectEditor/hooks/useDefaultSubProjectKind";
 import { useDefaultSubProjectBuildingScope } from "@/features/projectEditor/hooks/useDefaultSubProjectBuildingScope";
 import {
   isDevTourMode,
@@ -78,6 +77,7 @@ import {
 } from "@/features/projectEditor/model/types";
 import type { AdminBootstrapProject } from "@/entities/admin-access";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
+import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
 
 interface ProjectEditorProps {
   projectId: string;
@@ -583,6 +583,7 @@ const ProjectEditor = ({
   const [accessError, setAccessError] = useState<string | null>(null);
 
   const { navigate } = useLanguageNavigation();
+  const location = useLocation();
   const { user, userProfile, loading: authLoading, signOut } = useAuth();
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
@@ -597,12 +598,11 @@ const ProjectEditor = ({
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const defaultSubProjectKind = useDefaultSubProjectKind(
-    !isNew && project.id ? project.id : null,
-  );
   const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
     useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
-  const editorScopeKind = isNew ? "building" : defaultSubProjectKind;
+  /** Building vs villas/townhouses — driven by form state; persisted on save to `projects` + default `sub_projects`. */
+  const editorScopeKind: "building" | "object" =
+    project.project_type === "object" ? "object" : "building";
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -611,6 +611,24 @@ const ProjectEditor = ({
       document.documentElement.style.setProperty(key, value);
     });
   }, []);
+
+  // Пресет типа проекта из модалки создания (корневой проект)
+  useEffect(() => {
+    if (!isNew) return;
+    const kind = (
+      location.state as { mainProjectKind?: MainProjectCreationKind } | null
+    )?.mainProjectKind;
+    if (!kind) return;
+    setProject((prev) => {
+      if (kind === "object") {
+        return { ...prev, project_type: "object", has_masterplan: false };
+      }
+      if (kind === "genplan") {
+        return { ...prev, project_type: "building", has_masterplan: true };
+      }
+      return { ...prev, project_type: "building", has_masterplan: false };
+    });
+  }, [isNew, location.state]);
 
   // Читаем query параметры и устанавливаем активную вкладку
   useEffect(() => {
@@ -875,6 +893,7 @@ const ProjectEditor = ({
         theme_color: project.theme_color,
         project_type: project.project_type || "building",
         available_languages: project.available_languages,
+        has_masterplan: project.has_masterplan,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }), // Добавляем user_id только при создании
       };
@@ -1387,18 +1406,33 @@ const ProjectEditor = ({
                             <>
                               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                  <Label htmlFor="project-type-desktop">
+                                  <Label htmlFor="project-type">
                                     {t("projectEditor.projectType")}
                                   </Label>
-                                  <Input
-                                    id="project-type-desktop"
-                                    readOnly
-                                    value={
-                                      editorScopeKind === "object"
-                                        ? t("projectEditor.typeObject")
-                                        : t("projectEditor.typeBuilding")
+                                  <Select
+                                    value={editorScopeKind}
+                                    onValueChange={(v) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        project_type:
+                                          v === "object"
+                                            ? "object"
+                                            : "building",
+                                      }))
                                     }
-                                  />
+                                  >
+                                    <SelectTrigger id="project-type">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="building">
+                                        {t("projectEditor.typeBuilding")}
+                                      </SelectItem>
+                                      <SelectItem value="object">
+                                        {t("projectEditor.typeObject")}
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                   <p className="mt-1 text-xs text-muted-foreground">
                                     {t("projectEditor.subProjectTypeHint")}
                                   </p>

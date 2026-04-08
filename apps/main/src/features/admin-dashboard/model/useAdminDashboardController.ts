@@ -10,6 +10,7 @@ import { useLeadsRealtime } from "@/hooks/useLeadsRealtime";
 import { useLeads } from "@/entities/lead/queries/useLeads";
 import { useAdminDashboardInit } from "./useAdminDashboardInit";
 import { useAdminDashboardTours } from "./useAdminDashboardTours";
+import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
 
 export const useAdminDashboardController = () => {
   const [activeTab, setActiveTab] = useState("projects");
@@ -57,10 +58,13 @@ export const useAdminDashboardController = () => {
     setShowCreateModal(false);
   };
 
-  const handleManualCreate = () => {
+  const handleManualCreate = (mainProjectKind?: MainProjectCreationKind) => {
     setShowCreateModal(false);
     routerNavigate(getPathWithLanguage("/admin/project/new"), {
-      state: { from: location.pathname },
+      state: {
+        from: location.pathname,
+        ...(mainProjectKind && { mainProjectKind }),
+      },
     });
   };
 
