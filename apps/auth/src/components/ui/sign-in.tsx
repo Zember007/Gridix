@@ -389,6 +389,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
                 if (!email || !password) return;
                 if (mode === "signup" && !fullName) return;
+                if (
+                  mode === "signup" &&
+                  resolvedAccountType === "developer" &&
+                  !companyName
+                ) {
+                  return;
+                }
                 if (mode === "signup" && !privacyOfferAgreementAccepted) return;
 
                 const payload: SubmitPayload = {
@@ -472,6 +479,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       placeholder={companyNamePlaceholder}
                       className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
                       autoComplete="organization"
+                      required
                     />
                   </GlassInputWrapper>
                 </div>
