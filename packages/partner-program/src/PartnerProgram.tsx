@@ -34,6 +34,8 @@ export interface PartnerProgramProps {
   autoCreateProfile?: boolean;
   /** Базовый URL для ресурсов инструкций (видео, PDF). Ресурсы лежат в main app public/instructions. Для partners app передайте URL main app (например VITE_MAIN_APP_URL). */
   instructionsBaseUrl?: string;
+  /** Optional slot passed into PartnerInstructionsSection demo card (e.g. a "Join demo" button). */
+  joinDemoSlot?: React.ReactNode;
 }
 
 export const PartnerProgram: React.FC<PartnerProgramProps> = ({
@@ -42,6 +44,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
   onSectionChange: externalOnSectionChange,
   autoCreateProfile = false,
   instructionsBaseUrl,
+  joinDemoSlot,
 }) => {
   const { isPartner, loading, createPartnerProfile } = usePartner();
   const { toast } = useToast();
@@ -347,6 +350,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
         {activeTab === "instructions" && (
           <PartnerInstructionsSection
             instructionsBaseUrl={instructionsBaseUrl || ""}
+            joinDemoSlot={joinDemoSlot}
           />
         )}
       </div>

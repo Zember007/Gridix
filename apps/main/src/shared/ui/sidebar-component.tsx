@@ -26,7 +26,7 @@ import {
 } from "@phosphor-icons/react";
 import { SimplifiedSidebar } from "@gridix/ui";
 import { UnreadBadge } from "@/shared/ui/UnreadBadge";
-import { JoinDemoButton, ExitDemoButton } from "@/features/demo-cabinet";
+import { ExitDemoButton } from "@/features/demo-cabinet";
 import { useAdminAccess } from "@/entities/admin-access";
 
 const getQueryPage = (): string | null => {
@@ -282,8 +282,6 @@ export function AdminSidebar({
   const isMobile = useIsMobile();
   const adminAccess = useAdminAccess();
 
-  // Show "Try Demo" button when not already in a demo workspace
-  const showJoinDemo = !adminAccess?.isDemoWorkspace;
   const [activeSection, setActiveSection] = useState(
     () => activeTab || getQueryPage() || "projects",
   );
@@ -349,9 +347,6 @@ export function AdminSidebar({
         adminAccess?.isDemoWorkspace ? (
           <ExitDemoButton isCollapsed={isCollapsed} />
         ) : undefined
-      }
-      workspaceExtra={
-        showJoinDemo ? <JoinDemoButton isCollapsed={isCollapsed} /> : undefined
       }
     />
   );

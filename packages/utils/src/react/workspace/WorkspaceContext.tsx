@@ -130,6 +130,13 @@ export function WorkspaceProvider({
     const workspaces = await loadWorkspaces();
     setAvailableWorkspaces(workspaces);
 
+    // Workspaces array is empty during the initial loading pass (e.g. while
+    // userRole hasn't resolved yet). Clearing the stored selection at this
+    // point would discard a valid workspace that was persisted by a previous
+    // session (e.g. after join-demo sets localStorage then reloads).
+    // Wait for at least one workspace to arrive before making selection decisions.
+    if (workspaces.length === 0) return;
+
     // Restore stored selection if still available; otherwise reset or auto-pick.
     const storedId =
       typeof window === "undefined"

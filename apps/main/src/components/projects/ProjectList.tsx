@@ -57,6 +57,7 @@ import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { DeveloperConstructionTab } from "./DeveloperConstructionTab";
+import { JoinDemoButton } from "@/features/demo-cabinet";
 import {
   type PendingVideoUpload,
   VideoUploadDialog,
@@ -1782,27 +1783,32 @@ const ProjectList = ({
             <p className="mb-6 max-w-md text-center">
               {t("projectList.createFirstDescription")}
             </p>
-            {!isCrmMode && onCreateNew && (
-              <Button
-                onClick={onCreateNew}
-                size="lg"
-                className="create_project_usertour"
-                style={{
-                  backgroundColor: ADMIN_THEME.primary,
-                  color: ADMIN_THEME.textOnPrimary,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    ADMIN_THEME.primaryHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                }}
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                {t("projectList.createFirst")}
-              </Button>
-            )}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {!isCrmMode && onCreateNew && (
+                <Button
+                  onClick={onCreateNew}
+                  size="lg"
+                  className="create_project_usertour"
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      ADMIN_THEME.primaryHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                  }}
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  {t("projectList.createFirst")}
+                </Button>
+              )}
+              {!adminAccess?.isDemoWorkspace && (
+                <JoinDemoButton variant="inline" />
+              )}
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -1820,26 +1826,31 @@ const ProjectList = ({
                 {t("projectList.manageDescription")}
               </p>
             </div>
-            {!isCrmMode && onCreateNew && (
-              <Button
-                onClick={onCreateNew}
-                className="create_project_usertour w-full md:w-auto"
-                style={{
-                  backgroundColor: ADMIN_THEME.primary,
-                  color: ADMIN_THEME.textOnPrimary,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    ADMIN_THEME.primaryHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                }}
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                {t("projectList.createNew")}
-              </Button>
-            )}
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
+              {!adminAccess?.isDemoWorkspace && (
+                <JoinDemoButton variant="inline" />
+              )}
+              {!isCrmMode && onCreateNew && (
+                <Button
+                  onClick={onCreateNew}
+                  className="create_project_usertour w-full md:w-auto"
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      ADMIN_THEME.primaryHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                  }}
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  {t("projectList.createNew")}
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -385,7 +385,12 @@ export default function AuthPage() {
                 });
               }
 
-              toast.success(t("auth.checkEmail"));
+              try {
+                sessionStorage.setItem("gridix_pending_email", payload.email);
+              } catch {
+                // storage unavailable
+              }
+              navigate("/auth/check-email");
             } catch (err: unknown) {
               const message =
                 err instanceof Error ? err.message : t("auth.errorOccurred");

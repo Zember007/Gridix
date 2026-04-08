@@ -7,6 +7,30 @@ import {
   useWorkspace,
 } from "@gridix/utils/react";
 
+const WORKSPACE_STORAGE_KEY = "gridix_active_workspace_id:developer";
+const DEMO_WORKSPACE_PARAM = "demo_workspace";
+
+/**
+ * If the app was opened with ?demo_workspace=<id> (e.g. from the partners or
+ * agent cabinet "Try demo" button), write the id to localStorage so the
+ * WorkspaceProvider picks it up on first render, then strip the param from the URL.
+ */
+function applyDemoWorkspaceParam() {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  const demoId = url.searchParams.get(DEMO_WORKSPACE_PARAM);
+  if (!demoId) return;
+  try {
+    localStorage.setItem(WORKSPACE_STORAGE_KEY, demoId);
+  } catch {
+    // ignore storage errors
+  }
+  url.searchParams.delete(DEMO_WORKSPACE_PARAM);
+  window.history.replaceState({}, "", url.toString());
+}
+
+applyDemoWorkspaceParam();
+
 export type { WorkspaceOption };
 export { useWorkspace };
 

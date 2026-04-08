@@ -6,6 +6,13 @@ import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import { hasAuthTokensInHash } from "@gridix/utils";
 import { usePasswordGate } from "../model/usePasswordGate";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { useAdminAccess } from "@/entities/admin-access";
+
+const PARTNERS_APP_URL =
+  import.meta.env.VITE_PARTNERS_APP_URL?.trim() ||
+  "https://partner.gridix.live";
+const AGENT_APP_URL =
+  import.meta.env.VITE_AGENT_CABINET_URL?.trim() || "https://agent.gridix.live";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -19,6 +26,8 @@ export const ProtectedRoute = ({
   const { user, loading, requiresPasswordSetup } = useAuth();
   const location = useLocation();
   const { isSuperAdmin, loading: superAdminLoading } = useSuperAdmin();
+  // null when rendered outside AdminAccessProvider (e.g. embed routes) — safe to use
+  const adminAccess = useAdminAccess();
   const superAdminRedirectStartedRef = useRef(false);
   const currentLanguage = useMemo(
     () => getLanguageFromPath(location.pathname),
@@ -176,6 +185,25 @@ export const ProtectedRoute = ({
           replace
         />
       );
+    }
+
+    // Partners and agents may only access the main app while viewing a demo
+    // workspace. Outside of demo mode redirect them to their own cabinet.
+    if (adminAccess !== null) {
+      const accountType = user.user_metadata?.account_type as
+        | string
+        | undefined;
+      if (accountType === "partner" || accountType === "agent") {
+        // Wait for admin-access query to finish before deciding
+        if (adminAccess.loading) return <FullPageLoaderView />;
+
+        if (!adminAccess.isDemoWorkspace) {
+          const targetApp =
+            accountType === "partner" ? PARTNERS_APP_URL : AGENT_APP_URL;
+          window.location.replace(targetApp);
+          return <FullPageLoaderView />;
+        }
+      }
     }
   }
 

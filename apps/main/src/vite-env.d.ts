@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_PARTNERS_APP_URL?: string;
+  readonly VITE_AGENT_CABINET_URL?: string;
   readonly VITE_USERTOUR_TOKEN?: string;
   readonly VITE_USERTOUR_ADMIN_ONBOARDING_CONTENT_ID?: string;
   readonly VITE_USERTOUR_PROJECT_CREATION_CONTENT_ID?: string;
