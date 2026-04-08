@@ -111,7 +111,10 @@ export function useGenplanEditorData({
   );
 
   const handleSaveInfraZone = useCallback(
-    async (formData: InfraZoneFormData, imageFile?: File | null) => {
+    async (
+      formData: InfraZoneFormData,
+      imageFile?: File | null,
+    ): Promise<string | null> => {
       setSavingZone(true);
       try {
         let coverImage = formData.cover_image ?? null;
@@ -164,8 +167,10 @@ export function useGenplanEditorData({
           ];
         });
         toast.success(t("genplan.infraZones.saveSuccess"));
+        return zoneId;
       } catch {
         toast.error(t("genplan.infraZones.saveError"));
+        return null;
       } finally {
         setSavingZone(false);
       }

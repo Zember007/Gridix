@@ -57,7 +57,11 @@
       "progress": {
         "rangeLabel": "Подпроекты:",
         "missingList": "Без полигона:",
-        "allConfigured": "У всех подпроектов есть полигон"
+        "infraRangeLabel": "Зоны инфраструктуры:",
+        "infraDrawn": "С полигоном:",
+        "infraMissing": "Без полигона:",
+        "missingInfraList": "Зоны без разметки на генплане:",
+        "allConfigured": "У всех подпроектов и зон инфраструктуры есть полигон на генплане"
       },
       "helper": {
         "savedAndNext": "«{{name}}» сохранён. Далее: {{nextName}}",

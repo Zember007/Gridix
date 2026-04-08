@@ -3060,6 +3060,7 @@ export type Database = {
           pdf_presentation_url: string | null;
           polygon_settings_facade: Json | null;
           polygon_settings_floor: Json | null;
+          polygon_settings_genplan: Json | null;
           project_type: Database["public"]["Enums"]["project_type"];
           root_project_id: string | null;
           slug: string | null;
@@ -3095,6 +3096,7 @@ export type Database = {
           pdf_presentation_url?: string | null;
           polygon_settings_facade?: Json | null;
           polygon_settings_floor?: Json | null;
+          polygon_settings_genplan?: Json | null;
           project_type?: Database["public"]["Enums"]["project_type"];
           root_project_id?: string | null;
           slug?: string | null;
@@ -3130,6 +3132,7 @@ export type Database = {
           pdf_presentation_url?: string | null;
           polygon_settings_facade?: Json | null;
           polygon_settings_floor?: Json | null;
+          polygon_settings_genplan?: Json | null;
           project_type?: Database["public"]["Enums"]["project_type"];
           root_project_id?: string | null;
           slug?: string | null;

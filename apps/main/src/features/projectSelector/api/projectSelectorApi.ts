@@ -553,6 +553,11 @@ export interface SelectorMasterplanResult {
   infrastructureZones: MasterplanInfrastructureZone[];
 }
 
+export interface SelectorMasterplanWithProjectGenplanOverlay extends SelectorMasterplanResult {
+  /** From `projects.polygon_settings_genplan`; overrides per-masterplan legacy settings in the viewer. */
+  projectGenplanPolygonSettings: unknown | null;
+}
+
 export async function loadSelectorMasterplan(
   projectId: string,
   masterplanId?: string,
@@ -572,6 +577,27 @@ export async function loadSelectorMasterplan(
     areas: result.areas ?? [],
     infrastructureZones: (result.infrastructureZones ??
       []) as MasterplanInfrastructureZone[],
+  };
+}
+
+export async function loadSelectorMasterplanWithProjectGenplanOverlay(
+  projectId: string,
+  masterplanId?: string,
+): Promise<SelectorMasterplanWithProjectGenplanOverlay> {
+  const [mp, projRes] = await Promise.all([
+    loadSelectorMasterplan(projectId, masterplanId),
+    supabase
+      .from("projects")
+      .select("polygon_settings_genplan")
+      .eq("id", projectId)
+      .maybeSingle(),
+  ]);
+
+  return {
+    ...mp,
+    projectGenplanPolygonSettings: projRes.error
+      ? null
+      : ((projRes.data?.polygon_settings_genplan as unknown) ?? null),
   };
 }
 

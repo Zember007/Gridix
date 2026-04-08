@@ -57,7 +57,11 @@
       "progress": {
         "rangeLabel": "ქვეპროექტები:",
         "missingList": "პოლიგონის გარეშე:",
-        "allConfigured": "ყველა ქვეპროექტს აქვს პოლიგონი"
+        "infraRangeLabel": "ინფრასტრუქტურის ზონები:",
+        "infraDrawn": "პოლიგონით:",
+        "infraMissing": "პოლიგონის გარეშე:",
+        "missingInfraList": "გენგანზე აღნიშნული არაა:",
+        "allConfigured": "ყველა ქვეპროექტს და ინფრასტრუქტურის ზონას აქვს პოლიგონი გენგანზე"
       },
       "helper": {
         "savedAndNext": "«{{name}}» შენახულია. შემდეგი: {{nextName}}",

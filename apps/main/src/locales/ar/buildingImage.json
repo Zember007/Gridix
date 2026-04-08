@@ -57,7 +57,11 @@
       "progress": {
         "rangeLabel": "المشاريع الفرعية:",
         "missingList": "بدون مضلع:",
-        "allConfigured": "كل المشاريع الفرعية لديها مضلع"
+        "infraRangeLabel": "مناطق البنية التحتية:",
+        "infraDrawn": "مع مضلع:",
+        "infraMissing": "بدون مضلع:",
+        "missingInfraList": "مناطق غير موضوعة على المخطط:",
+        "allConfigured": "جميع المشاريع الفرعية ومناطق البنية التحتية لديها مضلع على المخطط"
       },
       "helper": {
         "savedAndNext": "تم حفظ «{{name}}». التالي: {{nextName}}",

@@ -228,6 +228,9 @@ function GenplanEditorPanel({
   const [addingZone, setAddingZone] = useState(false);
 
   const viewerWrapRef = useRef<HTMLDivElement | null>(null);
+  const focusNewInfrastructureZoneIdRef = useRef<string | null>(null);
+  const selectEntityRef = useRef(gp.selectEntity);
+  selectEntityRef.current = gp.selectEntity;
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const [hoveredAreaId, setHoveredAreaId] = useState<string | null>(null);
   const [hoverPopupPos, setHoverPopupPos] = useState<{
@@ -262,10 +265,39 @@ function GenplanEditorPanel({
   }, []);
 
   useEffect(() => {
-    if (!guidedModeEnabled || gp.hasCompletedAllSubProjects) {
+    if (!guidedModeEnabled || gp.hasCompletedAllGenplanEntities) {
       setPostSaveGuidance(null);
     }
-  }, [guidedModeEnabled, gp.hasCompletedAllSubProjects]);
+  }, [guidedModeEnabled, gp.hasCompletedAllGenplanEntities]);
+
+  const hasSelectableEntities =
+    genplan.subProjects.length > 0 || data.infraZones.length > 0;
+
+  useEffect(() => {
+    const zoneId = focusNewInfrastructureZoneIdRef.current;
+    if (!zoneId) return;
+    if (
+      !data.masterplanImageUrl ||
+      !genplan.masterplanId ||
+      !hasSelectableEntities
+    ) {
+      return;
+    }
+    focusNewInfrastructureZoneIdRef.current = null;
+    const frame = requestAnimationFrame(() => {
+      viewerWrapRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      void selectEntityRef.current("infrastructure_zone", zoneId);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [
+    data.infraZones.length,
+    data.masterplanImageUrl,
+    genplan.masterplanId,
+    hasSelectableEntities,
+  ]);
 
   const handleEntitySelect = (value: string) => {
     if (!value) return;
@@ -281,21 +313,26 @@ function GenplanEditorPanel({
       gp.selectedEntityType && gp.selectedEntityId
         ? gp.entityDisplayName(gp.selectedEntityType, gp.selectedEntityId)
         : "";
-    const expectedMissing = gp.missingSubProjects.filter(
-      (sp) => sp.id !== gp.selectedEntityId,
-    );
-    const nextSp = expectedMissing[0] ?? null;
+    const savedType = gp.selectedEntityType;
+    const savedId = gp.selectedEntityId;
+    const queueAfterSave =
+      savedType && savedId
+        ? gp.guidedMissingEntities.filter(
+            (e) => !(e.type === savedType && e.id === savedId),
+          )
+        : gp.guidedMissingEntities;
+    const next = queueAfterSave[0] ?? null;
     const saved = await gp.handlePolygonSave();
     if (!saved) return;
-    if (!guidedModeEnabled || !nextSp) {
+    if (!guidedModeEnabled || !next) {
       setPostSaveGuidance(null);
       return;
     }
     setPostSaveGuidance({
       savedName,
-      nextName: nextSp.name,
-      nextId: nextSp.id,
-      nextType: "sub_project",
+      nextName: next.name,
+      nextId: next.id,
+      nextType: next.type,
     });
   };
 
@@ -333,9 +370,6 @@ function GenplanEditorPanel({
       </div>
     );
   }
-
-  const hasSelectableEntities =
-    genplan.subProjects.length > 0 || data.infraZones.length > 0;
 
   return (
     <div className="space-y-4">
@@ -474,25 +508,60 @@ function GenplanEditorPanel({
               guidedProgressBlock={
                 <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                    <div className="text-sm text-muted-foreground">
-                      {t("buildingImage.genplan.guided.progress.rangeLabel")}{" "}
-                      <span className="font-medium text-foreground">
-                        {gp.totalSubProjectsCount}
-                      </span>
-                    </div>
-                    <div>
-                      {t("buildingImage.guided.progress.configured")}{" "}
-                      <span className="font-medium">
-                        {gp.configuredSubProjectCount} /{" "}
-                        {gp.totalSubProjectsCount}
-                      </span>
-                    </div>
-                    <div>
-                      {t("buildingImage.guided.progress.missing")}{" "}
-                      <span className="font-medium">
-                        {gp.missingSubProjects.length}
-                      </span>
-                    </div>
+                    {gp.totalSubProjectsCount > 0 && (
+                      <>
+                        <div className="text-sm text-muted-foreground">
+                          {t(
+                            "buildingImage.genplan.guided.progress.rangeLabel",
+                          )}{" "}
+                          <span className="font-medium text-foreground">
+                            {gp.totalSubProjectsCount}
+                          </span>
+                        </div>
+                        <div>
+                          {t("buildingImage.guided.progress.configured")}{" "}
+                          <span className="font-medium">
+                            {gp.configuredSubProjectCount} /{" "}
+                            {gp.totalSubProjectsCount}
+                          </span>
+                        </div>
+                        <div>
+                          {t("buildingImage.guided.progress.missing")}{" "}
+                          <span className="font-medium">
+                            {gp.missingSubProjects.length}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    {gp.totalInfrastructureZonesCount > 0 && (
+                      <>
+                        <div className="text-sm text-muted-foreground">
+                          {t(
+                            "buildingImage.genplan.guided.progress.infraRangeLabel",
+                          )}{" "}
+                          <span className="font-medium text-foreground">
+                            {gp.totalInfrastructureZonesCount}
+                          </span>
+                        </div>
+                        <div>
+                          {t(
+                            "buildingImage.genplan.guided.progress.infraDrawn",
+                          )}{" "}
+                          <span className="font-medium">
+                            {gp.configuredInfrastructureCount} /{" "}
+                            {gp.totalInfrastructureZonesCount}
+                          </span>
+                        </div>
+                        <div>
+                          {t(
+                            "buildingImage.genplan.guided.progress.infraMissing",
+                          )}{" "}
+                          <span className="font-medium">
+                            {gp.missingInfrastructureZones.length}
+                          </span>
+                        </div>
+                      </>
+                    )}
                     <div className="ml-auto flex items-center gap-2">
                       <Label
                         htmlFor="genplan-guided-toggle"
@@ -507,33 +576,68 @@ function GenplanEditorPanel({
                       />
                     </div>
                   </div>
-                  {gp.hasCompletedAllSubProjects ? (
+                  {gp.hasCompletedAllGenplanEntities ? (
                     <p className="text-sm font-medium text-emerald-600">
                       {t("buildingImage.genplan.guided.progress.allConfigured")}
                     </p>
                   ) : (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="shrink-0">
-                        {t("buildingImage.genplan.guided.progress.missingList")}
-                      </span>
+                    <div className="space-y-2">
                       {gp.missingSubProjects.length > 0 && (
-                        <div className="flex-1 overflow-x-auto pb-1">
-                          <div className="flex min-w-max gap-2">
-                            {gp.missingSubProjects.map((sp) => (
-                              <Button
-                                key={sp.id}
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => {
-                                  void gp.selectEntity("sub_project", sp.id);
-                                }}
-                                disabled={gp.isEditing}
-                              >
-                                {sp.name}
-                              </Button>
-                            ))}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="shrink-0">
+                            {t(
+                              "buildingImage.genplan.guided.progress.missingList",
+                            )}
+                          </span>
+                          <div className="flex-1 overflow-x-auto pb-1">
+                            <div className="flex min-w-max gap-2">
+                              {gp.missingSubProjects.map((sp) => (
+                                <Button
+                                  key={sp.id}
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => {
+                                    void gp.selectEntity("sub_project", sp.id);
+                                  }}
+                                  disabled={gp.isEditing}
+                                >
+                                  {sp.name}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {gp.missingInfrastructureZones.length > 0 && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="shrink-0">
+                            {t(
+                              "buildingImage.genplan.guided.progress.missingInfraList",
+                            )}
+                          </span>
+                          <div className="flex-1 overflow-x-auto pb-1">
+                            <div className="flex min-w-max gap-2">
+                              {gp.missingInfrastructureZones.map((iz) => (
+                                <Button
+                                  key={iz.id}
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => {
+                                    void gp.selectEntity(
+                                      "infrastructure_zone",
+                                      iz.id,
+                                    );
+                                  }}
+                                  disabled={gp.isEditing}
+                                >
+                                  {iz.name}
+                                </Button>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -721,7 +825,7 @@ function GenplanEditorPanel({
               }
               guidedOverlay={
                 guidedModeEnabled &&
-                !gp.hasCompletedAllSubProjects &&
+                !gp.hasCompletedAllGenplanEntities &&
                 postSaveGuidance ? (
                   <div className="pointer-events-none absolute inset-0 z-30">
                     <div className="pointer-events-auto absolute left-1/2 top-4 w-[calc(100%-2rem)] max-w-[360px] -translate-x-1/2 rounded-lg border border-primary/30 bg-background/95 p-3 shadow-lg">
@@ -791,9 +895,14 @@ function GenplanEditorPanel({
               saving={data.savingZone}
               uploadingZoneImage={data.uploadingZoneImage}
               onSave={(formData, imageFile) => {
-                void data.handleSaveInfraZone(formData, imageFile).then(() => {
-                  setAddingZone(false);
-                });
+                void data
+                  .handleSaveInfraZone(formData, imageFile)
+                  .then((zoneId) => {
+                    setAddingZone(false);
+                    if (zoneId && !formData.id) {
+                      focusNewInfrastructureZoneIdRef.current = zoneId;
+                    }
+                  });
               }}
               onCancel={() => setAddingZone(false)}
               t={t}
@@ -822,8 +931,11 @@ function GenplanEditorPanel({
                   onSave={(formData, imageFile) => {
                     void data
                       .handleSaveInfraZone(formData, imageFile)
-                      .then(() => {
+                      .then((zoneId) => {
                         setEditingZoneId(null);
+                        if (zoneId && !formData.id) {
+                          focusNewInfrastructureZoneIdRef.current = zoneId;
+                        }
                       });
                   }}
                   onCancel={() => setEditingZoneId(null)}
@@ -887,14 +999,8 @@ function GenplanEditorPanel({
         </CardContent>
       </Card>
 
-      {/* Polygon display settings */}
-      {genplan.masterplanId && (
-        <PolygonCustomizationSettings
-          projectId={projectId}
-          type="genplan"
-          masterplanId={genplan.masterplanId}
-        />
-      )}
+      {/* Polygon display settings (one set per project, all masterplans) */}
+      <PolygonCustomizationSettings projectId={projectId} type="genplan" />
     </div>
   );
 }

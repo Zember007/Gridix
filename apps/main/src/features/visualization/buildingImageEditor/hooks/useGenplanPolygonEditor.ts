@@ -806,14 +806,65 @@ export function useGenplanPolygonEditor({
     [subProjectCoverage],
   );
 
+  const infrastructureCoverage = useMemo(
+    () =>
+      infrastructureZones.map((iz) => {
+        const area = findAreaForEntity(
+          genplan.areas,
+          "infrastructure_zone",
+          iz.id,
+        );
+        return {
+          zone: iz,
+          area,
+          hasPolygon: areaHasValidPolygon(area),
+        };
+      }),
+    [genplan.areas, infrastructureZones],
+  );
+
+  const missingInfrastructureZones = useMemo(
+    () =>
+      infrastructureCoverage
+        .filter((row) => !row.hasPolygon)
+        .map((r) => r.zone),
+    [infrastructureCoverage],
+  );
+
   const configuredSubProjectCount = useMemo(
     () => subProjectCoverage.filter((r) => r.hasPolygon).length,
     [subProjectCoverage],
   );
 
+  const configuredInfrastructureCount = useMemo(
+    () => infrastructureCoverage.filter((r) => r.hasPolygon).length,
+    [infrastructureCoverage],
+  );
+
   const totalSubProjectsCount = genplan.subProjects.length;
-  const hasCompletedAllSubProjects =
-    totalSubProjectsCount > 0 && missingSubProjects.length === 0;
+  const totalInfrastructureZonesCount = infrastructureZones.length;
+
+  const guidedMissingEntities = useMemo(
+    () => [
+      ...missingSubProjects.map((sp) => ({
+        type: "sub_project" as const,
+        id: sp.id,
+        name: sp.name,
+      })),
+      ...missingInfrastructureZones.map((iz) => ({
+        type: "infrastructure_zone" as const,
+        id: iz.id,
+        name: iz.name,
+      })),
+    ],
+    [missingInfrastructureZones, missingSubProjects],
+  );
+
+  const hasSelectableGenplanEntities =
+    totalSubProjectsCount + totalInfrastructureZonesCount > 0;
+
+  const hasCompletedAllGenplanEntities =
+    hasSelectableGenplanEntities && guidedMissingEntities.length === 0;
 
   return {
     selectedEntityType,
@@ -857,8 +908,12 @@ export function useGenplanPolygonEditor({
 
     subProjectCoverage,
     missingSubProjects,
+    missingInfrastructureZones,
     configuredSubProjectCount,
+    configuredInfrastructureCount,
     totalSubProjectsCount,
-    hasCompletedAllSubProjects,
+    totalInfrastructureZonesCount,
+    guidedMissingEntities,
+    hasCompletedAllGenplanEntities,
   };
 }

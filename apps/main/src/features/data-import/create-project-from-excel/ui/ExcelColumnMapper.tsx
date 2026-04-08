@@ -600,6 +600,7 @@ const ExcelColumnMapper = ({
           view_count: 0,
           polygon_settings_facade: {},
           polygon_settings_floor: {},
+          polygon_settings_genplan: null,
           has_masterplan: rootProjectKind === "genplan",
           parent_project_id: null,
           root_project_id: null,

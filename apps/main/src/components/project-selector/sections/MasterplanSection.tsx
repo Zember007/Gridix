@@ -111,14 +111,18 @@ export function MasterplanSection({
   const [activeMasterplanIndex, setActiveMasterplanIndex] = useState(0);
   const activeMasterplanItem = masterplansList[activeMasterplanIndex] ?? null;
 
-  const { masterplan, areas, infrastructureZones, loading } = useMasterplanData(
-    {
-      projectId,
-      masterplansList,
-      activeMasterplanId: activeMasterplanItem?.id,
-      enabled: true,
-    },
-  );
+  const {
+    masterplan,
+    areas,
+    infrastructureZones,
+    loading,
+    projectGenplanPolygonSettings,
+  } = useMasterplanData({
+    projectId,
+    masterplansList,
+    activeMasterplanId: activeMasterplanItem?.id,
+    enabled: true,
+  });
 
   const [selectedInfrastructureZone, setSelectedInfrastructureZone] =
     useState<MasterplanInfrastructureZone | null>(null);
@@ -160,8 +164,11 @@ export function MasterplanSection({
   );
 
   const overlaySettings = useMemo(
-    () => parsePolygonOverlaySettings(masterplan?.polygon_display_settings),
-    [masterplan?.polygon_display_settings],
+    () =>
+      parsePolygonOverlaySettings(
+        projectGenplanPolygonSettings ?? masterplan?.polygon_display_settings,
+      ),
+    [projectGenplanPolygonSettings, masterplan?.polygon_display_settings],
   );
 
   const buildingFill = overlaySettings.colors.building;

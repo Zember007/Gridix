@@ -57,7 +57,11 @@
       "progress": {
         "rangeLabel": "Subprojects:",
         "missingList": "Missing polygons:",
-        "allConfigured": "All subprojects have a polygon"
+        "infraRangeLabel": "Infrastructure zones:",
+        "infraDrawn": "With polygon:",
+        "infraMissing": "Missing polygon:",
+        "missingInfraList": "Zones not marked on the plan:",
+        "allConfigured": "All subprojects and infrastructure zones have a polygon on the plan"
       },
       "helper": {
         "savedAndNext": "{{name}} saved. Next: {{nextName}}",

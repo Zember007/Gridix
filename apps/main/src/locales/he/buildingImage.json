@@ -57,7 +57,11 @@
       "progress": {
         "rangeLabel": "תתי־פרויקטים:",
         "missingList": "חסר פוליגון:",
-        "allConfigured": "לכל תתי־הפרויקטים יש פוליגון"
+        "infraRangeLabel": "אזורי תשתית:",
+        "infraDrawn": "עם פוליגון:",
+        "infraMissing": "חסר פוליגון:",
+        "missingInfraList": "אזורים שלא סומנו על התכנית:",
+        "allConfigured": "לכל תתי־הפרויקטים ואזורי התשתית יש פוליגון על התכנית"
       },
       "helper": {
         "savedAndNext": "«{{name}}» נשמר. הבא: {{nextName}}",

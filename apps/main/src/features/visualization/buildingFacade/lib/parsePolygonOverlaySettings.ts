@@ -17,7 +17,10 @@ const DEFAULT: FacadeSettings = {
   },
 };
 
-/** Parses `project_masterplans.polygon_display_settings` (same shape as facade polygon settings). */
+/**
+ * Parses polygon overlay JSON (`projects.polygon_settings_genplan` or legacy
+ * `project_masterplans.polygon_display_settings`; same shape as facade polygon settings).
+ */
 export function parsePolygonOverlaySettings(raw: unknown): FacadeSettings {
   if (!raw || typeof raw !== "object") return DEFAULT;
 

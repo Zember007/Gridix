@@ -176,7 +176,7 @@ function ProjectApartmentSelectorLoaded({
     [visibleFilterFields],
   );
 
-  // Facade data (TanStack Query) — not used on project hub when genplan multi-sub mode
+  // Facade data (TanStack Query) — not used on project hub when genplan tab shows MasterplanSection
   const shouldLoadFacadeData =
     viewMode === "facade" &&
     !!project?.id &&
@@ -804,12 +804,9 @@ const ProjectApartmentSelectorDefault = ({
 
   const themeColor = project?.theme_color ?? "#000000";
 
-  // Plan: multi-sub when genplan is on and there is more than one sub-project total
-  // (not "more than one non-default" — 1 default + 1 building must still use genplan hub UX)
+  // Genplan hub UX when selector returns at least one masterplan (published/active in API).
   const modeContext: ModeContext =
-    Boolean(project?.has_masterplan) && subProjects.length > 1
-      ? "project-multi-sub"
-      : "default";
+    masterplansList.length > 0 ? "project-multi-sub" : "default";
 
   return (
     <div className="relative min-h-screen bg-white">

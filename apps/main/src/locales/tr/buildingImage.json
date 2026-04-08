@@ -57,7 +57,11 @@
       "progress": {
         "rangeLabel": "Alt projeler:",
         "missingList": "Çokgen eksik:",
-        "allConfigured": "Tüm alt projelerin çokgeni var"
+        "infraRangeLabel": "Altyapı bölgeleri:",
+        "infraDrawn": "Çokgeni olan:",
+        "infraMissing": "Çokgen eksik:",
+        "missingInfraList": "Planda işaretlenmemiş bölgeler:",
+        "allConfigured": "Tüm alt projelerin ve altyapı bölgelerinin planda çokgeni var"
       },
       "helper": {
         "savedAndNext": "«{{name}}» kaydedildi. Sıradaki: {{nextName}}",

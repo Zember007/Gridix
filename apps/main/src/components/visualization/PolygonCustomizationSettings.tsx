@@ -37,7 +37,7 @@ export interface PolygonSettings {
 interface PolygonCustomizationSettingsProps {
   projectId: string;
   type: "building" | "floor" | "genplan";
-  /** Required when type="genplan" — identifies the masterplan record. */
+  /** @deprecated Genplan settings are stored on the project; this prop is ignored. */
   masterplanId?: string;
   /** When provided, load/save settings from sub_projects instead of projects. */
   subProjectId?: string;
@@ -70,12 +70,36 @@ const defaultSettings: PolygonSettings = {
   },
 };
 
+/** Defaults for genplan: every toggle in this form is on. */
+const defaultGenplanPolygonSettings: PolygonSettings = {
+  ...defaultSettings,
+  hoverEffects: {
+    scale: true,
+    colorChange: true,
+    opacityChange: true,
+    glow: true,
+  },
+  display: {
+    showNumbers: true,
+    showTooltip: true,
+    showArea: true,
+    showPrice: true,
+  },
+};
+
+function baseDefaults(type: "building" | "floor" | "genplan"): PolygonSettings {
+  if (type === "genplan") {
+    return { ...defaultGenplanPolygonSettings };
+  }
+  return { ...defaultSettings };
+}
+
 // Функция для валидации и дополнения настроек дефолтными значениями
 const validateAndMergeSettings = (
   loadedSettings: unknown,
   type: "building" | "floor" | "genplan",
 ): PolygonSettings => {
-  const merged = { ...defaultSettings };
+  const merged = baseDefaults(type);
 
   if (!loadedSettings || typeof loadedSettings !== "object") {
     return merged;
@@ -83,10 +107,12 @@ const validateAndMergeSettings = (
 
   const settings = loadedSettings as Partial<PolygonSettings>;
 
+  const base = baseDefaults(type);
+
   // Валидация и слияние colors
   if (settings.colors && typeof settings.colors === "object") {
     merged.colors = {
-      ...defaultSettings.colors,
+      ...base.colors,
       ...settings.colors,
     };
   }
@@ -94,7 +120,7 @@ const validateAndMergeSettings = (
   // Валидация и слияние hoverEffects
   if (settings.hoverEffects && typeof settings.hoverEffects === "object") {
     merged.hoverEffects = {
-      ...defaultSettings.hoverEffects,
+      ...base.hoverEffects,
       ...settings.hoverEffects,
     };
   }
@@ -102,7 +128,7 @@ const validateAndMergeSettings = (
   // Валидация и слияние display
   if (settings.display && typeof settings.display === "object") {
     merged.display = {
-      ...defaultSettings.display,
+      ...base.display,
       ...settings.display,
     };
   }
@@ -110,13 +136,13 @@ const validateAndMergeSettings = (
   // Валидация и слияние opacity
   if (settings.opacity && typeof settings.opacity === "object") {
     merged.opacity = {
-      ...defaultSettings.opacity,
+      ...base.opacity,
       ...settings.opacity,
     };
   }
 
   // Для типа building убеждаемся, что есть building цвет
-  if (type === "building" && !merged.colors.building) {
+  if ((type === "building" || type === "genplan") && !merged.colors.building) {
     merged.colors.building = "#3b82f6";
   }
 
@@ -126,15 +152,14 @@ const validateAndMergeSettings = (
 const PolygonCustomizationSettings = ({
   projectId,
   type,
-  masterplanId,
   subProjectId,
   onSettingsChange,
   initialSettings,
 }: PolygonCustomizationSettingsProps) => {
-  const [settings, setSettings] = useState<PolygonSettings>(
+  const [settings, setSettings] = useState<PolygonSettings>(() =>
     initialSettings
       ? validateAndMergeSettings(initialSettings, type)
-      : defaultSettings,
+      : baseDefaults(type),
   );
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
@@ -142,20 +167,21 @@ const PolygonCustomizationSettings = ({
   const loadSettings = useCallback(async () => {
     try {
       if (type === "genplan") {
-        if (!masterplanId) return;
         const { data, error } = await supabase
-          .from("project_masterplans")
-          .select("polygon_display_settings")
-          .eq("id", masterplanId)
+          .from("projects")
+          .select("polygon_settings_genplan")
+          .eq("id", projectId)
           .single();
         if (error) throw error;
-        if (data?.polygon_display_settings) {
+        if (data?.polygon_settings_genplan) {
           setSettings(
             validateAndMergeSettings(
-              data.polygon_display_settings as unknown as PolygonSettings,
-              "building",
+              data.polygon_settings_genplan as unknown as PolygonSettings,
+              "genplan",
             ),
           );
+        } else {
+          setSettings(baseDefaults("genplan"));
         }
       } else if (type === "building") {
         const table = subProjectId ? "sub_projects" : "projects";
@@ -201,7 +227,7 @@ const PolygonCustomizationSettings = ({
     } catch (error) {
       console.error("Error loading polygon settings:", error);
     }
-  }, [projectId, subProjectId, masterplanId, type]);
+  }, [projectId, subProjectId, type]);
 
   useEffect(() => {
     if (initialSettings) {
@@ -215,12 +241,10 @@ const PolygonCustomizationSettings = ({
     setLoading(true);
     try {
       if (type === "genplan") {
-        if (!masterplanId)
-          throw new Error("masterplanId required for genplan settings");
         const { error } = await supabase
-          .from("project_masterplans")
-          .update({ polygon_display_settings: settings as unknown as Json })
-          .eq("id", masterplanId);
+          .from("projects")
+          .update({ polygon_settings_genplan: settings as unknown as Json })
+          .eq("id", projectId);
         if (error) throw error;
       } else if (type === "building") {
         const table = subProjectId ? "sub_projects" : "projects";
@@ -278,9 +302,11 @@ const PolygonCustomizationSettings = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          {type === "floor"
-            ? t("polygonSettings.floorTitle")
-            : t("polygonSettings.buildingTitle")}
+          {type === "genplan"
+            ? t("polygonSettings.genplanTitle")
+            : type === "floor"
+              ? t("polygonSettings.floorTitle")
+              : t("polygonSettings.buildingTitle")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

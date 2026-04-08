@@ -1176,11 +1176,6 @@ const PolygonPlanImageView = ({
                               isHovered && facadeSettings?.hoverEffects?.glow
                                 ? "drop-shadow(0 0 8px rgba(0,0,0,0.4))"
                                 : undefined,
-                            transform:
-                              isHovered && facadeSettings?.hoverEffects?.scale
-                                ? "scale(1.02)"
-                                : "scale(1)",
-                            transformOrigin: "center",
                           }}
                         />
                       </g>
