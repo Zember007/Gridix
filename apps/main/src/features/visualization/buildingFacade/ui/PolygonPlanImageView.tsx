@@ -244,7 +244,7 @@ const PolygonPlanImageView = ({
           id: p.id,
           floor_number: n,
           polygon: p.polygon,
-          color: facadeSettings?.colors?.building ?? "#3b82f6",
+          color: p.fillColor ?? facadeSettings?.colors?.building ?? "#3b82f6",
         });
       }
       return out;

@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@gridix/utils/react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@gridix/ui";
 import PolygonPlanImageView from "@/features/visualization/buildingFacade/ui/PolygonPlanImageView";
 import { parsePolygonOverlaySettings } from "@/features/visualization/buildingFacade/lib/parsePolygonOverlaySettings";
 import type { MasterplanPolygonItem } from "@/features/visualization/buildingFacade/model/types";
@@ -10,10 +11,10 @@ import { Spinner } from "@/shared/ui/Spinner";
 import type {
   MasterplanListItem,
   MasterplanArea,
+  MasterplanInfrastructureZone,
   SubProjectListItem,
 } from "@/features/projectSelector/api/projectSelectorApi";
 import { useMasterplanData } from "../hooks/useMasterplanData";
-import { normalizeSubProjectKind } from "../lib/subProjectDisplay";
 
 interface MasterplanSectionProps {
   project: Project;
@@ -28,10 +29,42 @@ interface PolygonPoint {
   y: number;
 }
 
-function geometryToPercentPolygons(
+function resolveInfrastructureZone(
+  area: MasterplanArea,
+  zones: MasterplanInfrastructureZone[],
+): MasterplanInfrastructureZone | null {
+  if (
+    area.linked_entity_type !== "infrastructure_zone" ||
+    !area.linked_entity_id
+  ) {
+    return null;
+  }
+  if (area.infrastructure_zone?.id) {
+    return area.infrastructure_zone;
+  }
+  return zones.find((z) => z.id === area.linked_entity_id) ?? null;
+}
+
+function zoneDescriptionText(zone: MasterplanInfrastructureZone): string {
+  const full = (zone.full_description ?? "").trim();
+  if (full.length > 0) return full;
+  const short = (zone.short_description ?? "").trim();
+  if (short.length > 0 && short !== "-") return short;
+  return "";
+}
+
+function compareMasterplanAreas(a: MasterplanArea, b: MasterplanArea): number {
+  const dz = (a.z_index ?? 0) - (b.z_index ?? 0);
+  if (dz !== 0) return dz;
+  return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+}
+
+function areasToMasterplanPolygons(
   areas: MasterplanArea[],
   naturalW: number | null,
   naturalH: number | null,
+  buildingFill: string,
+  infrastructureFill: string,
 ): MasterplanPolygonItem[] {
   const out: MasterplanPolygonItem[] = [];
   for (const a of areas) {
@@ -52,7 +85,11 @@ function geometryToPercentPolygons(
           y: (p.y / naturalH!) * 100,
         }))
       : pts;
-    out.push({ id: a.id, polygon });
+    const fillColor =
+      a.linked_entity_type === "infrastructure_zone"
+        ? infrastructureFill
+        : buildingFill;
+    out.push({ id: a.id, polygon, fillColor });
   }
   return out;
 }
@@ -74,12 +111,17 @@ export function MasterplanSection({
   const [activeMasterplanIndex, setActiveMasterplanIndex] = useState(0);
   const activeMasterplanItem = masterplansList[activeMasterplanIndex] ?? null;
 
-  const { masterplan, areas, loading } = useMasterplanData({
-    projectId,
-    masterplansList,
-    activeMasterplanId: activeMasterplanItem?.id,
-    enabled: true,
-  });
+  const { masterplan, areas, infrastructureZones, loading } = useMasterplanData(
+    {
+      projectId,
+      masterplansList,
+      activeMasterplanId: activeMasterplanItem?.id,
+      enabled: true,
+    },
+  );
+
+  const [selectedInfrastructureZone, setSelectedInfrastructureZone] =
+    useState<MasterplanInfrastructureZone | null>(null);
 
   const subProjectsById = useMemo(() => {
     const map: Record<string, SubProjectListItem> = {};
@@ -100,22 +142,46 @@ export function MasterplanSection({
     [areas],
   );
 
+  const infrastructureAreas = useMemo(
+    () =>
+      areas.filter(
+        (a) =>
+          a.linked_entity_type === "infrastructure_zone" &&
+          a.linked_entity_id &&
+          a.status === "active",
+      ),
+    [areas],
+  );
+
+  const displayAreas = useMemo(
+    () =>
+      [...buildingAreas, ...infrastructureAreas].sort(compareMasterplanAreas),
+    [buildingAreas, infrastructureAreas],
+  );
+
   const overlaySettings = useMemo(
     () => parsePolygonOverlaySettings(masterplan?.polygon_display_settings),
     [masterplan?.polygon_display_settings],
   );
 
+  const buildingFill = overlaySettings.colors.building;
+  const infrastructureFill = overlaySettings.colors.available ?? "#16a34a";
+
   const masterplanPolygons = useMemo(
     () =>
-      geometryToPercentPolygons(
-        buildingAreas,
+      areasToMasterplanPolygons(
+        displayAreas,
         masterplan?.background_asset_width ?? null,
         masterplan?.background_asset_height ?? null,
+        buildingFill,
+        infrastructureFill,
       ),
     [
-      buildingAreas,
+      displayAreas,
       masterplan?.background_asset_width,
       masterplan?.background_asset_height,
+      buildingFill,
+      infrastructureFill,
     ],
   );
 
@@ -133,22 +199,62 @@ export function MasterplanSection({
 
   const onMasterplanAreaClick = useCallback(
     (areaId: string) => {
-      const area = buildingAreas.find((a) => a.id === areaId);
-      const sid = area?.linked_entity_id;
+      const area = displayAreas.find((a) => a.id === areaId);
+      if (!area) return;
+
+      if (area.linked_entity_type === "infrastructure_zone") {
+        const zone = resolveInfrastructureZone(area, infrastructureZones);
+        if (zone) setSelectedInfrastructureZone(zone);
+        return;
+      }
+
+      if (area.linked_entity_type !== "sub_project") return;
+
+      const sid = area.linked_entity_id;
       if (!sid) return;
       const sp = subProjectsById[sid];
       if (sp) navigateToSubProject(sp.slug);
     },
-    [buildingAreas, subProjectsById, navigateToSubProject],
+    [displayAreas, infrastructureZones, subProjectsById, navigateToSubProject],
   );
 
   const masterplanRenderTooltip = useCallback(
     (areaId: string) => {
-      const area = buildingAreas.find((a) => a.id === areaId);
-      if (!area?.linked_entity_id) return null;
+      const area = displayAreas.find((a) => a.id === areaId);
+      if (!area) return null;
+
+      if (area.linked_entity_type === "infrastructure_zone") {
+        const zone = resolveInfrastructureZone(area, infrastructureZones);
+        if (!zone) return null;
+        const desc = zoneDescriptionText(zone);
+        return (
+          <div className="pointer-events-none w-64 overflow-hidden rounded-lg border bg-white shadow-lg">
+            {zone.cover_image ? (
+              <img
+                src={zone.cover_image}
+                alt=""
+                className="h-28 w-full object-cover"
+              />
+            ) : null}
+            <div className="p-3">
+              <div className="text-sm font-semibold">
+                {(zone.name ?? "").trim() || "—"}
+              </div>
+              {desc ? (
+                <div className="mt-1 line-clamp-4 text-xs text-muted-foreground">
+                  {desc}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        );
+      }
+
+      if (area.linked_entity_type !== "sub_project" || !area.linked_entity_id) {
+        return null;
+      }
       const sp = subProjectsById[area.linked_entity_id];
       if (!sp) return null;
-      const kind = normalizeSubProjectKind(sp.type);
       return (
         <div className="pointer-events-none w-56 rounded-lg border bg-white p-3 shadow-lg">
           <div className="mb-1 text-sm font-semibold">{sp.name}</div>
@@ -178,7 +284,7 @@ export function MasterplanSection({
         </div>
       );
     },
-    [buildingAreas, subProjectsById, t],
+    [displayAreas, infrastructureZones, subProjectsById, t],
   );
 
   const facadeNavItems = useMemo(
@@ -188,15 +294,23 @@ export function MasterplanSection({
 
   const masterplanPolygonLabels = useMemo(() => {
     const m: Record<string, string> = {};
-    for (const a of buildingAreas) {
-      const sp = a.linked_entity_id
-        ? subProjectsById[a.linked_entity_id]
-        : null;
-      const label = (a.short_label ?? a.label ?? sp?.name ?? "").trim();
-      if (label) m[a.id] = label;
+    for (const a of displayAreas) {
+      if (a.linked_entity_type === "sub_project") {
+        const sp = a.linked_entity_id
+          ? subProjectsById[a.linked_entity_id]
+          : null;
+        const label = (a.short_label ?? a.label ?? sp?.name ?? "").trim();
+        if (label) m[a.id] = label;
+        continue;
+      }
+      if (a.linked_entity_type === "infrastructure_zone") {
+        const zone = resolveInfrastructureZone(a, infrastructureZones);
+        const label = (a.short_label ?? a.label ?? zone?.name ?? "").trim();
+        if (label) m[a.id] = label;
+      }
     }
     return m;
-  }, [buildingAreas, subProjectsById]);
+  }, [displayAreas, subProjectsById, infrastructureZones]);
 
   const planProject = useMemo(
     () => ({
@@ -207,6 +321,10 @@ export function MasterplanSection({
     }),
     [project, masterplan?.name, activeMasterplanItem?.name],
   );
+
+  const zoneDialogDescription = selectedInfrastructureZone
+    ? zoneDescriptionText(selectedInfrastructureZone)
+    : "";
 
   if (loading && !masterplan) {
     return (
@@ -226,6 +344,39 @@ export function MasterplanSection({
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
+      <Dialog
+        open={selectedInfrastructureZone != null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedInfrastructureZone(null);
+        }}
+      >
+        <DialogContent className="max-h-[min(90dvh,640px)] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto sm:max-w-lg">
+          {selectedInfrastructureZone && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="pr-8 text-left">
+                  {(selectedInfrastructureZone.name ?? "").trim() || "—"}
+                </DialogTitle>
+              </DialogHeader>
+              {selectedInfrastructureZone.cover_image ? (
+                <div className="-mx-1 mt-2 overflow-hidden rounded-lg border bg-muted">
+                  <img
+                    src={selectedInfrastructureZone.cover_image}
+                    alt=""
+                    className="max-h-56 w-full object-cover"
+                  />
+                </div>
+              ) : null}
+              {zoneDialogDescription ? (
+                <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+                  {zoneDialogDescription}
+                </p>
+              ) : null}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <PolygonPlanImageView
           projectId={projectId}

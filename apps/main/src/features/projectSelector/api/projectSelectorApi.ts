@@ -506,6 +506,16 @@ export async function loadPdfTemplateData(
 
 // ── Masterplan data (public viewer) ──
 
+/** Public masterplan preview — subset of `project_infrastructure_zones` used by the genplan viewer. */
+export interface MasterplanInfrastructureZone {
+  id: string;
+  name: string | null;
+  short_description: string | null;
+  full_description: string | null;
+  cover_image: string | null;
+  zone_type?: string | null;
+}
+
 export interface MasterplanArea {
   id: string;
   area_type: string;
@@ -526,7 +536,7 @@ export interface MasterplanArea {
     price_from: number | null;
     currency: string | null;
   } | null;
-  infrastructure_zone?: Record<string, unknown> | null;
+  infrastructure_zone?: MasterplanInfrastructureZone | null;
 }
 
 export interface SelectorMasterplanResult {
@@ -540,6 +550,7 @@ export interface SelectorMasterplanResult {
     viewport_default: unknown;
   } | null;
   areas: MasterplanArea[];
+  infrastructureZones: MasterplanInfrastructureZone[];
 }
 
 export async function loadSelectorMasterplan(
@@ -559,6 +570,8 @@ export async function loadSelectorMasterplan(
   return {
     masterplan: result.masterplan ?? null,
     areas: result.areas ?? [],
+    infrastructureZones: (result.infrastructureZones ??
+      []) as MasterplanInfrastructureZone[],
   };
 }
 

@@ -31,6 +31,7 @@ export function useMasterplanData({
   return {
     masterplan: query.data?.masterplan ?? null,
     areas: query.data?.areas ?? [],
+    infrastructureZones: query.data?.infrastructureZones ?? [],
     loading: query.isLoading,
   };
 }

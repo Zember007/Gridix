@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchAdminBootstrap } from "../api/adminAccessApi";
 import type { AdminBootstrapResponse } from "../model/types";
 
+/** Prefix for TanStack Query; use with `invalidateQueries` / `refetchQueries` after project mutations. */
+export const ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX = ["adminBootstrap"] as const;
+
 interface UseAdminAccessQueryParams {
   userId: string | undefined;
   isManagerMode: boolean;
@@ -16,7 +19,12 @@ export function useAdminAccessQuery({
   enabled,
 }: UseAdminAccessQueryParams) {
   return useQuery<AdminBootstrapResponse>({
-    queryKey: ["adminBootstrap", userId, isManagerMode, activeWorkspaceId],
+    queryKey: [
+      ...ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX,
+      userId,
+      isManagerMode,
+      activeWorkspaceId,
+    ],
     enabled,
     staleTime: 60_000,
     gcTime: 30 * 60 * 1000,

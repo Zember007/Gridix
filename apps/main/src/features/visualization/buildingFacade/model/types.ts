@@ -46,6 +46,8 @@ export interface FacadeSettings {
 export type MasterplanPolygonItem = {
   id: string;
   polygon: { x: number; y: number }[];
+  /** SVG fill; defaults to overlay `colors.building` when omitted. */
+  fillColor?: string;
 };
 
 export interface PolygonPlanImageViewProps {

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -76,6 +77,7 @@ import {
   type ProjectEditorProject,
 } from "@/features/projectEditor/model/types";
 import type { AdminBootstrapProject } from "@/entities/admin-access";
+import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshAdminBootstrapCache";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
 
@@ -583,6 +585,7 @@ const ProjectEditor = ({
   const [accessError, setAccessError] = useState<string | null>(null);
 
   const { navigate } = useLanguageNavigation();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { user, userProfile, loading: authLoading, signOut } = useAuth();
   const { t } = useLanguage();
@@ -921,6 +924,8 @@ const ProjectEditor = ({
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
         });
+
+        await refreshAdminBootstrapCache(queryClient);
 
         setProject((prev) => ({ ...prev, id: data.id }));
         toast.success(t("projectEditor.projectCreated"));
