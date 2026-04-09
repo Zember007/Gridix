@@ -140,7 +140,7 @@ const ProjectApartmentsManager = ({
     } finally {
       setLoading(false);
     }
-  }, [projectId, t]);
+  }, [projectId, subProjectId, t]);
 
   useEffect(() => {
     if (editorData) {
@@ -1227,6 +1227,7 @@ const ProjectApartmentsManager = ({
         open={excelSyncDialogOpen}
         onClose={() => setExcelSyncDialogOpen(false)}
         projectId={projectId}
+        subProjectId={subProjectId}
         projectType={projectType ?? null}
         onSyncDone={() => {
           if (editorData) {

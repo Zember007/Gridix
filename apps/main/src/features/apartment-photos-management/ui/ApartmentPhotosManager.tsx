@@ -178,6 +178,7 @@ const ApartmentPhotosManager = ({
         <TabsContent value="layouts">
           <LayoutPhotosManager
             projectId={projectId}
+            subProjectId={subProjectId}
             initialApartments={apartments}
           />
         </TabsContent>

@@ -622,12 +622,14 @@ export interface SyncApartmentsResult {
 export async function syncApartmentsFromExcel(
   projectId: string,
   updates: ApartmentSyncUpdate[],
+  options?: { subProjectId?: string },
 ): Promise<SyncApartmentsResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
     body: {
       action: "sync-apartments-from-excel",
       projectId,
       updates,
+      ...(options?.subProjectId ? { subProjectId: options.subProjectId } : {}),
     },
   });
 

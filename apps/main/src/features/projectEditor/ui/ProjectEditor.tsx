@@ -1814,26 +1814,75 @@ const ProjectEditor = ({
 
               {activeTab === "floors" &&
                 editorScopeKind !== "object" &&
-                !project.has_masterplan && (
-                  <ProjectFloorsManager projectId={project.id} />
-                )}
-
-              {activeTab === "apartments" && !project.has_masterplan && (
-                <div className="space-y-4">
-                  <ProjectApartmentsManager
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <ProjectFloorsManager
                     projectId={project.id}
-                    projectType={editorScopeKind}
+                    subProjectId={defaultBuildingScope.subProjectId}
                   />
-                </div>
-              )}
+                ))}
 
-              {activeTab === "fields" && !project.has_masterplan && (
-                <AllFieldsManager projectId={project.id} />
-              )}
+              {activeTab === "apartments" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <ProjectApartmentsManager
+                      projectId={project.id}
+                      projectType={editorScopeKind}
+                      subProjectId={defaultBuildingScope.subProjectId}
+                    />
+                  </div>
+                ))}
 
-              {activeTab === "photos" && !project.has_masterplan && (
-                <ApartmentPhotosManager projectId={project.id} />
-              )}
+              {activeTab === "fields" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <AllFieldsManager
+                    projectId={project.id}
+                    subProjectId={defaultBuildingScope.subProjectId}
+                  />
+                ))}
+
+              {activeTab === "photos" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <ApartmentPhotosManager
+                    projectId={project.id}
+                    subProjectId={defaultBuildingScope.subProjectId}
+                  />
+                ))}
 
               {activeTab === "genplan" &&
                 (bootstrapProject?.plan_tier === "pro" &&

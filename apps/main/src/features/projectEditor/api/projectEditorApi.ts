@@ -451,9 +451,11 @@ export async function uploadLayoutPhoto(
   file: File,
   options: UploadWithProgressOptions & {
     assignment?: LayoutPhotoAssignment;
+    /** Scope layout photos to a sub-project (required when editing a building scope). */
+    subProjectId?: string;
   } = {},
 ): Promise<{ publicUrl: string }> {
-  const { assignment, ...uploadOptions } = options;
+  const { assignment, subProjectId, ...uploadOptions } = options;
   const fileName = createUniqueFileName(projectId, ".webp", layoutType);
   const objectPath = `layouts/${fileName}`;
 
@@ -475,6 +477,7 @@ export async function uploadLayoutPhoto(
     order_index: orderIndex,
     is_project_preview: assignment?.is_project_preview ?? false,
     apartment_ids: assignment?.apartment_ids ?? null,
+    ...(subProjectId ? { sub_project_id: subProjectId } : {}),
   });
 
   if (error) {

@@ -54,6 +54,8 @@ const MAX_CONCURRENT_UPLOADS = 3;
 
 interface LayoutPhotosManagerProps {
   projectId: string;
+  /** When set, loads apartments / layout rows for this building scope only. */
+  subProjectId?: string;
   initialApartments?: Apartment[] | null;
 }
 
@@ -450,6 +452,7 @@ function PhotoSettingsDialog({
 
 const LayoutPhotosManager = ({
   projectId,
+  subProjectId,
   initialApartments = null,
 }: LayoutPhotosManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -469,10 +472,12 @@ const LayoutPhotosManager = ({
 
   const loadApartments = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("apartments")
         .select("*")
         .eq("project_id", projectId);
+      if (subProjectId) query = query.eq("sub_project_id", subProjectId);
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -492,18 +497,21 @@ const LayoutPhotosManager = ({
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, subProjectId]);
 
   const loadLayoutPhotos = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let lpQuery = supabase
         .from("layout_photos")
         .select(
           "id, project_id, layout_type, image_url, description, order_index, is_project_preview, apartment_ids",
         )
         .eq("project_id", projectId)
-        .eq("layout_type", selectedLayoutType)
-        .order("order_index", { ascending: true });
+        .eq("layout_type", selectedLayoutType);
+      if (subProjectId) lpQuery = lpQuery.eq("sub_project_id", subProjectId);
+      const { data, error } = await lpQuery.order("order_index", {
+        ascending: true,
+      });
 
       if (error) throw error;
 
@@ -517,7 +525,7 @@ const LayoutPhotosManager = ({
     } catch (error) {
       console.error("Error loading layout photos:", error);
     }
-  }, [projectId, selectedLayoutType]);
+  }, [projectId, selectedLayoutType, subProjectId]);
 
   useEffect(() => {
     if (initialApartments != null && Array.isArray(initialApartments)) {
@@ -665,6 +673,7 @@ const LayoutPhotosManager = ({
                 task.orderIndex,
                 file,
                 {
+                  subProjectId,
                   signal: abortController.signal,
                   onProgress: (progress) => {
                     if (
@@ -754,6 +763,7 @@ const LayoutPhotosManager = ({
       loadLayoutPhotos,
       photos.length,
       projectId,
+      subProjectId,
       removeUploadItem,
       selectedLayoutType,
       t,
