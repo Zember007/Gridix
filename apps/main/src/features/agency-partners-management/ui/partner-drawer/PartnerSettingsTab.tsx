@@ -15,6 +15,7 @@ type Props = {
   signatureUrl: string | null;
   signedContracts: SignedContract[];
   signedContractsLoading: boolean;
+  readOnly?: boolean;
 };
 
 export const PartnerSettingsTab: React.FC<Props> = ({
@@ -26,6 +27,7 @@ export const PartnerSettingsTab: React.FC<Props> = ({
   signatureUrl,
   signedContracts,
   signedContractsLoading,
+  readOnly = false,
 }) => {
   return (
     <div className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -34,9 +36,14 @@ export const PartnerSettingsTab: React.FC<Props> = ({
         onUpdate={onUpdate}
         rejectionReasonDraft={rejectionReasonDraft}
         setRejectionReasonDraft={setRejectionReasonDraft}
+        readOnly={readOnly}
       />
 
-      <PartnerSettingsManagementSection partner={partner} onUpdate={onUpdate} />
+      <PartnerSettingsManagementSection
+        partner={partner}
+        onUpdate={onUpdate}
+        readOnly={readOnly}
+      />
 
       <PartnerSettingsSignatureSection
         partner={partner}

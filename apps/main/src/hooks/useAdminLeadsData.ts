@@ -305,6 +305,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
+  /** CRM funnels/stages belong to the workspace developer; null workspace = own account. */
+  const crmFunnelOwnerId = useMemo(
+    () => activeWorkspaceId ?? user?.id ?? null,
+    [activeWorkspaceId, user?.id],
+  );
+
   const { leads: dbLeads, loading: leadsLoading } = useLeads(filtersOverride);
 
   const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
@@ -340,15 +346,19 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     fields: ["name", "assignedTo", "price", "project", "tags"],
   }); // reserved for future automations
 
+  useEffect(() => {
+    setActiveFunnelId(null);
+  }, [crmFunnelOwnerId]);
+
   // Load funnels for current owner (developer/workspace)
   const funnelsQuery = useQuery({
-    queryKey: ["crm_funnels", activeWorkspaceId, user?.id],
-    enabled: !!user,
+    queryKey: ["crm_funnels", crmFunnelOwnerId],
+    enabled: !!crmFunnelOwnerId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("crm_funnels")
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", crmFunnelOwnerId!)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
@@ -357,8 +367,13 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   });
 
   const funnelAutomationComplianceQuery = useQuery({
-    queryKey: ["crm_funnel_triggers", "apartment_status_compliance", user?.id],
-    enabled: !!user && !!funnelsQuery.data && funnelsQuery.data.length > 0,
+    queryKey: [
+      "crm_funnel_triggers",
+      "apartment_status_compliance",
+      crmFunnelOwnerId,
+    ],
+    enabled:
+      !!crmFunnelOwnerId && !!funnelsQuery.data && funnelsQuery.data.length > 0,
     queryFn: async () => {
       const funnelIds = (funnelsQuery.data || []).map((f) => f.id);
       if (funnelIds.length === 0)
@@ -400,8 +415,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   });
 
   const allFunnelStagesQuery = useQuery({
-    queryKey: ["crm_funnel_stages", "by_funnel", user?.id],
-    enabled: !!user && !!funnelsQuery.data && funnelsQuery.data.length > 0,
+    queryKey: ["crm_funnel_stages", "by_funnel", crmFunnelOwnerId],
+    enabled:
+      !!crmFunnelOwnerId && !!funnelsQuery.data && funnelsQuery.data.length > 0,
     queryFn: async () => {
       const funnelIds = (funnelsQuery.data || []).map((f) => f.id);
       if (funnelIds.length === 0)
@@ -1429,10 +1445,13 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   };
 
   const handleAddFunnel = async () => {
-    if (!user) return;
+    if (!user || !crmFunnelOwnerId) return;
     const { data, error } = await supabase
       .from("crm_funnels")
-      .insert({ user_id: user.id, name: t("leads.funnel.newFunnelName") })
+      .insert({
+        user_id: crmFunnelOwnerId,
+        name: t("leads.funnel.newFunnelName"),
+      })
       .select("*")
       .single();
     if (error) {

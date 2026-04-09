@@ -25,6 +25,7 @@ type Props = {
     rejectionReason?: string,
   ) => Promise<void>;
   isManagerMode: boolean;
+  readOnly?: boolean;
 };
 
 export const AgencyPartnersTable: React.FC<Props> = ({
@@ -37,6 +38,7 @@ export const AgencyPartnersTable: React.FC<Props> = ({
   approvePartner,
   updatePartnerStatus,
   isManagerMode,
+  readOnly = false,
 }) => {
   const { t } = useLanguage();
 
@@ -80,7 +82,7 @@ export const AgencyPartnersTable: React.FC<Props> = ({
               <th className="px-6 py-4 text-right">
                 {t("partners.table.balance")}
               </th>
-              <th className="w-12 px-6 py-4"></th>
+              {!readOnly && <th className="w-12 px-6 py-4"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
@@ -124,58 +126,63 @@ export const AgencyPartnersTable: React.FC<Props> = ({
                     {t("partners.table.accrued")}
                   </div>
                 </td>
-                <td
-                  className="px-6 py-4 text-center"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600">
-                        <span className="sr-only">Actions</span>
-                        <MoreHorizontal className="size-5" aria-hidden />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      {(p.status === "pending" ||
-                        p.status === "needs_correction") && (
-                        <DropdownMenuItem
-                          onClick={() => approvePartner(p.id)}
-                          className="font-bold text-green-600"
+                {!readOnly && (
+                  <td
+                    className="px-6 py-4 text-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
                         >
-                          {t("partners.actions.approve")}
+                          <span className="sr-only">Actions</span>
+                          <MoreHorizontal className="size-5" aria-hidden />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        {(p.status === "pending" ||
+                          p.status === "needs_correction") && (
+                          <DropdownMenuItem
+                            onClick={() => approvePartner(p.id)}
+                            className="font-bold text-green-600"
+                          >
+                            {t("partners.actions.approve")}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => setPayoutTarget(p)}>
+                          {t("partners.actions.payout")}
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => setPayoutTarget(p)}>
-                        {t("partners.actions.payout")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          updatePartnerStatus(
-                            p.id,
-                            p.status === "blocked" ? "pending" : "blocked",
-                          )
-                        }
-                        className="text-red-600"
-                      >
-                        {p.status === "blocked"
-                          ? t("partners.actions.unblock")
-                          : t("partners.actions.block")}
-                      </DropdownMenuItem>
-                      {!isManagerMode && (
                         <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPartnerToDelete(p);
-                          }}
-                          className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                          onClick={() =>
+                            updatePartnerStatus(
+                              p.id,
+                              p.status === "blocked" ? "pending" : "blocked",
+                            )
+                          }
+                          className="text-red-600"
                         >
-                          <Trash2 className="mr-2 size-4" />
-                          {t("partners.actions.delete")}
+                          {p.status === "blocked"
+                            ? t("partners.actions.unblock")
+                            : t("partners.actions.block")}
                         </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
+                        {!isManagerMode && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPartnerToDelete(p);
+                            }}
+                            className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                          >
+                            <Trash2 className="mr-2 size-4" />
+                            {t("partners.actions.delete")}
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

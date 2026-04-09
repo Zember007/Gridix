@@ -20,6 +20,7 @@ type Props = {
   pendingRequests: number;
   partners: AgencyPartner[];
   partnersLoading: boolean;
+  readOnly?: boolean;
 };
 
 export const AgencyPartnersHeader: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
   pendingRequests,
   partners,
   partnersLoading,
+  readOnly = false,
 }) => {
   const { t } = useLanguage();
 
@@ -66,12 +68,14 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
                 />
               </div>
 
-              <Button
-                onClick={() => setIsInviteModalOpen(true)}
-                className="flex h-10 items-center gap-2 bg-[var(--admin-primary)] px-4 font-bold text-[var(--admin-text-on-primary)] shadow-sm hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
-              >
-                <LinkIcon size={18} /> {t("partners.invite")}
-              </Button>
+              {!readOnly && (
+                <Button
+                  onClick={() => setIsInviteModalOpen(true)}
+                  className="flex h-10 items-center gap-2 bg-[var(--admin-primary)] px-4 font-bold text-[var(--admin-text-on-primary)] shadow-sm hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
+                >
+                  <LinkIcon size={18} /> {t("partners.invite")}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -85,12 +89,14 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setIsInviteModalOpen(true)}
-                className="flex h-10 items-center gap-2 bg-[var(--admin-primary)] px-4 font-bold text-[var(--admin-text-on-primary)] shadow-sm hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
-              >
-                <LinkIcon size={18} /> {t("partners.invite")}
-              </Button>
+              {!readOnly && (
+                <Button
+                  onClick={() => setIsInviteModalOpen(true)}
+                  className="flex h-10 items-center gap-2 bg-[var(--admin-primary)] px-4 font-bold text-[var(--admin-text-on-primary)] shadow-sm hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
+                >
+                  <LinkIcon size={18} /> {t("partners.invite")}
+                </Button>
+              )}
             </div>
           )}
         </div>

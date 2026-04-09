@@ -87,6 +87,8 @@ interface ProjectEditorProps {
   onBack: () => void;
   bootstrapProject?: AdminBootstrapProject | null;
   isRestrictedProject?: boolean;
+  /** Demo cabinet: hide save / destructive actions without subscription notice. */
+  readOnly?: boolean;
 }
 
 type EditorProjectSource = {
@@ -575,6 +577,7 @@ const ProjectEditor = ({
   onBack,
   bootstrapProject = null,
   isRestrictedProject = false,
+  readOnly = false,
 }: ProjectEditorProps) => {
   const [project, setProject] = useState<ProjectEditorProject>(
     DEFAULT_PROJECT_EDITOR_PROJECT,
@@ -1158,35 +1161,37 @@ const ProjectEditor = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving || isRestrictedProject}
-                    size="sm"
-                    className="project_save_usertour"
-                    style={{
-                      backgroundColor: ADMIN_THEME.primary,
-                      color: ADMIN_THEME.textOnPrimary,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor =
-                          ADMIN_THEME.primaryHover;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor =
-                          ADMIN_THEME.primary;
-                      }
-                    }}
-                  >
-                    <Save className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">
-                      {saving
-                        ? t("projectEditor.saving")
-                        : t("projectEditor.save")}
-                    </span>
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      onClick={handleSave}
+                      disabled={saving || isRestrictedProject}
+                      size="sm"
+                      className="project_save_usertour"
+                      style={{
+                        backgroundColor: ADMIN_THEME.primary,
+                        color: ADMIN_THEME.textOnPrimary,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor =
+                            ADMIN_THEME.primaryHover;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor =
+                            ADMIN_THEME.primary;
+                        }
+                      }}
+                    >
+                      <Save className="h-4 w-4" />
+                      <span className="ml-2 hidden sm:inline">
+                        {saving
+                          ? t("projectEditor.saving")
+                          : t("projectEditor.save")}
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1748,7 +1753,7 @@ const ProjectEditor = ({
                             )}
                           </div>
 
-                          {isNew && (
+                          {isNew && !readOnly && (
                             <Button
                               onClick={handleSave}
                               disabled={saving}

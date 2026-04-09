@@ -118,6 +118,7 @@ const KanbanCard: React.FC<{
   onSelect: (l: ExtendedLead) => void;
   onStatusChange: (id: string, s: string) => void;
   onDragStart: (e: React.DragEvent, leadId: string) => void;
+  readOnly?: boolean;
 }> = ({
   lead,
   funnelStages,
@@ -126,6 +127,7 @@ const KanbanCard: React.FC<{
   onSelect,
   onStatusChange,
   onDragStart,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -146,6 +148,7 @@ const KanbanCard: React.FC<{
   }, [isStatusOpen]);
 
   const handleDragStartLocal = (e: React.DragEvent) => {
+    if (readOnly) return;
     setIsDragging(true);
     onDragStart(e, lead.id);
     setTimeout(() => setIsDragging(false), 0);
@@ -164,7 +167,7 @@ const KanbanCard: React.FC<{
 
   return (
     <div
-      draggable={true}
+      draggable={!readOnly}
       onDragStart={handleDragStartLocal}
       onDragEnd={() => setIsDragging(false)}
       onClick={() => onSelect(lead)}
@@ -213,40 +216,44 @@ const KanbanCard: React.FC<{
           </div>
         </div>
 
-        <div
-          className="relative"
-          ref={dropdownRef}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => setIsStatusOpen(!isStatusOpen)}
-            className="rounded p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover:opacity-100"
+        {!readOnly && (
+          <div
+            className="relative"
+            ref={dropdownRef}
+            onClick={(e) => e.stopPropagation()}
           >
-            <MoreHorizontal size={16} />
-          </button>
-          {isStatusOpen && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-xl border border-slate-100 bg-white py-1 shadow-xl duration-100 animate-in fade-in zoom-in-95">
-              <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {t("leads.kanban.changeStage")}
+            <button
+              type="button"
+              onClick={() => setIsStatusOpen(!isStatusOpen)}
+              className="rounded p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover:opacity-100"
+            >
+              <MoreHorizontal size={16} />
+            </button>
+            {isStatusOpen && (
+              <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-xl border border-slate-100 bg-white py-1 shadow-xl duration-100 animate-in fade-in zoom-in-95">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {t("leads.kanban.changeStage")}
+                </div>
+                {funnelStages.map((stage) => (
+                  <button
+                    type="button"
+                    key={stage.id}
+                    onClick={() => {
+                      onStatusChange(lead.id, stage.id);
+                      setIsStatusOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
+                  >
+                    <div
+                      className={`h-2 w-2 rounded-full bg-${stage.color}-500`}
+                    ></div>
+                    {stage.name}
+                  </button>
+                ))}
               </div>
-              {funnelStages.map((stage) => (
-                <button
-                  key={stage.id}
-                  onClick={() => {
-                    onStatusChange(lead.id, stage.id);
-                    setIsStatusOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
-                >
-                  <div
-                    className={`h-2 w-2 rounded-full bg-${stage.color}-500`}
-                  ></div>
-                  {stage.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Hero: Budget */}
@@ -348,6 +355,7 @@ export const LeadsKanban: React.FC<{
   onSelect: (lead: ExtendedLead) => void;
   onCreate: (l: Partial<ExtendedLead>) => void;
   onStatusChange: (id: string, s: string) => void;
+  readOnly?: boolean;
 }> = ({
   leads,
   funnelStages,
@@ -356,6 +364,7 @@ export const LeadsKanban: React.FC<{
   onSelect,
   onCreate,
   onStatusChange,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const [quickName, setQuickName] = useState("");
@@ -364,6 +373,7 @@ export const LeadsKanban: React.FC<{
 
   const handleDrop = (e: React.DragEvent, statusId: string) => {
     e.preventDefault();
+    if (readOnly) return;
     const leadId = e.dataTransfer.getData("leadId");
     if (leadId) onStatusChange(leadId, statusId);
     setDragOverColumn(null);
@@ -390,6 +400,7 @@ export const LeadsKanban: React.FC<{
             key={stage.id}
             className={`flex w-full flex-col rounded-xl border-2 transition-all duration-200 md:w-[320px] md:min-w-[300px] ${isDropTarget ? "scale-[1.01] border-dashed border-blue-300 bg-blue-50/50" : "border-transparent bg-slate-100/50"}`}
             onDragOver={(e) => {
+              if (readOnly) return;
               e.preventDefault();
               setDragOverColumn(stage.id);
             }}
@@ -425,7 +436,7 @@ export const LeadsKanban: React.FC<{
               </div>
             </div>
 
-            {stage.id === firstStageId && (
+            {stage.id === firstStageId && !readOnly && (
               <div className="mb-3 px-2">
                 <input
                   type="text"
@@ -456,6 +467,7 @@ export const LeadsKanban: React.FC<{
                   onDragStart={(e, id) => {
                     e.dataTransfer.setData("leadId", id);
                   }}
+                  readOnly={readOnly}
                 />
               ))}
 

@@ -36,6 +36,8 @@ export interface PartnerProgramProps {
   instructionsBaseUrl?: string;
   /** Optional slot passed into PartnerInstructionsSection demo card (e.g. a "Join demo" button). */
   joinDemoSlot?: React.ReactNode;
+  /** Demo cabinet: disable partner registration and balance/client mutations. */
+  readOnly?: boolean;
 }
 
 export const PartnerProgram: React.FC<PartnerProgramProps> = ({
@@ -45,6 +47,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
   autoCreateProfile = false,
   instructionsBaseUrl,
   joinDemoSlot,
+  readOnly = false,
 }) => {
   const { isPartner, loading, createPartnerProfile } = usePartner();
   const { toast } = useToast();
@@ -93,6 +96,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
   useEffect(() => {
     if (
       autoCreateProfile &&
+      !readOnly &&
       !loading &&
       !isPartner &&
       !isCreating &&
@@ -101,7 +105,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
       autoCreatedRef.current = true;
       void handleCreatePartner();
     }
-  }, [autoCreateProfile, loading, isPartner, isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoCreateProfile, readOnly, loading, isPartner, isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -190,7 +194,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
                 <div className="pt-4">
                   <Button
                     onClick={handleCreatePartner}
-                    disabled={isCreating}
+                    disabled={isCreating || readOnly}
                     className="partners_become_usertour w-full"
                   >
                     {isCreating
@@ -339,14 +343,16 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
       <div className={navigationMode === "tabs" ? "mt-4" : ""}>
         {activeTab === "account" && (
           <div className="space-y-6">
-            <PartnerAccountSection />
+            <PartnerAccountSection readOnly={readOnly} />
           </div>
         )}
         {activeTab === "overview" && (
           <PartnerOverviewSection onNavigate={(tab) => setActiveTab(tab)} />
         )}
         {activeTab === "referrals" && <PartnerReferralsSection />}
-        {activeTab === "clients" && <PartnerClientsSection />}
+        {activeTab === "clients" && (
+          <PartnerClientsSection readOnly={readOnly} />
+        )}
         {activeTab === "instructions" && (
           <PartnerInstructionsSection
             instructionsBaseUrl={instructionsBaseUrl || ""}

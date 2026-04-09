@@ -23,6 +23,8 @@ export function LeadsManager({
 }: LeadsManagerProps) {
   const { t } = useTranslation();
   const adminAccess = useAdminAccess();
+  const isDemoViewer = adminAccess?.isDemoViewer ?? false;
+  const readOnly = isDemoViewer;
   const canUseMassActions = projectId
     ? (adminAccess?.canUseMassActions(projectId) ?? false)
     : (adminAccess?.canUseMassActions() ?? false);
@@ -168,23 +170,25 @@ export function LeadsManager({
 
   return (
     <div className="flex h-screen flex-col bg-[var(--admin-background)] duration-500 animate-in fade-in">
-      <LeadsManagerModals
-        isCreateModalOpen={isCreateModalOpen}
-        setIsCreateModalOpen={setIsCreateModalOpen}
-        handleCreateLead={handleCreateLead}
-        filteredAndSortedLeads={filteredAndSortedLeads}
-        isCardAppearanceModalOpen={isCardAppearanceModalOpen}
-        setIsCardAppearanceModalOpen={setIsCardAppearanceModalOpen}
-        cardConfig={cardConfig}
-        handleSaveCardConfig={handleSaveCardConfig}
-        users={MOCK_USERS}
-        isImportModalOpen={isImportModalOpen}
-        setIsImportModalOpen={setIsImportModalOpen}
-        handleImportLeads={handleImportLeads}
-        isDuplicateFinderOpen={isDuplicateFinderOpen}
-        setIsDuplicateFinderOpen={setIsDuplicateFinderOpen}
-        handleMergeLeads={handleMergeLeads}
-      />
+      {!readOnly && (
+        <LeadsManagerModals
+          isCreateModalOpen={isCreateModalOpen}
+          setIsCreateModalOpen={setIsCreateModalOpen}
+          handleCreateLead={handleCreateLead}
+          filteredAndSortedLeads={filteredAndSortedLeads}
+          isCardAppearanceModalOpen={isCardAppearanceModalOpen}
+          setIsCardAppearanceModalOpen={setIsCardAppearanceModalOpen}
+          cardConfig={cardConfig}
+          handleSaveCardConfig={handleSaveCardConfig}
+          users={MOCK_USERS}
+          isImportModalOpen={isImportModalOpen}
+          setIsImportModalOpen={setIsImportModalOpen}
+          handleImportLeads={handleImportLeads}
+          isDuplicateFinderOpen={isDuplicateFinderOpen}
+          setIsDuplicateFinderOpen={setIsDuplicateFinderOpen}
+          handleMergeLeads={handleMergeLeads}
+        />
+      )}
 
       <LeadsManagerHeader
         t={t}
@@ -238,9 +242,10 @@ export function LeadsManager({
         setIsCreateModalOpen={setIsCreateModalOpen}
         setFilters={setFilters}
         resetFilters={resetFilters}
+        readOnly={readOnly}
       />
 
-      {!isFunnelSetupMode && canUseMassActions && (
+      {!readOnly && !isFunnelSetupMode && canUseMassActions && (
         <LeadsSelectionToolbar
           t={t}
           selectedCount={selectedIds.size}
@@ -285,6 +290,7 @@ export function LeadsManager({
         cardConfig={cardConfig}
         handleCreateLead={handleCreateLead}
         handleStatusChange={handleStatusChange}
+        readOnly={readOnly}
       />
 
       <LeadsManagerDrawer
@@ -300,17 +306,20 @@ export function LeadsManager({
         handleAddNote={handleAddNote}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
+        readOnly={readOnly}
       />
 
-      <Button
-        variant="default"
-        size="icon"
-        onClick={() => setIsCreateModalOpen(true)}
-        className="group fixed bottom-16 right-2 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] shadow-lg transition-transform hover:scale-105 hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] lg:hidden"
-        aria-label={t("leads.createModal.title")}
-      >
-        <Plus size={18} />
-      </Button>
+      {!readOnly && (
+        <Button
+          variant="default"
+          size="icon"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="group fixed bottom-16 right-2 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] shadow-lg transition-transform hover:scale-105 hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] lg:hidden"
+          aria-label={t("leads.createModal.title")}
+        >
+          <Plus size={18} />
+        </Button>
+      )}
     </div>
   );
 }

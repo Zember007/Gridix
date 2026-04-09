@@ -21,7 +21,13 @@ import {
   SelectValue,
 } from "@gridix/ui";
 
-export const PartnerAccountSection: React.FC = () => {
+type PartnerAccountSectionProps = {
+  readOnly?: boolean;
+};
+
+export const PartnerAccountSection: React.FC<PartnerAccountSectionProps> = ({
+  readOnly = false,
+}) => {
   const { t, language } = useLanguage();
   const {
     loading,
@@ -127,12 +133,15 @@ export const PartnerAccountSection: React.FC = () => {
             </div>
           </div>
           <div className="mt-2 flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4 lg:mt-0 lg:w-auto">
-            <button
-              onClick={() => setIsWithdrawalOpen(true)}
-              className="flex-1 rounded-lg border border-gray-200 px-6 py-3 text-center text-sm font-bold tracking-wider text-gray-500 uppercase transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-800 sm:border-transparent lg:flex-none"
-            >
-              {t("partners.withdrawMoney")}
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => setIsWithdrawalOpen(true)}
+                className="flex-1 rounded-lg border border-gray-200 px-6 py-3 text-center text-sm font-bold tracking-wider text-gray-500 uppercase transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-800 sm:border-transparent lg:flex-none"
+              >
+                {t("partners.withdrawMoney")}
+              </button>
+            )}
             {/*     <button
               onClick={() => setIsTopUpOpen(true)}
               className="flex-1 lg:flex-none py-3 px-8 rounded-lg bg-[#4CAF50] hover:bg-[#43A047] text-white text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all uppercase tracking-wider flex justify-center items-center gap-2 text-center"

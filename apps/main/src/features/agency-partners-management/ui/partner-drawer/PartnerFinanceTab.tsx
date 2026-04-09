@@ -6,9 +6,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 type Props = {
   partner: AgencyPartner;
   onPayout: (partner: AgencyPartner) => void;
+  readOnly?: boolean;
 };
 
-export const PartnerFinanceTab: React.FC<Props> = ({ partner, onPayout }) => {
+export const PartnerFinanceTab: React.FC<Props> = ({
+  partner,
+  onPayout,
+  readOnly = false,
+}) => {
   const { t } = useLanguage();
 
   return (
@@ -22,12 +27,15 @@ export const PartnerFinanceTab: React.FC<Props> = ({ partner, onPayout }) => {
             {t("partners.drawer.commissionResetHint")}
           </div>
         </div>
-        <Button
-          onClick={() => onPayout(partner)}
-          className="h-10 bg-amber-600 font-bold text-white shadow-sm transition-colors hover:bg-amber-700"
-        >
-          {t("partners.drawer.markAsPaid")}
-        </Button>
+        {!readOnly && (
+          <Button
+            type="button"
+            onClick={() => onPayout(partner)}
+            className="h-10 bg-amber-600 font-bold text-white shadow-sm transition-colors hover:bg-amber-700"
+          >
+            {t("partners.drawer.markAsPaid")}
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

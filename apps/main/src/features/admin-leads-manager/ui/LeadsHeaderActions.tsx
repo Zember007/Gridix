@@ -23,6 +23,7 @@ type LeadsHeaderActionsProps = {
   setIsCardAppearanceModalOpen: (value: boolean) => void;
   setIsDuplicateFinderOpen: (value: boolean) => void;
   setIsCreateModalOpen: (value: boolean) => void;
+  readOnly?: boolean;
 };
 
 export const LeadsHeaderActions = ({
@@ -39,6 +40,7 @@ export const LeadsHeaderActions = ({
   setIsCardAppearanceModalOpen,
   setIsDuplicateFinderOpen,
   setIsCreateModalOpen,
+  readOnly = false,
 }: LeadsHeaderActionsProps) => {
   return (
     <div className="flex shrink-0 items-center gap-3">
@@ -94,46 +96,53 @@ export const LeadsHeaderActions = ({
             >
               <FileDown size={16} /> {t("leads.settings.export")}
             </button>
-            <div className="my-1 h-px bg-slate-100"></div>
-            <button
-              onClick={() => {
-                setIsFunnelSetupMode(true);
-                setIsSettingsOpen(false);
-              }}
-              className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <SlidersHorizontal size={16} /> {t("leads.settings.funnelSetup")}
-            </button>
-            <button
-              onClick={() => {
-                setIsCardAppearanceModalOpen(true);
-                setIsSettingsOpen(false);
-              }}
-              className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <Wrench size={16} /> {t("leads.settings.cardAppearance")}
-            </button>
-            <div className="my-1 h-px bg-slate-100"></div>
-            <button
-              onClick={() => {
-                setIsDuplicateFinderOpen(true);
-                setIsSettingsOpen(false);
-              }}
-              className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <Shuffle size={16} /> {t("leads.settings.findDuplicates")}
-            </button>
+            {!readOnly && (
+              <>
+                <div className="my-1 h-px bg-slate-100"></div>
+                <button
+                  onClick={() => {
+                    setIsFunnelSetupMode(true);
+                    setIsSettingsOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <SlidersHorizontal size={16} />{" "}
+                  {t("leads.settings.funnelSetup")}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsCardAppearanceModalOpen(true);
+                    setIsSettingsOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <Wrench size={16} /> {t("leads.settings.cardAppearance")}
+                </button>
+                <div className="my-1 h-px bg-slate-100"></div>
+                <button
+                  onClick={() => {
+                    setIsDuplicateFinderOpen(true);
+                    setIsSettingsOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <Shuffle size={16} /> {t("leads.settings.findDuplicates")}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
 
-      <button
-        onClick={() => setIsCreateModalOpen(true)}
-        className="flex items-center gap-2 rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-all hover:bg-[var(--admin-primary-hover)] active:scale-95 active:bg-[var(--admin-primary-active)]"
-      >
-        <Plus size={18} />
-        {t("leads.createModal.title")}
-      </button>
+      {!readOnly && (
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2 rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-all hover:bg-[var(--admin-primary-hover)] active:scale-95 active:bg-[var(--admin-primary-active)]"
+        >
+          <Plus size={18} />
+          {t("leads.createModal.title")}
+        </button>
+      )}
     </div>
   );
 };

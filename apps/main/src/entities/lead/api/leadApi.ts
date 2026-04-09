@@ -36,7 +36,7 @@ export const fetchLeads = async (
       projects!inner (
         name
       ),
-      apartments!inner (
+      apartments (
         apartment_number,
         area,
         price

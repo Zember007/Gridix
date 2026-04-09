@@ -19,6 +19,7 @@ type LeadsFunnelMenuProps = {
   handleSelectFunnel: (id: string) => void;
   unreadCountByFunnelId: Record<string, number>;
   handleStartEditFunnel: (funnel: Funnel) => void;
+  readOnly?: boolean;
 };
 
 export const LeadsFunnelMenu = ({
@@ -37,6 +38,7 @@ export const LeadsFunnelMenu = ({
   handleSelectFunnel,
   unreadCountByFunnelId,
   handleStartEditFunnel,
+  readOnly = false,
 }: LeadsFunnelMenuProps) => {
   return (
     <div className="relative shrink-0" ref={funnelMenuRef}>
@@ -124,14 +126,17 @@ export const LeadsFunnelMenu = ({
                         />
                       )}
                     </div>
-                    <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        onClick={() => handleStartEditFunnel(funnel)}
-                        className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
-                      >
-                        <Edit size={14} />
-                      </button>
-                    </div>
+                    {!readOnly && (
+                      <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditFunnel(funnel)}
+                          className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+                        >
+                          <Edit size={14} />
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

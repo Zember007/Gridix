@@ -151,6 +151,7 @@
   "projects": "Projects",
   "settings": "Settings",
   "subscription": "Subscription",
+  "billing": "Billing",
   "integrations": "Integrations",
   "integrationsDescription": "Connect external services to your workspace.",
   "projectsConfig": "Projects configuration",

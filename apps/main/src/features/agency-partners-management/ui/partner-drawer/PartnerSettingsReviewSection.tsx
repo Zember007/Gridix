@@ -9,6 +9,7 @@ type Props = {
   onUpdate: (id: string, data: Partial<AgencyPartner>) => void;
   rejectionReasonDraft: string;
   setRejectionReasonDraft: React.Dispatch<React.SetStateAction<string>>;
+  readOnly?: boolean;
 };
 
 export const PartnerSettingsReviewSection: React.FC<Props> = ({
@@ -16,6 +17,7 @@ export const PartnerSettingsReviewSection: React.FC<Props> = ({
   onUpdate,
   rejectionReasonDraft,
   setRejectionReasonDraft,
+  readOnly = false,
 }) => {
   const { t } = useLanguage();
 
@@ -24,26 +26,30 @@ export const PartnerSettingsReviewSection: React.FC<Props> = ({
       <h4 className="mb-3 text-sm font-bold text-slate-900">
         {t("partners.drawer.applicationReview")}
       </h4>
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          onClick={() => onUpdate(partner.id, { status: "active" })}
-          className="bg-green-600 font-bold text-white hover:bg-green-700"
-        >
-          <CheckCircle2 size={16} /> {t("partners.drawer.activate")}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() =>
-            onUpdate(partner.id, {
-              status: "pending",
-              rejectionReason: undefined,
-            })
-          }
-          className="font-bold"
-        >
-          <Clock size={16} /> {t("partners.drawer.returnToPending")}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            onClick={() => onUpdate(partner.id, { status: "active" })}
+            className="bg-green-600 font-bold text-white hover:bg-green-700"
+          >
+            <CheckCircle2 size={16} /> {t("partners.drawer.activate")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              onUpdate(partner.id, {
+                status: "pending",
+                rejectionReason: undefined,
+              })
+            }
+            className="font-bold"
+          >
+            <Clock size={16} /> {t("partners.drawer.returnToPending")}
+          </Button>
+        </div>
+      )}
 
       <div className="mt-4">
         <label className="mb-2 block text-sm font-bold text-slate-700">
@@ -53,23 +59,28 @@ export const PartnerSettingsReviewSection: React.FC<Props> = ({
           value={rejectionReasonDraft}
           onChange={(e) => setRejectionReasonDraft(e.target.value)}
           rows={3}
-          className="focus:ring-[var(--admin-primary)]/20 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:ring-2"
+          readOnly={readOnly}
+          className="focus:ring-[var(--admin-primary)]/20 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none read-only:cursor-default read-only:bg-slate-100 focus:ring-2"
           placeholder={t("partners.drawer.correctionReasonPlaceholder")}
         />
-        <div className="mt-2 flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() =>
-              onUpdate(partner.id, {
-                status: "needs_correction",
-                rejectionReason: rejectionReasonDraft,
-              })
-            }
-            className="font-bold"
-          >
-            <AlertTriangle size={16} /> {t("partners.drawer.sendForCorrection")}
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="mt-2 flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                onUpdate(partner.id, {
+                  status: "needs_correction",
+                  rejectionReason: rejectionReasonDraft,
+                })
+              }
+              className="font-bold"
+            >
+              <AlertTriangle size={16} />{" "}
+              {t("partners.drawer.sendForCorrection")}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

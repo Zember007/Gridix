@@ -22,7 +22,7 @@ import {
   Stack as Layers3,
   UserCheck,
   UserCircle as UserIcon,
-  Crown,
+  CreditCard,
 } from "@phosphor-icons/react";
 import { SimplifiedSidebar } from "@gridix/ui";
 import { UnreadBadge } from "@/shared/ui/UnreadBadge";
@@ -39,7 +39,6 @@ const DEMO_HIDDEN_TABS = new Set([
   "subscription",
   "widgets",
   "integrations",
-  "partners",
   "settings",
 ]);
 
@@ -80,24 +79,16 @@ const getAdminNavItems = (
                 icon: <UserIcon size={18} />,
                 label: t("admin.contacts"),
               },
-              ...(!isDemoViewer
-                ? [
-                    {
-                      id: "agent_network",
-                      icon: <Handshake size={18} />,
-                      label: t("admin.agent_network"),
-                    },
-                  ]
-                : []),
+              {
+                id: "agent_network",
+                icon: <Handshake size={18} />,
+                label: t("admin.agent_network"),
+              },
             ],
           },
         ]
       : []),
-    {
-      id: "subscription",
-      icon: <Crown size={20} />,
-      label: t("admin.subscription"),
-    },
+
     { id: "widgets", icon: <Code size={20} />, label: t("admin.widgets") },
     {
       id: "integrations",
@@ -118,6 +109,11 @@ const getAdminNavItems = (
       id: "partners",
       icon: <Handshake size={20} />,
       label: t("admin.partners"),
+    },
+    {
+      id: "subscription",
+      icon: <CreditCard size={20} />,
+      label: t("admin.billing"),
     },
   ];
 
