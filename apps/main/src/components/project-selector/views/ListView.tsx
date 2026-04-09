@@ -101,7 +101,6 @@ export const ListView = ({
   const isObjectProject = projectType === "object";
   const listScrollAreaRef = useRef<HTMLDivElement | null>(null);
   const [listMaxHeight, setListMaxHeight] = useState<number | null>(null);
-  const [isPageScrolledToBottom, setIsPageScrolledToBottom] = useState(false);
 
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -237,27 +236,6 @@ export const ListView = ({
     };
   }, []);
 
-  useEffect(() => {
-    const updatePageScrollState = () => {
-      if (typeof window === "undefined") return;
-
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const fullHeight = document.documentElement.scrollHeight;
-
-      setIsPageScrolledToBottom(scrollTop + windowHeight >= fullHeight - 1);
-    };
-
-    updatePageScrollState();
-    window.addEventListener("scroll", updatePageScrollState, { passive: true });
-    window.addEventListener("resize", updatePageScrollState);
-
-    return () => {
-      window.removeEventListener("scroll", updatePageScrollState);
-      window.removeEventListener("resize", updatePageScrollState);
-    };
-  }, []);
-
   return (
     <div className="container mx-auto flex grow py-3 md:px-6">
       <div
@@ -302,8 +280,7 @@ export const ListView = ({
           data-list-scroll-scope="true"
           className={cn(
             "no-scrollbar relative pr-1",
-            listMaxHeight && isPageScrolledToBottom && "overflow-y-auto",
-            listMaxHeight && !isPageScrolledToBottom && "overflow-y-clip",
+            listMaxHeight && "overflow-y-auto",
           )}
           style={
             listMaxHeight ? { maxHeight: `${listMaxHeight}px` } : undefined

@@ -4,7 +4,10 @@ import { useLanguage } from "@gridix/utils/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@gridix/ui";
 import PolygonPlanImageView from "@/features/visualization/buildingFacade/ui/PolygonPlanImageView";
 import { parsePolygonOverlaySettings } from "@/features/visualization/buildingFacade/lib/parsePolygonOverlaySettings";
-import type { MasterplanPolygonItem } from "@/features/visualization/buildingFacade/model/types";
+import type {
+  MasterplanMobileSummary,
+  MasterplanPolygonItem,
+} from "@/features/visualization/buildingFacade/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
 import type { Apartment } from "@/entities/apartment/model/types";
 import { Spinner } from "@/shared/ui/Spinner";
@@ -319,6 +322,49 @@ export function MasterplanSection({
     return m;
   }, [displayAreas, subProjectsById, infrastructureZones]);
 
+  const masterplanMobileSummaries = useMemo(() => {
+    const m: Record<string, MasterplanMobileSummary> = {};
+    for (const a of displayAreas) {
+      if (a.linked_entity_type === "sub_project" && a.linked_entity_id) {
+        const sp = subProjectsById[a.linked_entity_id];
+        const title =
+          (a.short_label ?? a.label ?? sp?.name ?? "").trim() ||
+          sp?.name ||
+          "—";
+        let subtitle: string | undefined;
+        if (a.building_summary) {
+          const parts: string[] = [
+            `${a.building_summary.available_count} ${t("project.available")}`,
+          ];
+          if (a.building_summary.price_from != null) {
+            parts.push(
+              `${t("project.priceFrom")}: ${new Intl.NumberFormat(
+                "en-US",
+              ).format(
+                a.building_summary.price_from,
+              )}${a.building_summary.currency ? ` ${a.building_summary.currency}` : ""}`,
+            );
+          }
+          subtitle = parts.join(" · ");
+        }
+        m[a.id] = { kind: "sub_project", title, subtitle };
+        continue;
+      }
+      if (a.linked_entity_type === "infrastructure_zone") {
+        const zone = resolveInfrastructureZone(a, infrastructureZones);
+        const title =
+          (a.short_label ?? a.label ?? zone?.name ?? "").trim() ||
+          (zone?.name ?? "").trim() ||
+          "—";
+        const desc = zone ? zoneDescriptionText(zone) : "";
+        const subtitle =
+          desc.length > 160 ? `${desc.slice(0, 157)}…` : desc || undefined;
+        m[a.id] = { kind: "infrastructure_zone", title, subtitle };
+      }
+    }
+    return m;
+  }, [displayAreas, subProjectsById, infrastructureZones, t]);
+
   const planProject = useMemo(
     () => ({
       id: project.id,
@@ -410,6 +456,7 @@ export function MasterplanSection({
           onMasterplanAreaClick={onMasterplanAreaClick}
           masterplanRenderTooltip={masterplanRenderTooltip}
           masterplanPolygonLabels={masterplanPolygonLabels}
+          masterplanMobileSummaries={masterplanMobileSummaries}
         />
       </div>
     </div>

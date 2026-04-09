@@ -78,5 +78,7 @@
   "addressNotSet": "Adres belirtilmedi",
   "mapNoCoordinates": "Bu görünüm için haritada konum ayarlanmamış",
   "noMasterplan": "Genel plan mevcut değil",
-  "noObjects": "Nesne bulunamadı"
+  "noObjects": "Nesne bulunamadı",
+  "genplanOpenBuilding": "Bloğa git",
+  "genplanInfrastructureLabel": "Alan"
 }

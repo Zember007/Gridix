@@ -10,7 +10,7 @@ import {
   type TouchEvent,
   type ImgHTMLAttributes,
 } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -28,6 +28,7 @@ import { Spinner } from "@/shared/ui/Spinner";
 import type {
   PolygonPlanImageViewProps,
   BuildingFloor,
+  MasterplanMobileSummary,
 } from "@/features/visualization/buildingFacade/model/types";
 import {
   computeMobileDockPosition as computeMobileDockPositionUtil,
@@ -161,6 +162,178 @@ const MobileFloorInfoBar = ({
   );
 };
 
+function resolveMasterplanMobileSummary(
+  areaId: string,
+  summaries: PolygonPlanImageViewProps["masterplanMobileSummaries"],
+  labels: PolygonPlanImageViewProps["masterplanPolygonLabels"],
+): MasterplanMobileSummary | null {
+  const full = summaries?.[areaId];
+  if (full) return full;
+  const lb = labels?.[areaId]?.trim();
+  if (lb) return { kind: "sub_project", title: lb };
+  return null;
+}
+
+const MobileMasterplanSelectedCard = ({
+  areaId,
+  summary,
+  themeColor,
+  onOpen,
+}: {
+  areaId: string;
+  summary: MasterplanMobileSummary | null;
+  themeColor: string;
+  onOpen?: (areaId: string) => void;
+}) => {
+  const { t } = useLanguage();
+  if (!summary) return null;
+
+  const isBuilding = summary.kind === "sub_project";
+
+  return (
+    <div
+      className={`w-full overflow-hidden rounded-2xl border px-4 py-3.5 shadow-sm ${
+        isBuilding
+          ? "border-gray-100/90 bg-white"
+          : "border-slate-200/90 bg-gradient-to-br from-slate-50 to-white"
+      }`}
+      style={{
+        borderLeftWidth: 4,
+        borderLeftColor: isBuilding ? themeColor || "#514A47" : "#94a3b8",
+      }}
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+            isBuilding ? "text-white" : "bg-slate-200/90 text-slate-800"
+          }`}
+          style={
+            isBuilding
+              ? { backgroundColor: themeColor || "#514A47" }
+              : undefined
+          }
+        >
+          {isBuilding ? (
+            <Building2 className="h-3 w-3 shrink-0" aria-hidden />
+          ) : (
+            <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+          )}
+          {isBuilding
+            ? t("project.building")
+            : t("project.genplanInfrastructureLabel")}
+        </span>
+      </div>
+      <h3 className="text-base font-semibold leading-snug text-gray-900">
+        {summary.title}
+      </h3>
+      {summary.subtitle ? (
+        <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-slate-600">
+          {summary.subtitle}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-transform active:scale-[0.99] ${
+          isBuilding
+            ? "text-white"
+            : "border border-slate-200 bg-white text-slate-800 shadow-sm"
+        }`}
+        style={
+          isBuilding ? { backgroundColor: themeColor || "#514A47" } : undefined
+        }
+        onClick={() => onOpen?.(areaId)}
+      >
+        {isBuilding
+          ? t("project.genplanOpenBuilding")
+          : t("project.viewDetails")}
+        <ChevronRight className="h-4 w-4 opacity-90" aria-hidden />
+      </button>
+    </div>
+  );
+};
+
+const MobileMasterplanAreaList = ({
+  floors,
+  selectedFloor,
+  summaries,
+  labels,
+  themeColor,
+  onPickFloor,
+}: {
+  floors: BuildingFloor[];
+  selectedFloor: number | null;
+  summaries?: PolygonPlanImageViewProps["masterplanMobileSummaries"];
+  labels?: PolygonPlanImageViewProps["masterplanPolygonLabels"];
+  themeColor: string;
+  onPickFloor: (floorNumber: number) => void;
+}) => {
+  return (
+    <div className="flex max-h-[min(42vh,340px)] w-full flex-col gap-2 overflow-y-auto px-1 pb-1 pt-1">
+      {floors.map((floor) => {
+        const summary = resolveMasterplanMobileSummary(
+          floor.id,
+          summaries,
+          labels,
+        );
+        const title = summary?.title ?? "—";
+        const kind = summary?.kind ?? "sub_project";
+        const isBuilding = kind === "sub_project";
+        const active = selectedFloor === floor.floor_number;
+        const accent = themeColor || "#514A47";
+
+        return (
+          <button
+            key={floor.id}
+            type="button"
+            onClick={() => onPickFloor(floor.floor_number)}
+            className={`flex w-full min-w-0 flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.99] ${
+              active
+                ? isBuilding
+                  ? "border-gray-200 bg-white shadow-md"
+                  : "border-slate-300 bg-slate-100/90 shadow-sm"
+                : isBuilding
+                  ? "border-transparent bg-white shadow-sm ring-1 ring-black/[0.06]"
+                  : "border-slate-200/90 bg-slate-50/95"
+            }`}
+            style={{
+              borderLeftWidth: 4,
+              borderLeftColor: active
+                ? isBuilding
+                  ? accent
+                  : "#64748b"
+                : isBuilding
+                  ? `${accent}55`
+                  : "#e2e8f0",
+            }}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              {isBuilding ? (
+                <Building2
+                  className="h-4 w-4 shrink-0 text-gray-700 opacity-80"
+                  aria-hidden
+                />
+              ) : (
+                <MapPin
+                  className="h-4 w-4 shrink-0 text-slate-600"
+                  aria-hidden
+                />
+              )}
+              <span className="min-w-0 truncate text-sm font-semibold text-gray-900">
+                {title}
+              </span>
+            </div>
+            {summary?.subtitle ? (
+              <p className="line-clamp-2 pl-6 text-left text-[11px] leading-snug text-slate-500">
+                {summary.subtitle}
+              </p>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 const PolygonPlanImageView = ({
   project,
   entityKind,
@@ -186,6 +359,7 @@ const PolygonPlanImageView = ({
   onMasterplanAreaClick,
   masterplanRenderTooltip,
   masterplanPolygonLabels,
+  masterplanMobileSummaries,
 }: PolygonPlanImageViewProps) => {
   const isObjectLayout = entityKind === "object";
   const isMobile = useIsMobile();
@@ -379,11 +553,19 @@ const PolygonPlanImageView = ({
         if (planKind === "masterplan") {
           setMasterplanTooltipAreaId(floor.id);
         }
+        // Генплан на мобиле: подсказка в нижней строке, без плавающего попапа
+        if (planKind === "masterplan" && isMobile) {
+          setShowPopup(false);
+          setPopupAnchor(null);
+          setPopupPosition(null);
+          return;
+        }
+
         const polygonBounds = getPolygonBoundsPct(floor.polygon);
         setPopupAnchor({ floorNumber, polygonBounds });
         setShowPopup(true);
 
-        // Mobile: фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
+        // Mobile (фасад): фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
         if (isMobile) {
           const sizeForInitial =
             popupSize.width > 0 && popupSize.height > 0
@@ -414,6 +596,8 @@ const PolygonPlanImageView = ({
         setPopupAnchor(null);
         setPopupPosition(null);
         if (planKind === "masterplan") {
+          setMasterplanTooltipAreaId(floor.id);
+        } else {
           setMasterplanTooltipAreaId(null);
         }
       }
@@ -794,7 +978,9 @@ const PolygonPlanImageView = ({
 
   const handleFloorLeave = () => {
     setHoveredFloor(null);
-    setMasterplanTooltipAreaId(null);
+    if (!(isMobile && planKind === "masterplan")) {
+      setMasterplanTooltipAreaId(null);
+    }
     if (!isMobile) {
       setShowPopup(false);
       setPopupAnchor(null);
@@ -1024,6 +1210,15 @@ const PolygonPlanImageView = ({
     };
   }, [carouselApi, floorsWithPolygon]);
 
+  // Мобильный генплан: держим areaId в синхроне с выбранным полигоном (карусель на фасаде / список на генплане)
+  useEffect(() => {
+    if (planKind !== "masterplan" || selectedFloor == null) return;
+    const f = floorsWithPolygon.find((x) => x.floor_number === selectedFloor);
+    if (f) {
+      setMasterplanTooltipAreaId((prev) => (prev === f.id ? prev : f.id));
+    }
+  }, [planKind, selectedFloor, floorsWithPolygon]);
+
   useEffect(() => {
     if (!carouselApi) return;
 
@@ -1064,7 +1259,11 @@ const PolygonPlanImageView = ({
         className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isMobile ? "touch-manipulation" : ""}`}
         style={{
           minHeight: isMobile ? "auto" : 600,
-          height: isMobile ? "auto" : "calc(100dvh - 200px)",
+          height: isMobile
+            ? "auto"
+            : planKind === "masterplan"
+              ? "100%"
+              : "calc(100dvh - 200px)",
           width: "100%",
           maxWidth: "100%",
           boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
@@ -1283,6 +1482,33 @@ const PolygonPlanImageView = ({
           />
         )}
 
+        {planKind === "masterplan" &&
+          isMobile &&
+          floorsWithPolygon.length > 0 && (
+            <div className="space-y-3 border-t border-gray-100 bg-gradient-to-b from-slate-50/60 to-white px-3 pb-3 pt-3">
+              {masterplanTooltipAreaId ? (
+                <MobileMasterplanSelectedCard
+                  areaId={masterplanTooltipAreaId}
+                  summary={resolveMasterplanMobileSummary(
+                    masterplanTooltipAreaId,
+                    masterplanMobileSummaries,
+                    masterplanPolygonLabels,
+                  )}
+                  themeColor={themeColor}
+                  onOpen={onMasterplanAreaClick}
+                />
+              ) : null}
+              <MobileMasterplanAreaList
+                floors={floorsWithPolygon}
+                selectedFloor={selectedFloor}
+                summaries={masterplanMobileSummaries}
+                labels={masterplanPolygonLabels}
+                themeColor={themeColor}
+                onPickFloor={activateFloor}
+              />
+            </div>
+          )}
+
         {planKind !== "masterplan" &&
           isMobile &&
           floorsWithPolygon.length > 0 && (
@@ -1304,36 +1530,38 @@ const PolygonPlanImageView = ({
                     >
                       <div className="flex w-full flex-col justify-center">
                         <CarouselContent className="max-h-[600px]">
-                          {floorsWithPolygon.map((floor) => (
-                            <CarouselItem
-                              key={floor.floor_number}
-                              className="flex basis-1/5 items-center justify-center"
-                            >
-                              <button
-                                className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold transition-colors ${
-                                  selectedFloor === floor.floor_number
-                                    ? "text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                                style={
-                                  selectedFloor === floor.floor_number
-                                    ? { backgroundColor: themeColor }
-                                    : {}
-                                }
-                                onPointerDown={beginSwipeGuard}
-                                onPointerMove={trackSwipeGuard}
-                                onClick={() => {
-                                  if (swipeGuardRef.current.moved) {
-                                    swipeGuardRef.current.moved = false;
-                                    return;
-                                  }
-                                  activateFloor(floor.floor_number);
-                                }}
+                          {floorsWithPolygon.map((floor) => {
+                            return (
+                              <CarouselItem
+                                key={floor.id}
+                                className="flex basis-1/5 items-center justify-center"
                               >
-                                {floor.floor_number}
-                              </button>
-                            </CarouselItem>
-                          ))}
+                                <button
+                                  className={`flex h-10 w-full max-w-[22vw] items-center justify-center truncate rounded-xl px-1 text-lg font-semibold transition-colors ${
+                                    selectedFloor === floor.floor_number
+                                      ? "text-white"
+                                      : "text-gray-700 hover:bg-gray-100"
+                                  }`}
+                                  style={
+                                    selectedFloor === floor.floor_number
+                                      ? { backgroundColor: themeColor }
+                                      : {}
+                                  }
+                                  onPointerDown={beginSwipeGuard}
+                                  onPointerMove={trackSwipeGuard}
+                                  onClick={() => {
+                                    if (swipeGuardRef.current.moved) {
+                                      swipeGuardRef.current.moved = false;
+                                      return;
+                                    }
+                                    activateFloor(floor.floor_number);
+                                  }}
+                                >
+                                  {floor.floor_number}
+                                </button>
+                              </CarouselItem>
+                            );
+                          })}
                         </CarouselContent>
                       </div>
 

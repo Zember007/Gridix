@@ -78,5 +78,7 @@
   "addressNotSet": "Адрес не указан",
   "mapNoCoordinates": "Для этого объекта не задано расположение на карте",
   "noMasterplan": "Генплан не настроен",
-  "noObjects": "Объекты не найдены"
+  "noObjects": "Объекты не найдены",
+  "genplanOpenBuilding": "Перейти к корпусу",
+  "genplanInfrastructureLabel": "Территория"
 }

@@ -78,5 +78,7 @@
   "addressNotSet": "მისამართი არ არის მითითებული",
   "mapNoCoordinates": "ამ ხედისთვის რუკაზე მდებარეობა არ არის მითითებული",
   "noMasterplan": "გენგეგმა მიუწვდომელია",
-  "noObjects": "ობიექტები არ მოიძებნა"
+  "noObjects": "ობიექტები არ მოიძებნა",
+  "genplanOpenBuilding": "გადასვლა შენობაზე",
+  "genplanInfrastructureLabel": "ტერიტორია"
 }

@@ -50,6 +50,13 @@ export type MasterplanPolygonItem = {
   fillColor?: string;
 };
 
+/** Mobile genplan: card + vertical list copy (built in MasterplanSection). */
+export type MasterplanMobileSummary = {
+  kind: "sub_project" | "infrastructure_zone";
+  title: string;
+  subtitle?: string;
+};
+
 export interface PolygonPlanImageViewProps {
   projectId: string;
   themeColor: string;
@@ -81,6 +88,8 @@ export interface PolygonPlanImageViewProps {
   masterplanRenderTooltip?: (areaId: string) => ReactNode;
   /** Short labels on masterplan polygons (when `planKind === "masterplan"` and `display.showNumbers`). */
   masterplanPolygonLabels?: Record<string, string>;
+  /** Rich titles/subtitles for mobile genplan list + detail card. */
+  masterplanMobileSummaries?: Record<string, MasterplanMobileSummary>;
 }
 
 /** @deprecated Use PolygonPlanImageViewProps */

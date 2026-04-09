@@ -78,5 +78,7 @@
   "addressNotSet": "Address not specified",
   "mapNoCoordinates": "Map location is not set for this view",
   "noMasterplan": "No master plan available",
-  "noObjects": "No objects available"
+  "noObjects": "No objects available",
+  "genplanOpenBuilding": "Open building",
+  "genplanInfrastructureLabel": "Area"
 }

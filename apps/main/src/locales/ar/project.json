@@ -78,5 +78,7 @@
   "addressNotSet": "لم يتم تحديد العنوان",
   "mapNoCoordinates": "لم يتم تعيين الموقع على الخريطة لهذا العرض",
   "noMasterplan": "لا يوجد مخطط عام متاح",
-  "noObjects": "لا توجد كائنات متاحة"
+  "noObjects": "لا توجد كائنات متاحة",
+  "genplanOpenBuilding": "الانتقال إلى المبنى",
+  "genplanInfrastructureLabel": "منطقة"
 }
