@@ -49,7 +49,6 @@ export function usePartner() {
 
       setLoading(true);
 
-      const cached = partnerStateCache.get(userId);
       const effectivePartnerUserId = scopedPartnerUserId ?? sessionUserId;
 
       const isDelegatedWorkspace =
