@@ -148,8 +148,12 @@ function ProjectApartmentSelectorLoaded({
 
   const handleBackToGenplan = useCallback(() => {
     if (!subProject) return;
-    const projectPath = project.slug ? project.slug : `id/${project.id}`;
     const preserved = { search: location.search, hash: location.hash };
+    if (isWidget) {
+      navigate({ pathname: "/", ...preserved });
+      return;
+    }
+    const projectPath = project.slug ? project.slug : `id/${project.id}`;
     if (customDomain) {
       navigate({ pathname: "/", ...preserved });
       return;
@@ -161,6 +165,7 @@ function ProjectApartmentSelectorLoaded({
     navigate({ pathname, ...preserved });
   }, [
     subProject,
+    isWidget,
     customDomain,
     project.slug,
     project.id,
@@ -552,10 +557,8 @@ function ProjectApartmentSelectorLoaded({
             setIsFiltersOpen={ui.setFiltersOpen}
             modeContext={modeContext}
             headerTitle={headerTitle}
-            onBack={subProject && !isWidget ? handleBackToGenplan : undefined}
-            backAriaLabel={
-              subProject && !isWidget ? t("project.backToGenplan") : undefined
-            }
+            onBack={subProject ? handleBackToGenplan : undefined}
+            backAriaLabel={subProject ? t("project.backToGenplan") : undefined}
           />
 
           {/* Main content area */}

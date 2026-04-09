@@ -10,12 +10,15 @@ import { ProjectApartmentSelector } from "@/components/project-selector";
  * (load-sub-project via `useProjectSelectorSubProject`).
  */
 export default function SubProjectWidgetPage() {
-  const { projectSlug, subSlug } = useParams<{
-    projectSlug: string;
-    subSlug: string;
+  const { projectSlug, projectId, subSlug } = useParams<{
+    projectSlug?: string;
+    projectId?: string;
+    subSlug?: string;
   }>();
 
-  if (!projectSlug || !subSlug) {
+  const projectIdentifier = projectId ? `id/${projectId}` : (projectSlug ?? "");
+
+  if (!projectIdentifier || !subSlug) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">Проект не найден</p>
@@ -26,7 +29,7 @@ export default function SubProjectWidgetPage() {
   return (
     <div className="min-h-screen bg-background">
       <ProjectApartmentSelector
-        projectId={projectSlug}
+        projectId={projectIdentifier}
         subProjectSlug={subSlug}
       />
     </div>

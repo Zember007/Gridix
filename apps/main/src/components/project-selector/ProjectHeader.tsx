@@ -92,7 +92,7 @@ export const ProjectHeader = ({
     >
       <div className="container mx-auto flex flex-col py-2 md:px-6 md:py-3">
         <div className={cn("flex items-center justify-between gap-4")}>
-          {!isWidget && (
+          {(!isWidget || onBack) && (
             <div className="flex min-w-0 max-w-[min(100%,42rem)] items-center gap-1 md:gap-2">
               {onBack ? (
                 <Button

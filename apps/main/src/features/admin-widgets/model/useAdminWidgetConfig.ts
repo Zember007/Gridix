@@ -7,8 +7,14 @@ import {
 } from "@gridix/utils/lib";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { generateEmbedCode } from "@/features/admin-widgets/lib/generateEmbedCode";
+import {
+  generateEmbedCode,
+  type WidgetContentMode,
+} from "@/features/admin-widgets/lib/generateEmbedCode";
 import { useAdminAccess } from "@/entities/admin-access";
+import { useAdminWidgetSubProjects } from "@/features/admin-widgets/model/useAdminWidgetSubProjects";
+import { useProjectHasMasterplan } from "@/features/admin-widgets/model/useProjectHasMasterplan";
+import { subProjectEmbedSlug } from "@/features/admin-widgets/lib/subProjectEmbedSlug";
 
 export const useAdminWidgetConfig = () => {
   const { t } = useLanguage();
@@ -33,6 +39,19 @@ export const useAdminWidgetConfig = () => {
   const [floatingButtonSideOffset, setFloatingButtonSideOffset] =
     useState<number>(32);
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+  const [widgetContentMode, setWidgetContentMode] =
+    useState<WidgetContentMode>("genplan");
+  const [widgetSubProjectSlug, setWidgetSubProjectSlug] = useState<string>("");
+
+  const subProjectsQuery = useAdminWidgetSubProjects(
+    selectedProject || undefined,
+  );
+  const subProjects = subProjectsQuery.data ?? [];
+  const subProjectsLoading = subProjectsQuery.isLoading;
+
+  const masterplanQuery = useProjectHasMasterplan(selectedProject || undefined);
+  const projectHasGenplan = masterplanQuery.data === true;
+  const projectGenplanLoading = masterplanQuery.isLoading;
 
   useEffect(() => {
     const themeVariables = getAdminThemeVariables(ADMIN_THEME);
@@ -51,6 +70,41 @@ export const useAdminWidgetConfig = () => {
       setSelectedProject(projects[0]?.id || "");
     }
   }, [projects, selectedProject]);
+
+  useEffect(() => {
+    setWidgetSubProjectSlug("");
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (!selectedProject || masterplanQuery.isLoading) return;
+    const has = masterplanQuery.data === true;
+    setWidgetContentMode((prev) => {
+      if (has) {
+        const allowed: WidgetContentMode[] = [
+          "genplan",
+          "objects",
+          "list",
+          "building",
+        ];
+        return allowed.includes(prev) ? prev : "genplan";
+      }
+      const allowed: WidgetContentMode[] = [
+        "facade",
+        "chess",
+        "list",
+        "building",
+      ];
+      return allowed.includes(prev) ? prev : "facade";
+    });
+  }, [selectedProject, masterplanQuery.isLoading, masterplanQuery.data]);
+
+  useEffect(() => {
+    if (!widgetSubProjectSlug || subProjectsQuery.isLoading) return;
+    const valid = subProjects.some(
+      (sp) => subProjectEmbedSlug(sp) === widgetSubProjectSlug,
+    );
+    if (!valid) setWidgetSubProjectSlug("");
+  }, [subProjects, widgetSubProjectSlug, subProjectsQuery.isLoading]);
 
   const selectedProjectData = projects.find(
     (project) => project.id === selectedProject,
@@ -96,6 +150,8 @@ export const useAdminWidgetConfig = () => {
         floatingButtonSideOffset,
         selectedProject,
         selectedProjectEmbedIdentifier,
+        widgetContentMode,
+        widgetSubProjectSlug,
       }),
     [
       defaultLanguage,
@@ -106,12 +162,21 @@ export const useAdminWidgetConfig = () => {
       floatingButtonSideOffset,
       selectedProject,
       selectedProjectEmbedIdentifier,
+      widgetContentMode,
+      widgetSubProjectSlug,
     ],
   );
 
   const copyEmbedCode = () => {
     if (!selectedProjectEmbedIdentifier) {
       toast.error("No active project available for widget generation.");
+      return;
+    }
+    if (
+      widgetContentMode === "building" &&
+      !widgetSubProjectSlug.trim().length
+    ) {
+      toast.error(t("adminWidgets.subProjectSelectRequired"));
       return;
     }
     navigator.clipboard.writeText(embedCode);
@@ -123,12 +188,29 @@ export const useAdminWidgetConfig = () => {
       toast.error("No active project available for preview.");
       return;
     }
-    const baseUrl = window.location.origin;
-    let previewUrl = "";
-    if (selectedProjectEmbedIdentifier) {
-      previewUrl = `${baseUrl}/embed/project/${selectedProjectEmbedIdentifier}?lang=${defaultLanguage}`;
+    if (
+      widgetContentMode === "building" &&
+      !widgetSubProjectSlug.trim().length
+    ) {
+      toast.error(t("adminWidgets.subProjectSelectRequired"));
+      return;
     }
-    if (!previewUrl) return;
+    const baseUrl = window.location.origin;
+    const params = new URLSearchParams();
+    params.set("lang", defaultLanguage);
+    if (widgetContentMode === "objects" || widgetContentMode === "chess") {
+      params.set("view", "chess");
+    } else if (widgetContentMode === "list") {
+      params.set("view", "list");
+    }
+
+    let path = `/embed/project/${selectedProjectEmbedIdentifier}`;
+    if (widgetContentMode === "building") {
+      const seg = encodeURIComponent(widgetSubProjectSlug.trim());
+      path = `${path}/p/${seg}`;
+    }
+
+    const previewUrl = `${baseUrl}${path}?${params.toString()}`;
     window.open(previewUrl, "_blank");
   };
 
@@ -157,6 +239,14 @@ export const useAdminWidgetConfig = () => {
     copyEmbedCode,
     embedCode,
     selectedProjectEmbedIdentifier,
+    widgetContentMode,
+    setWidgetContentMode,
+    widgetSubProjectSlug,
+    setWidgetSubProjectSlug,
+    subProjects,
+    subProjectsLoading,
+    projectHasGenplan,
+    projectGenplanLoading,
     LANGUAGE_CONFIG,
     ADMIN_THEME,
   };

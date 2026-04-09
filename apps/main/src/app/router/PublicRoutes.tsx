@@ -55,6 +55,10 @@ export function PublicRoutes() {
         element={withLocalSuspense(<SubProjectWidgetPage />)}
       />
       <Route
+        path="project/id/:projectId/p/:subSlug"
+        element={withLocalSuspense(<SubProjectWidgetPage />)}
+      />
+      <Route
         path="project/:projectSlug/p/:subSlug"
         element={withLocalSuspense(<SubProjectWidgetPage />)}
       />

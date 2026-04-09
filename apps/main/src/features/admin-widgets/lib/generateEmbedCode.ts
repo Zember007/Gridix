@@ -1,5 +1,18 @@
 import { Language } from "@gridix/utils/lib";
 
+/**
+ * Режим главного экрана виджета.
+ * С генпланом: genplan / objects / …
+ * Без генплана: facade / chess / … (те же URL, что фасад и шахматка в селекторе)
+ */
+export type WidgetContentMode =
+  | "genplan"
+  | "objects"
+  | "facade"
+  | "chess"
+  | "list"
+  | "building";
+
 type GenerateEmbedCodeParams = {
   origin: string;
   defaultLanguage: Language;
@@ -10,6 +23,9 @@ type GenerateEmbedCodeParams = {
   floatingButtonSideOffset: number;
   selectedProject: string;
   selectedProjectEmbedIdentifier: string;
+  widgetContentMode: WidgetContentMode;
+  /** Slug подпроекта при `widgetContentMode === "building"` */
+  widgetSubProjectSlug: string;
 };
 
 export const generateEmbedCode = ({
@@ -22,6 +38,8 @@ export const generateEmbedCode = ({
   floatingButtonSideOffset,
   selectedProject,
   selectedProjectEmbedIdentifier,
+  widgetContentMode,
+  widgetSubProjectSlug,
 }: GenerateEmbedCodeParams) => {
   const scriptUrl = `${origin}/widget/index.js`;
 
@@ -35,6 +53,15 @@ export const generateEmbedCode = ({
   };
   if (selectedProject !== "all" && selectedProjectEmbedIdentifier) {
     params.projectId = selectedProjectEmbedIdentifier;
+  }
+
+  const slug = widgetSubProjectSlug.trim();
+  if (widgetContentMode === "building" && slug.length > 0) {
+    params.subProjectSlug = slug;
+  } else if (widgetContentMode === "objects" || widgetContentMode === "chess") {
+    params.widgetStartView = "objects";
+  } else if (widgetContentMode === "list") {
+    params.widgetStartView = "list";
   }
 
   const attrs = Object.entries(params)

@@ -25,6 +25,14 @@ const AdminWidgets = () => {
     setFloatingButtonBottomOffset,
     floatingButtonSideOffset,
     setFloatingButtonSideOffset,
+    widgetContentMode,
+    setWidgetContentMode,
+    widgetSubProjectSlug,
+    setWidgetSubProjectSlug,
+    subProjects,
+    subProjectsLoading,
+    projectHasGenplan,
+    projectGenplanLoading,
     handleToggleShowFullProject,
     handleToggleShowFloatingButton,
     openPreview,
@@ -72,6 +80,14 @@ const AdminWidgets = () => {
           setFloatingButtonBottomOffset={setFloatingButtonBottomOffset}
           floatingButtonSideOffset={floatingButtonSideOffset}
           setFloatingButtonSideOffset={setFloatingButtonSideOffset}
+          widgetContentMode={widgetContentMode}
+          setWidgetContentMode={setWidgetContentMode}
+          widgetSubProjectSlug={widgetSubProjectSlug}
+          setWidgetSubProjectSlug={setWidgetSubProjectSlug}
+          subProjects={subProjects}
+          subProjectsLoading={subProjectsLoading}
+          projectHasGenplan={projectHasGenplan}
+          projectGenplanLoading={projectGenplanLoading}
           handleToggleShowFullProject={handleToggleShowFullProject}
           handleToggleShowFloatingButton={handleToggleShowFloatingButton}
           openPreview={openPreview}
