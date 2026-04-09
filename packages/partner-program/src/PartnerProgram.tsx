@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PartnerScopeProvider } from "./PartnerScopeContext";
 import { usePartner } from "./queries/usePartner";
 import { Button, useToast } from "@gridix/ui";
 import { Wallet } from "lucide-react";
@@ -38,9 +39,46 @@ export interface PartnerProgramProps {
   joinDemoSlot?: React.ReactNode;
   /** Demo cabinet: disable partner registration and balance/client mutations. */
   readOnly?: boolean;
+  /**
+   * Workspace owner user id (e.g. `viewer.effective_developer_id` from admin-bootstrap).
+   * When the auth user views another developer’s cabinet (demo viewer / manager), pass this so
+   * partner data matches that workspace, not the viewer’s own partner profile.
+   */
+  scopedPartnerUserId?: string;
 }
 
 export const PartnerProgram: React.FC<PartnerProgramProps> = ({
+  navigationMode,
+  activeSection: externalSection,
+  onSectionChange: externalOnSectionChange,
+  autoCreateProfile = false,
+  instructionsBaseUrl,
+  joinDemoSlot,
+  readOnly = false,
+  scopedPartnerUserId,
+}) => {
+  return (
+    <PartnerScopeProvider value={scopedPartnerUserId}>
+      <PartnerProgramInner
+        navigationMode={navigationMode}
+        {...(externalSection !== undefined
+          ? { activeSection: externalSection }
+          : {})}
+        {...(externalOnSectionChange !== undefined
+          ? { onSectionChange: externalOnSectionChange }
+          : {})}
+        autoCreateProfile={autoCreateProfile}
+        {...(instructionsBaseUrl !== undefined ? { instructionsBaseUrl } : {})}
+        joinDemoSlot={joinDemoSlot}
+        readOnly={readOnly}
+      />
+    </PartnerScopeProvider>
+  );
+};
+
+const PartnerProgramInner: React.FC<
+  Omit<PartnerProgramProps, "scopedPartnerUserId">
+> = ({
   navigationMode,
   activeSection: externalSection,
   onSectionChange: externalOnSectionChange,

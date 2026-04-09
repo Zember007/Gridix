@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
-import type { PartnerProfile } from "../model/types";
+import { usePartnerScopeUserId } from "../PartnerScopeContext";
+import { fetchPartnerStats } from "../api/partnerApi";
+import type { PartnerProfile, PartnerStats } from "../model/types";
 
 interface CachedPartnerState {
   isPartner: boolean;
@@ -12,7 +14,15 @@ interface CachedPartnerState {
 const partnerStateCache = new Map<string, CachedPartnerState>();
 const partnerRequestInFlight = new Map<string, Promise<CachedPartnerState>>();
 
+function getPartnerCacheKey(
+  sessionUserId: string,
+  effectivePartnerUserId: string,
+): string {
+  return `${sessionUserId}|${effectivePartnerUserId}`;
+}
+
 export function usePartner() {
+  const scopedPartnerUserId = usePartnerScopeUserId();
   const [isPartner, setIsPartner] = useState(false);
   const [partnerProfile, setPartnerProfile] = useState<PartnerProfile | null>(
     null,
@@ -23,13 +33,13 @@ export function usePartner() {
     useCurrentSession();
 
   const checkPartnerStatus = useCallback(async () => {
-    let userId: string | null = null;
+    let sessionUserId: string | null = null;
 
     try {
       if (isSessionLoading) return;
-      userId = sessionQuery?.user?.id ?? null;
+      sessionUserId = sessionQuery?.user?.id ?? null;
 
-      if (!userId) {
+      if (!sessionUserId) {
         setIsPartner(false);
         setPartnerProfile(null);
         setIsDemoAccount(false);
@@ -37,7 +47,17 @@ export function usePartner() {
         return;
       }
 
-      const cached = partnerStateCache.get(userId);
+      const effectivePartnerUserId = scopedPartnerUserId ?? sessionUserId;
+
+      const isDelegatedWorkspace =
+        Boolean(scopedPartnerUserId) && scopedPartnerUserId !== sessionUserId;
+
+      const cacheKey = getPartnerCacheKey(
+        sessionUserId,
+        effectivePartnerUserId,
+      );
+
+      const cached = partnerStateCache.get(cacheKey);
       if (cached) {
         setIsPartner(cached.isPartner);
         setPartnerProfile(cached.partnerProfile);
@@ -46,7 +66,7 @@ export function usePartner() {
         return;
       }
 
-      const inFlight = partnerRequestInFlight.get(userId);
+      const inFlight = partnerRequestInFlight.get(cacheKey);
       if (inFlight) {
         const state = await inFlight;
         setIsPartner(state.isPartner);
@@ -57,24 +77,43 @@ export function usePartner() {
       }
 
       const request = (async (): Promise<CachedPartnerState> => {
-        const [{ data: profile, error }, { data: upRow }] = await Promise.all([
-          supabase
-            .from("partner_profiles" as any)
-            .select("*")
-            .eq("user_id", userId)
-            .single(),
-          supabase
-            .from("user_profiles")
-            .select("is_demo")
-            .eq("id", userId)
-            .maybeSingle(),
-        ]);
+        const { data: upRow } = await supabase
+          .from("user_profiles")
+          .select("is_demo")
+          .eq("id", effectivePartnerUserId)
+          .maybeSingle();
+
+        const demo = Boolean((upRow as { is_demo?: boolean } | null)?.is_demo);
+
+        if (isDelegatedWorkspace) {
+          const statsPayload: PartnerStats =
+            await fetchPartnerStats(scopedPartnerUserId);
+
+          const pf = statsPayload.partner_profile ?? null;
+          if (pf) {
+            return {
+              isPartner: true,
+              partnerProfile: pf,
+              isDemoAccount: demo,
+            };
+          }
+
+          return {
+            isPartner: false,
+            partnerProfile: null,
+            isDemoAccount: demo,
+          };
+        }
+
+        const { data: profile, error } = await supabase
+          .from("partner_profiles" as any)
+          .select("*")
+          .eq("user_id", effectivePartnerUserId)
+          .single();
 
         if (error && error.code !== "PGRST116") {
           throw error;
         }
-
-        const demo = Boolean((upRow as { is_demo?: boolean } | null)?.is_demo);
 
         if (profile) {
           return {
@@ -91,9 +130,9 @@ export function usePartner() {
         };
       })();
 
-      partnerRequestInFlight.set(userId, request);
+      partnerRequestInFlight.set(cacheKey, request);
       const nextState = await request;
-      partnerStateCache.set(userId, nextState);
+      partnerStateCache.set(cacheKey, nextState);
       setIsPartner(nextState.isPartner);
       setPartnerProfile(nextState.partnerProfile);
       setIsDemoAccount(nextState.isDemoAccount);
@@ -103,12 +142,17 @@ export function usePartner() {
       setPartnerProfile(null);
       setIsDemoAccount(false);
     } finally {
-      if (userId) {
-        partnerRequestInFlight.delete(userId);
+      if (sessionUserId) {
+        const effectivePartnerUserId = scopedPartnerUserId ?? sessionUserId;
+        const cacheKey = getPartnerCacheKey(
+          sessionUserId,
+          effectivePartnerUserId,
+        );
+        partnerRequestInFlight.delete(cacheKey);
       }
       setLoading(false);
     }
-  }, [isSessionLoading, sessionQuery?.user?.id]);
+  }, [isSessionLoading, sessionQuery?.user?.id, scopedPartnerUserId]);
 
   useEffect(() => {
     void checkPartnerStatus();
@@ -162,7 +206,9 @@ export function usePartner() {
         ),
       };
 
-      partnerStateCache.set(userId, nextState);
+      const effectivePartnerUserId = scopedPartnerUserId ?? userId;
+      const cacheKey = getPartnerCacheKey(userId, effectivePartnerUserId);
+      partnerStateCache.set(cacheKey, nextState);
       setPartnerProfile(nextState.partnerProfile);
       setIsPartner(true);
       setIsDemoAccount(nextState.isDemoAccount);

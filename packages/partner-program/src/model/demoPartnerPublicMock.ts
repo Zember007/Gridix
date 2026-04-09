@@ -248,6 +248,29 @@ export function buildDemoIncomeHistoryFallback(): PartnerIncomePoint[] {
   return out;
 }
 
+/** Демо-график: если серия есть, но «плоская» (мало ненулевых дней / низкая сумма), подменяем на волну. */
+export function resolveDemoIncomeHistoryForChart(
+  baseHistory: PartnerIncomePoint[] | undefined | null,
+): PartnerIncomePoint[] {
+  const raw = baseHistory ?? [];
+  const minLen = 20;
+  const minTotal = 280;
+  const minNonZeroDays = 5;
+
+  if (raw.length < minLen) {
+    return buildDemoIncomeHistoryFallback();
+  }
+
+  const total = raw.reduce((s, p) => s + (p.amount ?? 0), 0);
+  const nonZeroDays = raw.filter((p) => (p.amount ?? 0) > 1e-6).length;
+
+  if (total >= minTotal && nonZeroDays >= minNonZeroDays) {
+    return raw;
+  }
+
+  return buildDemoIncomeHistoryFallback();
+}
+
 const DEMO_TRAFFIC_FALLBACK = {
   by_source: [
     { source: "instagram", count: 148 },
@@ -293,10 +316,7 @@ export function applyDemoPartnerStatsOverlay(
   const referralN = mockClients.filter((c) => c.type === "referral").length;
   const managedN = mockClients.filter((c) => c.type === "managed").length;
 
-  const income =
-    base.income_history && base.income_history.length >= 20
-      ? base.income_history
-      : buildDemoIncomeHistoryFallback();
+  const income = resolveDemoIncomeHistoryForChart(base.income_history);
 
   const income30 = income.reduce((s, x) => s + x.amount, 0);
   const earned = Math.max(

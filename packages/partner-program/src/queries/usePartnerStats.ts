@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
+import { usePartnerScopeUserId } from "../PartnerScopeContext";
 import type { PartnerStats } from "../model/types";
 import { applyDemoPartnerStatsOverlay } from "../model/demoPartnerPublicMock";
 
@@ -72,46 +73,61 @@ const fetchPartnerStats = async (partnerId?: string): Promise<PartnerStats> => {
 };
 
 export function usePartnerStats(partnerId?: string) {
+  const scopedPartnerUserId = usePartnerScopeUserId();
   const [stats, setStats] = useState<PartnerStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: sessionQuery } = useCurrentSession();
 
-  const cacheKey = getPartnerStatsCacheKey(partnerId);
+  const sessionUserId = sessionQuery?.user?.id;
 
-  const fetchStats = async ({ force = false }: { force?: boolean } = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchStats = useCallback(
+    async ({ force = false }: { force?: boolean } = {}) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const userId = sessionQuery?.user?.id;
-      const isDemo = await fetchIsDemoPartnerUser(userId);
-      const cacheKeyFull = `${cacheKey}:${userId ?? "anon"}:${isDemo ? "demo" : "live"}`;
+        const needsDelegatedStats = Boolean(
+          scopedPartnerUserId &&
+          sessionUserId &&
+          scopedPartnerUserId !== sessionUserId,
+        );
+        const delegateTargetUserId = needsDelegatedStats
+          ? scopedPartnerUserId
+          : undefined;
+        const apiPartnerId = partnerId ?? delegateTargetUserId;
+        const statsOwnerUserId = delegateTargetUserId ?? sessionUserId;
+        const cacheKey = getPartnerStatsCacheKey(apiPartnerId);
 
-      const cached = partnerStatsCache.get(cacheKeyFull);
-      if (!force && cached && isFreshEntry(cached)) {
-        setStats(cached.data);
-        return;
+        const isDemo = await fetchIsDemoPartnerUser(statsOwnerUserId);
+        const cacheKeyFull = `${cacheKey}:${sessionUserId ?? "anon"}:${statsOwnerUserId ?? "anon"}:${isDemo ? "demo" : "live"}`;
+
+        const cached = partnerStatsCache.get(cacheKeyFull);
+        if (!force && cached && isFreshEntry(cached)) {
+          setStats(cached.data);
+          return;
+        }
+
+        const nextStats = await fetchPartnerStats(apiPartnerId);
+        const merged = applyDemoPartnerStatsOverlay(nextStats, isDemo);
+        partnerStatsCache.set(cacheKeyFull, {
+          data: merged,
+          updatedAt: Date.now(),
+        });
+        setStats(merged);
+      } catch (err) {
+        console.error("Error fetching partner stats:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch stats");
+      } finally {
+        setLoading(false);
       }
-
-      const nextStats = await fetchPartnerStats(partnerId);
-      const merged = applyDemoPartnerStatsOverlay(nextStats, isDemo);
-      partnerStatsCache.set(cacheKeyFull, {
-        data: merged,
-        updatedAt: Date.now(),
-      });
-      setStats(merged);
-    } catch (err) {
-      console.error("Error fetching partner stats:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch stats");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [partnerId, sessionUserId, scopedPartnerUserId],
+  );
 
   useEffect(() => {
     void fetchStats();
-  }, [partnerId, sessionQuery?.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchStats]);
 
   return {
     stats,
