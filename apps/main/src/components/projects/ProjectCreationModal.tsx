@@ -412,9 +412,10 @@ const ProjectCreationModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCloseModal}>
-      <DialogContent className="project_creation_modal_usertour max-h-[90vh] max-w-5xl overflow-y-auto border-border/80"
-                     onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
-                     onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+      <DialogContent
+        className="project_creation_modal_usertour max-h-[90vh] max-w-5xl overflow-y-auto border-border/80"
+        onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
+        onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
       >
         <DialogHeader className="space-y-1 text-left">
           <DialogTitle className="text-xl font-semibold tracking-tight">

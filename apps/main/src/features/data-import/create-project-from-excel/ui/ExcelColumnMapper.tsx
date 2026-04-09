@@ -609,12 +609,12 @@ const ExcelColumnMapper = ({
         const project = await createProject(projectDataForCreation);
         if (!project) throw new Error("Failed to create project");
 
-      // Driver.js tour uses local once-storage; we don't persist onboarding state in Supabase here.
-      void trackOnboardingMilestone({
-        eventName: "gridix_project_created",
-        properties: { project_id: project.id, source: "excel_import" },
-        onceKey: "gridix_project_created",
-      });
+        // Driver.js tour uses local once-storage; we don't persist onboarding state in Supabase here.
+        void trackOnboardingMilestone({
+          eventName: "gridix_project_created",
+          properties: { project_id: project.id, source: "excel_import" },
+          onceKey: "gridix_project_created",
+        });
 
         resolvedProjectId = project.id;
         resolvedSubProjectId = null;
