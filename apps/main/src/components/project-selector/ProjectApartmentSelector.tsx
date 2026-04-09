@@ -7,7 +7,7 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@gridix/ui";
 import { formatMoney } from "@gridix/utils/lib";
 import type { Tables } from "@gridix/types/database";
@@ -137,6 +137,39 @@ function ProjectApartmentSelectorLoaded({
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const headerTitle = useMemo(() => {
+    if (!subProject) return undefined;
+    const n = (subProject.name ?? "").trim();
+    return n.length > 0 ? n : project.name;
+  }, [subProject, project.name]);
+
+  const handleBackToGenplan = useCallback(() => {
+    if (!subProject) return;
+    const projectPath = project.slug ? project.slug : `id/${project.id}`;
+    const preserved = { search: location.search, hash: location.hash };
+    if (customDomain) {
+      navigate({ pathname: "/", ...preserved });
+      return;
+    }
+    const isWidgetPath = location.pathname.includes("/widget/");
+    const pathname = isWidgetPath
+      ? `/${language}/widget/${projectPath}`
+      : `/${language}/project/${projectPath}`;
+    navigate({ pathname, ...preserved });
+  }, [
+    subProject,
+    customDomain,
+    project.slug,
+    project.id,
+    language,
+    location.pathname,
+    location.search,
+    location.hash,
+    navigate,
+  ]);
 
   const { fields: fieldSettings } = useFields(project?.id || null, {
     fieldSettings: rawFieldSettings,
@@ -518,6 +551,11 @@ function ProjectApartmentSelectorLoaded({
             isFiltersOpen={ui.isFiltersOpen}
             setIsFiltersOpen={ui.setFiltersOpen}
             modeContext={modeContext}
+            headerTitle={headerTitle}
+            onBack={subProject && !isWidget ? handleBackToGenplan : undefined}
+            backAriaLabel={
+              subProject && !isWidget ? t("project.backToGenplan") : undefined
+            }
           />
 
           {/* Main content area */}

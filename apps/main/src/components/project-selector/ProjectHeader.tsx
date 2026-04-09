@@ -1,6 +1,12 @@
 import { RefObject, useEffect } from "react";
-import { LanguageToggle, Sheet, SheetContent, SheetTrigger } from "@gridix/ui";
-import { SlidersHorizontal } from "lucide-react";
+import {
+  Button,
+  LanguageToggle,
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@gridix/ui";
+import { ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { CompactFilters } from "@/components/project-selector/filters/CompactFilters";
 import { ViewModeButtons } from "@/components/project-selector/ViewModeButtons";
@@ -26,6 +32,11 @@ interface ProjectHeaderProps {
   isFiltersOpen: boolean;
   setIsFiltersOpen: (open: boolean) => void;
   modeContext?: ModeContext;
+  /** When set (e.g. sub-project from genplan), show back arrow next to the title */
+  onBack?: () => void;
+  backAriaLabel?: string;
+  /** Title in the header; defaults to project name */
+  headerTitle?: string;
 }
 
 export const ProjectHeader = ({
@@ -43,8 +54,13 @@ export const ProjectHeader = ({
   isFiltersOpen,
   setIsFiltersOpen,
   modeContext = "default",
+  onBack,
+  backAriaLabel,
+  headerTitle,
 }: ProjectHeaderProps) => {
   const { language, setLanguage } = useLanguage();
+
+  const titleText = (headerTitle ?? project?.name)?.trim() || "";
 
   const allowedLanguages: Language[] | null = Array.isArray(
     (project as unknown as { available_languages?: unknown })
@@ -77,13 +93,27 @@ export const ProjectHeader = ({
       <div className="container mx-auto flex flex-col py-2 md:px-6 md:py-3">
         <div className={cn("flex items-center justify-between gap-4")}>
           {!isWidget && (
-            <h1
-              className="min-w-0 truncate whitespace-nowrap font-bold text-gray-900"
-              style={{ fontSize: "clamp(14px, 2vw, 18px)" }}
-              title={project?.name}
-            >
-              {project?.name}
-            </h1>
+            <div className="flex min-w-0 max-w-[min(100%,42rem)] items-center gap-1 md:gap-2">
+              {onBack ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-gray-900"
+                  onClick={onBack}
+                  aria-label={backAriaLabel ?? undefined}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              ) : null}
+              <h1
+                className="min-w-0 truncate whitespace-nowrap font-bold text-gray-900"
+                style={{ fontSize: "clamp(14px, 2vw, 18px)" }}
+                title={titleText}
+              >
+                {titleText}
+              </h1>
+            </div>
           )}
           {!isMobile && (
             <div className={cn("min-w-0", !isWidget && "flex-1")}>
