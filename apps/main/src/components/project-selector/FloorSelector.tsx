@@ -131,6 +131,9 @@ export const FloorSelector = ({
     carouselApi.scrollTo(index, false);
   }, [carouselApi, selectedFloorForPlan, floors]);
 
+  // Only sync URL when the user changes the carousel snap (e.g. drag).
+  // Do NOT run sync on effect mount/reInit: `floors` often gets a new reference after
+  // polygon loads — an eager sync would read a stale snap and overwrite the URL floor.
   useEffect(() => {
     if (!carouselApi) return;
 
@@ -141,13 +144,10 @@ export const FloorSelector = ({
       setSelectedFloorForPlan(currentFloor);
     };
 
-    syncSelectedFloorWithCarousel();
     carouselApi.on("select", syncSelectedFloorWithCarousel);
-    carouselApi.on("reInit", syncSelectedFloorWithCarousel);
 
     return () => {
       carouselApi.off("select", syncSelectedFloorWithCarousel);
-      carouselApi.off("reInit", syncSelectedFloorWithCarousel);
     };
   }, [carouselApi, floors, setSelectedFloorForPlan]);
 

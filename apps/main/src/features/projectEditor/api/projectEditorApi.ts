@@ -325,17 +325,19 @@ export async function uploadFloorPlan(
   projectId: string,
   floorNumber: number,
   file: File,
-  options: UploadWithProgressOptions = {},
+  options: UploadWithProgressOptions & { subProjectId?: string } = {},
 ): Promise<{ publicUrl: string }> {
+  const { subProjectId, ...uploadOptions } = options;
   const form = new FormData();
   form.set("action", "uploadFloorPlan");
   form.set("projectId", projectId);
   form.set("floorNumber", String(floorNumber));
+  if (subProjectId) form.set("subProjectId", subProjectId);
   form.set("file", file);
 
   const response = await invokeFunctionUploadWithProgress<{
     publicUrl?: string;
-  }>(form, options);
+  }>(form, uploadOptions);
 
   if (!response.publicUrl) throw new Error("No URL returned");
 
@@ -366,12 +368,32 @@ export async function removeFloorPlan(
   projectId: string,
   floorNumber: number,
   imageUrl?: string | null,
+  options?: { subProjectId?: string },
 ): Promise<void> {
-  const { error: dbError } = await supabase
+  let deleteQuery = supabase
     .from("floor_plans")
     .delete()
     .eq("project_id", projectId)
     .eq("floor_number", floorNumber);
+
+  if (options?.subProjectId) {
+    deleteQuery = deleteQuery.eq("sub_project_id", options.subProjectId);
+  } else {
+    const { data: defaultSp, error: spError } = await supabase
+      .from("sub_projects")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("is_default", true)
+      .maybeSingle();
+    if (spError) throw spError;
+    if (defaultSp?.id) {
+      deleteQuery = deleteQuery.eq("sub_project_id", defaultSp.id);
+    } else {
+      deleteQuery = deleteQuery.is("sub_project_id", null);
+    }
+  }
+
+  const { error: dbError } = await deleteQuery;
 
   if (dbError) throw dbError;
 
@@ -429,9 +451,11 @@ export async function uploadLayoutPhoto(
   file: File,
   options: UploadWithProgressOptions & {
     assignment?: LayoutPhotoAssignment;
+    /** Scope layout photos to a sub-project (required when editing a building scope). */
+    subProjectId?: string;
   } = {},
 ): Promise<{ publicUrl: string }> {
-  const { assignment, ...uploadOptions } = options;
+  const { assignment, subProjectId, ...uploadOptions } = options;
   const fileName = createUniqueFileName(projectId, ".webp", layoutType);
   const objectPath = `layouts/${fileName}`;
 
@@ -453,6 +477,7 @@ export async function uploadLayoutPhoto(
     order_index: orderIndex,
     is_project_preview: assignment?.is_project_preview ?? false,
     apartment_ids: assignment?.apartment_ids ?? null,
+    ...(subProjectId ? { sub_project_id: subProjectId } : {}),
   });
 
   if (error) {

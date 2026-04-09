@@ -34,7 +34,6 @@ describe("popupPosition utils", () => {
 
     const position = computePopupPositionForPolygon({
       containerEl: container,
-      isExpanded: true,
       imageRect,
       polygonBoundsPct: {
         minX: 45,
@@ -73,7 +72,6 @@ describe("popupPosition utils", () => {
 
     const position = computeMobileDockPosition({
       containerEl: container,
-      isExpanded: true,
       imageRect,
       visibleFloors: [floor],
       size: { width: 180, height: 120 },

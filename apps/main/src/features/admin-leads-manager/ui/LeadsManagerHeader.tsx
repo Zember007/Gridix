@@ -53,6 +53,7 @@ export type LeadsManagerHeaderProps = {
   setIsCreateModalOpen: (value: boolean) => void;
   setFilters: (updater: (prev: LeadsFilters) => LeadsFilters) => void;
   resetFilters: () => void;
+  readOnly?: boolean;
 };
 
 export const LeadsManagerHeader = ({
@@ -101,6 +102,7 @@ export const LeadsManagerHeader = ({
   setIsCreateModalOpen,
   setFilters,
   resetFilters,
+  readOnly = false,
 }: LeadsManagerHeaderProps) => {
   const sourceOptions = getSourceOptions(t);
 
@@ -122,16 +124,18 @@ export const LeadsManagerHeader = ({
           >
             {t("leads.funnel.back")}
           </button>
-          <button
-            onClick={() => {
-              handleSaveFunnelSetup();
-              onFunnelSaved();
-              setIsFunnelSetupMode(false);
-            }}
-            className="rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-colors hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
-          >
-            {t("leads.funnel.save")}
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => {
+                handleSaveFunnelSetup();
+                onFunnelSaved();
+                setIsFunnelSetupMode(false);
+              }}
+              className="rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-colors hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)]"
+            >
+              {t("leads.funnel.save")}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -156,6 +160,7 @@ export const LeadsManagerHeader = ({
           handleSelectFunnel={handleSelectFunnel}
           unreadCountByFunnelId={unreadCountByFunnelId}
           handleStartEditFunnel={handleStartEditFunnel}
+          readOnly={readOnly}
         />
 
         <div className="h-6 w-px bg-slate-200"></div>
@@ -192,6 +197,7 @@ export const LeadsManagerHeader = ({
           setIsCardAppearanceModalOpen={setIsCardAppearanceModalOpen}
           setIsDuplicateFinderOpen={setIsDuplicateFinderOpen}
           setIsCreateModalOpen={setIsCreateModalOpen}
+          readOnly={readOnly}
         />
       </div>
 

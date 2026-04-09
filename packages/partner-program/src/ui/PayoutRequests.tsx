@@ -34,8 +34,10 @@ import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerPayout } from "../model/types";
 import { useLanguage } from "@gridix/utils/react";
+import { usePartnerScopeUserId } from "../PartnerScopeContext";
 
 export function PayoutRequests() {
+  const scopedPartnerUserId = usePartnerScopeUserId();
   const { stats, loading: statsLoading } = usePartnerStats();
   const { t } = useLanguage();
   const [payouts, setPayouts] = useState<PartnerPayout[]>([]);
@@ -56,11 +58,23 @@ export function PayoutRequests() {
       const user = sessionQuery?.user ?? null;
       if (!user) return;
 
+      const sessionUserId = user.id;
+      const needsDelegatedStats = Boolean(
+        scopedPartnerUserId &&
+        sessionUserId &&
+        scopedPartnerUserId !== sessionUserId,
+      );
+      const partnerUserId = needsDelegatedStats
+        ? scopedPartnerUserId
+        : sessionUserId;
+
+      if (!partnerUserId) return;
+
       // Получаем профиль партнёра
       const { data: partnerProfile } = await supabase
         .from("partner_profiles")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("user_id", partnerUserId)
         .single();
 
       if (!partnerProfile) return;
@@ -83,7 +97,7 @@ export function PayoutRequests() {
     } finally {
       setLoading(false);
     }
-  }, [isSessionLoading, sessionQuery?.user]);
+  }, [isSessionLoading, sessionQuery?.user, scopedPartnerUserId]);
 
   useEffect(() => {
     void fetchPayouts();

@@ -20,6 +20,7 @@ type DbCustomFieldRow = {
 
 export interface UseCustomFieldsManagerParams {
   projectId?: string | null;
+  subProjectId?: string;
   onFieldsChange?: (fields: CustomField[]) => void;
   initialEditingField?: CustomField | null;
   onClose?: () => void;
@@ -50,6 +51,7 @@ function normalizeTranslations(
 
 export function useCustomFieldsManager({
   projectId,
+  subProjectId,
   onFieldsChange,
   initialEditingField = null,
   onClose,
@@ -200,7 +202,6 @@ export function useCustomFieldsManager({
           if (error) throw error;
           toast.success(t("customFields.updateSuccess"));
         } else {
-          // Создание нового поля
           const { error } = await supabase
             .from("project_custom_fields")
             .insert([
@@ -214,6 +215,7 @@ export function useCustomFieldsManager({
                 field_options: field.field_options,
                 sort_order: field.sort_order || fields.length,
                 is_visible: field.is_visible,
+                ...(subProjectId && { sub_project_id: subProjectId }),
               },
             ]);
 

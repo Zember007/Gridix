@@ -1,4 +1,10 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
+
+const VIEW_W = 800;
+const VIEW_H = 250;
+const PAD = { top: 16, right: 12, bottom: 28, left: 12 } as const;
+const PLOT_W = VIEW_W - PAD.left - PAD.right;
+const PLOT_H = VIEW_H - PAD.top - PAD.bottom;
 
 interface IncomeChartProps {
   data: number[];
@@ -12,41 +18,42 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
   language,
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const height = 250;
-  const width = 800;
-  const padding = 20;
-
-  const maxVal = Math.max(...data) * 1.1; // Add 10% headroom
+  const width = VIEW_W;
+  const height = VIEW_H;
+  const maxVal = Math.max(0, ...data) * 1.1 || 1; // headroom; avoid 0-range
   const minVal = 0;
 
-  // Memoize points calculation
+  const xSpan = Math.max(1, data.length - 1);
+
+  // Memoize points calculation (uniform scaling via SVG meet + aspect-ratio wrapper)
   const points = useMemo(() => {
     return data.map((val, i) => {
-      const x = (i / (data.length - 1)) * (width - padding * 2) + padding;
+      const x = PAD.left + (i / xSpan) * PLOT_W;
       const y =
-        height -
-        ((val - minVal) / (maxVal - minVal || 1)) * (height - padding * 2) -
-        padding;
+        PAD.top + PLOT_H - ((val - minVal) / (maxVal - minVal)) * PLOT_H;
       return { x, y, val, date: dates[i] };
     });
-  }, [data, dates, maxVal, minVal]);
+  }, [data, dates, maxVal, minVal, xSpan]);
 
   const pathD = `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`;
-  const areaD = `${pathD} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`;
+  const bottomY = PAD.top + PLOT_H;
+  const areaD = `${pathD} L ${PAD.left + PLOT_W},${bottomY} L ${PAD.left},${bottomY} Z`;
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+  const viewBoxToSvgX = (e: React.MouseEvent<SVGSVGElement>): number | null => {
+    const svg = e.currentTarget;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    const p = svg.createSVGPoint();
+    p.x = e.clientX;
+    p.y = e.clientY;
+    return p.matrixTransform(ctm.inverse()).x;
+  };
 
-    // Find closest point based on X coordinate (responsive scaling handled by viewBox)
-    // We map screen X back to viewBox X
-    const scaleX = width / rect.width;
-    const svgX = x * scaleX;
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svgX = viewBoxToSvgX(e);
+    if (svgX === null) return;
 
-    // Find closest index
     let closestIndex = 0;
     let minDiff = Infinity;
 
@@ -67,17 +74,23 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
 
   const activePoint = hoveredIndex !== null ? points[hoveredIndex] : null;
 
+  if (!data.length) {
+    return (
+      <div className="flex h-32 w-full items-center justify-center text-sm text-gray-400">
+        —
+      </div>
+    );
+  }
+
   return (
-    <div
-      ref={containerRef}
-      className="group relative h-full w-full cursor-crosshair"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div className="group relative w-full min-w-0">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-full w-full overflow-visible"
-        preserveAspectRatio="none"
+        className="block h-auto w-full cursor-crosshair overflow-visible"
+        preserveAspectRatio="xMidYMid meet"
+        role="presentation"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -92,27 +105,27 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
 
         {/* Grid Lines */}
         <line
-          x1={padding}
-          y1={height - padding}
-          x2={width - padding}
-          y2={height - padding}
+          x1={PAD.left}
+          y1={bottomY}
+          x2={PAD.left + PLOT_W}
+          y2={bottomY}
           stroke="#e2e8f0"
           strokeWidth="1"
         />
         <line
-          x1={padding}
-          y1={padding}
-          x2={width - padding}
-          y2={padding}
+          x1={PAD.left}
+          y1={PAD.top}
+          x2={PAD.left + PLOT_W}
+          y2={PAD.top}
           stroke="#e2e8f0"
           strokeWidth="1"
           strokeDasharray="4 4"
         />
         <line
-          x1={padding}
-          y1={height / 2}
-          x2={width - padding}
-          y2={height / 2}
+          x1={PAD.left}
+          y1={PAD.top + PLOT_H / 2}
+          x2={PAD.left + PLOT_W}
+          y2={PAD.top + PLOT_H / 2}
           stroke="#e2e8f0"
           strokeWidth="1"
           strokeDasharray="4 4"
@@ -137,9 +150,9 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
             {/* Vertical Line */}
             <line
               x1={activePoint.x}
-              y1={padding}
+              y1={PAD.top}
               x2={activePoint.x}
-              y2={height - padding}
+              y2={bottomY}
               stroke="#94a3b8"
               strokeWidth="1"
               strokeDasharray="4 4"
@@ -158,13 +171,13 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
         )}
       </svg>
 
-      {/* Tooltip */}
+      {/* Tooltip uses same %-of-wrapper as viewBox coords (SVG is full width of wrapper) */}
       {activePoint && (
         <div
           className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full transform rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-xl transition-all duration-75"
           style={{
-            left: `${(activePoint.x / width) * 100}%`,
-            top: `${(activePoint.y / height) * 100}%`,
+            left: `${(activePoint.x / VIEW_W) * 100}%`,
+            top: `${(activePoint.y / VIEW_H) * 100}%`,
             marginTop: "-10px",
           }}
         >

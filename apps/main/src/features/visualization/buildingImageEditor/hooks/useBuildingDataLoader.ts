@@ -20,11 +20,19 @@ const initialBuildingDataInFlight = new Map<
 
 interface UseBuildingDataLoaderParams {
   projectId: string;
+  subProjectId?: string;
+  /** Override floors count (e.g. from sub_project.floors). Defaults to project.floors. */
+  initialFloors?: number;
+  /** Layout kind for this editor scope (`sub_projects.type`). */
+  subProjectType?: "building" | "object";
   currentImageUrl?: string | null;
 }
 
 export function useBuildingDataLoader({
   projectId,
+  subProjectId,
+  initialFloors,
+  subProjectType,
   currentImageUrl,
 }: UseBuildingDataLoaderParams) {
   const [facades, setFacades] = useState<ProjectFacade[]>([]);
@@ -48,13 +56,15 @@ export function useBuildingDataLoader({
       },
       display: { showNumbers: true, showTooltip: false },
     });
+  // Compound key so different subprojects of the same project don't share cache.
+  const cacheKey = subProjectId ? `${projectId}:${subProjectId}` : projectId;
   const initializedProjectIdRef = useRef<string | null>(null);
 
   const { user } = useAuth();
   const { project } = useProjectInEditorScope(projectId);
   const { t } = useLanguage();
 
-  const isObjectProject = project?.project_type === "object";
+  const isObjectProject = subProjectType === "object";
 
   const activeFacade = useMemo(
     () => facades.find((f) => f.id === selectedFacadeId) ?? facades[0] ?? null,
@@ -81,9 +91,10 @@ export function useBuildingDataLoader({
       preferredFacadeId?: string | null,
     ): Promise<BuildingDataSnapshot> => {
       const pid = project?.id || projectId;
-      const projectFloors = project?.floors || 1;
+      // Prefer explicitly passed floors (subproject context) over project.floors.
+      const projectFloors = initialFloors ?? project?.floors ?? 1;
 
-      let loadedFacades = await api.fetchFacades(pid);
+      let loadedFacades = await api.fetchFacades(pid, subProjectId);
       const legacyImageUrl =
         project?.building_image_url ?? currentImageUrl ?? null;
 
@@ -91,7 +102,12 @@ export function useBuildingDataLoader({
       // image exists on project, but project_facades has no records.
       // In that case create primary "main" facade so UI tabs stay consistent.
       if (loadedFacades.length === 0 && legacyImageUrl) {
-        const primaryFacade = await api.insertFacade(pid, "main", 0);
+        const primaryFacade = await api.insertFacade(
+          pid,
+          "main",
+          0,
+          subProjectId,
+        );
         await api.updateFacadeImage(primaryFacade.id, legacyImageUrl);
         loadedFacades = [{ ...primaryFacade, image_url: legacyImageUrl }];
       }
@@ -111,7 +127,10 @@ export function useBuildingDataLoader({
 
       let apartmentNumbersSnapshot: number[] = [];
       if (isObjectProject) {
-        apartmentNumbersSnapshot = await api.fetchApartmentNumbers(pid);
+        apartmentNumbersSnapshot = await api.fetchApartmentNumbers(
+          pid,
+          subProjectId,
+        );
       }
 
       let normalizedFloors: BuildingFloor[] = [];
@@ -130,8 +149,10 @@ export function useBuildingDataLoader({
         isSelected: false,
       }));
 
-      const nextFacadeDisplaySettings =
-        await api.fetchFacadeDisplaySettings(pid);
+      const nextFacadeDisplaySettings = await api.fetchFacadeDisplaySettings(
+        pid,
+        subProjectId,
+      );
 
       return {
         floors: projectFloors,
@@ -146,11 +167,13 @@ export function useBuildingDataLoader({
     },
     [
       currentImageUrl,
+      initialFloors,
       isObjectProject,
       project?.building_image_url,
       project?.floors,
       project?.id,
       projectId,
+      subProjectId,
       selectedFacadeId,
     ],
   );
@@ -174,21 +197,21 @@ export function useBuildingDataLoader({
       try {
         const snapshot = await fetchBuildingDataSnapshot(preferredFacadeId);
         applyBuildingDataSnapshot(snapshot);
-        initialBuildingDataCache.set(projectId, snapshot);
+        initialBuildingDataCache.set(cacheKey, snapshot);
       } catch (error) {
         console.error("Error loading building data:", error);
       }
     },
-    [applyBuildingDataSnapshot, fetchBuildingDataSnapshot, projectId],
+    [applyBuildingDataSnapshot, cacheKey, fetchBuildingDataSnapshot],
   );
 
   // Initial data loading with cache / dedup
   React.useEffect(() => {
     if (!projectId || !project) return;
-    if (initializedProjectIdRef.current === projectId) return;
-    initializedProjectIdRef.current = projectId;
+    if (initializedProjectIdRef.current === cacheKey) return;
+    initializedProjectIdRef.current = cacheKey;
 
-    const cached = initialBuildingDataCache.get(projectId);
+    const cached = initialBuildingDataCache.get(cacheKey);
     const hasImageWithoutFacadesInCache =
       !!cached &&
       cached.facades.length === 0 &&
@@ -205,10 +228,10 @@ export function useBuildingDataLoader({
     if (hasImageWithoutFacadesInCache) {
       // Cached snapshot can be stale/inconsistent (image exists but no facade tabs).
       // Force fresh fetch so auto-heal can recreate primary "main" facade.
-      initialBuildingDataCache.delete(projectId);
+      initialBuildingDataCache.delete(cacheKey);
     }
 
-    const inFlight = initialBuildingDataInFlight.get(projectId);
+    const inFlight = initialBuildingDataInFlight.get(cacheKey);
     if (inFlight) {
       void inFlight
         .then((snapshot) => {
@@ -222,11 +245,11 @@ export function useBuildingDataLoader({
     }
 
     const request = fetchBuildingDataSnapshot();
-    initialBuildingDataInFlight.set(projectId, request);
+    initialBuildingDataInFlight.set(cacheKey, request);
 
     void request
       .then((snapshot) => {
-        initialBuildingDataCache.set(projectId, snapshot);
+        initialBuildingDataCache.set(cacheKey, snapshot);
         applyBuildingDataSnapshot(snapshot);
       })
       .catch((error) => {
@@ -234,10 +257,12 @@ export function useBuildingDataLoader({
         console.error("Error loading building data:", error);
       })
       .finally(() => {
-        initialBuildingDataInFlight.delete(projectId);
+        initialBuildingDataInFlight.delete(cacheKey);
       });
   }, [
     applyBuildingDataSnapshot,
+    cacheKey,
+    currentImageUrl,
     fetchBuildingDataSnapshot,
     project,
     projectId,
@@ -271,6 +296,7 @@ export function useBuildingDataLoader({
     project,
     user,
     t,
+    subProjectId,
 
     loadBuildingData,
   };

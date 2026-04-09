@@ -39,6 +39,7 @@ interface ImportedRowData {
 
 interface ExcelApartmentSyncMapperProps {
   projectId: string;
+  subProjectId?: string;
   projectType: "building" | "object" | null;
   excelColumns: string[];
   importedData: ImportedRowData[];
@@ -90,6 +91,7 @@ interface RoomsValidationResult {
 
 const ExcelApartmentSyncMapper = ({
   projectId,
+  subProjectId,
   projectType,
   excelColumns,
   importedData,
@@ -188,11 +190,13 @@ const ExcelApartmentSyncMapper = ({
 
   useEffect(() => {
     const loadCustomFields = async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("project_custom_fields")
         .select("*")
         .eq("project_id", projectId)
         .order("sort_order");
+      if (subProjectId) q = q.eq("sub_project_id", subProjectId);
+      const { data } = await q;
 
       if (data) {
         setCustomFields(data as unknown as CustomField[]);
@@ -209,7 +213,7 @@ const ExcelApartmentSyncMapper = ({
       }
     };
     loadCustomFields();
-  }, [projectId]);
+  }, [projectId, subProjectId]);
 
   const effectiveType = projectType ?? "building";
 
@@ -530,7 +534,9 @@ const ExcelApartmentSyncMapper = ({
       });
 
       const validUpdates = updates.filter((u) => u.apartment_number.length > 0);
-      const result = await syncApartmentsFromExcel(projectId, validUpdates);
+      const result = await syncApartmentsFromExcel(projectId, validUpdates, {
+        subProjectId,
+      });
 
       if (result.notFound.length > 0) {
         toast.warning(
@@ -569,6 +575,7 @@ const ExcelApartmentSyncMapper = ({
     statusMapping,
     customFields,
     projectId,
+    subProjectId,
     onSyncDone,
     onComplete,
     t,

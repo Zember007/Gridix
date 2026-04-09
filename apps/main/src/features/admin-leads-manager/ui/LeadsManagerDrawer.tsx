@@ -15,6 +15,7 @@ type LeadsManagerDrawerProps = {
   handleAddNote: React.ComponentProps<typeof LeadDrawer>["onAddNote"];
   handleAddTag: React.ComponentProps<typeof LeadDrawer>["onAddTag"];
   handleRemoveTag: React.ComponentProps<typeof LeadDrawer>["onRemoveTag"];
+  readOnly?: boolean;
 };
 
 export const LeadsManagerDrawer = ({
@@ -30,6 +31,7 @@ export const LeadsManagerDrawer = ({
   handleAddNote,
   handleAddTag,
   handleRemoveTag,
+  readOnly = false,
 }: LeadsManagerDrawerProps) => {
   return (
     <LeadDrawer
@@ -45,6 +47,7 @@ export const LeadsManagerDrawer = ({
       onAddNote={handleAddNote}
       onAddTag={handleAddTag}
       onRemoveTag={handleRemoveTag}
+      readOnly={readOnly}
     />
   );
 };

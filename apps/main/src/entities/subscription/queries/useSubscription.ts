@@ -242,7 +242,13 @@ export function useSubscription(projectId?: string) {
       if (error) {
         throw error;
       }
-      setPlans(data.plans || []);
+      const rawPlans = (data.plans || []) as SubscriptionPlan[];
+      setPlans(
+        rawPlans.map((plan) => ({
+          ...plan,
+          pricing: plan.pricing?.filter((p) => p.durationMonths !== 3) ?? [],
+        })),
+      );
     } catch (err) {
       console.error("Error fetching plans:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch plans");

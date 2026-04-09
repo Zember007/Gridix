@@ -41,10 +41,11 @@ interface ListViewProps {
   filteredApartments: Apartment[];
   listViewMode: "list" | "grid";
   setListViewMode: (mode: "list" | "grid") => void;
-  selectedType: "all" | "apartment" | "commercial" | "parking";
+  selectedType: "all" | "apartment" | "object" | "commercial" | "parking";
   setSelectedType: (
-    value: "all" | "apartment" | "commercial" | "parking",
+    value: "all" | "apartment" | "object" | "commercial" | "parking",
   ) => void;
+  hasObjects?: boolean;
   openApartmentDetails: (apartment: Apartment) => void;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
   getVisibleFields: () => FieldSetting[];
@@ -63,6 +64,8 @@ interface ListViewProps {
   ) => number;
   formatPrice: (price: number) => string;
   project?: Project;
+  /** From `sub_projects.type` for current scope (default or selected sub-project). */
+  projectType: "building" | "object";
   selectedCurrency: string;
   isMobile: boolean;
   themeColor?: string;
@@ -86,16 +89,18 @@ export const ListView = ({
   convertPrice,
   formatPrice,
   project,
+  projectType,
   selectedCurrency,
   isMobile,
   themeColor = "#000000",
   hideViewToggle = false,
   fieldVisibility,
+  hasObjects = false,
 }: ListViewProps) => {
   const { t } = useLanguage();
+  const isObjectProject = projectType === "object";
   const listScrollAreaRef = useRef<HTMLDivElement | null>(null);
   const [listMaxHeight, setListMaxHeight] = useState<number | null>(null);
-  const [isPageScrolledToBottom, setIsPageScrolledToBottom] = useState(false);
 
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -231,27 +236,6 @@ export const ListView = ({
     };
   }, []);
 
-  useEffect(() => {
-    const updatePageScrollState = () => {
-      if (typeof window === "undefined") return;
-
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const fullHeight = document.documentElement.scrollHeight;
-
-      setIsPageScrolledToBottom(scrollTop + windowHeight >= fullHeight - 1);
-    };
-
-    updatePageScrollState();
-    window.addEventListener("scroll", updatePageScrollState, { passive: true });
-    window.addEventListener("resize", updatePageScrollState);
-
-    return () => {
-      window.removeEventListener("scroll", updatePageScrollState);
-      window.removeEventListener("resize", updatePageScrollState);
-    };
-  }, []);
-
   return (
     <div className="container mx-auto flex grow py-3 md:px-6">
       <div
@@ -261,7 +245,7 @@ export const ListView = ({
           <h2
             className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-900`}
           >
-            {project?.project_type === "object"
+            {isObjectProject
               ? t("project.objectList")
               : t("project.apartmentsList")}
           </h2>
@@ -296,21 +280,25 @@ export const ListView = ({
           data-list-scroll-scope="true"
           className={cn(
             "no-scrollbar relative pr-1",
-            listMaxHeight && isPageScrolledToBottom && "overflow-y-auto",
-            listMaxHeight && !isPageScrolledToBottom && "overflow-y-clip",
+            listMaxHeight && "overflow-y-auto",
           )}
           style={
             listMaxHeight ? { maxHeight: `${listMaxHeight}px` } : undefined
           }
         >
-          {/* Type selector tabs - only show if project has commercial or parking */}
-          {(project?.has_commercial || project?.has_parking) && (
+          {/* Type selector tabs - show if project has commercial, parking, or object sub-projects */}
+          {(project?.has_commercial || project?.has_parking || hasObjects) && (
             <div className="sticky top-0 z-20 bg-white pb-2 pt-1">
               <Tabs
                 value={selectedType}
                 onValueChange={(value) =>
                   setSelectedType(
-                    value as "all" | "apartment" | "commercial" | "parking",
+                    value as
+                      | "all"
+                      | "apartment"
+                      | "object"
+                      | "commercial"
+                      | "parking",
                   )
                 }
               >
@@ -324,6 +312,14 @@ export const ListView = ({
                       value: "apartment" as const,
                       label: t("apartmentsManager.typeApartment"),
                     },
+                    ...(hasObjects
+                      ? [
+                          {
+                            value: "object" as const,
+                            label: t("project.objects"),
+                          },
+                        ]
+                      : []),
                     ...(project?.has_commercial
                       ? [
                           {
@@ -752,30 +748,31 @@ export const ListView = ({
                             </div>
 
                             {/* Action Buttons - Always visible */}
-                            {apartment.status === "available" && (
-                              <div className="mr-[57px] flex flex-shrink-0 items-center gap-4">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-10 w-10 p-2 hover:bg-gray-100"
-                                  onClick={(e) => handleShare(e, apartment)}
-                                >
-                                  <Share2 className="h-6 w-6 text-black" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-10 w-10 p-2 hover:bg-gray-100"
-                                  onClick={(e) =>
-                                    handleFavoriteToggle(e, apartment)
-                                  }
-                                >
-                                  <Heart
-                                    className={`h-6 w-6 text-black ${isFavorite(apartment.id) ? "fill-current text-red-500" : "text-black"}`}
-                                  />
-                                </Button>
-                              </div>
-                            )}
+
+                            <div
+                              className={`mr-[57px] flex flex-shrink-0 items-center gap-4 ${apartment.status === "available" ? "" : "opacity-0"}`}
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-10 w-10 p-2 hover:bg-gray-100"
+                                onClick={(e) => handleShare(e, apartment)}
+                              >
+                                <Share2 className="h-6 w-6 text-black" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-10 w-10 p-2 hover:bg-gray-100"
+                                onClick={(e) =>
+                                  handleFavoriteToggle(e, apartment)
+                                }
+                              >
+                                <Heart
+                                  className={`h-6 w-6 text-black ${isFavorite(apartment.id) ? "fill-current text-red-500" : "text-black"}`}
+                                />
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -786,7 +783,7 @@ export const ListView = ({
             ) : (
               // Grid layout
               <div className="space-y-8">
-                {project?.project_type === "object" ? (
+                {isObjectProject ? (
                   // Villas: single grid across all units, no floor headers
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
                     {filteredApartments.map((apartment) => (

@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useParams } from "react-router-dom";
 import { LANGUAGE_CONFIG } from "@gridix/utils/lib";
 import { createAppQueryClient } from "@gridix/utils/api";
 import i18n from "@/shared/lib/i18n";
@@ -18,11 +18,25 @@ const widgetQueryClient = createAppQueryClient();
 // Используется только для версионирования style.css
 declare const __WIDGET_VERSION__: string;
 
+/** Стартовый экран встроенного виджета (после загрузки проекта). */
+export type WidgetStartView = "genplan" | "objects" | "list";
+
 type InitOptions = {
   // Основные параметры
   projectId?: string | undefined; // slug или UUID проекта
   lang?: string | undefined; // ru | en | ka | ar
   showFullProject?: boolean | undefined; // показывать полный проект в виджете
+
+  /**
+   * Стартовый режим для проекта с генпланом: генплан (по умолчанию), список объектов/подпроектов или список квартир.
+   * Для обычного проекта без генплана влияет только выбор вкладки (фасад / шахматка / список).
+   */
+  widgetStartView?: WidgetStartView | undefined;
+  /**
+   * Показать только выбранное здание (slug подпроекта). Полный хаб проекта не загружается.
+   * Навигация на генплан из этого режима недоступна, если не открыть полный виджет проекта отдельно.
+   */
+  subProjectSlug?: string | undefined;
 
   // Настройки парящей кнопки
   showFloatingButton?: boolean; // показывать/скрывать кнопку
@@ -32,6 +46,31 @@ type InitOptions = {
 };
 
 const DEFAULT_CONTAINER_ID = "gridix-widget-root";
+
+function parseWidgetStartView(raw: string | null): WidgetStartView | undefined {
+  if (raw === "genplan" || raw === "objects" || raw === "list") return raw;
+  return undefined;
+}
+
+/** Путь + query для MemoryRouter: генплан по умолчанию, либо только подпроект. */
+function buildWidgetInitialPath(opts: {
+  subProjectSlug?: string | undefined;
+  widgetStartView?: WidgetStartView | undefined;
+}): string {
+  const sp = new URLSearchParams();
+  if (opts.widgetStartView === "objects") {
+    sp.set("view", "chess");
+  } else if (opts.widgetStartView === "list") {
+    sp.set("view", "list");
+  }
+  const q = sp.toString();
+  const suffix = q ? `?${q}` : "";
+  const slug = opts.subProjectSlug?.trim();
+  if (slug) {
+    return `/p/${encodeURIComponent(slug)}${suffix}`;
+  }
+  return `/${suffix}`;
+}
 
 function getWidgetScriptSrc(): string | null {
   // Best case: during script execution, currentScript points to the widget script.
@@ -85,6 +124,8 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
   const floatingButtonBottomOffsetParam = qp.get("floatingButtonBottomOffset");
   const floatingButtonSideOffsetParam = qp.get("floatingButtonSideOffset");
   const showFullProjectParam = qp.get("showFullProject");
+  const widgetStartViewParam = parseWidgetStartView(qp.get("widgetStartView"));
+  const subProjectSlugParam = qp.get("subProjectSlug")?.trim();
 
   const parsedFloatingBottom = floatingButtonBottomOffsetParam
     ? parseInt(floatingButtonBottomOffsetParam, 10)
@@ -93,12 +134,23 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
     ? parseInt(floatingButtonSideOffsetParam, 10)
     : undefined;
 
+  const mergedSubSlug =
+    options.subProjectSlug ??
+    (subProjectSlugParam && subProjectSlugParam.length > 0
+      ? subProjectSlugParam
+      : undefined);
+
+  const mergedStartView =
+    options.widgetStartView ?? widgetStartViewParam ?? undefined;
+
   return {
     projectId: options.projectId ?? qp.get("projectId") ?? undefined,
     lang: options.lang ?? qp.get("lang") ?? undefined,
     showFullProject:
       options.showFullProject ??
       (showFullProjectParam ? showFullProjectParam !== "false" : true),
+    widgetStartView: mergedStartView,
+    subProjectSlug: mergedSubSlug,
     showFloatingButton:
       options.showFloatingButton ??
       (showFloatingButtonParam ? showFloatingButtonParam !== "false" : true),
@@ -202,20 +254,42 @@ function lazyLoadWithObserver(
   observer.observe(container);
 }
 
-function WidgetApp(props: { projectId?: string | undefined }) {
+function WidgetEmbeddedSubProject(props: { projectId: string }) {
   const { projectId } = props;
-
-  if (!projectId) return null;
-
-  const content = (
+  const { subSlug } = useParams<{ subSlug: string }>();
+  if (!subSlug) return null;
+  return (
     <ProjectApartmentSelector
       projectId={projectId}
+      subProjectSlug={subSlug}
       isWidget={true}
-      showFullProjectInWidget={true}
     />
   );
+}
 
-  return <div className="h-full bg-background text-foreground">{content}</div>;
+function WidgetProjectRoutes(props: {
+  projectId: string;
+  initialPath: string;
+}) {
+  const { projectId, initialPath } = props;
+  return (
+    <div className="h-full bg-background text-foreground">
+      <MemoryRouter initialEntries={[initialPath]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProjectApartmentSelector projectId={projectId} isWidget={true} />
+            }
+          />
+          <Route
+            path="/p/:subSlug"
+            element={<WidgetEmbeddedSubProject projectId={projectId} />}
+          />
+        </Routes>
+      </MemoryRouter>
+    </div>
+  );
 }
 
 // Быстрая инициализация только парящей кнопки
@@ -306,11 +380,15 @@ async function initInternal(opts: InitOptions) {
   root.render(
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={widgetQueryClient}>
-        <MemoryRouter>
-          <AuthProvider>
-            <WidgetApp projectId={opts.projectId} />
-          </AuthProvider>
-        </MemoryRouter>
+        <AuthProvider>
+          <WidgetProjectRoutes
+            projectId={opts.projectId as string}
+            initialPath={buildWidgetInitialPath({
+              subProjectSlug: opts.subProjectSlug,
+              widgetStartView: opts.widgetStartView,
+            })}
+          />
+        </AuthProvider>
       </QueryClientProvider>
     </I18nextProvider>,
   );

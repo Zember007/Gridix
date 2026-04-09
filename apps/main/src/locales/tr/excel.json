@@ -1,7 +1,15 @@
 {
   "mapper": {
     "actions": {
-      "createProject": "Verilerle proje oluştur"
+      "createProject": "Verilerle proje oluştur",
+      "createSubProject": "Bina oluştur ve içe aktar",
+      "importApartments": "Daireleri içe aktar"
+    },
+    "subProject": {
+      "infoTitle": "Bina bilgisi",
+      "infoDescription": "Yeni binanın adı ve türü; daire verileri dosyanızdan gelir.",
+      "name": "Bina adı*",
+      "type": "Bina türü*"
     },
     "preview": {
       "description": "Verileriniz nasıl içe aktarılacak ({{count}} kayıt)",
@@ -140,6 +148,10 @@
       "linkAccessible": "Bağlantıya içe aktarma için erişilebilir",
       "projectCreated": "\"{{name}}\" projesi, {{floors}} katta {{count}} daireyle oluşturuldu",
       "projectCreatedObjects": "\"{{name}}\" projesi {{count}} nesneyle oluşturuldu",
+      "subProjectCreatedBuilding": "\"{{name}}\" binası, {{floors}} katta {{count}} daireyle oluşturuldu",
+      "subProjectCreatedObjects": "\"{{name}}\" binası {{count}} nesneyle oluşturuldu",
+      "apartmentsImportedBuilding": "{{floors}} katta {{count}} daire içe aktarıldı",
+      "apartmentsImportedObjects": "{{count}} nesne içe aktarıldı",
       "projectCreationError": "Proje oluşturulurken hata oluştu"
     }
   }

@@ -296,6 +296,7 @@ interface TaskCardProps {
   onComplete: (lid: string, tid: string, res: string) => void;
   onToggle: (lid: string, tid: string) => void;
   onDelete: (lid: string, tid: string) => void;
+  readOnly?: boolean;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -304,12 +305,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onComplete,
   onToggle,
   onDelete,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const TASK_TYPES = getTaskTypes(t);
   const [isCompleting, setIsCompleting] = useState(false);
   const [resultText, setResultText] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (readOnly) {
+      setIsCompleting(false);
+      setIsMenuOpen(false);
+    }
+  }, [readOnly]);
 
   const handleComplete = () => {
     if (!resultText.trim()) return;
@@ -333,17 +342,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           )}
         </div>
-        <button
-          onClick={() => onToggle(leadId, task.id)}
-          className="whitespace-nowrap text-xs text-blue-500 hover:underline"
-        >
-          {t("leads.tasks.return")}
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => onToggle(leadId, task.id)}
+            className="whitespace-nowrap text-xs text-blue-500 hover:underline"
+          >
+            {t("leads.tasks.return")}
+          </button>
+        )}
       </div>
     );
   }
 
-  if (isCompleting) {
+  if (isCompleting && !readOnly) {
     return (
       <div className="space-y-3 rounded-xl border-2 border-blue-400 bg-white p-4 shadow-lg animate-in fade-in zoom-in-95">
         <div className="flex items-center justify-between">
@@ -412,41 +424,47 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
 
-        <div className="absolute right-2 top-2 flex items-center gap-1 bg-white pl-2 opacity-0 shadow-[-10px_0_10px_white] transition-opacity group-hover:opacity-100">
-          <button
-            onClick={() => setIsCompleting(true)}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-green-50 hover:text-green-600"
-            title="Выполнить"
-          >
-            <CheckCircle2 size={16} />
-          </button>
-          <div className="relative">
+        {!readOnly && (
+          <div className="absolute right-2 top-2 flex items-center gap-1 bg-white pl-2 opacity-0 shadow-[-10px_0_10px_white] transition-opacity group-hover:opacity-100">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              type="button"
+              onClick={() => setIsCompleting(true)}
+              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-green-50 hover:text-green-600"
+              title="Выполнить"
             >
-              <MoreVertical size={16} />
+              <CheckCircle2 size={16} />
             </button>
-            {isMenuOpen && (
-              <div className="absolute right-0 top-full z-20 mt-1 w-28 rounded-lg border border-slate-100 bg-white py-1 shadow-xl animate-in fade-in zoom-in-95">
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-600 hover:bg-slate-50"
-                >
-                  <Edit size={12} /> {t("leads.tasks.edit")}
-                </button>
-                <button
-                  onClick={() => onDelete(leadId, task.id)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 size={12} /> {t("leads.tasks.delete")}
-                </button>
-              </div>
-            )}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              >
+                <MoreVertical size={16} />
+              </button>
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full z-20 mt-1 w-28 rounded-lg border border-slate-100 bg-white py-1 shadow-xl animate-in fade-in zoom-in-95">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-600 hover:bg-slate-50"
+                  >
+                    <Edit size={12} /> {t("leads.tasks.edit")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(leadId, task.id)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 size={12} /> {t("leads.tasks.delete")}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

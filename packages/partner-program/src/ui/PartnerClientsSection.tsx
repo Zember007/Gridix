@@ -63,7 +63,13 @@ function getPartnerLevelLabel(
   return fallback ?? inputLevel ?? t("partners.levelBronze");
 }
 
-export const PartnerClientsSection: React.FC = () => {
+type PartnerClientsSectionProps = {
+  readOnly?: boolean;
+};
+
+export const PartnerClientsSection: React.FC<PartnerClientsSectionProps> = ({
+  readOnly = false,
+}) => {
   const { clients, loading, error } = usePartnerClients();
   const { stats } = usePartnerStats();
   const { toast } = useToast();
@@ -617,13 +623,16 @@ export const PartnerClientsSection: React.FC = () => {
               {t("partners.managedClientsHint")}
             </p>
           </div>
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-black hover:shadow-xl md:w-auto"
-            onClick={() => setIsAddClientModalOpen(true)}
-          >
-            <UserPlus size={18} />
-            {t("partners.addClient")}
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-black hover:shadow-xl md:w-auto"
+              onClick={() => setIsAddClientModalOpen(true)}
+            >
+              <UserPlus size={18} />
+              {t("partners.addClient")}
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -819,20 +828,23 @@ export const PartnerClientsSection: React.FC = () => {
 
                 {/* Действия */}
                 <div className="flex w-full flex-col items-center gap-3 pt-4 sm:flex-row lg:w-auto lg:pt-0">
-                  <button
-                    onClick={() => openNoteModal(client.id)}
-                    className={`rounded-lg border p-2 transition-colors ${
-                      hasNote
-                        ? "border-amber-200 bg-amber-50 text-amber-600"
-                        : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600"
-                    }`}
-                    title={t("partners.notesTitle")}
-                  >
-                    <StickyNote
-                      size={18}
-                      className={hasNote ? "fill-amber-100" : ""}
-                    />
-                  </button>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => openNoteModal(client.id)}
+                      className={`rounded-lg border p-2 transition-colors ${
+                        hasNote
+                          ? "border-amber-200 bg-amber-50 text-amber-600"
+                          : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                      }`}
+                      title={t("partners.notesTitle")}
+                    >
+                      <StickyNote
+                        size={18}
+                        className={hasNote ? "fill-amber-100" : ""}
+                      />
+                    </button>
+                  )}
 
                   <button
                     onClick={() => handleImpersonate(client.client_id)}

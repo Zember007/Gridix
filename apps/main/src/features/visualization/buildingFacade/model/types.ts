@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { FieldSetting } from "@/hooks/useFields";
 
@@ -5,9 +6,7 @@ export type BuildingFacadeProject = {
   id: string;
   name: string;
   building_image_url: string | null;
-  project_type?: "building" | "object" | null;
   currency?: string | null;
-  facade_open?: boolean | null;
 };
 
 export interface BuildingFloor {
@@ -23,7 +22,12 @@ export interface FacadeNavItem {
 }
 
 export interface FacadeSettings {
-  colors: { building: string };
+  colors: {
+    building: string;
+    available?: string;
+    sold?: string;
+    reserved?: string;
+  };
   opacity: { normal: number; hover: number };
   hoverEffects: {
     glow: boolean;
@@ -31,13 +35,34 @@ export interface FacadeSettings {
     opacityChange?: boolean;
     scale?: boolean;
   };
-  display: { showNumbers: boolean; showTooltip: boolean };
+  display: {
+    showNumbers: boolean;
+    showTooltip: boolean;
+    showArea?: boolean;
+    showPrice?: boolean;
+  };
 }
 
-export interface BuildingFacadeViewProps {
+export type MasterplanPolygonItem = {
+  id: string;
+  polygon: { x: number; y: number }[];
+  /** SVG fill; defaults to overlay `colors.building` when omitted. */
+  fillColor?: string;
+};
+
+/** Mobile genplan: card + vertical list copy (built in MasterplanSection). */
+export type MasterplanMobileSummary = {
+  kind: "sub_project" | "infrastructure_zone";
+  title: string;
+  subtitle?: string;
+};
+
+export interface PolygonPlanImageViewProps {
   projectId: string;
   themeColor: string;
   project: BuildingFacadeProject;
+  /** Building vs villa layout — from `sub_projects.type` in scope (not `projects.project_type`). */
+  entityKind: "building" | "object";
   imageUrl?: string | null;
   apartments: Apartment[];
   onFloorSelect?: (floor: number) => void;
@@ -54,4 +79,18 @@ export interface BuildingFacadeViewProps {
   facades?: FacadeNavItem[];
   activeFacadeIndex?: number;
   onFacadeChange?: (nextIndex: number) => void;
+  /** Facade (default) or masterplan / genplan polygons in the same viewer shell. */
+  planKind?: "facade" | "masterplan";
+  /** Polygons in **percent** coordinates 0–100 (same as facade floors). */
+  masterplanPolygons?: MasterplanPolygonItem[];
+  onMasterplanAreaClick?: (areaId: string) => void;
+  /** Tooltip/popup body when `facadeSettings.display.showTooltip` and hovering a masterplan polygon. */
+  masterplanRenderTooltip?: (areaId: string) => ReactNode;
+  /** Short labels on masterplan polygons (when `planKind === "masterplan"` and `display.showNumbers`). */
+  masterplanPolygonLabels?: Record<string, string>;
+  /** Rich titles/subtitles for mobile genplan list + detail card. */
+  masterplanMobileSummaries?: Record<string, MasterplanMobileSummary>;
 }
+
+/** @deprecated Use PolygonPlanImageViewProps */
+export type BuildingFacadeViewProps = PolygonPlanImageViewProps;

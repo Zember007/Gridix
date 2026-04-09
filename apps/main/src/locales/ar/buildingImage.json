@@ -25,7 +25,54 @@
     "objectNumber": "كائن رقم {{number}}",
     "plan": "خطة الكائنات",
     "polygonsDescription": "حدد المناطق على الخطة لكل كائن (فيلات، منازل)",
-    "polygonsTitle": "مضلعات الكائنات"
+    "polygonsTitle": "مضلعات الكائنات",
+    "description": "قم بتحميل صورة المخطط لتكوين مضلعات الكائنات",
+    "guided": {
+      "toggle": "اقترح الكائن التالي",
+      "progress": {
+        "floorRange": "نطاق الكائنات:",
+        "missingFloors": "الكائنات المفقودة:",
+        "allConfigured": "تم تكوين جميع الكائنات"
+      },
+      "helper": {
+        "savedAndNext": "تم حفظ الكائن #{{floor}}. الكائن المفقود التالي: {{nextFloor}}",
+        "goNext": "اذهب إلى الكائن التالي"
+      }
+    }
+  },
+  "genplan": {
+    "description": "حمّل صورة المخطط العام، ثم ارسم حدود كل مشروع فرعي بأدوات المضلع نفسها المستخدمة في واجهة المبنى.",
+    "noEntities": "أضف مشاريع فرعية أو مناطق بنية تحتية أولاً — ثم يمكنك رسم المناطق على المخطط.",
+    "polygonsTitle": "مضلعات المشاريع الفرعية",
+    "polygonsDescription": "اختر مشروعاً فرعياً أو منطقة بنية تحتية، ثم ارسم أو عدّل المضلع على المخطط العام.",
+    "selectLabel": "مشروع فرعي / منطقة",
+    "selectPlaceholder": "اختر مشروعاً فرعياً أو منطقة",
+    "addNew": "بدء الرسم",
+    "canvas": "المخطط العام",
+    "creating": "رسم المنطقة: {{name}}",
+    "delete": "حذف المنطقة",
+    "hoverCaption": "منطقة",
+    "guided": {
+      "toggle": "اقتراح المشروع الفرعي التالي",
+      "progress": {
+        "rangeLabel": "المشاريع الفرعية:",
+        "missingList": "بدون مضلع:",
+        "infraRangeLabel": "مناطق البنية التحتية:",
+        "infraDrawn": "مع مضلع:",
+        "infraMissing": "بدون مضلع:",
+        "missingInfraList": "مناطق غير موضوعة على المخطط:",
+        "allConfigured": "جميع المشاريع الفرعية ومناطق البنية التحتية لديها مضلع على المخطط"
+      },
+      "helper": {
+        "savedAndNext": "تم حفظ «{{name}}». التالي: {{nextName}}",
+        "goNext": "انتقل إلى التالي"
+      }
+    },
+    "polygon": {
+      "createSuccess": "تم إنشاء المنطقة لـ {{name}}",
+      "saveSuccess": "تم حفظ المنطقة لـ {{name}}",
+      "deleteSuccess": "تم حذف المنطقة"
+    }
   },
   "polygon": {
     "cancel": "إلغاء",

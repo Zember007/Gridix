@@ -43,6 +43,12 @@ export const useSubscriptionTabController = () => {
   const [isChangeCardModalOpen, setIsChangeCardModalOpen] = useState(false);
 
   useEffect(() => {
+    if (selectedDuration === 3) {
+      setSelectedDuration(1);
+    }
+  }, [selectedDuration]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const url = new URL(window.location.href);
@@ -130,8 +136,9 @@ export const useSubscriptionTabController = () => {
       : null;
     const hasActivePaidPeriod = periodEnd !== null && periodEnd > Date.now();
 
+    // Abandoned Stripe checkout leaves pending_payment with no paid period — user must retry.
     if (sub.status === "pending_payment") {
-      return false;
+      return !hasActivePaidPeriod;
     }
 
     if (
@@ -161,7 +168,6 @@ export const useSubscriptionTabController = () => {
 
   const durationOptions = [
     { value: 1, label: t("admin.subscriptionPage.durations.1") },
-    { value: 3, label: t("admin.subscriptionPage.durations.3") },
     { value: 6, label: t("admin.subscriptionPage.durations.6") },
     { value: 12, label: t("admin.subscriptionPage.durations.12") },
     { value: 24, label: t("admin.subscriptionPage.durations.24") },

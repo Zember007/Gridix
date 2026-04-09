@@ -1,6 +1,9 @@
 import { supabase } from "@gridix/utils/api";
+import type { PartnerStats } from "../model/types";
 
-export const fetchPartnerStats = async (partnerId?: string) => {
+export const fetchPartnerStats = async (
+  partnerId?: string,
+): Promise<PartnerStats> => {
   const { data, error: functionError } = await supabase.functions.invoke(
     "partner-program",
     {
@@ -19,5 +22,5 @@ export const fetchPartnerStats = async (partnerId?: string) => {
     throw new Error(data.error);
   }
 
-  return data;
+  return data as PartnerStats;
 };

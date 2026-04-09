@@ -16,6 +16,7 @@
   "areaRange": "Alan aralığı",
   "available": "Mevcut",
   "backToBuilding": "Binaya Geri Dön",
+  "backToGenplan": "Genel plana dön",
   "changeFilters": "Arama filtrelerinizi değiştirmeyi deneyin",
   "contactAdmin": "Yöneticiyle iletişime geçin",
   "contactManager": "İletişim Yöneticisi",
@@ -69,5 +70,16 @@
   "viewDetails": "Detayları görüntüle",
   "openMenu": "Menüyü aç",
   "closeMenu": "Menüyü kapat",
-  "plan_floor": "Kat {{kat}} planı"
+  "plan_floor": "Kat {{kat}} planı",
+  "masterplans": "Genel Planlar",
+  "objects": "Nesneler",
+  "building": "Bina",
+  "object": "Nesne",
+  "priceFrom": "Fiyat",
+  "addressNotSet": "Adres belirtilmedi",
+  "mapNoCoordinates": "Bu görünüm için haritada konum ayarlanmamış",
+  "noMasterplan": "Genel plan mevcut değil",
+  "noObjects": "Nesne bulunamadı",
+  "genplanOpenBuilding": "Bloğa git",
+  "genplanInfrastructureLabel": "Alan"
 }

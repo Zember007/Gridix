@@ -426,6 +426,7 @@ export function SimplifiedSidebar({
   preferredLocale,
   workspaceExtra,
   exitDemoSlot,
+  isNavLoading,
 }: {
   navItems: SimplifiedSidebarNavItem[];
   activeSection: string;
@@ -452,6 +453,8 @@ export function SimplifiedSidebar({
   workspaceExtra?: React.ReactNode;
   /** Demo exit button — always rendered, even when sidebar is collapsed. */
   exitDemoSlot?: React.ReactNode;
+  /** When true, hides nav items (opacity-0) to avoid layout shifts during async data load. */
+  isNavLoading?: boolean;
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
@@ -611,7 +614,9 @@ export function SimplifiedSidebar({
       {workspaceExtra ?? null}
 
       {/* Navigation */}
-      <div className="no-scrollbar flex-1 overflow-y-auto px-2 py-2">
+      <div
+        className={`no-scrollbar flex-1 overflow-y-auto px-2 py-2${isNavLoading ? "pointer-events-none opacity-0" : ""}`}
+      >
         <nav className="space-y-1">
           {primaryNavItems.map((item) => {
             const hasChildren = item.children && item.children.length > 0;

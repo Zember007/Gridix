@@ -79,6 +79,7 @@ interface Props {
   onAddNote: (id: string, note: string) => void;
   onAddTag: (id: string, tag: string) => void;
   onRemoveTag: (id: string, tag: string) => void;
+  readOnly?: boolean;
 }
 
 export const LeadDrawer: React.FC<Props> = ({
@@ -94,6 +95,7 @@ export const LeadDrawer: React.FC<Props> = ({
   onAddNote,
   onAddTag,
   onRemoveTag,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
@@ -186,6 +188,7 @@ export const LeadDrawer: React.FC<Props> = ({
               onComplete={onCompleteTask}
               onToggle={onToggleTask}
               onDelete={onDeleteTask}
+              readOnly={readOnly}
             />
           ))}
         </div>
@@ -225,57 +228,74 @@ export const LeadDrawer: React.FC<Props> = ({
                 )}
 
                 <div className="mt-1 flex items-center gap-2">
-                  {!isEditing ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-600"
-                    >
-                      <Pencil size={10} /> {t("leads.drawer.edit")}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSaveEdit}
-                      className="flex items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-xs font-bold text-green-600 hover:text-green-700"
-                    >
-                      <Save size={12} /> {t("leads.drawer.save")}
-                    </button>
-                  )}
+                  {!readOnly &&
+                    (!isEditing ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-600"
+                      >
+                        <Pencil size={10} /> {t("leads.drawer.edit")}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSaveEdit}
+                        className="flex items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-xs font-bold text-green-600 hover:text-green-700"
+                      >
+                        <Save size={12} /> {t("leads.drawer.save")}
+                      </button>
+                    ))}
                 </div>
               </div>
             </div>
 
             <div className="relative mt-3">
-              {currentStage && (
-                <button
-                  onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
-                  className={`inline-flex items-center gap-2 rounded-lg border py-1 pl-2 pr-3 text-xs font-bold uppercase tracking-wider transition-all hover:shadow-sm bg-${currentStage.color}-50 text-${currentStage.color}-700 border-${currentStage.color}-200 hover:border-${currentStage.color}-300`}
-                >
+              {currentStage &&
+                (readOnly ? (
                   <div
-                    className={`h-2 w-2 rounded-full bg-${currentStage.color}-500`}
-                  ></div>
-                  {currentStage.name}
-                  <ChevronDown size={12} className="opacity-50" />
-                </button>
-              )}
-              {isStatusMenuOpen && (
-                <div className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-2xl animate-in fade-in zoom-in-95">
-                  {funnelStages.map((stage) => (
+                    className={`inline-flex items-center gap-2 rounded-lg border py-1 pl-2 pr-3 text-xs font-bold uppercase tracking-wider bg-${currentStage.color}-50 text-${currentStage.color}-700 border-${currentStage.color}-200`}
+                  >
+                    <div
+                      className={`h-2 w-2 rounded-full bg-${currentStage.color}-500`}
+                    ></div>
+                    {currentStage.name}
+                  </div>
+                ) : (
+                  <>
                     <button
-                      key={stage.id}
-                      onClick={() => {
-                        onStatusChange(lead.id, stage.id);
-                        setIsStatusMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-3 border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:border-blue-500 hover:bg-slate-50"
+                      type="button"
+                      onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
+                      className={`inline-flex items-center gap-2 rounded-lg border py-1 pl-2 pr-3 text-xs font-bold uppercase tracking-wider transition-all hover:shadow-sm bg-${currentStage.color}-50 text-${currentStage.color}-700 border-${currentStage.color}-200 hover:border-${currentStage.color}-300`}
                     >
                       <div
-                        className={`h-2.5 w-2.5 rounded-full bg-${stage.color}-500 shrink-0`}
+                        className={`h-2 w-2 rounded-full bg-${currentStage.color}-500`}
                       ></div>
-                      {stage.name}
+                      {currentStage.name}
+                      <ChevronDown size={12} className="opacity-50" />
                     </button>
-                  ))}
-                </div>
-              )}
+                    {isStatusMenuOpen && (
+                      <div className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-2xl animate-in fade-in zoom-in-95">
+                        {funnelStages.map((stage) => (
+                          <button
+                            type="button"
+                            key={stage.id}
+                            onClick={() => {
+                              onStatusChange(lead.id, stage.id);
+                              setIsStatusMenuOpen(false);
+                            }}
+                            className="flex w-full items-center gap-3 border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:border-blue-500 hover:bg-slate-50"
+                          >
+                            <div
+                              className={`h-2.5 w-2.5 rounded-full bg-${stage.color}-500 shrink-0`}
+                            ></div>
+                            {stage.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ))}
             </div>
           </div>
           <button
@@ -457,30 +477,35 @@ export const LeadDrawer: React.FC<Props> = ({
                       className="group flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
                     >
                       {tag}
-                      <button
-                        onClick={() => onRemoveTag(lead.id, tag)}
-                        className="text-slate-400 hover:text-red-500"
-                      >
-                        <X size={12} />
-                      </button>
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={() => onRemoveTag(lead.id, tag)}
+                          className="text-slate-400 hover:text-red-500"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
                     </span>
                   ))}
                 </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={t("leads.drawer.addTag")}
-                    value={newTagText}
-                    onChange={(e) => setNewTagText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newTagText.trim()) {
-                        onAddTag(lead.id, newTagText.trim());
-                        setNewTagText("");
-                      }
-                    }}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
+                {!readOnly && (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={t("leads.drawer.addTag")}
+                      value={newTagText}
+                      onChange={(e) => setNewTagText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newTagText.trim()) {
+                          onAddTag(lead.id, newTagText.trim());
+                          setNewTagText("");
+                        }
+                      }}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -488,11 +513,13 @@ export const LeadDrawer: React.FC<Props> = ({
           {/* TASKS TAB */}
           {activeTab === "tasks" && (
             <div className="space-y-6 duration-300 animate-in fade-in slide-in-from-bottom-2">
-              <TaskComposer
-                onAdd={(text, type, date, time, assignedTo) =>
-                  onAddTask(lead.id, text, type, date, time, assignedTo)
-                }
-              />
+              {!readOnly && (
+                <TaskComposer
+                  onAdd={(text, type, date, time, assignedTo) =>
+                    onAddTask(lead.id, text, type, date, time, assignedTo)
+                  }
+                />
+              )}
 
               <div className="space-y-2">
                 {tasks.length === 0 && (
@@ -537,6 +564,7 @@ export const LeadDrawer: React.FC<Props> = ({
                           onComplete={onCompleteTask}
                           onToggle={onToggleTask}
                           onDelete={onDeleteTask}
+                          readOnly={readOnly}
                         />
                       ))}
                     </div>
@@ -549,39 +577,42 @@ export const LeadDrawer: React.FC<Props> = ({
           {/* HISTORY TAB */}
           {activeTab === "history" && (
             <div className="duration-300 animate-in fade-in slide-in-from-bottom-2">
-              <div className="mb-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                <div className="relative">
-                  <textarea
-                    placeholder={t("leads.drawer.writeNote")}
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                        onAddNote(lead.id, noteText);
-                        setNoteText("");
-                      }
-                    }}
-                    className="min-h-[60px] w-full resize-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-                  <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
-                    <span className="text-[10px] font-medium text-slate-300">
-                      {t("leads.drawer.ctrlEnterToSend")}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (noteText.trim()) {
+              {!readOnly && (
+                <div className="mb-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <div className="relative">
+                    <textarea
+                      placeholder={t("leads.drawer.writeNote")}
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
                           onAddNote(lead.id, noteText);
                           setNoteText("");
                         }
                       }}
-                      disabled={!noteText.trim()}
-                      className="rounded-lg bg-slate-100 p-2 text-slate-500 transition-colors hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:hover:bg-slate-100 disabled:hover:text-slate-500"
-                    >
-                      <Send size={16} />
-                    </button>
+                      className="min-h-[60px] w-full resize-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                    />
+                    <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
+                      <span className="text-[10px] font-medium text-slate-300">
+                        {t("leads.drawer.ctrlEnterToSend")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (noteText.trim()) {
+                            onAddNote(lead.id, noteText);
+                            setNoteText("");
+                          }
+                        }}
+                        disabled={!noteText.trim()}
+                        className="rounded-lg bg-slate-100 p-2 text-slate-500 transition-colors hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:hover:bg-slate-100 disabled:hover:text-slate-500"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="relative space-y-6 pl-6">
                 {/* Continuous Line */}

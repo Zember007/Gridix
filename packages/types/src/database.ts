@@ -449,6 +449,7 @@ export type Database = {
           project_id: string;
           rooms: string;
           status: string;
+          sub_project_id: string | null;
           type: Database["public"]["Enums"]["apartment_type"] | null;
           updated_at: string;
         };
@@ -465,6 +466,7 @@ export type Database = {
           project_id: string;
           rooms: string;
           status?: string;
+          sub_project_id?: string | null;
           type?: Database["public"]["Enums"]["apartment_type"] | null;
           updated_at?: string;
         };
@@ -481,6 +483,7 @@ export type Database = {
           project_id?: string;
           rooms?: string;
           status?: string;
+          sub_project_id?: string | null;
           type?: Database["public"]["Enums"]["apartment_type"] | null;
           updated_at?: string;
         };
@@ -497,6 +500,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "apartments_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -680,6 +690,7 @@ export type Database = {
           id: string;
           polygon: Json;
           project_id: string;
+          sub_project_id: string | null;
         };
         Insert: {
           color?: string;
@@ -689,6 +700,7 @@ export type Database = {
           id?: string;
           polygon?: Json;
           project_id: string;
+          sub_project_id?: string | null;
         };
         Update: {
           color?: string;
@@ -698,6 +710,7 @@ export type Database = {
           id?: string;
           polygon?: Json;
           project_id?: string;
+          sub_project_id?: string | null;
         };
         Relationships: [
           {
@@ -712,6 +725,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "building_floors_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -1200,6 +1220,51 @@ export type Database = {
           },
         ];
       };
+      customer_subscriptions: {
+        Row: {
+          billing_interval: string;
+          billing_interval_count: number;
+          cancel_at_period_end: boolean;
+          created_at: string;
+          current_period_end: string | null;
+          current_period_start: string | null;
+          id: string;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          billing_interval?: string;
+          billing_interval_count?: number;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          id?: string;
+          status?: string;
+          stripe_customer_id: string;
+          stripe_subscription_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          billing_interval?: string;
+          billing_interval_count?: number;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          id?: string;
+          status?: string;
+          stripe_customer_id?: string;
+          stripe_subscription_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       floor_plans: {
         Row: {
           created_at: string;
@@ -1208,6 +1273,7 @@ export type Database = {
           id: string;
           image_url: string | null;
           project_id: string;
+          sub_project_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1217,6 +1283,7 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           project_id: string;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1226,6 +1293,7 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           project_id?: string;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -1234,6 +1302,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "floor_plans_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -1249,6 +1324,7 @@ export type Database = {
           layout_type: string;
           order_index: number;
           project_id: string;
+          sub_project_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1261,6 +1337,7 @@ export type Database = {
           layout_type: string;
           order_index?: number;
           project_id: string;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1273,6 +1350,7 @@ export type Database = {
           layout_type?: string;
           order_index?: number;
           project_id?: string;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -1281,6 +1359,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "layout_photos_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -1493,6 +1578,7 @@ export type Database = {
           project_id: string;
           source: string | null;
           status: string | null;
+          sub_project_id: string | null;
           tags: string[] | null;
           updated_at: string;
         };
@@ -1515,6 +1601,7 @@ export type Database = {
           project_id: string;
           source?: string | null;
           status?: string | null;
+          sub_project_id?: string | null;
           tags?: string[] | null;
           updated_at?: string;
         };
@@ -1537,6 +1624,7 @@ export type Database = {
           project_id?: string;
           source?: string | null;
           status?: string | null;
+          sub_project_id?: string | null;
           tags?: string[] | null;
           updated_at?: string;
         };
@@ -1553,6 +1641,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leads_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -2331,6 +2426,7 @@ export type Database = {
           is_visible: boolean;
           project_id: string;
           sort_order: number;
+          sub_project_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -2345,6 +2441,7 @@ export type Database = {
           is_visible?: boolean;
           project_id: string;
           sort_order?: number;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -2359,6 +2456,7 @@ export type Database = {
           is_visible?: boolean;
           project_id?: string;
           sort_order?: number;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -2367,6 +2465,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_custom_fields_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -2446,6 +2551,7 @@ export type Database = {
           name: string;
           order_index: number;
           project_id: string;
+          sub_project_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -2454,6 +2560,7 @@ export type Database = {
           name: string;
           order_index?: number;
           project_id: string;
+          sub_project_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -2462,6 +2569,7 @@ export type Database = {
           name?: string;
           order_index?: number;
           project_id?: string;
+          sub_project_id?: string | null;
         };
         Relationships: [
           {
@@ -2469,6 +2577,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_facades_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
             referencedColumns: ["id"];
           },
         ];
@@ -2484,6 +2599,7 @@ export type Database = {
           is_visible: boolean;
           project_id: string;
           sort_order: number;
+          sub_project_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -2496,6 +2612,7 @@ export type Database = {
           is_visible?: boolean;
           project_id: string;
           sort_order?: number;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -2508,11 +2625,229 @@ export type Database = {
           is_visible?: boolean;
           project_id?: string;
           sort_order?: number;
+          sub_project_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: "project_field_settings_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_field_settings_sub_project_id_fkey";
+            columns: ["sub_project_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_infrastructure_zones: {
+        Row: {
+          cover_image: string | null;
+          created_at: string;
+          cta_payload: Json | null;
+          cta_type: string | null;
+          display_mode: string;
+          full_description: string | null;
+          gallery: Json | null;
+          icon: string | null;
+          id: string;
+          is_published: boolean;
+          name: string;
+          priority: number;
+          project_id: string;
+          short_description: string | null;
+          status: string;
+          updated_at: string;
+          zone_type: string;
+        };
+        Insert: {
+          cover_image?: string | null;
+          created_at?: string;
+          cta_payload?: Json | null;
+          cta_type?: string | null;
+          display_mode?: string;
+          full_description?: string | null;
+          gallery?: Json | null;
+          icon?: string | null;
+          id?: string;
+          is_published?: boolean;
+          name?: string;
+          priority?: number;
+          project_id: string;
+          short_description?: string | null;
+          status?: string;
+          updated_at?: string;
+          zone_type?: string;
+        };
+        Update: {
+          cover_image?: string | null;
+          created_at?: string;
+          cta_payload?: Json | null;
+          cta_type?: string | null;
+          display_mode?: string;
+          full_description?: string | null;
+          gallery?: Json | null;
+          icon?: string | null;
+          id?: string;
+          is_published?: boolean;
+          name?: string;
+          priority?: number;
+          project_id?: string;
+          short_description?: string | null;
+          status?: string;
+          updated_at?: string;
+          zone_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_infrastructure_zones_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_masterplan_areas: {
+        Row: {
+          analytics_payload: Json | null;
+          area_type: string;
+          audience_rules: Json | null;
+          created_at: string;
+          geometry: Json;
+          geometry_type: string;
+          id: string;
+          is_clickable: boolean;
+          label: string | null;
+          linked_entity_id: string | null;
+          linked_entity_type: string;
+          masterplan_id: string;
+          open_behavior: string | null;
+          short_label: string | null;
+          sort_order: number;
+          status: string;
+          ui_payload: Json | null;
+          updated_at: string;
+          z_index: number;
+        };
+        Insert: {
+          analytics_payload?: Json | null;
+          area_type?: string;
+          audience_rules?: Json | null;
+          created_at?: string;
+          geometry?: Json;
+          geometry_type?: string;
+          id?: string;
+          is_clickable?: boolean;
+          label?: string | null;
+          linked_entity_id?: string | null;
+          linked_entity_type?: string;
+          masterplan_id: string;
+          open_behavior?: string | null;
+          short_label?: string | null;
+          sort_order?: number;
+          status?: string;
+          ui_payload?: Json | null;
+          updated_at?: string;
+          z_index?: number;
+        };
+        Update: {
+          analytics_payload?: Json | null;
+          area_type?: string;
+          audience_rules?: Json | null;
+          created_at?: string;
+          geometry?: Json;
+          geometry_type?: string;
+          id?: string;
+          is_clickable?: boolean;
+          label?: string | null;
+          linked_entity_id?: string | null;
+          linked_entity_type?: string;
+          masterplan_id?: string;
+          open_behavior?: string | null;
+          short_label?: string | null;
+          sort_order?: number;
+          status?: string;
+          ui_payload?: Json | null;
+          updated_at?: string;
+          z_index?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_masterplan_areas_masterplan_id_fkey";
+            columns: ["masterplan_id"];
+            isOneToOne: false;
+            referencedRelation: "project_masterplans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_masterplans: {
+        Row: {
+          background_asset_height: number | null;
+          background_asset_url: string | null;
+          background_asset_width: number | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_default: boolean;
+          name: string;
+          polygon_display_settings: Json | null;
+          project_id: string;
+          published_at: string | null;
+          slug: string | null;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+          viewport_default: Json | null;
+        };
+        Insert: {
+          background_asset_height?: number | null;
+          background_asset_url?: string | null;
+          background_asset_width?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_default?: boolean;
+          name?: string;
+          polygon_display_settings?: Json | null;
+          project_id: string;
+          published_at?: string | null;
+          slug?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+          viewport_default?: Json | null;
+        };
+        Update: {
+          background_asset_height?: number | null;
+          background_asset_url?: string | null;
+          background_asset_width?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_default?: boolean;
+          name?: string;
+          polygon_display_settings?: Json | null;
+          project_id?: string;
+          published_at?: string | null;
+          slug?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+          viewport_default?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_masterplans_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
@@ -2707,9 +3042,9 @@ export type Database = {
           created_at: string;
           currency: Database["public"]["Enums"]["currency_type"] | null;
           description: string | null;
-          facade_open: boolean;
           floors: number;
           has_commercial: boolean | null;
+          has_masterplan: boolean;
           has_parking: boolean | null;
           id: string;
           installment_enabled: boolean | null;
@@ -2721,10 +3056,13 @@ export type Database = {
           max_installment_months: number | null;
           min_down_payment_percent: number | null;
           name: string;
+          parent_project_id: string | null;
           pdf_presentation_url: string | null;
           polygon_settings_facade: Json | null;
           polygon_settings_floor: Json | null;
+          polygon_settings_genplan: Json | null;
           project_type: Database["public"]["Enums"]["project_type"];
+          root_project_id: string | null;
           slug: string | null;
           subscription_expires_at: string | null;
           subscription_status: string | null;
@@ -2740,9 +3078,9 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["currency_type"] | null;
           description?: string | null;
-          facade_open?: boolean;
           floors?: number;
           has_commercial?: boolean | null;
+          has_masterplan?: boolean;
           has_parking?: boolean | null;
           id?: string;
           installment_enabled?: boolean | null;
@@ -2754,10 +3092,13 @@ export type Database = {
           max_installment_months?: number | null;
           min_down_payment_percent?: number | null;
           name: string;
+          parent_project_id?: string | null;
           pdf_presentation_url?: string | null;
           polygon_settings_facade?: Json | null;
           polygon_settings_floor?: Json | null;
+          polygon_settings_genplan?: Json | null;
           project_type?: Database["public"]["Enums"]["project_type"];
+          root_project_id?: string | null;
           slug?: string | null;
           subscription_expires_at?: string | null;
           subscription_status?: string | null;
@@ -2773,9 +3114,9 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["currency_type"] | null;
           description?: string | null;
-          facade_open?: boolean;
           floors?: number;
           has_commercial?: boolean | null;
+          has_masterplan?: boolean;
           has_parking?: boolean | null;
           id?: string;
           installment_enabled?: boolean | null;
@@ -2787,10 +3128,13 @@ export type Database = {
           max_installment_months?: number | null;
           min_down_payment_percent?: number | null;
           name?: string;
+          parent_project_id?: string | null;
           pdf_presentation_url?: string | null;
           polygon_settings_facade?: Json | null;
           polygon_settings_floor?: Json | null;
+          polygon_settings_genplan?: Json | null;
           project_type?: Database["public"]["Enums"]["project_type"];
+          root_project_id?: string | null;
           slug?: string | null;
           subscription_expires_at?: string | null;
           subscription_status?: string | null;
@@ -2805,6 +3149,20 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "projects_parent_project_id_fkey";
+            columns: ["parent_project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "projects_root_project_id_fkey";
+            columns: ["root_project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
         ];
@@ -2849,6 +3207,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "stripe_subscription_items_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sub_projects: {
+        Row: {
+          address: string | null;
+          building_image_url: string | null;
+          created_at: string;
+          floors: number;
+          has_commercial: boolean;
+          has_parking: boolean;
+          id: string;
+          is_default: boolean;
+          latitude: number | null;
+          longitude: number | null;
+          name: string;
+          polygon_settings_facade: Json | null;
+          polygon_settings_floor: Json | null;
+          project_id: string;
+          slug: string;
+          sort_order: number;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          address?: string | null;
+          building_image_url?: string | null;
+          created_at?: string;
+          floors?: number;
+          has_commercial?: boolean;
+          has_parking?: boolean;
+          id?: string;
+          is_default?: boolean;
+          latitude?: number | null;
+          longitude?: number | null;
+          name: string;
+          polygon_settings_facade?: Json | null;
+          polygon_settings_floor?: Json | null;
+          project_id: string;
+          slug: string;
+          sort_order?: number;
+          type?: string;
+          updated_at?: string;
+        };
+        Update: {
+          address?: string | null;
+          building_image_url?: string | null;
+          created_at?: string;
+          floors?: number;
+          has_commercial?: boolean;
+          has_parking?: boolean;
+          id?: string;
+          is_default?: boolean;
+          latitude?: number | null;
+          longitude?: number | null;
+          name?: string;
+          polygon_settings_facade?: Json | null;
+          polygon_settings_floor?: Json | null;
+          project_id?: string;
+          slug?: string;
+          sort_order?: number;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sub_projects_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
@@ -2921,6 +3350,115 @@ export type Database = {
           },
         ];
       };
+      subscription_line_items: {
+        Row: {
+          cancelled_at: string | null;
+          created_at: string;
+          customer_subscription_id: string;
+          discount_percentage: number;
+          effective_price: number | null;
+          id: string;
+          item_type: string;
+          module_slug: string | null;
+          plan_id: string | null;
+          plan_slug: string;
+          project_id: string | null;
+          status: string;
+          stripe_subscription_item_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          cancelled_at?: string | null;
+          created_at?: string;
+          customer_subscription_id: string;
+          discount_percentage?: number;
+          effective_price?: number | null;
+          id?: string;
+          item_type?: string;
+          module_slug?: string | null;
+          plan_id?: string | null;
+          plan_slug: string;
+          project_id?: string | null;
+          status?: string;
+          stripe_subscription_item_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          created_at?: string;
+          customer_subscription_id?: string;
+          discount_percentage?: number;
+          effective_price?: number | null;
+          id?: string;
+          item_type?: string;
+          module_slug?: string | null;
+          plan_id?: string | null;
+          plan_slug?: string;
+          project_id?: string | null;
+          status?: string;
+          stripe_subscription_item_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscription_line_items_customer_subscription_id_fkey";
+            columns: ["customer_subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "customer_subscriptions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscription_line_items_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "subscription_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscription_line_items_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subscription_modules: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          features: Json;
+          id: string;
+          is_active: boolean;
+          monthly_price: number;
+          name: string;
+          slug: string;
+          stripe_product_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          features?: Json;
+          id?: string;
+          is_active?: boolean;
+          monthly_price: number;
+          name: string;
+          slug: string;
+          stripe_product_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          features?: Json;
+          id?: string;
+          is_active?: boolean;
+          monthly_price?: number;
+          name?: string;
+          slug?: string;
+          stripe_product_id?: string | null;
+        };
+        Relationships: [];
+      };
       subscription_plans: {
         Row: {
           base_price: number;
@@ -2932,6 +3470,8 @@ export type Database = {
           is_active: boolean | null;
           name: string;
           slug: string;
+          stripe_price_id: string | null;
+          stripe_product_id: string | null;
           updated_at: string | null;
         };
         Insert: {
@@ -2944,6 +3484,8 @@ export type Database = {
           is_active?: boolean | null;
           name: string;
           slug: string;
+          stripe_price_id?: string | null;
+          stripe_product_id?: string | null;
           updated_at?: string | null;
         };
         Update: {
@@ -2956,6 +3498,8 @@ export type Database = {
           is_active?: boolean | null;
           name?: string;
           slug?: string;
+          stripe_price_id?: string | null;
+          stripe_product_id?: string | null;
           updated_at?: string | null;
         };
         Relationships: [];
@@ -3190,6 +3734,7 @@ export type Database = {
           signature_meta: Json;
           signature_method: string | null;
           signature_path: string | null;
+          stripe_customer_id: string | null;
           tax_id: string | null;
           updated_at: string;
         };
@@ -3220,6 +3765,7 @@ export type Database = {
           signature_meta?: Json;
           signature_method?: string | null;
           signature_path?: string | null;
+          stripe_customer_id?: string | null;
           tax_id?: string | null;
           updated_at?: string;
         };
@@ -3250,6 +3796,7 @@ export type Database = {
           signature_meta?: Json;
           signature_method?: string | null;
           signature_path?: string | null;
+          stripe_customer_id?: string | null;
           tax_id?: string | null;
           updated_at?: string;
         };
@@ -3312,6 +3859,8 @@ export type Database = {
           plan_id: string;
           project_id: string | null;
           status: string;
+          stripe_subscription_id: string | null;
+          stripe_subscription_item_id: string | null;
           trial_ends_at: string | null;
           updated_at: string | null;
           user_id: string;
@@ -3340,6 +3889,8 @@ export type Database = {
           plan_id: string;
           project_id?: string | null;
           status?: string;
+          stripe_subscription_id?: string | null;
+          stripe_subscription_item_id?: string | null;
           trial_ends_at?: string | null;
           updated_at?: string | null;
           user_id: string;
@@ -3368,6 +3919,8 @@ export type Database = {
           plan_id?: string;
           project_id?: string | null;
           status?: string;
+          stripe_subscription_id?: string | null;
+          stripe_subscription_item_id?: string | null;
           trial_ends_at?: string | null;
           updated_at?: string | null;
           user_id?: string;
@@ -3410,6 +3963,14 @@ export type Database = {
         }[];
       };
       check_if_user_has_password: { Args: never; Returns: boolean };
+      claim_stripe_event_processing: {
+        Args: {
+          p_event_id: string;
+          p_event_type: string;
+          p_stale_after_seconds?: number;
+        };
+        Returns: string;
+      };
       cleanup_expired_invitations: { Args: never; Returns: number };
       create_default_manager_permissions: {
         Args: { manager_account_id: string };
@@ -3451,6 +4012,19 @@ export type Database = {
         Args: { p_link_type: string; partner_id_param: string };
         Returns: number;
       };
+      get_project_children: {
+        Args: { p_project_id: string };
+        Returns: {
+          address: string;
+          created_at: string;
+          description: string;
+          id: string;
+          name: string;
+          parent_project_id: string;
+          root_project_id: string;
+          slug: string;
+        }[];
+      };
       get_referral_commission_percentage: {
         Args: { p_level: number };
         Returns: number;
@@ -3475,10 +4049,26 @@ export type Database = {
         Returns: boolean;
       };
       is_superadmin: { Args: { _user_id: string }; Returns: boolean };
+      join_demo_cabinet: {
+        Args: { p_email: string; p_full_name: string; p_user_id: string };
+        Returns: Json;
+      };
+      mark_stripe_event_failed: {
+        Args: { p_error: string; p_event_id: string };
+        Returns: undefined;
+      };
+      mark_stripe_event_processed: {
+        Args: { p_event_id: string };
+        Returns: undefined;
+      };
       needs_token_refresh: { Args: { settings_id: string }; Returns: boolean };
       purge_agent_public_preview_files: {
         Args: { max_files?: number };
         Returns: number;
+      };
+      resolve_billing_project_id: {
+        Args: { p_project_id: string };
+        Returns: string;
       };
       trigger_changelog_scan: { Args: never; Returns: undefined };
     };

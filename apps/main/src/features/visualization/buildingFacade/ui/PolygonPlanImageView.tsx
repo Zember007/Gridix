@@ -10,7 +10,7 @@ import {
   type TouchEvent,
   type ImgHTMLAttributes,
 } from "react";
-import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -26,8 +26,9 @@ import { useLockBodyScroll } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Spinner } from "@/shared/ui/Spinner";
 import type {
-  BuildingFacadeViewProps,
+  PolygonPlanImageViewProps,
   BuildingFloor,
+  MasterplanMobileSummary,
 } from "@/features/visualization/buildingFacade/model/types";
 import {
   computeMobileDockPosition as computeMobileDockPositionUtil,
@@ -37,11 +38,10 @@ import {
 // import { HandTap } from "@phosphor-icons/react";
 import InteractionHint from "@/components/visualization/InteractionHint";
 
-const COLLAPSED_HEIGHT = 280;
-
 const MobileFloorInfoBar = ({
   selectedFloor,
   project,
+  isObjectLayout,
   apartments,
   facadeSettings,
   visibleFields,
@@ -51,10 +51,11 @@ const MobileFloorInfoBar = ({
   getFloorStats,
 }: {
   selectedFloor: number;
-  project: BuildingFacadeViewProps["project"];
-  apartments: BuildingFacadeViewProps["apartments"];
-  facadeSettings: BuildingFacadeViewProps["facadeSettings"];
-  visibleFields: BuildingFacadeViewProps["visibleFields"];
+  project: PolygonPlanImageViewProps["project"];
+  isObjectLayout: boolean;
+  apartments: PolygonPlanImageViewProps["apartments"];
+  facadeSettings: PolygonPlanImageViewProps["facadeSettings"];
+  visibleFields: PolygonPlanImageViewProps["visibleFields"];
   selectedCurrency?: string;
   themeColor: string;
   onFloorClick: (floorNumber: number) => void;
@@ -67,7 +68,7 @@ const MobileFloorInfoBar = ({
 }) => {
   const { t } = useLanguage();
 
-  if (project.project_type === "object") {
+  if (isObjectLayout) {
     const apartment = apartments.find(
       (apt) => apt.apartment_number === selectedFloor.toString(),
     );
@@ -161,8 +162,181 @@ const MobileFloorInfoBar = ({
   );
 };
 
-const BuildingFacadeView = ({
+function resolveMasterplanMobileSummary(
+  areaId: string,
+  summaries: PolygonPlanImageViewProps["masterplanMobileSummaries"],
+  labels: PolygonPlanImageViewProps["masterplanPolygonLabels"],
+): MasterplanMobileSummary | null {
+  const full = summaries?.[areaId];
+  if (full) return full;
+  const lb = labels?.[areaId]?.trim();
+  if (lb) return { kind: "sub_project", title: lb };
+  return null;
+}
+
+const MobileMasterplanSelectedCard = ({
+  areaId,
+  summary,
+  themeColor,
+  onOpen,
+}: {
+  areaId: string;
+  summary: MasterplanMobileSummary | null;
+  themeColor: string;
+  onOpen?: (areaId: string) => void;
+}) => {
+  const { t } = useLanguage();
+  if (!summary) return null;
+
+  const isBuilding = summary.kind === "sub_project";
+
+  return (
+    <div
+      className={`w-full overflow-hidden rounded-2xl border px-4 py-3.5 shadow-sm ${
+        isBuilding
+          ? "border-gray-100/90 bg-white"
+          : "border-slate-200/90 bg-gradient-to-br from-slate-50 to-white"
+      }`}
+      style={{
+        borderLeftWidth: 4,
+        borderLeftColor: isBuilding ? themeColor || "#514A47" : "#94a3b8",
+      }}
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+            isBuilding ? "text-white" : "bg-slate-200/90 text-slate-800"
+          }`}
+          style={
+            isBuilding
+              ? { backgroundColor: themeColor || "#514A47" }
+              : undefined
+          }
+        >
+          {isBuilding ? (
+            <Building2 className="h-3 w-3 shrink-0" aria-hidden />
+          ) : (
+            <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+          )}
+          {isBuilding
+            ? t("project.building")
+            : t("project.genplanInfrastructureLabel")}
+        </span>
+      </div>
+      <h3 className="text-base font-semibold leading-snug text-gray-900">
+        {summary.title}
+      </h3>
+      {summary.subtitle ? (
+        <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-slate-600">
+          {summary.subtitle}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-transform active:scale-[0.99] ${
+          isBuilding
+            ? "text-white"
+            : "border border-slate-200 bg-white text-slate-800 shadow-sm"
+        }`}
+        style={
+          isBuilding ? { backgroundColor: themeColor || "#514A47" } : undefined
+        }
+        onClick={() => onOpen?.(areaId)}
+      >
+        {isBuilding
+          ? t("project.genplanOpenBuilding")
+          : t("project.viewDetails")}
+        <ChevronRight className="h-4 w-4 opacity-90" aria-hidden />
+      </button>
+    </div>
+  );
+};
+
+const MobileMasterplanAreaList = ({
+  floors,
+  selectedFloor,
+  summaries,
+  labels,
+  themeColor,
+  onPickFloor,
+}: {
+  floors: BuildingFloor[];
+  selectedFloor: number | null;
+  summaries?: PolygonPlanImageViewProps["masterplanMobileSummaries"];
+  labels?: PolygonPlanImageViewProps["masterplanPolygonLabels"];
+  themeColor: string;
+  onPickFloor: (floorNumber: number) => void;
+}) => {
+  return (
+    <div className="flex max-h-[min(42vh,340px)] w-full flex-col gap-2 overflow-y-auto px-1 pb-1 pt-1">
+      {floors.map((floor) => {
+        const summary = resolveMasterplanMobileSummary(
+          floor.id,
+          summaries,
+          labels,
+        );
+        const title = summary?.title ?? "—";
+        const kind = summary?.kind ?? "sub_project";
+        const isBuilding = kind === "sub_project";
+        const active = selectedFloor === floor.floor_number;
+        const accent = themeColor || "#514A47";
+
+        return (
+          <button
+            key={floor.id}
+            type="button"
+            onClick={() => onPickFloor(floor.floor_number)}
+            className={`flex w-full min-w-0 flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.99] ${
+              active
+                ? isBuilding
+                  ? "border-gray-200 bg-white shadow-md"
+                  : "border-slate-300 bg-slate-100/90 shadow-sm"
+                : isBuilding
+                  ? "border-transparent bg-white shadow-sm ring-1 ring-black/[0.06]"
+                  : "border-slate-200/90 bg-slate-50/95"
+            }`}
+            style={{
+              borderLeftWidth: 4,
+              borderLeftColor: active
+                ? isBuilding
+                  ? accent
+                  : "#64748b"
+                : isBuilding
+                  ? `${accent}55`
+                  : "#e2e8f0",
+            }}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              {isBuilding ? (
+                <Building2
+                  className="h-4 w-4 shrink-0 text-gray-700 opacity-80"
+                  aria-hidden
+                />
+              ) : (
+                <MapPin
+                  className="h-4 w-4 shrink-0 text-slate-600"
+                  aria-hidden
+                />
+              )}
+              <span className="min-w-0 truncate text-sm font-semibold text-gray-900">
+                {title}
+              </span>
+            </div>
+            {summary?.subtitle ? (
+              <p className="line-clamp-2 pl-6 text-left text-[11px] leading-snug text-slate-500">
+                {summary.subtitle}
+              </p>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const PolygonPlanImageView = ({
   project,
+  entityKind,
   imageUrl,
   apartments,
   onFloorSelect,
@@ -180,9 +354,15 @@ const BuildingFacadeView = ({
   facades,
   activeFacadeIndex,
   onFacadeChange,
-}: BuildingFacadeViewProps) => {
+  planKind = "facade",
+  masterplanPolygons,
+  onMasterplanAreaClick,
+  masterplanRenderTooltip,
+  masterplanPolygonLabels,
+  masterplanMobileSummaries,
+}: PolygonPlanImageViewProps) => {
+  const isObjectLayout = entityKind === "object";
   const isMobile = useIsMobile();
-  const [isExpanded, setIsExpanded] = useState(project.facade_open);
   const [imageRect, setImageRect] = useState<{
     offset: { x: number; y: number };
     size: { width: number; height: number };
@@ -219,10 +399,32 @@ const BuildingFacadeView = ({
   } | null>(null);
   const [isTouchZooming] = useState(false);
   const [touchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [masterplanTooltipAreaId, setMasterplanTooltipAreaId] = useState<
+    string | null
+  >(null);
 
   useLockBodyScroll(isTouchZooming);
 
   const facadeImageUrl = imageUrl ?? project.building_image_url ?? null;
+
+  const floorsSource = useMemo((): BuildingFloor[] => {
+    if (planKind === "masterplan" && masterplanPolygons?.length) {
+      let n = 0;
+      const out: BuildingFloor[] = [];
+      for (const p of masterplanPolygons) {
+        if (!p.polygon || p.polygon.length < 3) continue;
+        n += 1;
+        out.push({
+          id: p.id,
+          floor_number: n,
+          polygon: p.polygon,
+          color: p.fillColor ?? facadeSettings?.colors?.building ?? "#3b82f6",
+        });
+      }
+      return out;
+    }
+    return buildingFloors;
+  }, [planKind, masterplanPolygons, buildingFloors, facadeSettings]);
 
   const showFacadeNav =
     !!facades &&
@@ -243,8 +445,11 @@ const BuildingFacadeView = ({
   }, [activeFacadeIndex, facades, onFacadeChange, showFacadeNav]);
 
   const visibleFloors = useMemo(() => {
-    if (project.project_type === "object") {
-      return buildingFloors;
+    if (planKind === "masterplan") {
+      return floorsSource;
+    }
+    if (isObjectLayout) {
+      return floorsSource;
     }
 
     // When filter is enabled, show only floors with available apartments,
@@ -256,14 +461,14 @@ const BuildingFacadeView = ({
           .map((apt) => apt.floor_number),
       );
 
-      const filtered = buildingFloors.filter((floor) =>
+      const filtered = floorsSource.filter((floor) =>
         floorsWithAvailable.has(floor.floor_number),
       );
-      return filtered.length > 0 ? filtered : buildingFloors;
+      return filtered.length > 0 ? filtered : floorsSource;
     }
 
-    return buildingFloors;
-  }, [buildingFloors, apartments, project.project_type, _showOnlyAvailable]);
+    return floorsSource;
+  }, [planKind, floorsSource, apartments, isObjectLayout, _showOnlyAvailable]);
 
   const floorsWithPolygon = useMemo(
     () =>
@@ -303,12 +508,11 @@ const BuildingFacadeView = ({
     (size: { width: number; height: number }) =>
       computeMobileDockPositionUtil({
         containerEl: containerRef.current,
-        isExpanded: isExpanded ?? false,
         imageRect,
         visibleFloors: floorsWithPolygon,
         size,
       }),
-    [floorsWithPolygon, imageRect, isExpanded],
+    [floorsWithPolygon, imageRect],
   );
 
   const computePopupPositionForPolygon = useCallback(
@@ -323,17 +527,15 @@ const BuildingFacadeView = ({
     ) =>
       computePopupPositionForPolygonUtil({
         containerEl: containerRef.current,
-        isExpanded: isExpanded ?? false,
         imageRect,
         polygonBoundsPct,
         size,
       }),
-    [imageRect, isExpanded],
+    [imageRect],
   );
 
   const handleFloorHover = useCallback(
     (floorNumber: number) => {
-      if (!isExpanded) return;
       if (!containerRef.current) return;
 
       // Находим полигон для данного этажа
@@ -348,11 +550,22 @@ const BuildingFacadeView = ({
 
       // Show popup if tooltip is enabled in settings
       if (facadeSettings?.display?.showTooltip) {
+        if (planKind === "masterplan") {
+          setMasterplanTooltipAreaId(floor.id);
+        }
+        // Генплан на мобиле: подсказка в нижней строке, без плавающего попапа
+        if (planKind === "masterplan" && isMobile) {
+          setShowPopup(false);
+          setPopupAnchor(null);
+          setPopupPosition(null);
+          return;
+        }
+
         const polygonBounds = getPolygonBoundsPct(floor.polygon);
         setPopupAnchor({ floorNumber, polygonBounds });
         setShowPopup(true);
 
-        // Mobile: фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
+        // Mobile (фасад): фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
         if (isMobile) {
           const sizeForInitial =
             popupSize.width > 0 && popupSize.height > 0
@@ -382,14 +595,19 @@ const BuildingFacadeView = ({
         setShowPopup(false);
         setPopupAnchor(null);
         setPopupPosition(null);
+        if (planKind === "masterplan") {
+          setMasterplanTooltipAreaId(floor.id);
+        } else {
+          setMasterplanTooltipAreaId(null);
+        }
       }
     },
     [
+      planKind,
       computeMobileDockPosition,
       computePopupPositionForPolygon,
       facadeSettings?.display?.showTooltip,
       floorsWithPolygon,
-      isExpanded,
       isMobile,
       mobilePopupDockPosition,
       popupSize,
@@ -443,7 +661,7 @@ const BuildingFacadeView = ({
   useLayoutEffect(() => {
     // After any layout-affecting change, measure the real image-area container.
     measureImageRect();
-  }, [measureImageRect, isExpanded, isMobile, facadeImageUrl]);
+  }, [measureImageRect, isMobile, facadeImageUrl]);
 
   useEffect(() => {
     const containerEl = containerRef.current;
@@ -489,7 +707,6 @@ const BuildingFacadeView = ({
 
   useEffect(() => {
     if (
-      !isExpanded ||
       !imageRect ||
       imageRect.size.width === 0 ||
       imageRect.size.height === 0
@@ -522,14 +739,7 @@ const BuildingFacadeView = ({
         setPopupPosition(null);
       }
     }
-  }, [
-    floorsWithPolygon,
-    handleFloorHover,
-    imageRect,
-    isExpanded,
-    isMobile,
-    selectedFloor,
-  ]);
+  }, [floorsWithPolygon, handleFloorHover, imageRect, isMobile, selectedFloor]);
 
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
@@ -540,6 +750,7 @@ const BuildingFacadeView = ({
     setPopupPosition(null);
     setSelectedFloor(null);
     setHoveredFloor(null);
+    setMasterplanTooltipAreaId(null);
   }, [facadeImageUrl]);
 
   // Handle escape key to close popup
@@ -547,22 +758,13 @@ const BuildingFacadeView = ({
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && showPopup) {
         setShowPopup(false);
+        setMasterplanTooltipAreaId(null);
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [showPopup]);
-
-  // Close popup when switching between expanded/collapsed modes
-  useEffect(() => {
-    if (showPopup && !isExpanded) {
-      setShowPopup(false);
-      setPopupAnchor(null);
-      setPopupPosition(null);
-      setSelectedFloor(null);
-    }
-  }, [isExpanded, showPopup]);
 
   const getFloorApartments = (floorNumber: number) => {
     return apartments.filter((apt) => apt.floor_number === floorNumber);
@@ -600,8 +802,8 @@ const BuildingFacadeView = ({
   }) => {
     const { t } = useLanguage();
 
-    // For project_type = object, Number is apartment number, not floor number
-    if (project.project_type === "object") {
+    // For object layout, Number is apartment number, not floor number
+    if (isObjectLayout) {
       const apartment = apartments.find(
         (apt) => apt.apartment_number === Number.toString(),
       );
@@ -642,7 +844,7 @@ const BuildingFacadeView = ({
       );
     }
 
-    // For project_type = building, Number is floor number
+    // For building layout, Number is floor number
     const stats = getFloorStats(Number);
 
     return (
@@ -682,12 +884,7 @@ const BuildingFacadeView = ({
 
   useLayoutEffect(() => {
     if (!showPopup || !containerRef.current || !popupRef.current) return;
-    if (
-      !isExpanded ||
-      !imageRect ||
-      imageRect.size.width === 0 ||
-      imageRect.size.height === 0
-    )
+    if (!imageRect || imageRect.size.width === 0 || imageRect.size.height === 0)
       return;
 
     const rect = popupRef.current.getBoundingClientRect();
@@ -749,7 +946,6 @@ const BuildingFacadeView = ({
     computeMobileDockPosition,
     computePopupPositionForPolygon,
     imageRect,
-    isExpanded,
     isMobile,
     mobilePopupDockPosition,
     popupAnchor,
@@ -759,8 +955,8 @@ const BuildingFacadeView = ({
   ]);
 
   const handleFloorClick = (floorNumber: number) => {
-    // For project_type = object, floorNumber is actually apartment number
-    if (project.project_type === "object") {
+    // For object layout, floorNumber is actually apartment number
+    if (isObjectLayout) {
       const apartment = apartments.find(
         (apt) => apt.apartment_number === floorNumber.toString(),
       );
@@ -781,13 +977,24 @@ const BuildingFacadeView = ({
   };
 
   const handleFloorLeave = () => {
-    if (!isExpanded) return;
     setHoveredFloor(null);
+    if (!(isMobile && planKind === "masterplan")) {
+      setMasterplanTooltipAreaId(null);
+    }
     if (!isMobile) {
       setShowPopup(false);
       setPopupAnchor(null);
       setPopupPosition(null);
     }
+  };
+
+  const handlePolygonSvgClick = (floor: BuildingFloor) => {
+    setShowPopup(false);
+    if (planKind === "masterplan") {
+      onMasterplanAreaClick?.(floor.id);
+      return;
+    }
+    handleFloorClick(floor.floor_number);
   };
 
   const handleSVGFloorClick = (floorNumber: number) => {
@@ -798,8 +1005,6 @@ const BuildingFacadeView = ({
   };
 
   const handleSVGFloorHover = (floorNumber: number) => {
-    if (!isExpanded) return;
-
     setHoveredFloor(floorNumber);
     handleFloorHover(floorNumber);
   };
@@ -817,12 +1022,7 @@ const BuildingFacadeView = ({
   // чтобы он по возможности не перекрывал полигоны.
   // Приоритет: сверху слева → сверху справа → другие доступные места.
   useEffect(() => {
-    if (
-      !isMobile ||
-      !isExpanded ||
-      floorsWithPolygon.length === 0 ||
-      !containerRef.current
-    ) {
+    if (!isMobile || floorsWithPolygon.length === 0 || !containerRef.current) {
       return;
     }
 
@@ -922,7 +1122,7 @@ const BuildingFacadeView = ({
       return !noOverlap;
     };
     void intersectsPolygons;
-  }, [floorsWithPolygon, imageRect, isExpanded, isMobile]);
+  }, [floorsWithPolygon, imageRect, isMobile]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const isCarouselInteractingRef = useRef(false);
@@ -1010,6 +1210,15 @@ const BuildingFacadeView = ({
     };
   }, [carouselApi, floorsWithPolygon]);
 
+  // Мобильный генплан: держим areaId в синхроне с выбранным полигоном (карусель на фасаде / список на генплане)
+  useEffect(() => {
+    if (planKind !== "masterplan" || selectedFloor == null) return;
+    const f = floorsWithPolygon.find((x) => x.floor_number === selectedFloor);
+    if (f) {
+      setMasterplanTooltipAreaId((prev) => (prev === f.id ? prev : f.id));
+    }
+  }, [planKind, selectedFloor, floorsWithPolygon]);
+
   useEffect(() => {
     if (!carouselApi) return;
 
@@ -1047,25 +1256,23 @@ const BuildingFacadeView = ({
     <>
       <div
         ref={outerRef}
-        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isExpanded ? "" : "mx-auto"} ${isMobile ? "touch-manipulation" : ""}`}
+        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isMobile ? "touch-manipulation" : ""}`}
         style={{
-          minHeight: isExpanded ? (isMobile ? "auto" : 600) : "auto",
-          height: isExpanded
-            ? isMobile
-              ? "auto"
-              : "calc(100dvh - 200px)"
-            : isMobile
-              ? "200px"
-              : `${COLLAPSED_HEIGHT}px`,
-          width: isExpanded ? "100%" : "100%",
-          maxWidth: isExpanded ? "100%" : undefined,
-          boxShadow: isExpanded ? "0 8px 32px rgba(0,0,0,0.12)" : undefined,
+          minHeight: isMobile ? "auto" : 600,
+          height: isMobile
+            ? "auto"
+            : planKind === "masterplan"
+              ? "100%"
+              : "calc(100dvh - 200px)",
+          width: "100%",
+          maxWidth: "100%",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
         }}
       >
         {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
         <div
           ref={containerRef}
-          className={`relative flex min-h-0 w-full items-center justify-center overflow-hidden ${isMobile && isExpanded ? "" : "flex-1"}`}
+          className={`relative flex min-h-0 w-full items-center justify-center overflow-hidden ${isMobile ? "" : "flex-1"}`}
           style={{ touchAction: isTouchZooming ? "none" : "manipulation" }}
         >
           {/* Blurred background – visible on sm+ (≥640px); hidden on small phones */}
@@ -1126,6 +1333,21 @@ const BuildingFacadeView = ({
                     const baseColor = getFloorFillColor(floor);
                     const isHovered = hoveredFloor === floor.floor_number;
                     const isActive = selectedFloor === floor.floor_number;
+                    const labelText =
+                      planKind === "masterplan" &&
+                      facadeSettings?.display?.showNumbers &&
+                      masterplanPolygonLabels?.[floor.id]
+                        ? masterplanPolygonLabels[floor.id]
+                        : null;
+                    const labelCenter = labelText
+                      ? getPolygonBoundsPct(floor.polygon)
+                      : null;
+                    const labelCx = labelCenter
+                      ? (labelCenter.minX + labelCenter.maxX) / 2
+                      : 0;
+                    const labelCy = labelCenter
+                      ? (labelCenter.minY + labelCenter.maxY) / 2
+                      : 0;
                     return (
                       <g key={floor.id}>
                         <polygon
@@ -1138,19 +1360,13 @@ const BuildingFacadeView = ({
                           }
                           className="cursor-pointer transition-all duration-200"
                           data-floor={floor.floor_number}
-                          onClick={() =>
-                            handleSVGFloorClick(floor.floor_number)
-                          }
+                          onClick={() => handlePolygonSvgClick(floor)}
                           onMouseEnter={() => {
-                            if (isExpanded) {
-                              handleSVGFloorHover(floor.floor_number);
-                            }
+                            handleSVGFloorHover(floor.floor_number);
                           }}
                           onMouseLeave={() => {
-                            if (isExpanded) {
-                              setHoveredFloor(null);
-                              handleFloorLeave();
-                            }
+                            setHoveredFloor(null);
+                            handleFloorLeave();
                           }}
                           style={{
                             pointerEvents: "auto",
@@ -1159,11 +1375,6 @@ const BuildingFacadeView = ({
                               isHovered && facadeSettings?.hoverEffects?.glow
                                 ? "drop-shadow(0 0 8px rgba(0,0,0,0.4))"
                                 : undefined,
-                            transform:
-                              isHovered && facadeSettings?.hoverEffects?.scale
-                                ? "scale(1.02)"
-                                : "scale(1)",
-                            transformOrigin: "center",
                           }}
                         />
                       </g>
@@ -1201,20 +1412,6 @@ const BuildingFacadeView = ({
             </>
           )}
 
-          {!isExpanded && (
-            <button
-              className={`absolute ${showFacadeNav ? "bottom-12" : "bottom-4"} left-1/2 z-10 -translate-x-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-all hover:bg-white ${
-                isMobile ? "p-3 active:scale-95" : "p-4 hover:scale-105"
-              }`}
-              onClick={() => setIsExpanded(true)}
-              style={{ touchAction: "manipulation" }}
-            >
-              <Maximize2
-                className={`text-gray-900 ${isMobile ? "h-4 w-4" : "h-7 w-7"}`}
-              />
-            </button>
-          )}
-
           {showFacadeNav && (
             <div className="absolute bottom-2 left-1/2 z-30 -translate-x-1/2">
               <div className="flex items-end gap-3 rounded-full bg-white/80 px-3 py-2 shadow-lg backdrop-blur">
@@ -1246,29 +1443,35 @@ const BuildingFacadeView = ({
           )}
 
           {showPopup &&
+            popupPosition &&
+            !isMobile &&
+            planKind === "masterplan" &&
+            masterplanTooltipAreaId &&
+            masterplanRenderTooltip && (
+              <div
+                ref={popupRef}
+                className="absolute z-30"
+                style={{ left: popupPosition.x, top: popupPosition.y }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {masterplanRenderTooltip(masterplanTooltipAreaId)}
+              </div>
+            )}
+          {showPopup &&
             selectedFloor !== null &&
             popupPosition &&
-            !isMobile && (
+            !isMobile &&
+            planKind !== "masterplan" && (
               <FloorPopup Number={selectedFloor} position={popupPosition} />
             )}
           <InteractionHint storageKey="building" />
         </div>
 
-        {/*    {isExpanded && (
-          <button
-            className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
-              }`}
-            aria-label={'Close'}
-            onClick={() => setIsExpanded(false)}
-            style={{ touchAction: 'manipulation' }}
-          >
-            <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
-          </button>
-        )} */}
-        {isMobile && isExpanded && selectedFloor !== null && (
+        {planKind !== "masterplan" && isMobile && selectedFloor !== null && (
           <MobileFloorInfoBar
             selectedFloor={selectedFloor}
             project={project}
+            isObjectLayout={isObjectLayout}
             apartments={apartments}
             facadeSettings={facadeSettings}
             visibleFields={visibleFields}
@@ -1279,85 +1482,116 @@ const BuildingFacadeView = ({
           />
         )}
 
-        {isMobile && isExpanded && floorsWithPolygon.length > 0 && (
-          <div className="flex h-20 w-full flex-row items-center justify-center p-4">
-            <div className="flex w-full flex-row items-center gap-4">
-              <div className="flex min-h-0 flex-1 items-center justify-center py-2">
-                <div className="relative w-full max-w-[60vw]">
-                  <Carousel
-                    className="h-full w-full touch-pan-y"
-                    orientation="horizontal"
-                    opts={{
-                      align: "center",
-                      loop: floorsWithPolygon.length > 3,
-                      dragFree: false,
-                      skipSnaps: false,
-                      containScroll: "trimSnaps",
-                    }}
-                    setApi={setCarouselApi}
-                  >
-                    <div className="flex w-full flex-col justify-center">
-                      <CarouselContent className="max-h-[600px]">
-                        {floorsWithPolygon.map((floor) => (
-                          <CarouselItem
-                            key={floor.floor_number}
-                            className="flex basis-1/5 items-center justify-center"
-                          >
-                            <button
-                              className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold transition-colors ${
-                                selectedFloor === floor.floor_number
-                                  ? "text-white"
-                                  : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                              style={
-                                selectedFloor === floor.floor_number
-                                  ? { backgroundColor: themeColor }
-                                  : {}
-                              }
-                              onPointerDown={beginSwipeGuard}
-                              onPointerMove={trackSwipeGuard}
-                              onClick={() => {
-                                if (swipeGuardRef.current.moved) {
-                                  swipeGuardRef.current.moved = false;
-                                  return;
-                                }
-                                activateFloor(floor.floor_number);
-                              }}
-                            >
-                              {floor.floor_number}
-                            </button>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                    </div>
+        {planKind === "masterplan" &&
+          isMobile &&
+          floorsWithPolygon.length > 0 && (
+            <div className="space-y-3 border-t border-gray-100 bg-gradient-to-b from-slate-50/60 to-white px-3 pb-3 pt-3">
+              {masterplanTooltipAreaId ? (
+                <MobileMasterplanSelectedCard
+                  areaId={masterplanTooltipAreaId}
+                  summary={resolveMasterplanMobileSummary(
+                    masterplanTooltipAreaId,
+                    masterplanMobileSummaries,
+                    masterplanPolygonLabels,
+                  )}
+                  themeColor={themeColor}
+                  onOpen={onMasterplanAreaClick}
+                />
+              ) : null}
+              <MobileMasterplanAreaList
+                floors={floorsWithPolygon}
+                selectedFloor={selectedFloor}
+                summaries={masterplanMobileSummaries}
+                labels={masterplanPolygonLabels}
+                themeColor={themeColor}
+                onPickFloor={activateFloor}
+              />
+            </div>
+          )}
 
-                    {floorsWithPolygon.length > 3 && (
-                      <>
-                        <CarouselPrevious
-                          className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
-                          style={{ touchAction: "manipulation" }}
-                          onPointerDown={blockArrowDragStart}
-                          onTouchStart={blockArrowDragStart}
-                          onMouseDown={blockArrowDragStart}
-                        />
-                        <CarouselNext
-                          className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
-                          style={{ touchAction: "manipulation" }}
-                          onPointerDown={blockArrowDragStart}
-                          onTouchStart={blockArrowDragStart}
-                          onMouseDown={blockArrowDragStart}
-                        />
-                      </>
-                    )}
-                  </Carousel>
+        {planKind !== "masterplan" &&
+          isMobile &&
+          floorsWithPolygon.length > 0 && (
+            <div className="flex h-20 w-full flex-row items-center justify-center p-4">
+              <div className="flex w-full flex-row items-center gap-4">
+                <div className="flex min-h-0 flex-1 items-center justify-center py-2">
+                  <div className="relative w-full max-w-[60vw]">
+                    <Carousel
+                      className="h-full w-full touch-pan-y"
+                      orientation="horizontal"
+                      opts={{
+                        align: "center",
+                        loop: floorsWithPolygon.length > 3,
+                        dragFree: false,
+                        skipSnaps: false,
+                        containScroll: "trimSnaps",
+                      }}
+                      setApi={setCarouselApi}
+                    >
+                      <div className="flex w-full flex-col justify-center">
+                        <CarouselContent className="max-h-[600px]">
+                          {floorsWithPolygon.map((floor) => {
+                            return (
+                              <CarouselItem
+                                key={floor.id}
+                                className="flex basis-1/5 items-center justify-center"
+                              >
+                                <button
+                                  className={`flex h-10 w-full max-w-[22vw] items-center justify-center truncate rounded-xl px-1 text-lg font-semibold transition-colors ${
+                                    selectedFloor === floor.floor_number
+                                      ? "text-white"
+                                      : "text-gray-700 hover:bg-gray-100"
+                                  }`}
+                                  style={
+                                    selectedFloor === floor.floor_number
+                                      ? { backgroundColor: themeColor }
+                                      : {}
+                                  }
+                                  onPointerDown={beginSwipeGuard}
+                                  onPointerMove={trackSwipeGuard}
+                                  onClick={() => {
+                                    if (swipeGuardRef.current.moved) {
+                                      swipeGuardRef.current.moved = false;
+                                      return;
+                                    }
+                                    activateFloor(floor.floor_number);
+                                  }}
+                                >
+                                  {floor.floor_number}
+                                </button>
+                              </CarouselItem>
+                            );
+                          })}
+                        </CarouselContent>
+                      </div>
+
+                      {floorsWithPolygon.length > 3 && (
+                        <>
+                          <CarouselPrevious
+                            className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                            style={{ touchAction: "manipulation" }}
+                            onPointerDown={blockArrowDragStart}
+                            onTouchStart={blockArrowDragStart}
+                            onMouseDown={blockArrowDragStart}
+                          />
+                          <CarouselNext
+                            className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                            style={{ touchAction: "manipulation" }}
+                            onPointerDown={blockArrowDragStart}
+                            onTouchStart={blockArrowDragStart}
+                            onMouseDown={blockArrowDragStart}
+                          />
+                        </>
+                      )}
+                    </Carousel>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </>
   );
 };
 
-export default BuildingFacadeView;
+export default PolygonPlanImageView;

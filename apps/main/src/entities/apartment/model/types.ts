@@ -15,6 +15,7 @@ export interface Apartment {
   created_at: string;
   updated_at: string;
   floor_plan_id: string | null;
+  sub_project_id?: string | null;
 }
 
 // Функция для преобразования данных из Supabase в правильный формат
@@ -30,5 +31,6 @@ export function normalizeApartmentData(data: any): Apartment {
     area: Number(data.area),
     rooms: data.type === "apartment" ? data.rooms : data.type,
     floor_number: Number(data.floor_number),
+    sub_project_id: data.sub_project_id ?? null,
   };
 }

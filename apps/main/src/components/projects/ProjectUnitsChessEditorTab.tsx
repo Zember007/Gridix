@@ -27,6 +27,8 @@ import type { Json } from "@gridix/types/database";
 import ApartmentEditorForm from "@/components/projects/ApartmentEditorForm";
 import ProjectApartmentsExcelSyncDialog from "@/components/projects/ProjectApartmentsExcelSyncDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDefaultSubProjectBuildingScope } from "@/features/projectEditor/hooks/useDefaultSubProjectBuildingScope";
+import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import {
   normalizeApartmentData,
   type Apartment,
@@ -74,6 +76,8 @@ const ProjectUnitsChessEditorTab = ({
   projectId,
 }: ProjectUnitsChessEditorTabProps) => {
   const { t } = useLanguage();
+  const { scope: buildingScope, isReady: buildingScopeReady } =
+    useDefaultSubProjectBuildingScope(projectId);
   const [loading, setLoading] = useState(true);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(
@@ -91,12 +95,17 @@ const ProjectUnitsChessEditorTab = ({
   );
 
   const loadApartments = useCallback(async () => {
+    if (!buildingScopeReady) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let q = supabase
         .from("apartments")
         .select("*")
         .eq("project_id", projectId);
+      if (buildingScope?.subProjectId) {
+        q = q.eq("sub_project_id", buildingScope.subProjectId);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       setApartments((data ?? []).map(normalizeApartmentData));
     } catch (error) {
@@ -105,7 +114,7 @@ const ProjectUnitsChessEditorTab = ({
     } finally {
       setLoading(false);
     }
-  }, [projectId, t]);
+  }, [projectId, buildingScopeReady, buildingScope?.subProjectId, t]);
 
   useEffect(() => {
     void loadApartments();
@@ -216,6 +225,9 @@ const ProjectUnitsChessEditorTab = ({
         project_id: projectId,
         updated_at: new Date().toISOString(),
         type: toApartmentType(newApartment.type),
+        ...(buildingScope?.subProjectId
+          ? { sub_project_id: buildingScope.subProjectId }
+          : {}),
       };
 
       const { data, error } = await supabase
@@ -261,25 +273,38 @@ const ProjectUnitsChessEditorTab = ({
 
     try {
       if (apartmentsOnFloor.length > 0) {
-        const { error: apartmentsError } = await supabase
+        let delApt = supabase
           .from("apartments")
           .delete()
           .eq("project_id", projectId)
           .eq("floor_number", floorNumber);
+        if (buildingScope?.subProjectId) {
+          delApt = delApt.eq("sub_project_id", buildingScope.subProjectId);
+        }
+        const { error: apartmentsError } = await delApt;
         if (apartmentsError) throw apartmentsError;
       }
 
+      let delBf = supabase
+        .from("building_floors")
+        .delete()
+        .eq("project_id", projectId)
+        .eq("floor_number", floorNumber);
+      if (buildingScope?.subProjectId) {
+        delBf = delBf.eq("sub_project_id", buildingScope.subProjectId);
+      }
+      let delFp = supabase
+        .from("floor_plans")
+        .delete()
+        .eq("project_id", projectId)
+        .eq("floor_number", floorNumber);
+      if (buildingScope?.subProjectId) {
+        delFp = delFp.eq("sub_project_id", buildingScope.subProjectId);
+      }
+
       const [buildingFloorsResult, floorPlansResult] = await Promise.all([
-        supabase
-          .from("building_floors")
-          .delete()
-          .eq("project_id", projectId)
-          .eq("floor_number", floorNumber),
-        supabase
-          .from("floor_plans")
-          .delete()
-          .eq("project_id", projectId)
-          .eq("floor_number", floorNumber),
+        delBf,
+        delFp,
       ]);
 
       if (buildingFloorsResult.error) throw buildingFloorsResult.error;
@@ -314,6 +339,9 @@ const ProjectUnitsChessEditorTab = ({
         floor_number: newFloorNumber,
         polygon: [],
         color: "#3b82f6",
+        ...(buildingScope?.subProjectId
+          ? { sub_project_id: buildingScope.subProjectId }
+          : {}),
       });
       if (error) throw error;
       toast.success(
@@ -325,6 +353,22 @@ const ProjectUnitsChessEditorTab = ({
       toast.error(t("floorManagement.addFloorError"));
     }
   };
+
+  if (!buildingScopeReady) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center p-6">
+        <LoadingProgress />
+      </div>
+    );
+  }
+
+  if (!buildingScope) {
+    return (
+      <p className="p-6 text-sm text-destructive">
+        {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-4 p-6">
@@ -440,6 +484,7 @@ const ProjectUnitsChessEditorTab = ({
         open={excelSyncDialogOpen}
         onClose={() => setExcelSyncDialogOpen(false)}
         projectId={projectId}
+        subProjectId={buildingScope?.subProjectId}
         projectType="building"
         onSyncDone={() => void loadApartments()}
       />

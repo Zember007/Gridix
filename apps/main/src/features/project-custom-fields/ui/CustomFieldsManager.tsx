@@ -14,6 +14,7 @@ import { CustomFieldEditor } from "./CustomFieldEditor";
 
 interface CustomFieldsManagerProps {
   projectId?: string | null;
+  subProjectId?: string;
   onFieldsChange?: (fields: CustomField[]) => void;
   editingField?: CustomField | null;
   onClose?: () => void;
@@ -21,6 +22,7 @@ interface CustomFieldsManagerProps {
 
 const CustomFieldsManager = ({
   projectId,
+  subProjectId,
   onFieldsChange,
   editingField: initialEditingField = null,
   onClose,
@@ -42,6 +44,7 @@ const CustomFieldsManager = ({
     t,
   } = useCustomFieldsManager({
     projectId,
+    subProjectId,
     onFieldsChange,
     initialEditingField,
     onClose,

@@ -26,7 +26,10 @@ export const AdvancedFilters = (props: AdvancedFiltersProps) => {
     formatPrice,
     visibleFilterFields,
     hasAnyVisibleFilter,
+    projectType,
   } = props;
+
+  const isObjectProject = projectType === "object";
 
   const {
     t,
@@ -108,7 +111,7 @@ export const AdvancedFilters = (props: AdvancedFiltersProps) => {
           </div>
         )}
 
-      {visibleFilterFields.rooms && project?.project_type !== "object" && (
+      {visibleFilterFields.rooms && !isObjectProject && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t("project.rooms")}</div>
           <div className="flex flex-wrap gap-2">
@@ -153,7 +156,7 @@ export const AdvancedFilters = (props: AdvancedFiltersProps) => {
 
       {visibleFilterFields.floor &&
         viewMode !== "floor-plan" &&
-        project?.project_type !== "object" && (
+        !isObjectProject && (
           <div className="space-y-2">
             <div className="text-xs text-gray-500">{t("project.floor")}</div>
             <div className="flex flex-wrap gap-2">

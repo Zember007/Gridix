@@ -16,6 +16,7 @@
   "areaRange": "טווח שטח",
   "available": "זָמִין",
   "backToBuilding": "חזרה לבניין",
+  "backToGenplan": "חזרה לתוכנית האתר",
   "changeFilters": "נסה לשנות את מסנני החיפוש שלך",
   "contactAdmin": "צור קשר עם מנהל המערכת",
   "contactManager": "מנהל יצירת קשר",
@@ -69,5 +70,16 @@
   "viewDetails": "צפה בפרטים",
   "openMenu": "פתח תפריט",
   "closeMenu": "סגור תפריט",
-  "plan_floor": "תוכנית קומה {{קומה}}"
+  "plan_floor": "תוכנית קומה {{קומה}}",
+  "masterplans": "תוכניות אב",
+  "objects": "אובייקטים",
+  "building": "בניין",
+  "object": "אובייקט",
+  "priceFrom": "מחיר מ-",
+  "addressNotSet": "הכתובת לא צוינה",
+  "mapNoCoordinates": "לא הוגדר מיקום במפה לתצוגה זו",
+  "noMasterplan": "אין תוכנית אב זמינה",
+  "noObjects": "אין אובייקטים זמינים",
+  "genplanOpenBuilding": "מעבר לבניין",
+  "genplanInfrastructureLabel": "שטח"
 }

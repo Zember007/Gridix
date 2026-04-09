@@ -1,25 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
+import { usePartnerScopeUserId } from "../PartnerScopeContext";
 import type { PartnerClient } from "../model/types";
+import { applyDemoPartnerClientsOverlay } from "../model/demoPartnerPublicMock";
 
 export function usePartnerClients() {
+  const scopedPartnerUserId = usePartnerScopeUserId();
   const [clients, setClients] = useState<PartnerClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: sessionQuery, isLoading: isSessionLoading } =
     useCurrentSession();
 
-  const fetchClients = async () => {
+  const sessionUserId = sessionQuery?.user?.id;
+
+  const fetchClients = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
+      const needsDelegatedStats = Boolean(
+        scopedPartnerUserId &&
+        sessionUserId &&
+        scopedPartnerUserId !== sessionUserId,
+      );
+      const delegateTargetUserId = needsDelegatedStats
+        ? scopedPartnerUserId
+        : undefined;
+      const statsOwnerUserId = delegateTargetUserId ?? sessionUserId;
 
       const { data, error: functionError } = await supabase.functions.invoke(
         "partner-program",
         {
           body: {
             action: "get_stats",
+            ...(delegateTargetUserId
+              ? { partner_id: delegateTargetUserId }
+              : {}),
           },
         },
       );
@@ -32,18 +50,34 @@ export function usePartnerClients() {
         throw new Error(data.error);
       }
 
-      setClients(data.clients || []);
+      let isDemo = false;
+      if (statsOwnerUserId) {
+        const { data: prof } = await supabase
+          .from("user_profiles")
+          .select("is_demo")
+          .eq("id", statsOwnerUserId)
+          .maybeSingle();
+        isDemo = Boolean((prof as { is_demo?: boolean } | null)?.is_demo);
+      }
+
+      setClients(
+        applyDemoPartnerClientsOverlay(
+          (data.clients || []) as PartnerClient[],
+          isDemo,
+        ),
+      );
     } catch (err) {
       console.error("Error fetching partner clients:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch clients");
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionUserId, scopedPartnerUserId]);
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (isSessionLoading) return;
+    void fetchClients();
+  }, [isSessionLoading, fetchClients]);
 
   const addManagedClient = async (clientId: string) => {
     try {

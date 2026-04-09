@@ -11,6 +11,7 @@ import type { ProjectFacade } from "../types";
 
 interface UseFacadeDataParams {
   projectId: string | undefined;
+  subProjectId?: string;
   /** Only load facade data when the facade view is active. */
   enabled: boolean;
 }
@@ -28,13 +29,14 @@ interface UseFacadeDataResult {
 
 export const useFacadeData = ({
   projectId,
+  subProjectId,
   enabled,
 }: UseFacadeDataParams): UseFacadeDataResult => {
   const queryEnabled = !!projectId && enabled;
 
   const facadeQuery = useQuery({
-    queryKey: ["project-selector", "facade", projectId],
-    queryFn: () => loadSelectorFacade(projectId!),
+    queryKey: ["project-selector", "facade", projectId, subProjectId],
+    queryFn: () => loadSelectorFacade(projectId!, subProjectId),
     enabled: queryEnabled,
   });
 

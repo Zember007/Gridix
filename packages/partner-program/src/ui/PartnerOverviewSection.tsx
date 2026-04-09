@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { resolveDemoIncomeHistoryForChart } from "../model/demoPartnerPublicMock";
 import {
   Copy,
   Users,
@@ -29,15 +30,26 @@ interface PartnerOverviewSectionProps {
 export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
   onNavigate,
 }) => {
-  const { isPartner, partnerProfile } = usePartner();
+  const { isPartner, partnerProfile, isDemoAccount } = usePartner();
   const { stats, loading } = usePartnerStats();
   const { language, t } = useLanguage();
 
   const referralCode = partnerProfile?.partner_code ?? "—";
 
-  const incomeHistory = stats?.income_history ?? [];
-  const chartData = incomeHistory.map((point) => point.amount);
-  const chartDates = incomeHistory.map((point) => point.date);
+  const incomeHistory = useMemo(() => {
+    const raw = stats?.income_history ?? [];
+    if (!isDemoAccount) return raw;
+    return resolveDemoIncomeHistoryForChart(raw);
+  }, [stats?.income_history, isDemoAccount]);
+
+  const chartData = useMemo(
+    () => incomeHistory.map((point) => point.amount),
+    [incomeHistory],
+  );
+  const chartDates = useMemo(
+    () => incomeHistory.map((point) => point.date),
+    [incomeHistory],
+  );
 
   const trafficStats = useMemo(() => {
     const colors = [
@@ -305,7 +317,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         </div>
 
-        <div className="h-[180px] w-full sm:h-[220px]">
+        <div className="w-full min-w-0">
           <IncomeChart
             data={chartData}
             dates={chartDates}

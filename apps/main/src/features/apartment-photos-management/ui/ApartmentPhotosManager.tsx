@@ -28,9 +28,13 @@ import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
+  subProjectId?: string;
 }
 
-const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
+const ApartmentPhotosManager = ({
+  projectId,
+  subProjectId,
+}: ApartmentPhotosManagerProps) => {
   const { t } = useLanguage();
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
@@ -56,7 +60,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     duplicatePhotosToApartments,
     handleDeletePhoto,
     handleReorderPhotos,
-  } = useApartmentPhotosManager(projectId);
+  } = useApartmentPhotosManager(projectId, subProjectId);
 
   const sourceApartment = useMemo(
     () =>
@@ -174,6 +178,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         <TabsContent value="layouts">
           <LayoutPhotosManager
             projectId={projectId}
+            subProjectId={subProjectId}
             initialApartments={apartments}
           />
         </TabsContent>

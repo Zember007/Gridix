@@ -1,6 +1,10 @@
 // Main component
 export { PartnerProgram } from "./PartnerProgram";
 export type { PartnerProgramProps, PartnerSection } from "./PartnerProgram";
+export {
+  PartnerScopeProvider,
+  usePartnerScopeUserId,
+} from "./PartnerScopeContext";
 
 // Hooks (re-exported for consumers that need them directly)
 export { usePartner } from "./queries/usePartner";
@@ -19,6 +23,13 @@ export type {
   PartnerProgramRequest,
   PartnerProgramResponse,
 } from "./model/types";
+
+export {
+  applyDemoPartnerStatsOverlay,
+  applyDemoPartnerClientsOverlay,
+  getDemoPartnerClientsMock,
+  resolveDemoIncomeHistoryForChart,
+} from "./model/demoPartnerPublicMock";
 
 // Instructions config (host assets in main app public/instructions/)
 export {

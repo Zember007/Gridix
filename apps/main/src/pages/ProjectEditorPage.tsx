@@ -57,6 +57,7 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
     !isNew &&
     bootstrapProject != null &&
     bootstrapProject.access_status !== "active";
+  const isDemoViewer = adminAccess?.isDemoViewer ?? false;
 
   if (!isNew && adminAccess?.loading) {
     return (
@@ -95,6 +96,7 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
         onBack={goBack}
         bootstrapProject={bootstrapProject}
         isRestrictedProject={isRestrictedProject}
+        readOnly={isDemoViewer}
       />
     </ProjectEditorDataProvider>
   );

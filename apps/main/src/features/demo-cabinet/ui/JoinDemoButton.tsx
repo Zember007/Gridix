@@ -10,6 +10,12 @@ const WORKSPACE_STORAGE_KEY = "gridix_active_workspace_id:developer";
 
 interface JoinDemoButtonProps {
   isCollapsed?: boolean;
+  /**
+   * `sidebar` (default) — renders inside the dark sidebar with a border-bottom divider.
+   * `instructions` — full-width button for dark content cards.
+   * `inline` — outline button that sits inline next to other page-level buttons.
+   */
+  variant?: "sidebar" | "instructions" | "inline";
 }
 
 /**
@@ -20,6 +26,7 @@ interface JoinDemoButtonProps {
  */
 export const JoinDemoButton = ({
   isCollapsed = false,
+  variant = "sidebar",
 }: JoinDemoButtonProps) => {
   const { t } = useLanguage();
   const { userRole } = useUserRole();
@@ -61,6 +68,57 @@ export const JoinDemoButton = ({
   };
 
   const label = loading ? t("admin.demo.joining") : t("admin.demo.joinButton");
+
+  if (variant === "inline") {
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={handleJoin}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+          style={{
+            borderColor: ADMIN_THEME.sidebarBorder,
+            color: ADMIN_THEME.textPrimary,
+            backgroundColor: "transparent",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+          }}
+        >
+          <Eye size={16} className="flex-shrink-0" />
+          {label}
+        </button>
+        {error && (
+          <p className="mt-1 text-xs" style={{ color: ADMIN_THEME.error }}>
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (variant === "instructions") {
+    return (
+      <div className="mt-3">
+        <button
+          type="button"
+          onClick={handleJoin}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+        >
+          <Eye size={18} className="flex-shrink-0" />
+          {label}
+        </button>
+        {error && (
+          <p className="mt-1 text-center text-xs text-red-400">{error}</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

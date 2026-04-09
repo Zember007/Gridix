@@ -321,8 +321,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   return (
     <div className="flex min-h-[100dvh] w-full flex-col overflow-x-clip font-sans md:flex-row">
       {/* Left column: auth form */}
-      <section className="flex flex-1 items-center justify-center p-4">
-        <div className="w-full max-w-md">
+      <section className="flex flex-1 flex-col overflow-y-auto p-4">
+        <div className="my-auto w-full max-w-md self-center py-4">
           <div className="flex flex-col gap-2">
             <div className={titleBlockClassName}>
               <h1 className={`${titleAnimationClassName} ${titleClassName}`}>
@@ -389,6 +389,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
                 if (!email || !password) return;
                 if (mode === "signup" && !fullName) return;
+                if (
+                  mode === "signup" &&
+                  resolvedAccountType === "developer" &&
+                  !companyName
+                ) {
+                  return;
+                }
                 if (mode === "signup" && !privacyOfferAgreementAccepted) return;
 
                 const payload: SubmitPayload = {
@@ -472,6 +479,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       placeholder={companyNamePlaceholder}
                       className="w-full rounded-2xl bg-transparent px-4 py-3 text-sm focus:outline-none"
                       autoComplete="organization"
+                      required
                     />
                   </GlassInputWrapper>
                 </div>

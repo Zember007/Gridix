@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { convertPrice } from "@gridix/utils/lib";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
+  ApartmentTypeFilter,
   FilterFieldKey,
   normalizePriceRangeForCurrencyChange,
 } from "@/components/project-selector/hooks/useProjectFilters";
@@ -10,7 +11,6 @@ export type ProjectLike = {
   currency?: string | null;
   has_commercial?: boolean | null;
   has_parking?: boolean | null;
-  project_type?: string | null;
 };
 
 export type AdvancedFiltersProps = {
@@ -20,10 +20,8 @@ export type AdvancedFiltersProps = {
   setSelectedRooms: (value: string) => void;
   selectedFloor: string;
   setSelectedFloor: (value: string) => void;
-  selectedType: "all" | "apartment" | "commercial" | "parking";
-  setSelectedType: (
-    value: "all" | "apartment" | "commercial" | "parking",
-  ) => void;
+  selectedType: ApartmentTypeFilter;
+  setSelectedType: (value: ApartmentTypeFilter) => void;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   selectedCurrency: string;
@@ -51,6 +49,8 @@ export type AdvancedFiltersProps = {
   formatPrice: (price: number) => string;
   visibleFilterFields: Record<FilterFieldKey, boolean>;
   hasAnyVisibleFilter: boolean;
+  /** `sub_projects.type` for current selector scope. */
+  projectType: "building" | "object";
 };
 
 export const useAdvancedFiltersState = ({
@@ -79,6 +79,7 @@ export const useAdvancedFiltersState = ({
   getUniqueFloors,
   hasFreeLayout,
   project,
+  projectType: _selectorEntityKind,
   setViewMode,
 }: AdvancedFiltersProps) => {
   const { t } = useLanguage();

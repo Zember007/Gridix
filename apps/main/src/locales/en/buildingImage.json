@@ -25,7 +25,54 @@
     "objectNumber": "Object #{{number}}",
     "plan": "Objects Plan",
     "polygonsDescription": "Mark areas on the plan for each object (villas, townhouses)",
-    "polygonsTitle": "Object Polygons"
+    "polygonsTitle": "Object Polygons",
+    "description": "Upload plan image for object polygon configuration",
+    "guided": {
+      "toggle": "Suggest next object",
+      "progress": {
+        "floorRange": "Object range:",
+        "missingFloors": "Missing objects:",
+        "allConfigured": "All objects are configured"
+      },
+      "helper": {
+        "savedAndNext": "Object #{{floor}} saved. Next missing object: {{nextFloor}}",
+        "goNext": "Go to next object"
+      }
+    }
+  },
+  "genplan": {
+    "description": "Upload the master plan image, then outline each subproject on it using the same polygon tools as the facade editor.",
+    "noEntities": "Add subprojects or infrastructure zones first — then you can draw their areas on the plan.",
+    "polygonsTitle": "Subproject polygons",
+    "polygonsDescription": "Pick a subproject or infrastructure zone, then draw or edit its polygon on the master plan.",
+    "selectLabel": "Subproject / zone",
+    "selectPlaceholder": "Select subproject or zone",
+    "addNew": "Start drawing",
+    "canvas": "Master plan",
+    "creating": "Drawing area: {{name}}",
+    "delete": "Delete area",
+    "hoverCaption": "Area",
+    "guided": {
+      "toggle": "Suggest next subproject",
+      "progress": {
+        "rangeLabel": "Subprojects:",
+        "missingList": "Missing polygons:",
+        "infraRangeLabel": "Infrastructure zones:",
+        "infraDrawn": "With polygon:",
+        "infraMissing": "Missing polygon:",
+        "missingInfraList": "Zones not marked on the plan:",
+        "allConfigured": "All subprojects and infrastructure zones have a polygon on the plan"
+      },
+      "helper": {
+        "savedAndNext": "{{name}} saved. Next: {{nextName}}",
+        "goNext": "Go to next"
+      }
+    },
+    "polygon": {
+      "createSuccess": "Area created for {{name}}",
+      "saveSuccess": "Area saved for {{name}}",
+      "deleteSuccess": "Area deleted"
+    }
   },
   "polygon": {
     "cancel": "Cancel",

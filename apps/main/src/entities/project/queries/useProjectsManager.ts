@@ -1,10 +1,12 @@
 // useProjectsManager.ts - Исправленная версия
 import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@gridix/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Tables } from "@gridix/types/database";
 import { useLanguage } from "@gridix/utils/react";
+import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshAdminBootstrapCache";
 
 // Используем тип из Supabase напрямую
 export type Project = Tables<"projects">;
@@ -43,6 +45,7 @@ const isCacheValid = (timestamp: number): boolean => {
 };
 
 export const useProjectsManager = () => {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
@@ -309,6 +312,8 @@ export const useProjectsManager = () => {
         // Очищаем кеш проектов пользователя
         clearProjectsCache({ userId: user.id });
 
+        await refreshAdminBootstrapCache(queryClient);
+
         toast.success(t("projectEditor.projectCreated"));
         return data as Project;
       } catch (err) {
@@ -317,7 +322,7 @@ export const useProjectsManager = () => {
         return null;
       }
     },
-    [user],
+    [user, queryClient, t],
   );
 
   // Обновление проекта
@@ -348,6 +353,8 @@ export const useProjectsManager = () => {
         // Очищаем кеш списков проектов
         clearProjectsCache();
 
+        await refreshAdminBootstrapCache(queryClient);
+
         toast.success("Проект обновлен");
         return true;
       } catch (err) {
@@ -356,7 +363,7 @@ export const useProjectsManager = () => {
         return false;
       }
     },
-    [user],
+    [user, queryClient],
   );
 
   // Удаление проекта
@@ -380,6 +387,8 @@ export const useProjectsManager = () => {
         singleProjectCache.delete(projectId);
         clearProjectsCache();
 
+        await refreshAdminBootstrapCache(queryClient);
+
         toast.success("Проект удален");
         return true;
       } catch (err) {
@@ -388,7 +397,7 @@ export const useProjectsManager = () => {
         return false;
       }
     },
-    [user],
+    [user, queryClient],
   );
 
   // Очистка кеша

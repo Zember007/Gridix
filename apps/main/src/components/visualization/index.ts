@@ -1,4 +1,3 @@
-export { default as BuildingFacadeView } from "./BuildingFacadeView";
 export { default as BuildingImageEditor } from "./BuildingImageEditor";
 export { default as BuildingPolygonSettings } from "./BuildingPolygonSettings";
 export { default as FloorPlanEditor } from "./FloorPlanEditor";

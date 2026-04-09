@@ -16,6 +16,7 @@
   "areaRange": "Диапазон площадей",
   "available": "Доступно",
   "backToBuilding": "Назад к зданию",
+  "backToGenplan": "Назад к генплану",
   "changeFilters": "Попробуйте изменить фильтры поиска",
   "contactAdmin": "Обратитесь к администратору",
   "contactManager": "Связаться с менеджером",
@@ -69,5 +70,16 @@
   "viewDetails": "Посмотреть детали",
   "openMenu": "Открыть меню",
   "closeMenu": "Закрыть меню",
-  "plan_floor": "План {{floor}} этажа"
+  "plan_floor": "План {{floor}} этажа",
+  "masterplans": "Генпланы",
+  "objects": "Объекты",
+  "building": "Корпус",
+  "object": "Объект",
+  "priceFrom": "Цена от",
+  "addressNotSet": "Адрес не указан",
+  "mapNoCoordinates": "Для этого объекта не задано расположение на карте",
+  "noMasterplan": "Генплан не настроен",
+  "noObjects": "Объекты не найдены",
+  "genplanOpenBuilding": "Перейти к корпусу",
+  "genplanInfrastructureLabel": "Территория"
 }

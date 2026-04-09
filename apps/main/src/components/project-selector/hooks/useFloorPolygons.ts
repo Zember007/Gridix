@@ -14,6 +14,7 @@ function extractPolygon(raw: unknown): { x: number; y: number }[] {
 
 export interface UseFloorPolygonsParams {
   projectId: string | undefined;
+  subProjectId?: string;
   viewMode: ViewMode;
   selectedFloorForPlan: number | null;
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
@@ -21,6 +22,7 @@ export interface UseFloorPolygonsParams {
 
 export const useFloorPolygons = ({
   projectId,
+  subProjectId,
   viewMode,
   selectedFloorForPlan,
   setApartments,
@@ -54,9 +56,11 @@ export const useFloorPolygons = ({
       polygonsLoadingRef.current.add(floor);
 
       try {
-        const { polygonsByFloor } = await loadSelectorFloorPolygons(projectId, [
-          floor,
-        ]);
+        const { polygonsByFloor } = await loadSelectorFloorPolygons(
+          projectId,
+          [floor],
+          subProjectId,
+        );
 
         const rows: PolygonRow[] = (polygonsByFloor[floor] ?? []).map((d) => ({
           id: d.id,

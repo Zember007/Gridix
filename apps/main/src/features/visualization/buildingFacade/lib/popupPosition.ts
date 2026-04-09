@@ -57,19 +57,13 @@ const clampWithin = (
 
 export function computeMobileDockPosition(args: {
   containerEl: HTMLElement | null;
-  isExpanded: boolean;
   imageRect: ImageRectInContainer | null;
   visibleFloors: BuildingFloor[];
   size: PopupSize;
 }): PopupPosition | null {
-  const { containerEl, isExpanded, imageRect, visibleFloors, size } = args;
+  const { containerEl, imageRect, visibleFloors, size } = args;
   if (!containerEl) return null;
-  if (
-    !isExpanded ||
-    !imageRect ||
-    imageRect.size.width === 0 ||
-    imageRect.size.height === 0
-  )
+  if (!imageRect || imageRect.size.width === 0 || imageRect.size.height === 0)
     return null;
 
   const containerRect = containerEl.getBoundingClientRect();
@@ -177,19 +171,13 @@ export function computeMobileDockPosition(args: {
 
 export function computePopupPositionForPolygon(args: {
   containerEl: HTMLElement | null;
-  isExpanded: boolean;
   imageRect: ImageRectInContainer | null;
   polygonBoundsPct: PolygonBoundsPct;
   size: PopupSize;
 }): PopupPosition | null {
-  const { containerEl, isExpanded, imageRect, polygonBoundsPct, size } = args;
+  const { containerEl, imageRect, polygonBoundsPct, size } = args;
   if (!containerEl) return null;
-  if (
-    !isExpanded ||
-    !imageRect ||
-    imageRect.size.width === 0 ||
-    imageRect.size.height === 0
-  )
+  if (!imageRect || imageRect.size.width === 0 || imageRect.size.height === 0)
     return null;
 
   const padding = 8;

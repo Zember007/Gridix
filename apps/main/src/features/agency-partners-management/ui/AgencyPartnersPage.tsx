@@ -9,8 +9,13 @@ import { AgencyPartnersHeader } from "./AgencyPartnersHeader";
 import { AgencyPartnersDeleteDialog } from "./AgencyPartnersDeleteDialog";
 import { AgencyPartnersStatsCards } from "./AgencyPartnersStatsCards";
 import { AgencyPartnersTable } from "./AgencyPartnersTable";
+import { useAdminAccess } from "@/entities/admin-access";
 
 export const AgencyPartnersPage: React.FC = () => {
+  const adminAccess = useAdminAccess();
+  const isDemoViewer = adminAccess?.isDemoViewer ?? false;
+  const readOnly = isDemoViewer;
+
   const {
     partners,
     loading,
@@ -76,27 +81,31 @@ export const AgencyPartnersPage: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      <PartnerInviteModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-      />
+      {!readOnly && (
+        <>
+          <PartnerInviteModal
+            isOpen={isInviteModalOpen}
+            onClose={() => setIsInviteModalOpen(false)}
+          />
 
-      <PartnerPayoutModal
-        isOpen={!!payoutTarget}
-        onClose={() => setPayoutTarget(null)}
-        partner={payoutTarget}
-        onPayout={async (payoutIds) => {
-          if (!payoutTarget) return;
-          await markPaid(payoutIds);
-        }}
-        getPendingPayouts={getPendingPayouts}
-      />
+          <PartnerPayoutModal
+            isOpen={!!payoutTarget}
+            onClose={() => setPayoutTarget(null)}
+            partner={payoutTarget}
+            onPayout={async (payoutIds) => {
+              if (!payoutTarget) return;
+              await markPaid(payoutIds);
+            }}
+            getPendingPayouts={getPendingPayouts}
+          />
 
-      <AgencyPartnersDeleteDialog
-        partnerToDelete={partnerToDelete}
-        setPartnerToDelete={setPartnerToDelete}
-        deletePartner={deletePartner}
-      />
+          <AgencyPartnersDeleteDialog
+            partnerToDelete={partnerToDelete}
+            setPartnerToDelete={setPartnerToDelete}
+            deletePartner={deletePartner}
+          />
+        </>
+      )}
 
       <PartnerDrawer
         partner={selectedPartner}
@@ -107,6 +116,7 @@ export const AgencyPartnersPage: React.FC = () => {
           setPayoutTarget(partner);
         }}
         developerId={developerId}
+        readOnly={readOnly}
       />
 
       <AgencyPartnersHeader
@@ -118,6 +128,7 @@ export const AgencyPartnersPage: React.FC = () => {
         pendingRequests={stats.pendingRequests}
         partners={partners}
         partnersLoading={loading}
+        readOnly={readOnly}
       />
 
       <div className="flex-1">
@@ -135,6 +146,7 @@ export const AgencyPartnersPage: React.FC = () => {
                 approvePartner={approvePartner}
                 updatePartnerStatus={updatePartnerStatus}
                 isManagerMode={isManagerMode}
+                readOnly={readOnly}
               />
             </>
           )}

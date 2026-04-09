@@ -39,6 +39,7 @@ type LeadsManagerContentProps = {
   handleStatusChange: React.ComponentProps<
     typeof LeadsKanban
   >["onStatusChange"];
+  readOnly?: boolean;
 };
 
 export const LeadsManagerContent = ({
@@ -70,6 +71,7 @@ export const LeadsManagerContent = ({
   cardConfig,
   handleCreateLead,
   handleStatusChange,
+  readOnly = false,
 }: LeadsManagerContentProps) => {
   return (
     <main className="flex-1 overflow-y-auto bg-[var(--admin-background-secondary)]">
@@ -111,12 +113,15 @@ export const LeadsManagerContent = ({
                           .join(", ")}
                       </p>
                     </div>
-                    <button
-                      onClick={() => setIsFunnelSetupMode(true)}
-                      className="inline-flex h-full w-fit whitespace-nowrap rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-700"
-                    >
-                      {t("leads.warnings.funnelTriggersCta")}
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => setIsFunnelSetupMode(true)}
+                        className="inline-flex h-full w-fit whitespace-nowrap rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-700"
+                      >
+                        {t("leads.warnings.funnelTriggersCta")}
+                      </button>
+                    )}
                   </div>
                   <div className="flex shrink-0 items-start gap-2">
                     <button
@@ -163,6 +168,7 @@ export const LeadsManagerContent = ({
               onSelect={setSelectedLead}
               onCreate={handleCreateLead}
               onStatusChange={handleStatusChange}
+              readOnly={readOnly}
             />
           )}
         </div>

@@ -116,7 +116,25 @@
         "fields": "Daire numaraları, katlar, odalar, alan, fiyat, durum"
       },
       "supportedFormats": "Desteklenen formatlar:",
-      "title": "Yeni proje oluştur"
+      "title": "Yeni proje oluştur",
+      "kind": {
+        "stepDescription": "Gelişiminize uygun düzeni seçin. Ayrıntıları daha sonra düzenleyicide değiştirebilirsiniz.",
+        "question": "Ne tür bir proje oluşturuyorsunuz?",
+        "back": "Türü değiştir",
+        "selectedLabel": "Tür",
+        "building": {
+          "title": "Bina — çok daireli konut",
+          "description": "Katları ve daireleri olan tek bina — tüm yapı için tek cephe önizlemesi."
+        },
+        "object": {
+          "title": "Konut — villa / sıra ev",
+          "description": "Müstakil veya sıra konutlar — her konut için önizleme ve çokgenler."
+        },
+        "genplan": {
+          "title": "Master plan — birden fazla alt proje",
+          "description": "Birden çok bina içeren arazi planı; her alt projenin kendi cephesi ve daireleri vardır. Yalnızca düzenleyicide manuel kurulum; Excel içe aktarma bu tür için yok."
+        }
+      }
     }
   },
   "demo": {
@@ -133,6 +151,7 @@
   "projects": "Projeler",
   "settings": "Ayarlar",
   "subscription": "Abonelik",
+  "billing": "Faturalama",
   "integrations": "Entegrasyonlar",
   "integrationsDescription": "Harici hizmetleri çalışma alanınıza bağlayın.",
   "projectsConfig": "Proje yapılandırması",
@@ -251,7 +270,6 @@
     },
     "durations": {
       "1": "1 ay",
-      "3": "3 ay",
       "6": "6 ay",
       "12": "12 ay",
       "24": "2 yıl",

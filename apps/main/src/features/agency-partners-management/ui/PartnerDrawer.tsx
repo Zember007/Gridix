@@ -23,6 +23,7 @@ type Props = {
   onUpdate: (id: string, data: Partial<AgencyPartner>) => void;
   onPayout: (partner: AgencyPartner) => void;
   developerId?: string | null;
+  readOnly?: boolean;
 };
 
 export const PartnerDrawer: React.FC<Props> = ({
@@ -30,6 +31,7 @@ export const PartnerDrawer: React.FC<Props> = ({
   onClose,
   onUpdate,
   onPayout,
+  readOnly = false,
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<PartnerDrawerTab>("overview");
@@ -138,7 +140,11 @@ export const PartnerDrawer: React.FC<Props> = ({
             />
           )}
           {activeTab === "finance" && (
-            <PartnerFinanceTab partner={partner} onPayout={onPayout} />
+            <PartnerFinanceTab
+              partner={partner}
+              onPayout={onPayout}
+              readOnly={readOnly}
+            />
           )}
           {activeTab === "settings" && (
             <PartnerSettingsTab
@@ -154,6 +160,7 @@ export const PartnerDrawer: React.FC<Props> = ({
               signatureUrl={signatureUrl}
               signedContracts={signedContractsQuery.data ?? []}
               signedContractsLoading={signedContractsQuery.isLoading}
+              readOnly={readOnly}
             />
           )}
         </div>

@@ -89,6 +89,8 @@ export interface PartnerStats {
   next_level_name?: string | null;
   next_level_required_active_clients?: number | null;
   clients_to_next_level?: number | null;
+  /** Present on `get_stats` when resolving another user’s partner (delegated workspace). */
+  partner_profile?: PartnerProfile | null;
   clients: Array<{
     id: string;
     type: "referral" | "managed";

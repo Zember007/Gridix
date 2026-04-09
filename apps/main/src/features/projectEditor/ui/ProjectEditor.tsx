@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -42,6 +43,10 @@ import {
   removeProjectPdf,
 } from "@/features/projectEditor/api/projectEditorApi";
 import {
+  syncProjectBuildingImage,
+  uploadFacadeImageToStorage,
+} from "@/features/visualization/buildingImageEditor/api/buildingImageEditorApi";
+import {
   ProjectEditorDataProvider,
   useProjectEditorDataContext,
 } from "@/features/projectEditor/context/ProjectEditorDataContext";
@@ -51,11 +56,16 @@ import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
 import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/ApartmentPhotosManager";
 
 import ProjectDomainSettings from "@/features/admin-project-domain-settings";
+import { lazy, Suspense } from "react";
 import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
-import { useSearchParams } from "react-router-dom";
+const GenplanEditorTab = lazy(
+  () => import("@/features/genplan/ui/GenplanEditorTab"),
+);
+import { useLocation, useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { useDefaultSubProjectBuildingScope } from "@/features/projectEditor/hooks/useDefaultSubProjectBuildingScope";
 import {
   trackOnboardingMilestone,
   tryAutoOpenProjectChecklistPanel,
@@ -68,7 +78,9 @@ import {
   type ProjectEditorProject,
 } from "@/features/projectEditor/model/types";
 import type { AdminBootstrapProject } from "@/entities/admin-access";
+import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshAdminBootstrapCache";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
+import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
 
 interface ProjectEditorProps {
   projectId: string;
@@ -76,6 +88,8 @@ interface ProjectEditorProps {
   onBack: () => void;
   bootstrapProject?: AdminBootstrapProject | null;
   isRestrictedProject?: boolean;
+  /** Demo cabinet: hide save / destructive actions without subscription notice. */
+  readOnly?: boolean;
 }
 
 type EditorProjectSource = {
@@ -96,8 +110,8 @@ type EditorProjectSource = {
   pdf_presentation_url?: string | null;
   theme_color?: string | null;
   project_type?: "building" | "object" | null;
-  facade_open?: boolean | null;
   available_languages?: unknown;
+  has_masterplan?: boolean | null;
   user_id?: string | null;
 };
 
@@ -116,6 +130,172 @@ interface ProjectPdfPresentationSectionProps {
   hasUser: boolean;
   onPdfUrlChange: (pdfUrl: string | null) => void;
 }
+
+interface ProjectBuildingImageSectionProps {
+  projectId: string;
+  buildingImageUrl: string | null;
+  isNew: boolean;
+  hasUser: boolean;
+  onUrlChange: (url: string | null) => void;
+}
+
+const ProjectBuildingImageSection = memo(
+  ({
+    projectId,
+    buildingImageUrl,
+    isNew,
+    hasUser,
+    onUrlChange,
+  }: ProjectBuildingImageSectionProps) => {
+    const { t } = useLanguage();
+    const [uploading, setUploading] = useState(false);
+    const [removing, setRemoving] = useState(false);
+
+    const handleUpload = useCallback(
+      async (file: File) => {
+        if (!hasUser || isNew) {
+          toast.error(t("projectEditor.saveProjectFirst"));
+          return;
+        }
+        if (!file.type.startsWith("image/")) {
+          toast.error(t("projectEditor.buildingImageOnlyImages"));
+          return;
+        }
+        const maxSize = 15 * 1024 * 1024;
+        if (file.size > maxSize) {
+          toast.error(t("projectEditor.buildingImageTooLarge"));
+          return;
+        }
+        setUploading(true);
+        try {
+          const publicUrl = await uploadFacadeImageToStorage(projectId, file);
+          await syncProjectBuildingImage(projectId, publicUrl);
+          onUrlChange(publicUrl);
+          toast.success(t("projectEditor.buildingImageUploadSuccess"));
+        } catch (e) {
+          console.error("Building image upload failed:", e);
+          toast.error(t("projectEditor.buildingImageUploadError"));
+        } finally {
+          setUploading(false);
+        }
+      },
+      [hasUser, isNew, onUrlChange, projectId, t],
+    );
+
+    const handleRemove = useCallback(async () => {
+      if (!hasUser || isNew || !buildingImageUrl || removing || uploading) {
+        return;
+      }
+      setRemoving(true);
+      onUrlChange(null);
+      try {
+        await syncProjectBuildingImage(projectId, null);
+        toast.success(t("projectEditor.buildingImageRemoveSuccess"));
+      } catch (e) {
+        onUrlChange(buildingImageUrl);
+        console.error("Building image remove failed:", e);
+        toast.error(t("projectEditor.buildingImageRemoveError"));
+      } finally {
+        setRemoving(false);
+      }
+    }, [
+      buildingImageUrl,
+      hasUser,
+      isNew,
+      onUrlChange,
+      projectId,
+      removing,
+      t,
+      uploading,
+    ]);
+
+    return (
+      <div className="space-y-4 border-t pt-4">
+        <h4 className="flex items-center gap-2 text-sm font-medium">
+          <Image className="h-4 w-4" />
+          {t("projectEditor.buildingImage")}
+        </h4>
+        <p className="text-xs text-muted-foreground">
+          {t("projectEditor.buildingImageDesc")}
+        </p>
+
+        {buildingImageUrl ? (
+          <div className="flex flex-col gap-3 rounded-lg border bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src={buildingImageUrl}
+                alt=""
+                className="h-16 w-24 rounded-md border object-cover"
+              />
+              <span className="text-sm text-muted-foreground">
+                {t("projectEditor.buildingImageUploaded")}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                disabled={uploading || removing}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/*";
+                  input.onchange = () => {
+                    const f = input.files?.[0];
+                    if (f) void handleUpload(f);
+                  };
+                  input.click();
+                }}
+              >
+                {t("projectEditor.buildingImageReplace")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                type="button"
+                disabled={removing || uploading}
+                onClick={() => void handleRemove()}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 text-center">
+            {!uploading && (
+              <FileDropzone
+                accept="image/*"
+                disabled={isNew}
+                multiple={false}
+                heading={t("projectEditor.buildingImageUploadHeading")}
+                description={t("projectEditor.buildingImageUploadHint")}
+                dropLabel={t("projectEditor.clickOrDrop")}
+                idleLabel={t("projectEditor.clickOrDrop")}
+                className="p-0"
+                onFilesSelected={async (files) => {
+                  const file = files[0];
+                  if (!file) return;
+                  await handleUpload(file);
+                }}
+              />
+            )}
+            {uploading && (
+              <p className="p-6 text-sm text-muted-foreground">
+                {t("projectEditor.uploading")}
+              </p>
+            )}
+            {isNew && (
+              <p className="mt-2 px-3 pb-3 text-xs text-muted-foreground">
+                {t("projectEditor.saveProjectFirstNote")}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 const ProjectPdfPresentationSection = memo(
   ({
@@ -398,6 +578,7 @@ const ProjectEditor = ({
   onBack,
   bootstrapProject = null,
   isRestrictedProject = false,
+  readOnly = false,
 }: ProjectEditorProps) => {
   const [project, setProject] = useState<ProjectEditorProject>(
     DEFAULT_PROJECT_EDITOR_PROJECT,
@@ -408,6 +589,8 @@ const ProjectEditor = ({
   const [accessError, setAccessError] = useState<string | null>(null);
 
   const { navigate } = useLanguageNavigation();
+  const queryClient = useQueryClient();
+  const location = useLocation();
   const { user, userProfile, loading: authLoading, signOut } = useAuth();
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
@@ -421,6 +604,12 @@ const ProjectEditor = ({
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
+    useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
+  /** Building vs villas/townhouses — driven by form state; persisted on save to `projects` + default `sub_projects`. */
+  const editorScopeKind: "building" | "object" =
+    project.project_type === "object" ? "object" : "building";
+
   // Применяем CSS переменные темы
   useEffect(() => {
     const themeVariables = getAdminThemeVariables(ADMIN_THEME);
@@ -428,6 +617,24 @@ const ProjectEditor = ({
       document.documentElement.style.setProperty(key, value);
     });
   }, []);
+
+  // Пресет типа проекта из модалки создания (корневой проект)
+  useEffect(() => {
+    if (!isNew) return;
+    const kind = (
+      location.state as { mainProjectKind?: MainProjectCreationKind } | null
+    )?.mainProjectKind;
+    if (!kind) return;
+    setProject((prev) => {
+      if (kind === "object") {
+        return { ...prev, project_type: "object", has_masterplan: false };
+      }
+      if (kind === "genplan") {
+        return { ...prev, project_type: "building", has_masterplan: true };
+      }
+      return { ...prev, project_type: "building", has_masterplan: false };
+    });
+  }, [isNew, location.state]);
 
   // Читаем query параметры и устанавливаем активную вкладку
   useEffect(() => {
@@ -441,6 +648,7 @@ const ProjectEditor = ({
         "floors",
         "photos",
         "fields",
+        "genplan",
         "domains",
       ];
       if (validTabs.includes(page)) {
@@ -480,10 +688,8 @@ const ProjectEditor = ({
             | "building"
             | "object"
             | null) || "building",
-        facade_open:
-          ((row as unknown as Record<string, unknown>)
-            .facade_open as boolean) || false,
         available_languages: parseAvailableLanguages(row.available_languages),
+        has_masterplan: Boolean(row.has_masterplan),
       });
     },
     [],
@@ -516,6 +722,16 @@ const ProjectEditor = ({
   }, [projectId, projectSource?.id, isNew, mapDbProjectToEditor]);
 
   // Project editor onboarding: Driver.js + once в localStorage (`gridix_driver_once:…:project_editor`)
+  // When genplan mode is active, hidden tabs should redirect to general
+  const GENPLAN_HIDDEN_TABS = ["apartments", "floors", "photos", "fields"];
+  useEffect(() => {
+    if (project.has_masterplan && GENPLAN_HIDDEN_TABS.includes(activeTab)) {
+      setActiveTab("basic");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.has_masterplan, activeTab]);
+
+  // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
   useEffect(() => {
     if (authLoading) return;
 
@@ -634,7 +850,6 @@ const ProjectEditor = ({
         floors: project.floors,
         has_parking: project.has_parking,
         has_commercial: project.has_commercial,
-        building_image_url: project.building_image_url,
         latitude: project.latitude,
         longitude: project.longitude,
         currency: project.currency,
@@ -644,8 +859,8 @@ const ProjectEditor = ({
         pdf_presentation_url: project.pdf_presentation_url,
         theme_color: project.theme_color,
         project_type: project.project_type || "building",
-        facade_open: project.facade_open,
         available_languages: project.available_languages,
+        has_masterplan: project.has_masterplan,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }), // Добавляем user_id только при создании
       };
@@ -658,6 +873,23 @@ const ProjectEditor = ({
           .single();
 
         if (error) throw error;
+
+        await supabase.from("sub_projects").insert({
+          project_id: data.id,
+          name: data.name,
+          slug: "default",
+          type: data.project_type === "object" ? "object" : "building",
+          sort_order: 0,
+          is_default: true,
+          floors: data.floors ?? 1,
+          has_parking: data.has_parking ?? false,
+          has_commercial: data.has_commercial ?? false,
+          address: data.address ?? null,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
+        });
+
+        await refreshAdminBootstrapCache(queryClient);
 
         setProject((prev) => ({ ...prev, id: data.id }));
         toast.success(t("projectEditor.projectCreated"));
@@ -688,6 +920,24 @@ const ProjectEditor = ({
           .eq("id", project.id);
 
         if (error) throw error;
+
+        if (!project.has_masterplan) {
+          await supabase
+            .from("sub_projects")
+            .update({
+              name: project.name.trim(),
+              type: project.project_type === "object" ? "object" : "building",
+              floors: project.floors,
+              has_parking: project.has_parking,
+              has_commercial: project.has_commercial,
+              address: project.address || null,
+              latitude: project.latitude,
+              longitude: project.longitude,
+            })
+            .eq("project_id", project.id)
+            .eq("is_default", true);
+        }
+
         toast.success(t("projectEditor.projectSaved"));
       }
     } catch (error) {
@@ -714,6 +964,10 @@ const ProjectEditor = ({
   };
   const handlePdfUrlChange = useCallback((pdfUrl: string | null) => {
     setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
+  }, []);
+
+  const handleBuildingImageUrlChange = useCallback((url: string | null) => {
+    setProject((prev) => ({ ...prev, building_image_url: url }));
   }, []);
 
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -759,6 +1013,8 @@ const ProjectEditor = ({
         return "photos";
       case "fields":
         return "fields";
+      case "genplan":
+        return "genplan";
       case "domains":
         return "domains";
       default:
@@ -782,6 +1038,9 @@ const ProjectEditor = ({
         break;
       case "fields":
         setActiveTab("fields");
+        break;
+      case "genplan":
+        setActiveTab("genplan");
         break;
       case "domains":
         setActiveTab("domains");
@@ -812,13 +1071,15 @@ const ProjectEditor = ({
         onSectionChange={handleSidebarSectionChange}
         activeTab={getSidebarSection(activeTab ?? "basic")}
         userEmail={userProfile?.email || user?.email || "Unknown user"}
-        projectType={project.project_type ?? "building"}
+        projectType={editorScopeKind}
+        hasMasterplan={project.has_masterplan}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
         onSignOut={handleSignOut}
         isSigningOut={isSigningOut}
+        isNavLoading={isEditorDataLoading}
       />
       <div
         className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
@@ -861,35 +1122,37 @@ const ProjectEditor = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving || isRestrictedProject}
-                    size="sm"
-                    className="project_save_usertour"
-                    style={{
-                      backgroundColor: ADMIN_THEME.primary,
-                      color: ADMIN_THEME.textOnPrimary,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor =
-                          ADMIN_THEME.primaryHover;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor =
-                          ADMIN_THEME.primary;
-                      }
-                    }}
-                  >
-                    <Save className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">
-                      {saving
-                        ? t("projectEditor.saving")
-                        : t("projectEditor.save")}
-                    </span>
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      onClick={handleSave}
+                      disabled={saving || isRestrictedProject}
+                      size="sm"
+                      className="project_save_usertour"
+                      style={{
+                        backgroundColor: ADMIN_THEME.primary,
+                        color: ADMIN_THEME.textOnPrimary,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor =
+                            ADMIN_THEME.primaryHover;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor =
+                            ADMIN_THEME.primary;
+                        }
+                      }}
+                    >
+                      <Save className="h-4 w-4" />
+                      <span className="ml-2 hidden sm:inline">
+                        {saving
+                          ? t("projectEditor.saving")
+                          : t("projectEditor.save")}
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -919,7 +1182,7 @@ const ProjectEditor = ({
                       <Label>{t("projectEditor.projectType")}</Label>
                       <Input
                         value={
-                          project.project_type === "object"
+                          editorScopeKind === "object"
                             ? t("projectEditor.typeObject")
                             : t("projectEditor.typeBuilding")
                         }
@@ -948,7 +1211,7 @@ const ProjectEditor = ({
 
               {(activeTab === "basic" || activeTab === "building") && (
                 <div className="space-y-6">
-                  {/* Sub-navigation for basic/building sections - only on desktop */}
+                  {/* Sub-navigation for basic/building sections - only on desktop. Hide building tab when genplan is active (facade belongs to subprojects) */}
                   <div className="mb-6 hidden gap-2 lg:flex">
                     <Button
                       variant={activeTab === "basic" ? "default" : "outline"}
@@ -958,17 +1221,21 @@ const ProjectEditor = ({
                       <Building2 className="h-4 w-4" />
                       {t("projectEditor.basicInfo")}
                     </Button>
-                    <Button
-                      variant={activeTab === "building" ? "default" : "outline"}
-                      onClick={() => setActiveTab("building")}
-                      disabled={isNew}
-                      className="flex items-center gap-2"
-                    >
-                      <Image className="h-4 w-4" />
-                      {project.project_type === "object"
-                        ? "Object Image"
-                        : t("projectEditor.buildingImage")}
-                    </Button>
+                    {!project.has_masterplan && (
+                      <Button
+                        variant={
+                          activeTab === "building" ? "default" : "outline"
+                        }
+                        onClick={() => setActiveTab("building")}
+                        disabled={isNew}
+                        className="flex items-center gap-2"
+                      >
+                        <Image className="h-4 w-4" />
+                        {editorScopeKind === "object"
+                          ? "Object Image"
+                          : t("projectEditor.buildingImage")}
+                      </Button>
+                    )}
                   </div>
 
                   {activeTab === "basic" && (
@@ -1106,107 +1373,97 @@ const ProjectEditor = ({
                               })}
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                              <Label htmlFor="project-type-desktop">
-                                {t("projectEditor.projectType")}
-                              </Label>
-                              <Select
-                                value={project.project_type || "building"}
-                                onValueChange={(v: "building" | "object") =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    project_type: v,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger id="project-type-desktop">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="building">
-                                    {t("projectEditor.typeBuilding")}
-                                  </SelectItem>
-                                  <SelectItem value="object">
-                                    {t("projectEditor.typeObject")}
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {project.project_type !== "object" && (
-                              <div>
-                                <Label htmlFor="floors">
-                                  {t("projectEditor.floors")} *
-                                </Label>
-                                <Input
-                                  id="floors"
-                                  type="number"
-                                  min="1"
-                                  value={project.floors}
-                                  onChange={(e) =>
-                                    setProject((prev) => ({
-                                      ...prev,
-                                      floors: parseInt(e.target.value) || 1,
-                                    }))
-                                  }
-                                />
+                          {!project.has_masterplan && (
+                            <>
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                  <Label htmlFor="project-type">
+                                    {t("projectEditor.projectType")}
+                                  </Label>
+                                  <Select
+                                    value={editorScopeKind}
+                                    onValueChange={(v) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        project_type:
+                                          v === "object"
+                                            ? "object"
+                                            : "building",
+                                      }))
+                                    }
+                                  >
+                                    <SelectTrigger id="project-type">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="building">
+                                        {t("projectEditor.typeBuilding")}
+                                      </SelectItem>
+                                      <SelectItem value="object">
+                                        {t("projectEditor.typeObject")}
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {t("projectEditor.subProjectTypeHint")}
+                                  </p>
+                                </div>
+                                {editorScopeKind !== "object" && (
+                                  <div>
+                                    <Label htmlFor="floors">
+                                      {t("projectEditor.floors")} *
+                                    </Label>
+                                    <Input
+                                      id="floors"
+                                      type="number"
+                                      min="1"
+                                      value={project.floors}
+                                      onChange={(e) =>
+                                        setProject((prev) => ({
+                                          ...prev,
+                                          floors: parseInt(e.target.value) || 1,
+                                        }))
+                                      }
+                                    />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
 
-                          {/* Дополнительные типы помещений */}
-                          <div className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="has-parking"
-                                checked={project.has_parking}
-                                onCheckedChange={(checked) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    has_parking: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor="has-parking">
-                                {t("projectEditor.hasParking")}
-                              </Label>
-                            </div>
+                              <div className="space-y-4">
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    id="has-parking"
+                                    checked={project.has_parking}
+                                    onCheckedChange={(checked) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        has_parking: checked,
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor="has-parking">
+                                    {t("projectEditor.hasParking")}
+                                  </Label>
+                                </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="has-commercial"
-                                checked={project.has_commercial}
-                                onCheckedChange={(checked) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    has_commercial: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor="has-commercial">
-                                {t("projectEditor.hasCommercial")}
-                              </Label>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="facade-open-desktop"
-                                checked={project.facade_open}
-                                onCheckedChange={(checked) =>
-                                  setProject((prev) => ({
-                                    ...prev,
-                                    facade_open: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor="facade-open-desktop">
-                                {t("projectEditor.facadeOpen")}
-                              </Label>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              {t("projectEditor.facadeOpenDesc")}
-                            </p>
-                          </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    id="has-commercial"
+                                    checked={project.has_commercial}
+                                    onCheckedChange={(checked) =>
+                                      setProject((prev) => ({
+                                        ...prev,
+                                        has_commercial: checked,
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor="has-commercial">
+                                    {t("projectEditor.hasCommercial")}
+                                  </Label>
+                                </div>
+                              </div>
+                            </>
+                          )}
                           <div>
                             <Label htmlFor="latitude">
                               {t("projectEditor.latitude")}
@@ -1354,6 +1611,14 @@ const ProjectEditor = ({
                             </p>
                           </div>
 
+                          <ProjectBuildingImageSection
+                            projectId={project.id}
+                            buildingImageUrl={project.building_image_url}
+                            isNew={isNew}
+                            hasUser={Boolean(user)}
+                            onUrlChange={handleBuildingImageUrlChange}
+                          />
+
                           <ProjectPdfPresentationSection
                             projectId={project.id}
                             pdfPresentationUrl={project.pdf_presentation_url}
@@ -1449,7 +1714,7 @@ const ProjectEditor = ({
                             )}
                           </div>
 
-                          {isNew && (
+                          {isNew && !readOnly && (
                             <Button
                               onClick={handleSave}
                               disabled={saving}
@@ -1484,41 +1749,124 @@ const ProjectEditor = ({
                     </>
                   )}
 
-                  {activeTab === "building" && (
-                    <BuildingImageEditor
-                      projectId={project.id}
-                      currentImageUrl={project.building_image_url}
-                      onImageUpdate={(imageUrl) =>
-                        setProject((prev) => ({
-                          ...prev,
-                          building_image_url: imageUrl,
-                        }))
-                      }
-                    />
+                  {activeTab === "building" && !project.has_masterplan && (
+                    <>
+                      {!defaultBuildingScopeReady ? (
+                        <div className="flex min-h-[200px] items-center justify-center">
+                          <LoadingProgress />
+                        </div>
+                      ) : !defaultBuildingScope ? (
+                        <p className="text-sm text-destructive">
+                          {t(
+                            "projectEditor.facadeEditorDefaultSubProjectMissing",
+                          )}
+                        </p>
+                      ) : (
+                        <BuildingImageEditor
+                          projectId={project.id}
+                          subProjectId={defaultBuildingScope.subProjectId}
+                          initialFloors={defaultBuildingScope.floors}
+                          subProjectType={editorScopeKind}
+                          currentImageUrl={
+                            defaultBuildingScope.buildingImageUrl ??
+                            project.building_image_url
+                          }
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               )}
 
-              {activeTab === "floors" && project.project_type !== "object" && (
-                <ProjectFloorsManager projectId={project.id} />
-              )}
-
-              {activeTab === "apartments" && (
-                <div className="space-y-4">
-                  <ProjectApartmentsManager
+              {activeTab === "floors" &&
+                editorScopeKind !== "object" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <ProjectFloorsManager
                     projectId={project.id}
-                    projectType={project.project_type ?? "building"}
+                    subProjectId={defaultBuildingScope.subProjectId}
                   />
-                </div>
-              )}
+                ))}
 
-              {activeTab === "fields" && (
-                <AllFieldsManager projectId={project.id} />
-              )}
+              {activeTab === "apartments" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <ProjectApartmentsManager
+                      projectId={project.id}
+                      projectType={editorScopeKind}
+                      subProjectId={defaultBuildingScope.subProjectId}
+                    />
+                  </div>
+                ))}
 
-              {activeTab === "photos" && (
-                <ApartmentPhotosManager projectId={project.id} />
-              )}
+              {activeTab === "fields" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <AllFieldsManager
+                    projectId={project.id}
+                    subProjectId={defaultBuildingScope.subProjectId}
+                  />
+                ))}
+
+              {activeTab === "photos" &&
+                !project.has_masterplan &&
+                (!defaultBuildingScopeReady ? (
+                  <div className="flex min-h-[200px] items-center justify-center">
+                    <LoadingProgress />
+                  </div>
+                ) : !defaultBuildingScope ? (
+                  <p className="text-sm text-destructive">
+                    {t("projectEditor.facadeEditorDefaultSubProjectMissing")}
+                  </p>
+                ) : (
+                  <ApartmentPhotosManager
+                    projectId={project.id}
+                    subProjectId={defaultBuildingScope.subProjectId}
+                  />
+                ))}
+
+              {activeTab === "genplan" &&
+                (bootstrapProject?.plan_tier === "pro" &&
+                bootstrapProject?.access_status === "active" ? (
+                  <Suspense fallback={null}>
+                    <GenplanEditorTab
+                      projectId={project.id}
+                      onMasterplanToggled={(active) =>
+                        setProject((prev) => ({
+                          ...prev,
+                          has_masterplan: active,
+                        }))
+                      }
+                    />
+                  </Suspense>
+                ) : (
+                  <AdminAccessNotice variant="pro" />
+                ))}
 
               {activeTab === "domains" && (
                 <ProjectDomainSettings

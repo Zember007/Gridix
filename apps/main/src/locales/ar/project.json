@@ -16,6 +16,7 @@
   "areaRange": "نطاق المساحات",
   "available": "متاح",
   "backToBuilding": "العودة إلى المبنى",
+  "backToGenplan": "العودة إلى المخطط العام",
   "changeFilters": "حاول تغيير فلاتر البحث",
   "contactAdmin": "اتصل بالمسؤول",
   "contactManager": "الاتصال بالمدير",
@@ -69,5 +70,16 @@
   "viewDetails": "عرض التفاصيل",
   "openMenu": "فتح القائمة",
   "closeMenu": "إغلاق القائمة",
-  "plan_floor": "مخطط الطابق {{الطابق}}."
+  "plan_floor": "مخطط الطابق {{الطابق}}.",
+  "masterplans": "المخططات العامة",
+  "objects": "الكائنات",
+  "building": "مبنى",
+  "object": "كائن",
+  "priceFrom": "السعر من",
+  "addressNotSet": "لم يتم تحديد العنوان",
+  "mapNoCoordinates": "لم يتم تعيين الموقع على الخريطة لهذا العرض",
+  "noMasterplan": "لا يوجد مخطط عام متاح",
+  "noObjects": "لا توجد كائنات متاحة",
+  "genplanOpenBuilding": "الانتقال إلى المبنى",
+  "genplanInfrastructureLabel": "منطقة"
 }

@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { Routes, Route } from "react-router-dom";
 
 const ProjectWidgetPage = lazy(() => import("@/pages/ProjectWidgetPage"));
+const SubProjectWidgetPage = lazy(() => import("@/pages/SubProjectWidgetPage"));
 const EmbedProjectsPage = lazy(() => import("@/pages/EmbedProjectsPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -16,6 +17,14 @@ export function EmbedRoutes() {
       <Route
         path="projects/:userId"
         element={withLocalSuspense(<EmbedProjectsPage />)}
+      />
+      <Route
+        path="project/:projectSlug/p/:subSlug"
+        element={withLocalSuspense(<SubProjectWidgetPage />)}
+      />
+      <Route
+        path="project/id/:projectId/p/:subSlug"
+        element={withLocalSuspense(<SubProjectWidgetPage />)}
       />
       <Route
         path="project/:projectSlug"

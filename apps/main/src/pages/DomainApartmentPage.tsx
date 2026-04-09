@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import ApartmentDetailsPage from "@/pages/ApartmentDetailsPage";
 
 export default function DomainApartmentPage() {
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const { apartmentNumber } = useParams<{ apartmentNumber: string }>();
   const {
     project: domainProject,
     loading: domainLoading,
@@ -21,15 +21,11 @@ export default function DomainApartmentPage() {
     );
   }
 
-  if (domainError || !isDomainProject || !domainProject || !apartmentId) {
+  if (domainError || !isDomainProject || !domainProject || !apartmentNumber) {
     return <Navigate to={`/${DEFAULT_LANGUAGE}`} replace />;
   }
 
   return (
-    <ApartmentDetailsPage
-      useId={true}
-      apartmentIdProp={apartmentId}
-      projectIdProp={domainProject.id}
-    />
+    <ApartmentDetailsPage useId={false} projectIdProp={domainProject.id} />
   );
 }

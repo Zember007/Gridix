@@ -16,6 +16,7 @@
   "areaRange": "ფართობების დიაპაზონი",
   "available": "ხელმისაწვდომია",
   "backToBuilding": "შენობაზე დაბრუნება",
+  "backToGenplan": "დაბრუნება გენგეგმაზე",
   "changeFilters": "სცადეთ ძებნის ფილტრების შეცვლა",
   "contactAdmin": "დაუკავშირდით ადმინისტრატორს",
   "contactManager": "დაკავშირება მენეჯერთან",
@@ -69,5 +70,16 @@
   "viewDetails": "დეტალების ნახვა",
   "openMenu": "მენიუს გახსნა",
   "closeMenu": "მენიუს დახურვა",
-  "plan_floor": "{{floor}} სართულის გეგმა"
+  "plan_floor": "{{floor}} სართულის გეგმა",
+  "masterplans": "გენგეგმები",
+  "objects": "ობიექტები",
+  "building": "შენობა",
+  "object": "ობიექტი",
+  "priceFrom": "ფასი -დან",
+  "addressNotSet": "მისამართი არ არის მითითებული",
+  "mapNoCoordinates": "ამ ხედისთვის რუკაზე მდებარეობა არ არის მითითებული",
+  "noMasterplan": "გენგეგმა მიუწვდომელია",
+  "noObjects": "ობიექტები არ მოიძებნა",
+  "genplanOpenBuilding": "გადასვლა შენობაზე",
+  "genplanInfrastructureLabel": "ტერიტორია"
 }

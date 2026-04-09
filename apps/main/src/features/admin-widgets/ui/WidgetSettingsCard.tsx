@@ -16,6 +16,9 @@ import {
 } from "@gridix/ui";
 import { Copy, Eye } from "lucide-react";
 import { Language } from "@gridix/utils/lib";
+import type { WidgetContentMode } from "@/features/admin-widgets/lib/generateEmbedCode";
+import type { SubProject } from "@/features/genplan/model/types";
+import { subProjectEmbedSlug } from "@/features/admin-widgets/lib/subProjectEmbedSlug";
 
 type WidgetSettingsCardProps = {
   t: (key: string) => string;
@@ -34,6 +37,14 @@ type WidgetSettingsCardProps = {
   setFloatingButtonBottomOffset: (value: number) => void;
   floatingButtonSideOffset: number;
   setFloatingButtonSideOffset: (value: number) => void;
+  widgetContentMode: WidgetContentMode;
+  setWidgetContentMode: (value: WidgetContentMode) => void;
+  widgetSubProjectSlug: string;
+  setWidgetSubProjectSlug: (value: string) => void;
+  subProjects: SubProject[];
+  subProjectsLoading: boolean;
+  projectHasGenplan: boolean;
+  projectGenplanLoading: boolean;
   handleToggleShowFullProject: (checked: boolean) => void;
   handleToggleShowFloatingButton: (checked: boolean) => void;
   openPreview: () => void;
@@ -64,6 +75,14 @@ export const WidgetSettingsCard = ({
   setFloatingButtonBottomOffset,
   floatingButtonSideOffset,
   setFloatingButtonSideOffset,
+  widgetContentMode,
+  setWidgetContentMode,
+  widgetSubProjectSlug,
+  setWidgetSubProjectSlug,
+  subProjects,
+  subProjectsLoading,
+  projectHasGenplan,
+  projectGenplanLoading,
   handleToggleShowFullProject,
   handleToggleShowFloatingButton,
   openPreview,
@@ -118,6 +137,108 @@ export const WidgetSettingsCard = ({
           <p className="mt-1 text-xs text-gray-500">
             {t("adminWidgets.defaultLanguageDesc")}
           </p>
+        </div>
+
+        <div>
+          <Label htmlFor="widget-content-mode">
+            {t("adminWidgets.widgetContentMode")}
+          </Label>
+          {projectGenplanLoading ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("adminWidgets.loading")}
+            </p>
+          ) : (
+            <Select
+              value={widgetContentMode}
+              onValueChange={(value: WidgetContentMode) =>
+                setWidgetContentMode(value)
+              }
+            >
+              <SelectTrigger id="widget-content-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {projectHasGenplan ? (
+                  <>
+                    <SelectItem value="genplan">
+                      {t("adminWidgets.widgetContentGenplan")}
+                    </SelectItem>
+                    <SelectItem value="objects">
+                      {t("adminWidgets.widgetContentObjects")}
+                    </SelectItem>
+                    <SelectItem value="list">
+                      {t("adminWidgets.widgetContentList")}
+                    </SelectItem>
+                    <SelectItem value="building">
+                      {t("adminWidgets.widgetContentBuilding")}
+                    </SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="facade">
+                      {t("adminWidgets.widgetContentFacade")}
+                    </SelectItem>
+                    <SelectItem value="chess">
+                      {t("adminWidgets.widgetContentChess")}
+                    </SelectItem>
+                    <SelectItem value="list">
+                      {t("adminWidgets.widgetContentList")}
+                    </SelectItem>
+                    <SelectItem value="building">
+                      {t("adminWidgets.widgetContentBuilding")}
+                    </SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          )}
+          {!projectGenplanLoading && (
+            <p className="mt-1 text-xs text-gray-500">
+              {projectHasGenplan
+                ? t("adminWidgets.widgetContentModeDesc")
+                : t("adminWidgets.widgetContentModeDescNoGenplan")}
+            </p>
+          )}
+          {widgetContentMode === "building" && (
+            <div className="mt-3 space-y-2">
+              <Label htmlFor="widget-subproject-select">
+                {t("adminWidgets.widgetSubProjectLabel")}
+              </Label>
+              {subProjectsLoading ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("adminWidgets.loading")}
+                </p>
+              ) : subProjects.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("adminWidgets.widgetSubProjectEmpty")}
+                </p>
+              ) : (
+                <Select
+                  value={widgetSubProjectSlug || undefined}
+                  onValueChange={setWidgetSubProjectSlug}
+                >
+                  <SelectTrigger id="widget-subproject-select">
+                    <SelectValue
+                      placeholder={t(
+                        "adminWidgets.widgetSubProjectPlaceholder",
+                      )}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subProjects.map((sp) => {
+                      const slug = subProjectEmbedSlug(sp);
+                      const name = (sp.name ?? "").trim();
+                      return (
+                        <SelectItem key={sp.id} value={slug}>
+                          {name.length > 0 ? name : slug}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="border-t pt-2">

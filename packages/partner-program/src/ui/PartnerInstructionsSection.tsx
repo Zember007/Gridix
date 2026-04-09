@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { type ReactNode, useState } from "react";
 import {
   PlayCircle,
   Download,
@@ -28,11 +28,13 @@ const { MATERIALS, VIDEOS, FAQ_ITEMS, TARGET_AUDIENCE_KEYS } =
 export interface PartnerInstructionsSectionProps {
   /** Базовый URL для ресурсов инструкций (видео, PDF). Если не задан — используются относительные пути (main app). Для partners app передайте, например, VITE_MAIN_APP_URL. */
   instructionsBaseUrl?: string;
+  /** Optional slot rendered inside the Demo card below the existing CTA. Use this to render a "Join demo" button with app-specific logic. */
+  joinDemoSlot?: ReactNode;
 }
 
 export const PartnerInstructionsSection: React.FC<
   PartnerInstructionsSectionProps
-> = ({ instructionsBaseUrl }) => {
+> = ({ instructionsBaseUrl, joinDemoSlot }) => {
   const { t, language } = useLanguage();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -301,6 +303,7 @@ export const PartnerInstructionsSection: React.FC<
             <ExternalLink size={18} />
             {t("partners.instructionsDemoCta")}
           </a>
+          {joinDemoSlot ?? null}
         </section>
       </div>
 

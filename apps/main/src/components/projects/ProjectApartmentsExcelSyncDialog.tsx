@@ -34,6 +34,8 @@ interface ProjectApartmentsExcelSyncDialogProps {
   open: boolean;
   onClose: () => void;
   projectId: string;
+  /** Default (or current) building scope — Excel updates only apartments in this sub-project. */
+  subProjectId?: string;
   projectType: "building" | "object" | null;
   onSyncDone: () => void;
 }
@@ -47,6 +49,7 @@ const ProjectApartmentsExcelSyncDialog = ({
   open,
   onClose,
   projectId,
+  subProjectId,
   projectType,
   onSyncDone,
 }: ProjectApartmentsExcelSyncDialogProps) => {
@@ -226,6 +229,7 @@ const ProjectApartmentsExcelSyncDialog = ({
           </DialogHeader>
           <ExcelApartmentSyncMapper
             projectId={projectId}
+            subProjectId={subProjectId}
             projectType={projectType}
             excelColumns={excelColumns}
             importedData={importedData}

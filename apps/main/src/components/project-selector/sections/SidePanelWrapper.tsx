@@ -1,6 +1,8 @@
 import { ProjectSidePanel, type SidePanelState } from "../ProjectSidePanel";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
+import type { Tables } from "@gridix/types/database";
+import type { SubProjectListItem } from "@/features/projectSelector/api/projectSelectorApi";
 import type { FieldVisibility, LayoutPhoto } from "../types";
 
 interface SidePanelWrapperProps {
@@ -17,6 +19,8 @@ interface SidePanelWrapperProps {
   onOpenFloorPlan: (floorNumber: number) => void;
   selectedCurrency: string;
   fieldVisibility: FieldVisibility;
+  subProject?: Tables<"sub_projects"> | null;
+  subProjects: SubProjectListItem[];
 }
 
 export const SidePanelWrapper = ({
@@ -33,6 +37,8 @@ export const SidePanelWrapper = ({
   onOpenFloorPlan,
   selectedCurrency,
   fieldVisibility,
+  subProject,
+  subProjects,
 }: SidePanelWrapperProps) => {
   const panelProps = {
     open,
@@ -48,6 +54,8 @@ export const SidePanelWrapper = ({
     onOpenFloorPlan,
     selectedCurrency,
     fieldVisibility,
+    subProject,
+    subProjects,
   };
 
   return (

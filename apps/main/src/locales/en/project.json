@@ -16,6 +16,7 @@
   "areaRange": "Area range",
   "available": "Available",
   "backToBuilding": "Back to Building",
+  "backToGenplan": "Back to site plan",
   "changeFilters": "Try changing your search filters",
   "contactAdmin": "Contact administrator",
   "contactManager": "Contact Manager",
@@ -69,5 +70,16 @@
   "viewDetails": "View details",
   "openMenu": "Open menu",
   "closeMenu": "Close menu",
-  "plan_floor": "Floor {{floor}} plan"
+  "plan_floor": "Floor {{floor}} plan",
+  "masterplans": "Genplans",
+  "objects": "Objects",
+  "building": "Building",
+  "object": "Object",
+  "priceFrom": "Price from",
+  "addressNotSet": "Address not specified",
+  "mapNoCoordinates": "Map location is not set for this view",
+  "noMasterplan": "No master plan available",
+  "noObjects": "No objects available",
+  "genplanOpenBuilding": "Open building",
+  "genplanInfrastructureLabel": "Area"
 }

@@ -25,7 +25,54 @@
     "objectNumber": "Nesne #{{sayı}}",
     "plan": "Nesne Planı",
     "polygonsDescription": "Her nesne için plandaki alanları işaretleyin (villalar, şehir evleri)",
-    "polygonsTitle": "Nesne Çokgenleri"
+    "polygonsTitle": "Nesne Çokgenleri",
+    "description": "Nesne poligon yapılandırması için plan görüntüsü yükleyin",
+    "guided": {
+      "toggle": "Sonraki nesneyi öner",
+      "progress": {
+        "floorRange": "Nesne aralığı:",
+        "missingFloors": "Eksik nesneler:",
+        "allConfigured": "Tüm nesneler yapılandırıldı"
+      },
+      "helper": {
+        "savedAndNext": "#{{floor}} nesnesi kaydedildi. Sonraki eksik nesne: {{nextFloor}}",
+        "goNext": "Sonraki nesneye git"
+      }
+    }
+  },
+  "genplan": {
+    "description": "Genel plan görselini yükleyin; alt projeleri cephe düzenleyicisindekiyle aynı çokgen araçlarıyla işaretleyin.",
+    "noEntities": "Önce alt projeler veya altyapı bölgeleri ekleyin — ardından planda alanları çizebilirsiniz.",
+    "polygonsTitle": "Alt proje çokgenleri",
+    "polygonsDescription": "Bir alt proje veya altyapı bölgesi seçin, ardından genel planda çokgeni çizin veya düzenleyin.",
+    "selectLabel": "Alt proje / bölge",
+    "selectPlaceholder": "Alt proje veya bölge seçin",
+    "addNew": "Çizmeye başla",
+    "canvas": "Genel plan",
+    "creating": "Alan çiziliyor: {{name}}",
+    "delete": "Alanı sil",
+    "hoverCaption": "Alan",
+    "guided": {
+      "toggle": "Sonraki alt projeyi öner",
+      "progress": {
+        "rangeLabel": "Alt projeler:",
+        "missingList": "Çokgen eksik:",
+        "infraRangeLabel": "Altyapı bölgeleri:",
+        "infraDrawn": "Çokgeni olan:",
+        "infraMissing": "Çokgen eksik:",
+        "missingInfraList": "Planda işaretlenmemiş bölgeler:",
+        "allConfigured": "Tüm alt projelerin ve altyapı bölgelerinin planda çokgeni var"
+      },
+      "helper": {
+        "savedAndNext": "«{{name}}» kaydedildi. Sıradaki: {{nextName}}",
+        "goNext": "Sonrakine git"
+      }
+    },
+    "polygon": {
+      "createSuccess": "{{name}} için alan oluşturuldu",
+      "saveSuccess": "{{name}} için alan kaydedildi",
+      "deleteSuccess": "Alan silindi"
+    }
   },
   "polygon": {
     "cancel": "İptal etmek",
