@@ -20,6 +20,12 @@ export type {
   PartnerProgramResponse,
 } from "./model/types";
 
+export {
+  applyDemoPartnerStatsOverlay,
+  applyDemoPartnerClientsOverlay,
+  getDemoPartnerClientsMock,
+} from "./model/demoPartnerPublicMock";
+
 // Instructions config (host assets in main app public/instructions/)
 export {
   DEFAULT_INSTRUCTIONS_CONFIG,

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useCurrentSession } from "@gridix/utils";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerClient } from "../model/types";
+import { applyDemoPartnerClientsOverlay } from "../model/demoPartnerPublicMock";
 
 export function usePartnerClients() {
   const [clients, setClients] = useState<PartnerClient[]>([]);
@@ -32,7 +33,23 @@ export function usePartnerClients() {
         throw new Error(data.error);
       }
 
-      setClients(data.clients || []);
+      const user = sessionQuery?.user ?? null;
+      let isDemo = false;
+      if (user?.id) {
+        const { data: prof } = await supabase
+          .from("user_profiles")
+          .select("is_demo")
+          .eq("id", user.id)
+          .maybeSingle();
+        isDemo = Boolean((prof as { is_demo?: boolean } | null)?.is_demo);
+      }
+
+      setClients(
+        applyDemoPartnerClientsOverlay(
+          (data.clients || []) as PartnerClient[],
+          isDemo,
+        ),
+      );
     } catch (err) {
       console.error("Error fetching partner clients:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch clients");
@@ -42,8 +59,9 @@ export function usePartnerClients() {
   };
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (isSessionLoading) return;
+    void fetchClients();
+  }, [isSessionLoading, sessionQuery?.user?.id]);
 
   const addManagedClient = async (clientId: string) => {
     try {

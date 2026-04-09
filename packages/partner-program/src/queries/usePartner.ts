@@ -6,6 +6,7 @@ import type { PartnerProfile } from "../model/types";
 interface CachedPartnerState {
   isPartner: boolean;
   partnerProfile: PartnerProfile | null;
+  isDemoAccount: boolean;
 }
 
 const partnerStateCache = new Map<string, CachedPartnerState>();
@@ -16,6 +17,7 @@ export function usePartner() {
   const [partnerProfile, setPartnerProfile] = useState<PartnerProfile | null>(
     null,
   );
+  const [isDemoAccount, setIsDemoAccount] = useState(false);
   const [loading, setLoading] = useState(true);
   const { data: sessionQuery, isLoading: isSessionLoading } =
     useCurrentSession();
@@ -30,6 +32,7 @@ export function usePartner() {
       if (!userId) {
         setIsPartner(false);
         setPartnerProfile(null);
+        setIsDemoAccount(false);
         setLoading(false);
         return;
       }
@@ -38,6 +41,7 @@ export function usePartner() {
       if (cached) {
         setIsPartner(cached.isPartner);
         setPartnerProfile(cached.partnerProfile);
+        setIsDemoAccount(cached.isDemoAccount);
         setLoading(false);
         return;
       }
@@ -47,31 +51,43 @@ export function usePartner() {
         const state = await inFlight;
         setIsPartner(state.isPartner);
         setPartnerProfile(state.partnerProfile);
+        setIsDemoAccount(state.isDemoAccount);
         setLoading(false);
         return;
       }
 
       const request = (async (): Promise<CachedPartnerState> => {
-        const { data: profile, error } = await supabase
-          .from("partner_profiles" as any)
-          .select("*")
-          .eq("user_id", userId)
-          .single();
+        const [{ data: profile, error }, { data: upRow }] = await Promise.all([
+          supabase
+            .from("partner_profiles" as any)
+            .select("*")
+            .eq("user_id", userId)
+            .single(),
+          supabase
+            .from("user_profiles")
+            .select("is_demo")
+            .eq("id", userId)
+            .maybeSingle(),
+        ]);
 
         if (error && error.code !== "PGRST116") {
           throw error;
         }
 
+        const demo = Boolean((upRow as { is_demo?: boolean } | null)?.is_demo);
+
         if (profile) {
           return {
             isPartner: true,
             partnerProfile: profile as unknown as PartnerProfile,
+            isDemoAccount: demo,
           };
         }
 
         return {
           isPartner: false,
           partnerProfile: null,
+          isDemoAccount: demo,
         };
       })();
 
@@ -80,10 +96,12 @@ export function usePartner() {
       partnerStateCache.set(userId, nextState);
       setIsPartner(nextState.isPartner);
       setPartnerProfile(nextState.partnerProfile);
+      setIsDemoAccount(nextState.isDemoAccount);
     } catch (error) {
       console.error("Error checking partner status:", error);
       setIsPartner(false);
       setPartnerProfile(null);
+      setIsDemoAccount(false);
     } finally {
       if (userId) {
         partnerRequestInFlight.delete(userId);
@@ -130,14 +148,24 @@ export function usePartner() {
         throw new Error("Failed to create partner profile");
       }
 
+      const { data: upRow } = await supabase
+        .from("user_profiles")
+        .select("is_demo")
+        .eq("id", userId)
+        .maybeSingle();
+
       const nextState: CachedPartnerState = {
         isPartner: true,
         partnerProfile: profile as unknown as PartnerProfile,
+        isDemoAccount: Boolean(
+          (upRow as { is_demo?: boolean } | null)?.is_demo,
+        ),
       };
 
       partnerStateCache.set(userId, nextState);
       setPartnerProfile(nextState.partnerProfile);
       setIsPartner(true);
+      setIsDemoAccount(nextState.isDemoAccount);
 
       return profile;
     } catch (error) {
@@ -149,6 +177,7 @@ export function usePartner() {
   return {
     isPartner,
     partnerProfile,
+    isDemoAccount,
     loading,
     createPartnerProfile,
     refetch: checkPartnerStatus,
