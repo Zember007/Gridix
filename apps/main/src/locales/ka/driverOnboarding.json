@@ -18,6 +18,8 @@
     "step8Description": "Click “Create project”. When the modal opens, the next tour about import and project creation will start automatically."
   },
   "projectCreation": {
+    "phase1KindTitle": "ვქმნით პროექტს",
+    "phase1KindDescription": "აირჩიეთ განლაგება, რომელიც შეესაბამება თქვენს განვითარებას. დეტალები მოგვიანებით რედაქტორში შეცვლით. გასაგრძელებლად დააჭირეთ ბარათს.",
     "phase1Step1Title": "Create a project",
     "phase1Step1Description": "Choose a path: quick import from a file (recommended) or manual setup.",
     "phase1Step2Title": "Import from Excel / CSV",

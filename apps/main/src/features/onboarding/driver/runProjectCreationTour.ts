@@ -12,6 +12,8 @@ import {
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
 
+import { requestProjectCreationTourKindScreen } from "./projectCreationTourNavBridge";
+
 export const PROJECT_CREATION_DRIVER_TOUR_ID = "project_creation";
 
 type Translate = (key: string) => string;
@@ -26,11 +28,32 @@ const CLICK_ADVANCE_STEP_BUTTONS: TourPopoverButtons = ["previous", "close"];
 
 let activeProjectCreationDriver: Driver | null = null;
 
+/**
+ * Уничтожение инстанса между шагом выбора типа и шагами импорта: не помечать тур
+ * завершённым и не resolve() промиса `startProjectCreationDriverTour`.
+ */
+let skipMarkProjectCreationOnceOnDestroy = false;
+
 function nextAnimationFrame(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   return new Promise((resolve) =>
     window.requestAnimationFrame(() => resolve()),
   );
+}
+
+/** Ждём появления хотя бы одного из селекторов в DOM. */
+async function waitForAnySelector(
+  selectors: string[],
+  timeoutMs: number,
+  intervalMs: number,
+): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (selectors.some((s) => document.querySelector(s))) return true;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return false;
 }
 
 function filterStepsWithDomTargets(steps: DriveStep[]): DriveStep[] {
@@ -91,9 +114,19 @@ function selectBuildingProjectTypeAndAdvance(driver: Driver): void {
   });
 }
 
-function buildPhase1Steps(
+type Phase1ImportStepsOptions = {
+  /** «Назад» с первого шага импорта: вернуть UI на выбор типа и перезапустить шаг kind. */
+  onPrevFromFirstImport?: (driver: Driver) => void;
+};
+
+/**
+ * Шаги phase 1 после экрана выбора типа проекта (или сразу для потока подпроекта):
+ * бывший «обзор модалки» перенесён на карточку импорта (phase1Step1), затем детали импорта и загрузка.
+ */
+function buildPhase1ImportSteps(
   t: Translate,
   onAwaitMapperThenContinue: (driver: Driver) => void,
+  options?: Phase1ImportStepsOptions,
 ): DriveStep[] {
   const navOnlyPopover = {
     showButtons: PHASE1_NAV_BUTTONS,
@@ -112,9 +145,29 @@ function buildPhase1Steps(
     driver.setConfig({ ...driver.getConfig(), allowClose: true });
   };
 
+  const firstImportPopoverExtras =
+    options?.onPrevFromFirstImport != null
+      ? {
+          /**
+           * По умолчанию Driver отключает «Назад» на шаге 0; без пустого disableButtons
+           * кнопка не покажется.
+           */
+          disableButtons: [] as unknown as NonNullable<
+            NonNullable<DriveStep["popover"]>["disableButtons"]
+          >,
+          onPrevClick: (
+            _element: Element | undefined,
+            _step: DriveStep,
+            { driver }: { driver: Driver },
+          ) => {
+            options.onPrevFromFirstImport!(driver);
+          },
+        }
+      : {};
+
   return [
     {
-      element: ".project_creation_modal_usertour",
+      element: ".project_import_excel_usertour",
       disableActiveInteraction: true,
       onHighlighted: chainHighlighted(phase1AllowCloseHook),
       popover: {
@@ -124,6 +177,7 @@ function buildPhase1Steps(
         ),
         side: "bottom" as Side,
         ...navOnlyPopover,
+        ...firstImportPopoverExtras,
       },
     },
     {
@@ -178,6 +232,38 @@ function buildPhase1Steps(
       } satisfies DriveStep;
     })(),
   ];
+}
+
+function buildKindStep(
+  t: Translate,
+  onAfterKindChoice: (driver: Driver) => void,
+): DriveStep {
+  const phase1AllowCloseHook: DriverHook = (_el, _s, { driver }) => {
+    driver.setConfig({ ...driver.getConfig(), allowClose: false });
+  };
+
+  const phase1OpenHook: DriverHook = (_el, _s, { driver }) => {
+    driver.setConfig({ ...driver.getConfig(), allowClose: true });
+  };
+
+  const clickAdvance = clickToAdvanceOnHighlight(onAfterKindChoice);
+
+  return {
+    element: ".project_creation_kind_usertour",
+    disableActiveInteraction: false,
+    onHighlighted: chainHighlighted(
+      phase1AllowCloseHook,
+      phase1OpenHook,
+      clickAdvance.onHighlighted,
+    ),
+    onDeselected: clickAdvance.onDeselected,
+    popover: {
+      title: t("driverOnboarding.projectCreation.phase1KindTitle"),
+      description: t("driverOnboarding.projectCreation.phase1KindDescription"),
+      side: "bottom" as Side,
+      showButtons: CLICK_ADVANCE_STEP_BUTTONS,
+    },
+  };
 }
 
 function buildPhase2Steps(t: Translate): DriveStep[] {
@@ -294,6 +380,34 @@ function destroyActiveInstance(): void {
   }
 }
 
+function createProjectCreationPhase1Driver(params: {
+  userId: string;
+  t: Translate;
+  finish: () => void;
+}): Driver {
+  const { userId, t, finish } = params;
+  const driver = createGridixDriver({
+    allowClose: false,
+    allowKeyboardControl: false,
+    disableActiveInteraction: false,
+    showProgress: true,
+    nextBtnText: t("driverOnboarding.buttons.next"),
+    prevBtnText: t("driverOnboarding.buttons.previous"),
+    doneBtnText: t("driverOnboarding.buttons.done"),
+    showButtons: ["next", "previous", "close"],
+    onDestroyed: () => {
+      if (activeProjectCreationDriver === driver) {
+        activeProjectCreationDriver = null;
+      }
+      if (!skipMarkProjectCreationOnceOnDestroy) {
+        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
+        finish();
+      }
+    },
+  });
+  return driver;
+}
+
 /**
  * Снимает активный Driver тура создания проекта (закрытие модалки, размонтирование).
  * Записывает once-флаг — тур больше не показывается при повторном открытии модалки.
@@ -398,20 +512,29 @@ export function startProjectCreationDriverTour(params: {
         return;
       }
 
+      const kindOrImportReady = await waitForAnySelector(
+        [".project_creation_kind_usertour", ".project_import_excel_usertour"],
+        4000,
+        50,
+      );
+
+      if (!kindOrImportReady) {
+        finish();
+        return;
+      }
+
       /**
-       * Вызывается из onNextClick шага 4 (последний шаг phase 1).
+       * Вызывается из onNextClick шага 4 (последний шаг phase 1 import).
        * Сразу закрывает phase 1 через moveNext() (Driver.js сам вызовет destroy
        * на последнем шаге), затем асинхронно ждёт маппер и запускает phase 2.
        */
       const handleUploadNext = (driver: Driver) => {
-        // Немедленно закрыть phase 1 — пользователь нажал «Готово».
         try {
           driver.moveNext();
         } catch {
           // На последнем шаге moveNext() вызывает destroy — это ожидаемо.
         }
 
-        // Асинхронно ждём маппер и, если он появится, запускаем phase 2.
         void (async () => {
           const mapperReady = await waitForSelectors(
             [".excel_project_type_usertour"],
@@ -430,37 +553,162 @@ export function startProjectCreationDriverTour(params: {
         })();
       };
 
-      const phase1Steps = buildPhase1Steps(t, handleUploadNext);
-      const readyPhase1 = filterStepsWithDomTargets(phase1Steps);
-      if (!readyPhase1.length) {
+      let continueAfterKindChoice: (driver: Driver) => void;
+
+      function goBackToKindFromImport(importDriver: Driver): void {
+        void (async () => {
+          requestProjectCreationTourKindScreen();
+          const kindVisible = await waitForSelectors(
+            [".project_creation_kind_usertour"],
+            {
+              timeoutMs: 8000,
+              intervalMs: 100,
+              debugLabel: "project_tour_kind_from_import_back",
+            },
+          );
+          if (!kindVisible) return;
+
+          skipMarkProjectCreationOnceOnDestroy = true;
+          try {
+            importDriver.destroy();
+          } catch {
+            // ignore
+          } finally {
+            skipMarkProjectCreationOnceOnDestroy = false;
+          }
+
+          await nextAnimationFrame();
+          await nextAnimationFrame();
+
+          const kindStep = buildKindStep(t, (d) => continueAfterKindChoice(d));
+          const newDriver = createProjectCreationPhase1Driver({
+            userId,
+            t,
+            finish,
+          });
+          activeProjectCreationDriver = newDriver;
+          newDriver.setSteps([kindStep]);
+          newDriver.drive(0);
+          await nextAnimationFrame();
+        })();
+      }
+
+      continueAfterKindChoice = (driver: Driver) => {
+        void (async () => {
+          await nextAnimationFrame();
+          await nextAnimationFrame();
+
+          if (!document.querySelector(".project_creation_modal_usertour")) {
+            try {
+              driver.destroy();
+            } catch {
+              // onDestroyed завершит тур (генплан закрыл модалку)
+            }
+            return;
+          }
+
+          const importReady = await waitForSelectors(
+            [".project_import_excel_usertour"],
+            {
+              timeoutMs: 8000,
+              intervalMs: 100,
+              debugLabel: "project_creation_import_after_kind",
+            },
+          );
+
+          if (!importReady) {
+            try {
+              driver.destroy();
+            } catch {
+              // onDestroyed помечает прогресс
+            }
+            return;
+          }
+
+          const importSteps = buildPhase1ImportSteps(t, handleUploadNext, {
+            onPrevFromFirstImport: goBackToKindFromImport,
+          });
+          const readyImport = filterStepsWithDomTargets(importSteps);
+          if (!readyImport.length) {
+            try {
+              driver.destroy();
+            } catch {
+              // onDestroyed помечает прогресс
+            }
+            return;
+          }
+
+          try {
+            /**
+             * После клика по карточке узел `.project_creation_kind_usertour` размонтируется.
+             * `setSteps` на том же инстансе оставляет «залипшую» подсветку/попап первого шага.
+             * Новый инстанс Driver снимает оверлей корректно.
+             */
+            skipMarkProjectCreationOnceOnDestroy = true;
+            try {
+              driver.destroy();
+            } catch {
+              // ignore
+            } finally {
+              skipMarkProjectCreationOnceOnDestroy = false;
+            }
+
+            await nextAnimationFrame();
+            await nextAnimationFrame();
+
+            const importDriver = createProjectCreationPhase1Driver({
+              userId,
+              t,
+              finish,
+            });
+            activeProjectCreationDriver = importDriver;
+            importDriver.setSteps(readyImport);
+            importDriver.drive(0);
+            await nextAnimationFrame();
+          } catch (error) {
+            console.warn(
+              "Project creation driver tour: failed to continue after kind step",
+              error,
+            );
+            try {
+              driver.destroy();
+            } catch {
+              // ignore
+            }
+          }
+        })();
+      };
+
+      const hasKindStep = !!document.querySelector(
+        ".project_creation_kind_usertour",
+      );
+
+      const importStepsWhenNoKind = buildPhase1ImportSteps(t, handleUploadNext);
+      const readyPhase1WhenNoKind = filterStepsWithDomTargets(
+        importStepsWhenNoKind,
+      );
+
+      if (!hasKindStep && !readyPhase1WhenNoKind.length) {
         finish();
         return;
       }
 
       destroyActiveInstance();
 
-      const driver = createGridixDriver({
-        allowClose: false,
-        allowKeyboardControl: false,
-        disableActiveInteraction: false,
-        showProgress: true,
-        nextBtnText: t("driverOnboarding.buttons.next"),
-        prevBtnText: t("driverOnboarding.buttons.previous"),
-        doneBtnText: t("driverOnboarding.buttons.done"),
-        showButtons: ["next", "previous", "close"],
-        onDestroyed: () => {
-          if (activeProjectCreationDriver === driver) {
-            activeProjectCreationDriver = null;
-          }
-          markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
-          finish();
-        },
+      const driver = createProjectCreationPhase1Driver({
+        userId,
+        t,
+        finish,
       });
 
       activeProjectCreationDriver = driver;
 
       try {
-        driver.setSteps(readyPhase1);
+        if (hasKindStep) {
+          driver.setSteps([buildKindStep(t, continueAfterKindChoice)]);
+        } else {
+          driver.setSteps(readyPhase1WhenNoKind);
+        }
         driver.drive(0);
         await nextAnimationFrame();
       } catch (error) {

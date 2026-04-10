@@ -41,6 +41,7 @@ const ExcelUrlImporter = lazy(
   () => import("@/features/data-import/import-from-url/ui/ExcelUrlImporter"),
 );
 import { useLanguage } from "@/contexts/LanguageContext";
+import { registerProjectCreationTourKindNav } from "@/features/onboarding/driver/projectCreationTourNavBridge";
 import type { Tables } from "@gridix/types/database";
 import type { MainProjectCreationKind } from "./mainProjectCreationKind";
 
@@ -174,6 +175,22 @@ const ProjectCreationModal = ({
     }
     setRootStep("kind");
     setSelectedKind(null);
+  }, [open, isRootFlow]);
+
+  useEffect(() => {
+    if (!open || !isRootFlow) {
+      registerProjectCreationTourKindNav(null);
+      return;
+    }
+    registerProjectCreationTourKindNav({
+      requestKindScreen: () => {
+        setRootStep("kind");
+        setSelectedKind(null);
+      },
+    });
+    return () => {
+      registerProjectCreationTourKindNav(null);
+    };
   }, [open, isRootFlow]);
 
   const handleFileUpload = async (
@@ -433,7 +450,7 @@ const ProjectCreationModal = ({
         </DialogHeader>
 
         {isRootFlow && rootStep === "kind" && (
-          <div className="space-y-4 py-2">
+          <div className="project_creation_kind_usertour space-y-4 py-2">
             <p className="text-sm font-medium text-foreground">
               {t("admin.project.create.kind.question")}
             </p>
