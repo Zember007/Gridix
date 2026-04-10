@@ -287,7 +287,6 @@ export const useProjectsManager = () => {
           .from("projects")
           .insert({
             ...projectRow,
-            floors: null,
             user_id: user.id,
           })
           .select()

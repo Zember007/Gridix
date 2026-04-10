@@ -94,7 +94,6 @@ export const createProject = async (
     .from("projects")
     .insert({
       ...projectRow,
-      floors: null,
       user_id: userId,
     })
     .select()
