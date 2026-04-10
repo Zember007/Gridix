@@ -20,6 +20,7 @@
   "projectCreation": {
     "phase1KindTitle": "יוצרים פרויקט",
     "phase1KindDescription": "בחרו את הפריסה שמתאימה לפיתוח שלכם. אפשר לשנות פרטים מאוחר יותר בעורך. לחצו על כרטיס להמשך.",
+    "phase1Progress": "{{step}} מתוך {{count}}",
     "phase1Step1Title": "Create a project",
     "phase1Step1Description": "Choose a path: quick import from a file (recommended) or manual setup.",
     "phase1Step2Title": "Import from Excel / CSV",

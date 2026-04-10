@@ -117,7 +117,19 @@ function selectBuildingProjectTypeAndAdvance(driver: Driver): void {
 type Phase1ImportStepsOptions = {
   /** «Назад» с первого шага импорта: вернуть UI на выбор типа и перезапустить шаг kind. */
   onPrevFromFirstImport?: (driver: Driver) => void;
+  /** Счётчик прогресса: с kind — шаги 2–5 из 5; без kind (подпроект) — 1–4 из 4. */
+  progress?: { total: number; firstStepOneBased: number };
 };
+
+function phase1ProgressText(
+  t: Translate,
+  stepOneBased: number,
+  total: number,
+): string {
+  return t("driverOnboarding.projectCreation.phase1Progress")
+    .replace(/\{\{step\}\}/g, String(stepOneBased))
+    .replace(/\{\{count\}\}/g, String(total));
+}
 
 /**
  * Шаги phase 1 после экрана выбора типа проекта (или сразу для потока подпроекта):
@@ -165,6 +177,18 @@ function buildPhase1ImportSteps(
         }
       : {};
 
+  const prog = options?.progress;
+
+  const progressPopover = (stepOneBased: number) =>
+    prog
+      ? {
+          showProgress: true as const,
+          progressText: phase1ProgressText(t, stepOneBased, prog.total),
+        }
+      : {};
+
+  const s0 = prog ? prog.firstStepOneBased : 0;
+
   return [
     {
       element: ".project_import_excel_usertour",
@@ -177,6 +201,7 @@ function buildPhase1ImportSteps(
         ),
         side: "bottom" as Side,
         ...navOnlyPopover,
+        ...progressPopover(s0),
         ...firstImportPopoverExtras,
       },
     },
@@ -191,6 +216,7 @@ function buildPhase1ImportSteps(
         ),
         side: "bottom" as Side,
         ...navOnlyPopover,
+        ...progressPopover(s0 + 1),
       },
     },
     (() => {
@@ -209,6 +235,7 @@ function buildPhase1ImportSteps(
           ),
           side: "bottom" as Side,
           ...openClosePopover,
+          ...progressPopover(s0 + 2),
         },
       } satisfies DriveStep;
     })(),
@@ -228,6 +255,7 @@ function buildPhase1ImportSteps(
           ),
           side: "bottom" as Side,
           ...openClosePopover,
+          ...progressPopover(s0 + 3),
         },
       } satisfies DriveStep;
     })(),
@@ -262,6 +290,8 @@ function buildKindStep(
       description: t("driverOnboarding.projectCreation.phase1KindDescription"),
       side: "bottom" as Side,
       showButtons: CLICK_ADVANCE_STEP_BUTTONS,
+      showProgress: true,
+      progressText: phase1ProgressText(t, 1, 5),
     },
   };
 }
@@ -625,6 +655,7 @@ export function startProjectCreationDriverTour(params: {
 
           const importSteps = buildPhase1ImportSteps(t, handleUploadNext, {
             onPrevFromFirstImport: goBackToKindFromImport,
+            progress: { total: 5, firstStepOneBased: 2 },
           });
           const readyImport = filterStepsWithDomTargets(importSteps);
           if (!readyImport.length) {
@@ -681,7 +712,13 @@ export function startProjectCreationDriverTour(params: {
         ".project_creation_kind_usertour",
       );
 
-      const importStepsWhenNoKind = buildPhase1ImportSteps(t, handleUploadNext);
+      const importStepsWhenNoKind = buildPhase1ImportSteps(
+        t,
+        handleUploadNext,
+        {
+          progress: { total: 4, firstStepOneBased: 1 },
+        },
+      );
       const readyPhase1WhenNoKind = filterStepsWithDomTargets(
         importStepsWhenNoKind,
       );

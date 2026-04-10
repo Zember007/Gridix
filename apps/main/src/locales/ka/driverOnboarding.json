@@ -20,6 +20,7 @@
   "projectCreation": {
     "phase1KindTitle": "ვქმნით პროექტს",
     "phase1KindDescription": "აირჩიეთ განლაგება, რომელიც შეესაბამება თქვენს განვითარებას. დეტალები მოგვიანებით რედაქტორში შეცვლით. გასაგრძელებლად დააჭირეთ ბარათს.",
+    "phase1Progress": "{{step}} / {{count}}",
     "phase1Step1Title": "Create a project",
     "phase1Step1Description": "Choose a path: quick import from a file (recommended) or manual setup.",
     "phase1Step2Title": "Import from Excel / CSV",

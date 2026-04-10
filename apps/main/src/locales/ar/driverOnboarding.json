@@ -20,6 +20,7 @@
   "projectCreation": {
     "phase1KindTitle": "إنشاء مشروع",
     "phase1KindDescription": "اختر التخطيط الذي يناسب تطويرك. يمكنك تعديل التفاصيل لاحقًا في المحرر. انقر على بطاقة للمتابعة.",
+    "phase1Progress": "{{step}} من {{count}}",
     "phase1Step1Title": "Create a project",
     "phase1Step1Description": "Choose a path: quick import from a file (recommended) or manual setup.",
     "phase1Step2Title": "Import from Excel / CSV",
