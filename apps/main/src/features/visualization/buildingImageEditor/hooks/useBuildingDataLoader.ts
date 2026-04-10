@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { useLanguage } from "@gridix/utils/react";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import type { Shape } from "@/components/visualization/polygon-editor/GeometryShapes";
 import type {
   BuildingFloor,
@@ -79,7 +79,7 @@ export function useBuildingDataLoader({
 
   React.useEffect(() => {
     if (!facadeConfigured) return;
-    void trackUsertourEvent({
+    void trackOnboardingMilestone({
       eventName: "gridix_project_facade_configured",
       properties: { project_id: project?.id || projectId },
       onceKey: "gridix_project_facade_configured",

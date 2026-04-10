@@ -11,7 +11,7 @@ import {
   LanguageProviders,
 } from "@/app/providers";
 import { GlobalScrollToTopButton } from "@/app/GlobalScrollToTopButton";
-import { UsertourBlockingGate } from "@gridix/utils/integrations";
+import { OnboardingBlockingGate } from "@gridix/utils/integrations";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PublicRoutes = lazy(() =>
@@ -49,7 +49,7 @@ export default function App() {
       <BrowserRouter>
         <I18nRoutePreloader />
         <AuthProvider>
-          <UsertourBlockingGate>
+          <OnboardingBlockingGate>
             <Routes>
               <Route
                 path="/embed/*"
@@ -107,7 +107,7 @@ export default function App() {
               />
             </Routes>
             <GlobalScrollToTopButton />
-          </UsertourBlockingGate>
+          </OnboardingBlockingGate>
         </AuthProvider>
       </BrowserRouter>
     </BaseProviders>

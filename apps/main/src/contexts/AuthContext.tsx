@@ -11,7 +11,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import { fetchCurrentSession } from "@gridix/utils";
 import { processPendingReferralAfterAuth } from "@/features/partnerProgram/referralTracking";
-import { preloadUsertour, resetUsertour } from "@gridix/utils/integrations";
+import { resetOnboardingUiBlock } from "@gridix/utils/integrations";
 
 export interface UserProfile {
   id: string;
@@ -71,7 +71,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const loadedProfileUserIdRef = useRef<string | null>(null);
   const userProfileRef = useRef<UserProfile | null>(null);
   const didInitRef = useRef(false);
-  const didPreloadUsertourRef = useRef(false);
 
   const applyUserProfile = useCallback((profile: UserProfile | null) => {
     userProfileRef.current = profile;
@@ -339,22 +338,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, [applyUserProfile, loadUserProfile]);
 
-  // Usertour: initialize/identify only after auth + profile are ready.
   useEffect(() => {
     if (loading) return;
-
     if (!user) {
-      resetUsertour();
-      didPreloadUsertourRef.current = false;
-      return;
+      resetOnboardingUiBlock();
     }
-
-    // Pre-warm SDK in the background so starting the first tour is faster.
-    if (!didPreloadUsertourRef.current) {
-      didPreloadUsertourRef.current = true;
-      preloadUsertour();
-    }
-  }, [loading, user, userProfile]);
+  }, [loading, user]);
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();

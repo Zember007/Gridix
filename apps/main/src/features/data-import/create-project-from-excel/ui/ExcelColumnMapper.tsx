@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { trackUsertourEvent } from "@gridix/utils/integrations";
+import { trackOnboardingMilestone } from "@gridix/utils/integrations";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { useLanguage } from "@gridix/utils/react";
@@ -609,7 +609,8 @@ const ExcelColumnMapper = ({
         const project = await createProject(projectDataForCreation);
         if (!project) throw new Error("Failed to create project");
 
-        void trackUsertourEvent({
+        // Driver.js tour uses local once-storage; we don't persist onboarding state in Supabase here.
+        void trackOnboardingMilestone({
           eventName: "gridix_project_created",
           properties: { project_id: project.id, source: "excel_import" },
           onceKey: "gridix_project_created",

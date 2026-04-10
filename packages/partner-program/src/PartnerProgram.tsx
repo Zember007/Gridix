@@ -166,7 +166,7 @@ const PartnerProgramInner: React.FC<
             </p>
           </div>
           <div className="mt-8 space-y-6">
-            <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+            <div className="partners_program_intro_usertour bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
               <div className="space-y-4">
                 <div className="text-center">
                   <h3 className="mb-4 text-lg font-medium text-gray-900">
