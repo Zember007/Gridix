@@ -606,9 +606,32 @@ const ProjectEditor = ({
 
   const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
     useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
+  /** Floors count for the building tab is stored on the default `sub_projects` row, not on `projects`. */
+  const floorsSyncedFromSubProjectRef = useRef<string | null>(null);
   /** Building vs villas/townhouses — driven by form state; persisted on save to `projects` + default `sub_projects`. */
   const editorScopeKind: "building" | "object" =
     project.project_type === "object" ? "object" : "building";
+
+  useEffect(() => {
+    floorsSyncedFromSubProjectRef.current = null;
+  }, [projectId]);
+
+  useEffect(() => {
+    if (
+      isNew ||
+      !project.id ||
+      !defaultBuildingScopeReady ||
+      !defaultBuildingScope
+    ) {
+      return;
+    }
+    if (floorsSyncedFromSubProjectRef.current === project.id) return;
+    floorsSyncedFromSubProjectRef.current = project.id;
+    setProject((prev) => ({
+      ...prev,
+      floors: defaultBuildingScope.floors,
+    }));
+  }, [isNew, project.id, defaultBuildingScopeReady, defaultBuildingScope]);
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -847,7 +870,6 @@ const ProjectEditor = ({
         name: project.name.trim(),
         description: project.description || null,
         address: project.address || null,
-        floors: project.floors,
         has_parking: project.has_parking,
         has_commercial: project.has_commercial,
         latitude: project.latitude,
@@ -881,7 +903,7 @@ const ProjectEditor = ({
           type: data.project_type === "object" ? "object" : "building",
           sort_order: 0,
           is_default: true,
-          floors: data.floors ?? 1,
+          floors: project.floors,
           has_parking: data.has_parking ?? false,
           has_commercial: data.has_commercial ?? false,
           address: data.address ?? null,

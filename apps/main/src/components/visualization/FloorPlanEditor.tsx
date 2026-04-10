@@ -319,7 +319,10 @@ const FloorPlanEditor = ({
         setAllFloors(existingFloors);
       } else if (project) {
         // Fallback to project.floors if no building floors exist
-        const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
+        const floors = Array.from(
+          { length: project.floors ?? 1 },
+          (_, i) => i + 1,
+        );
         setAllFloors(floors);
       }
     } catch (error) {

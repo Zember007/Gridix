@@ -68,6 +68,26 @@ const convertPolygonToDb = (polygon: { x: number; y: number }[]): Json => {
   return polygon as Json;
 };
 
+async function persistBuildingScopeFloorsCount(
+  nextFloors: number,
+  projectId: string,
+  subProjectId: string | undefined,
+) {
+  if (subProjectId) {
+    const { error } = await supabase
+      .from("sub_projects")
+      .update({ floors: nextFloors })
+      .eq("id", subProjectId);
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from("projects")
+    .update({ floors: nextFloors })
+    .eq("id", projectId);
+  if (error) throw error;
+}
+
 const ProjectApartmentsManager = ({
   projectId,
   projectType,
@@ -558,17 +578,13 @@ const ProjectApartmentsManager = ({
 
       if (floorPlanError) throw floorPlanError;
 
-      // Update project floors count if this was the highest floor
-      const maxFloor = Math.max(
-        ...getUniqueFloors().filter((f) => f !== floorNumber),
-      );
-      if (project && floorNumber === project.floors) {
-        const { error: projectError } = await supabase
-          .from("projects")
-          .update({ floors: maxFloor || 1 })
-          .eq("id", projectId);
-
-        if (projectError) throw projectError;
+      // Update stored max floor count when removing the current top floor (sub_project is source of truth).
+      const floorsBefore = getUniqueFloors();
+      const currentMax = floorsBefore.length ? Math.max(...floorsBefore) : 0;
+      if (floorNumber === currentMax && currentMax > 0) {
+        const remaining = floorsBefore.filter((f) => f !== floorNumber);
+        const newMax = remaining.length ? Math.max(...remaining) : 1;
+        await persistBuildingScopeFloorsCount(newMax, projectId, subProjectId);
       }
 
       // Update local state
@@ -612,17 +628,18 @@ const ProjectApartmentsManager = ({
 
       if (buildingFloorError) throw buildingFloorError;
 
-      // Update project floors count if this is higher than current max
-      const maxFloor = Math.max(...existingFloors, newFloorNumber);
-      if (project && maxFloor > project.floors) {
-        const { error: projectError } = await supabase
-          .from("projects")
-          .update({ floors: maxFloor })
-          .eq("id", projectId);
-
-        if (projectError) throw projectError;
+      const currentMax = existingFloors.length
+        ? Math.max(...existingFloors)
+        : 0;
+      if (newFloorNumber > currentMax) {
+        await persistBuildingScopeFloorsCount(
+          newFloorNumber,
+          projectId,
+          subProjectId,
+        );
       }
 
+      const maxFloor = Math.max(...existingFloors, newFloorNumber);
       setNewFloorNumber(maxFloor + 1);
       toast.success(
         t("floorManagement.addFloorSuccess", { floor: newFloorNumber }),

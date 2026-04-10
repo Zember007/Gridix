@@ -19,7 +19,7 @@ interface UseFacadeCrudParams {
   subProjectId?: string;
   project: {
     id?: string;
-    floors?: number;
+    floors?: number | null;
     building_image_url?: string | null;
   } | null;
   user: { id: string } | null;

@@ -8,7 +8,7 @@ export interface Project {
   name: string;
   description: string | null;
   user_id: string | null;
-  floors: number;
+  floors: number | null;
   building_image_url: string | null;
   created_at: string;
   slug?: string | null;

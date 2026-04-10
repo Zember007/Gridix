@@ -17,7 +17,7 @@ interface UseFloorPolygonEditorParams {
   loadBuildingData: () => Promise<void>;
   projectId: string;
   subProjectId?: string;
-  project: { id?: string; floors?: number } | null;
+  project: { id?: string; floors?: number | null } | null;
   t: (key: string, params?: Record<string, unknown>) => string;
 }
 

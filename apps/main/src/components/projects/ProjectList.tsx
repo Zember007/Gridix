@@ -1915,7 +1915,7 @@ const ProjectList = ({
                             style={{ color: ADMIN_THEME.textSecondary }}
                             variant="outline"
                           >
-                            {project.floors} {t("projectList.floors")}
+                            {project.floors ?? 1} {t("projectList.floors")}
                           </Badge>
                           <span style={{ color: ADMIN_THEME.textSecondary }}>
                             {new Date(project.created_at).toLocaleDateString(

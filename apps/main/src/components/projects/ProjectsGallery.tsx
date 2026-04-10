@@ -76,7 +76,7 @@ const ProjectsGallery = ({
           description: project.description || "",
           address: project.address || "",
           slug: (project as any).slug ?? null,
-          floors: project.floors,
+          floors: project.floors ?? 1,
           building_image_url: project.building_image_url,
           latitude: project.latitude,
           longitude: project.longitude,
@@ -376,7 +376,7 @@ const ProjectsGallery = ({
                 <div className="flex items-center gap-1">
                   <Grid3X3 className="h-3 w-3" />
                   <span>
-                    {project.floors} {t("gallery.floors")}
+                    {project.floors ?? 1} {t("gallery.floors")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">

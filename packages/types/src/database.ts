@@ -3042,7 +3042,7 @@ export type Database = {
           created_at: string;
           currency: Database["public"]["Enums"]["currency_type"] | null;
           description: string | null;
-          floors: number;
+          floors: number | null;
           has_commercial: boolean | null;
           has_masterplan: boolean;
           has_parking: boolean | null;
@@ -3078,7 +3078,7 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["currency_type"] | null;
           description?: string | null;
-          floors?: number;
+          floors?: number | null;
           has_commercial?: boolean | null;
           has_masterplan?: boolean;
           has_parking?: boolean | null;
@@ -3114,7 +3114,7 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["currency_type"] | null;
           description?: string | null;
-          floors?: number;
+          floors?: number | null;
           has_commercial?: boolean | null;
           has_masterplan?: boolean;
           has_parking?: boolean | null;

@@ -617,7 +617,22 @@ const ExcelColumnMapper = ({
         });
 
         resolvedProjectId = project.id;
-        resolvedSubProjectId = null;
+
+        const { data: defaultSubProject, error: defaultSpError } =
+          await supabase
+            .from("sub_projects")
+            .select("id")
+            .eq("project_id", project.id)
+            .eq("is_default", true)
+            .maybeSingle();
+
+        if (defaultSpError) {
+          console.error(
+            "Excel import: failed to resolve default sub-project:",
+            defaultSpError,
+          );
+        }
+        resolvedSubProjectId = defaultSubProject?.id ?? null;
       }
 
       if (customFields.length > 0) {

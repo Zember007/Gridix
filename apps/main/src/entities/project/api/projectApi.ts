@@ -88,10 +88,13 @@ export const createProject = async (
     "id" | "created_at" | "updated_at" | "view_count" | "user_id"
   >,
 ): Promise<Project> => {
+  const { floors: defaultBuildingFloors, ...projectRow } = projectData;
+
   const { data, error } = await supabase
     .from("projects")
     .insert({
-      ...projectData,
+      ...projectRow,
+      floors: null,
       user_id: userId,
     })
     .select()
@@ -107,6 +110,9 @@ export const createProject = async (
     type: data.project_type === "object" ? "object" : "building",
     sort_order: 0,
     is_default: true,
+    floors: Math.max(1, defaultBuildingFloors ?? 1),
+    has_parking: data.has_parking ?? false,
+    has_commercial: data.has_commercial ?? false,
   });
 
   return data as Project;

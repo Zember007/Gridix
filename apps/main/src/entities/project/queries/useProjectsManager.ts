@@ -281,10 +281,13 @@ export const useProjectsManager = () => {
       }
 
       try {
+        const { floors: defaultBuildingFloors, ...projectRow } = projectData;
+
         const { data, error } = await supabase
           .from("projects")
           .insert({
-            ...projectData,
+            ...projectRow,
+            floors: null,
             user_id: user.id,
           })
           .select()
@@ -292,21 +295,24 @@ export const useProjectsManager = () => {
 
         if (error) throw error;
 
-        // Инициализируем стандартные поля для нового проекта
-        try {
-          const { error: fieldsError } = await supabase.rpc(
-            "initialize_default_fields",
-            {
-              p_project_id: data.id,
-            },
-          );
+        // Дефолтный подпроект: триггер `auto_initialize_sub_project_fields` создаёт
+        // строки в `project_field_settings` через `initialize_default_fields_for_sub_project`.
+        const { error: subProjectError } = await supabase
+          .from("sub_projects")
+          .insert({
+            project_id: data.id,
+            name: data.name,
+            slug: "default",
+            type: data.project_type === "object" ? "object" : "building",
+            sort_order: 0,
+            is_default: true,
+            floors: Math.max(1, defaultBuildingFloors ?? 1),
+            has_parking: data.has_parking ?? false,
+            has_commercial: data.has_commercial ?? false,
+          });
 
-          if (fieldsError) {
-            console.error("Error initializing default fields:", fieldsError);
-            // Не прерываем создание проекта из-за ошибки полей
-          }
-        } catch (fieldsErr) {
-          console.error("Error calling initialize_default_fields:", fieldsErr);
+        if (subProjectError) {
+          console.error("Error creating default sub-project:", subProjectError);
         }
 
         // Очищаем кеш проектов пользователя
@@ -334,9 +340,10 @@ export const useProjectsManager = () => {
       }
 
       try {
+        const { floors: _legacyFloors, ...safeUpdates } = updates;
         const { data, error } = await supabase
           .from("projects")
-          .update(updates)
+          .update(safeUpdates)
           .eq("id", projectId)
           .eq("user_id", user.id)
           .select()
