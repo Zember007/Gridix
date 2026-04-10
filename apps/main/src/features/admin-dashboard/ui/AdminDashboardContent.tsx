@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { cn } from "@gridix/utils/lib";
 import ProjectList from "@/components/projects/ProjectList";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import type { UserRole } from "@/hooks/useUserRole";
@@ -70,6 +71,13 @@ export const AdminDashboardContent = ({
   isDemoViewer = false,
 }: AdminDashboardContentProps) => {
   const adminAccess = useAdminAccess();
+
+  const showAdminSettings =
+    activeTab === "settings" &&
+    userRole.type !== "manager" &&
+    !isDemoViewer &&
+    Boolean(developerId);
+
   const tabFallback = (
     <div className="flex min-h-[320px] items-center justify-center">
       <LoadingProgress />
@@ -78,7 +86,14 @@ export const AdminDashboardContent = ({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto ${activeTab === "subscription" ? "mx-auto" : ""} ${activeTab !== "leads" ? "px-6 py-4 lg:py-6" : ""}`}
+      className={cn(
+        "min-h-0 flex-1",
+        showAdminSettings
+          ? "flex flex-col overflow-hidden px-6 py-4 lg:py-6"
+          : "overflow-y-auto",
+        !showAdminSettings && activeTab === "subscription" && "mx-auto",
+        !showAdminSettings && activeTab !== "leads" && "px-6 py-4 lg:py-6",
+      )}
     >
       {activeTab === "projects" && (
         <div className="projects_list_usertour h-full space-y-6">
@@ -89,80 +104,83 @@ export const AdminDashboardContent = ({
         </div>
       )}
 
-      <Suspense fallback={tabFallback}>
-        {activeTab === "leads" && (
-          <LeadsManager showProjectColumn={!isManager} />
-        )}
+      <div
+        className={
+          showAdminSettings
+            ? "flex min-h-0 flex-1 flex-col [&>*]:min-h-0 [&>*]:flex-1"
+            : "contents"
+        }
+      >
+        <Suspense fallback={tabFallback}>
+          {activeTab === "leads" && (
+            <LeadsManager showProjectColumn={!isManager} />
+          )}
 
-        {activeTab === "subscription" && userRole.type !== "manager" && (
-          <div className="h-full space-y-6">
-            <SubscriptionTab />
-          </div>
-        )}
+          {activeTab === "subscription" && userRole.type !== "manager" && (
+            <div className="h-full space-y-6">
+              <SubscriptionTab />
+            </div>
+          )}
 
-        {activeTab === "partners" && (
-          <div className="h-full space-y-6">
-            <PartnersPage />
-          </div>
-        )}
+          {activeTab === "partners" && (
+            <div className="h-full space-y-6">
+              <PartnersPage />
+            </div>
+          )}
 
-        {activeTab === "agent_network" && (
-          <div className="space-y-6">
-            {adminAccess?.loading ? (
-              tabFallback
-            ) : adminAccess?.hasAnyProProject ? (
-              <AgencyPartnersPage />
-            ) : (
-              <AdminAccessNotice variant="pro" />
+          {activeTab === "agent_network" && (
+            <div className="space-y-6">
+              {adminAccess?.loading ? (
+                tabFallback
+              ) : adminAccess?.hasAnyProProject ? (
+                <AgencyPartnersPage />
+              ) : (
+                <AdminAccessNotice variant="pro" />
+              )}
+            </div>
+          )}
+
+          {activeTab === "contacts" && <AdminContactsPage />}
+
+          {activeTab === "widgets" && (
+            <div className="h-full space-y-6">
+              <AdminWidgets />
+            </div>
+          )}
+
+          {activeTab === "analytics" && (
+            <div className="h-full space-y-6">
+              <AdminAnalytics />
+            </div>
+          )}
+
+          {activeTab === "integrations" &&
+            userRole.type !== "manager" &&
+            !isDemoViewer && (
+              <div className="space-y-6">
+                <IntegrationsTab />
+              </div>
             )}
-          </div>
-        )}
 
-        {activeTab === "contacts" && <AdminContactsPage />}
-
-        {activeTab === "widgets" && (
-          <div className="h-full space-y-6">
-            <AdminWidgets />
-          </div>
-        )}
-
-        {activeTab === "analytics" && (
-          <div className="h-full space-y-6">
-            <AdminAnalytics />
-          </div>
-        )}
-
-        {activeTab === "integrations" &&
-          userRole.type !== "manager" &&
-          !isDemoViewer && (
-            <div className="space-y-6">
-              <IntegrationsTab />
-            </div>
+          {showAdminSettings && developerId && (
+            <AdminSettingsRoot
+              userProfile={user as never}
+              loading={loading}
+              developerId={developerId}
+              isManager={isManager}
+              {...(userRole.managerData
+                ? { managerData: userRole.managerData }
+                : {})}
+            />
           )}
 
-        {activeTab === "settings" &&
-          userRole.type !== "manager" &&
-          !isDemoViewer &&
-          developerId && (
-            <div className="space-y-6">
-              <AdminSettingsRoot
-                userProfile={user as never}
-                loading={loading}
-                developerId={developerId}
-                isManager={isManager}
-                {...(userRole.managerData
-                  ? { managerData: userRole.managerData }
-                  : {})}
-              />
+          {activeTab === "changelog" && (
+            <div className="h-full space-y-6">
+              <ChangelogPage />
             </div>
           )}
-
-        {activeTab === "changelog" && (
-          <div className="h-full space-y-6">
-            <ChangelogPage />
-          </div>
-        )}
-      </Suspense>
+        </Suspense>
+      </div>
     </div>
   );
 };
