@@ -47,11 +47,6 @@ type InitOptions = {
 
 const DEFAULT_CONTAINER_ID = "gridix-widget-root";
 
-function parseWidgetStartView(raw: string | null): WidgetStartView | undefined {
-  if (raw === "genplan" || raw === "objects" || raw === "list") return raw;
-  return undefined;
-}
-
 /** Путь + query для MemoryRouter: генплан по умолчанию, либо только подпроект. */
 function buildWidgetInitialPath(opts: {
   subProjectSlug?: string | undefined;
@@ -124,8 +119,8 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
   const floatingButtonBottomOffsetParam = qp.get("floatingButtonBottomOffset");
   const floatingButtonSideOffsetParam = qp.get("floatingButtonSideOffset");
   const showFullProjectParam = qp.get("showFullProject");
-  const widgetStartViewParam = parseWidgetStartView(qp.get("widgetStartView"));
-  const subProjectSlugParam = qp.get("subProjectSlug")?.trim();
+  // Не читаем subProjectSlug / widgetStartView из URL страницы-хоста: чужие query
+  // (например ?subProjectSlug=default) ломали маршрут /p/... и скрывали генплан.
 
   const parsedFloatingBottom = floatingButtonBottomOffsetParam
     ? parseInt(floatingButtonBottomOffsetParam, 10)
@@ -134,23 +129,14 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
     ? parseInt(floatingButtonSideOffsetParam, 10)
     : undefined;
 
-  const mergedSubSlug =
-    options.subProjectSlug ??
-    (subProjectSlugParam && subProjectSlugParam.length > 0
-      ? subProjectSlugParam
-      : undefined);
-
-  const mergedStartView =
-    options.widgetStartView ?? widgetStartViewParam ?? undefined;
-
   return {
     projectId: options.projectId ?? qp.get("projectId") ?? undefined,
     lang: options.lang ?? qp.get("lang") ?? undefined,
     showFullProject:
       options.showFullProject ??
       (showFullProjectParam ? showFullProjectParam !== "false" : true),
-    widgetStartView: mergedStartView,
-    subProjectSlug: mergedSubSlug,
+    widgetStartView: options.widgetStartView,
+    subProjectSlug: options.subProjectSlug,
     showFloatingButton:
       options.showFloatingButton ??
       (showFloatingButtonParam ? showFloatingButtonParam !== "false" : true),
