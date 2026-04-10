@@ -1,12 +1,20 @@
-import { useState } from "react";
-import { Button } from "@gridix/ui";
+import { useMemo } from "react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@gridix/ui";
-import { Building2, Grid, List, MapPin, Heart, Menu, X } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  Grid,
+  List,
+  MapPin,
+  Heart,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/shared/lib/utils.ts";
 
@@ -33,6 +41,168 @@ interface ViewModeButtonsProps {
   modeContext?: ModeContext;
 }
 
+function getVisibleModes(
+  isMultiSub: boolean,
+  mapVisible: boolean | undefined,
+  projectType: "building" | "object",
+): ViewMode[] {
+  if (isMultiSub) {
+    const m: ViewMode[] = ["facade", "chess", "list"];
+    if (mapVisible) m.push("map");
+    m.push("favorites");
+    return m;
+  }
+  const m: ViewMode[] = ["chess", "facade", "list"];
+  if (projectType !== "object") m.push("floor-plan");
+  if (mapVisible) m.push("map");
+  m.push("favorites");
+  return m;
+}
+
+function ModeGlyph({
+  mode,
+  className,
+}: {
+  mode: ViewMode;
+  className?: string;
+}) {
+  const c = cn("shrink-0", className);
+  switch (mode) {
+    case "chess":
+      return <Grid className={c} />;
+    case "facade":
+      return <Building2 className={c} />;
+    case "list":
+      return <List className={c} />;
+    case "floor-plan":
+      return <Grid className={c} />;
+    case "map":
+      return <MapPin className={c} />;
+    case "favorites":
+      return <Heart className={c} />;
+    default:
+      return null;
+  }
+}
+
+function getModeLabel(
+  mode: ViewMode,
+  isMultiSub: boolean,
+  t: (key: string) => string,
+) {
+  if (isMultiSub) {
+    switch (mode) {
+      case "facade":
+        return t("project.masterplans");
+      case "chess":
+        return t("project.objects");
+      case "list":
+        return t("project.listView");
+      case "map":
+        return t("embed.onMap");
+      case "favorites":
+        return t("favorites.title");
+      default:
+        return "";
+    }
+  }
+  switch (mode) {
+    case "chess":
+      return t("project.chess");
+    case "facade":
+      return t("project.facade");
+    case "list":
+      return t("project.listView");
+    case "floor-plan":
+      return t("project.floorPlan");
+    case "map":
+      return t("embed.onMap");
+    case "favorites":
+      return t("favorites.title");
+    default:
+      return "";
+  }
+}
+
+/** Mobile: compact Select (same pattern as EmbedProjectsPage filters) next to language toggle */
+export const ViewModeSelect = ({
+  viewMode,
+  setViewMode,
+  favoritesCount,
+  projectType,
+  mapVisible,
+  modeContext = "default",
+}: Omit<ViewModeButtonsProps, "isMobile" | "className" | "isWidget">) => {
+  const { t } = useLanguage();
+  const isMultiSub = modeContext === "project-multi-sub";
+
+  const modes = useMemo(
+    () => getVisibleModes(isMultiSub, mapVisible, projectType),
+    [isMultiSub, mapVisible, projectType],
+  );
+
+  return (
+    <div className="flex max-w-[min(46vw,12rem)] shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-0.5">
+      <Select
+        value={viewMode}
+        onValueChange={(v) => setViewMode(v as ViewMode)}
+      >
+        <SelectTrigger
+          aria-label={t("project.selectViewMode")}
+          className={cn(
+            "h-8 w-full min-w-0 gap-1 border-0 bg-transparent px-1 py-0 text-xs shadow-none",
+            "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 data-[placeholder]:text-gray-700",
+            // стрелка Radix справа не должна сжиматься; дефолтная иконка иногда не видна на сером фоне
+            "[&>*:last-child]:hidden",
+          )}
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+            <SelectValue placeholder={getModeLabel(viewMode, isMultiSub, t)} />
+            {viewMode === "favorites" && favoritesCount > 0 ? (
+              <span className="flex h-4 min-w-[1rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] leading-none text-white">
+                {favoritesCount > 99 ? "99+" : favoritesCount}
+              </span>
+            ) : null}
+          </span>
+          <ChevronDown
+            className="h-4 w-4 shrink-0 text-gray-600 opacity-80"
+            aria-hidden
+          />
+        </SelectTrigger>
+        <SelectContent align="end" position="popper">
+          {modes.map((mode) => (
+            <SelectItem
+              key={mode}
+              value={mode}
+              textValue={getModeLabel(mode, isMultiSub, t)}
+              className={cn(
+                "pl-2 pr-2 [&>span:first-child]:hidden",
+                "data-[state=checked]:bg-gray-200 data-[state=checked]:text-gray-900",
+                "aria-[selected=true]:bg-gray-200 aria-[selected=true]:text-gray-900",
+                "focus:bg-gray-100 focus:text-gray-900",
+              )}
+            >
+              <span className="flex w-full min-w-0 items-center gap-2">
+                <ModeGlyph mode={mode} className="h-4 w-4 text-gray-600" />
+                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span className="truncate">
+                    {getModeLabel(mode, isMultiSub, t)}
+                  </span>
+                  {mode === "favorites" && favoritesCount > 0 ? (
+                    <span className="flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-xs text-white">
+                      {favoritesCount > 99 ? "99+" : favoritesCount}
+                    </span>
+                  ) : null}
+                </span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
 export const ViewModeButtons = ({
   viewMode,
   setViewMode,
@@ -45,228 +215,35 @@ export const ViewModeButtons = ({
   modeContext = "default",
 }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const isMultiSub = modeContext === "project-multi-sub";
 
+  if (isMobile) {
+    return null;
+  }
+
   const buttonClass = (mode: ViewMode) =>
-    ` -mb-[2px] px-4 h-9 rounded-none bg-transparent hover:bg-transparent transition-all duration-200
+    `h-8 shrink-0 rounded-none bg-transparent px-2 py-1 hover:bg-transparent transition-all duration-200
        ${
          viewMode === mode
-           ? "text-gray-900 font-bold border-b-2"
-           : "text-gray-500 font-medium border-b-2 border-transparent hover:text-gray-700"
+           ? "border-b-2 font-bold text-gray-900"
+           : "border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700"
        }
-       ${isMobile ? "text-xs" : "text-sm"}`;
+       text-sm`;
 
   const buttonStyle = (mode: ViewMode) =>
     viewMode === mode ? { borderColor: themeColor } : {};
 
-  const getModeLabel = (mode: ViewMode) => {
-    if (isMultiSub) {
-      switch (mode) {
-        case "facade":
-          return t("project.masterplans");
-        case "chess":
-          return t("project.objects");
-        case "list":
-          return t("project.listView");
-        case "map":
-          return t("embed.onMap");
-        case "favorites":
-          return t("favorites.title");
-        default:
-          return "";
-      }
-    }
-    switch (mode) {
-      case "chess":
-        return t("project.chess");
-      case "facade":
-        return t("project.facade");
-      case "list":
-        return t("project.listView");
-      case "floor-plan":
-        return t("project.floorPlan");
-      case "map":
-        return t("embed.onMap");
-      case "favorites":
-        return t("favorites.title");
-      default:
-        return "";
-    }
-  };
-
-  // Mobile: burger menu with icons and labels
-  if (isMobile) {
-    return (
-      <nav className="flex items-center justify-between gap-2">
-        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-          <DropdownMenuTrigger className="!border-none" asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={
-                isMenuOpen ? t("project.closeMenu") : t("project.openMenu")
-              }
-              className="`h-9 relative z-20 block w-9 cursor-pointer p-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 lg:hidden"
-            >
-              <Menu
-                className={`${isMenuOpen ? "rotate-180 scale-0 opacity-0" : ""} m-auto size-6 duration-200`}
-              />
-              <X
-                className={`${isMenuOpen ? "!rotate-0 !scale-100 !opacity-100" : ""} absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200`}
-              />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-[10rem]">
-            {isMultiSub ? (
-              <>
-                <DropdownMenuItem
-                  onClick={() => setViewMode("facade")}
-                  className={
-                    viewMode === "facade"
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("facade")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setViewMode("chess")}
-                  className={
-                    viewMode === "chess"
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }
-                >
-                  <Grid className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("chess")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setViewMode("list")}
-                  className={
-                    viewMode === "list"
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("list")}</span>
-                </DropdownMenuItem>
-                {mapVisible && (
-                  <DropdownMenuItem
-                    onClick={() => setViewMode("map")}
-                    className={
-                      viewMode === "map"
-                        ? "bg-accent text-accent-foreground"
-                        : ""
-                    }
-                  >
-                    <MapPin className="mr-2 h-4 w-4" />
-                    <span>{getModeLabel("map")}</span>
-                  </DropdownMenuItem>
-                )}
-              </>
-            ) : (
-              <>
-                <DropdownMenuItem
-                  onClick={() => setViewMode("chess")}
-                  className={
-                    viewMode === "chess"
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }
-                >
-                  <Grid className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("chess")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setViewMode("facade")}
-                  className={
-                    viewMode === "facade"
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("facade")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setViewMode("list")}
-                  className={
-                    viewMode === "list"
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("list")}</span>
-                </DropdownMenuItem>
-                {projectType !== "object" && (
-                  <DropdownMenuItem
-                    onClick={() => setViewMode("floor-plan")}
-                    className={
-                      viewMode === "floor-plan"
-                        ? "bg-accent text-accent-foreground"
-                        : ""
-                    }
-                  >
-                    <Grid className="mr-2 h-4 w-4" />
-                    <span>{getModeLabel("floor-plan")}</span>
-                  </DropdownMenuItem>
-                )}
-                {mapVisible && (
-                  <DropdownMenuItem
-                    onClick={() => setViewMode("map")}
-                    className={
-                      viewMode === "map"
-                        ? "bg-accent text-accent-foreground"
-                        : ""
-                    }
-                  >
-                    <MapPin className="mr-2 h-4 w-4" />
-                    <span>{getModeLabel("map")}</span>
-                  </DropdownMenuItem>
-                )}
-              </>
-            )}
-            <DropdownMenuItem
-              onClick={() => setViewMode("favorites")}
-              className={
-                viewMode === "favorites"
-                  ? "bg-accent text-accent-foreground"
-                  : ""
-              }
-            >
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center">
-                  <Heart className="mr-2 h-4 w-4" />
-                  <span>{getModeLabel("favorites")}</span>
-                </div>
-                {favoritesCount > 0 && (
-                  <span className="ml-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-xs text-white">
-                    {favoritesCount > 99 ? "99+" : favoritesCount}
-                  </span>
-                )}
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </nav>
-    );
-  }
+  const getLabel = (mode: ViewMode) => getModeLabel(mode, isMultiSub, t);
 
   return (
     <div
       className={cn(
-        "flex justify-center border-b-2 border-gray-200 md:items-center",
+        "inline-flex flex-nowrap items-end justify-start md:items-center",
         className,
       )}
     >
       {isMultiSub ? (
         <>
-          {/* 1. Genplans (mapped to facade viewMode) */}
           <Button
             variant="ghost"
             size="sm"
@@ -274,11 +251,10 @@ export const ViewModeButtons = ({
             style={buttonStyle("facade")}
             onClick={() => setViewMode("facade")}
           >
-            <Building2 className="mr-1 h-4 w-4" />
-            {getModeLabel("facade")}
+            <Building2 className="mr-0.5 h-3.5 w-3.5" />
+            {getLabel("facade")}
           </Button>
 
-          {/* 2. Objects (mapped to chess viewMode) */}
           <Button
             variant="ghost"
             size="sm"
@@ -286,11 +262,10 @@ export const ViewModeButtons = ({
             style={buttonStyle("chess")}
             onClick={() => setViewMode("chess")}
           >
-            <Grid className="mr-1 h-4 w-4" />
-            {getModeLabel("chess")}
+            <Grid className="mr-0.5 h-3.5 w-3.5" />
+            {getLabel("chess")}
           </Button>
 
-          {/* 3. List */}
           <Button
             variant="ghost"
             size="sm"
@@ -298,11 +273,10 @@ export const ViewModeButtons = ({
             style={buttonStyle("list")}
             onClick={() => setViewMode("list")}
           >
-            <List className="mr-1 h-4 w-4" />
-            {getModeLabel("list")}
+            <List className="mr-0.5 h-3.5 w-3.5" />
+            {getLabel("list")}
           </Button>
 
-          {/* 4. Map */}
           {mapVisible && (
             <Button
               variant="ghost"
@@ -311,14 +285,13 @@ export const ViewModeButtons = ({
               style={buttonStyle("map")}
               onClick={() => setViewMode("map")}
             >
-              <MapPin className="mr-1 h-4 w-4" />
-              {getModeLabel("map")}
+              <MapPin className="mr-0.5 h-3.5 w-3.5" />
+              {getLabel("map")}
             </Button>
           )}
         </>
       ) : (
         <>
-          {/* 1. Chess */}
           <Button
             variant="ghost"
             size="sm"
@@ -326,13 +299,10 @@ export const ViewModeButtons = ({
             style={buttonStyle("chess")}
             onClick={() => setViewMode("chess")}
           >
-            <Grid
-              className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
-            />
-            {!isMobile && getModeLabel("chess")}
+            <Grid className="mr-0.5 h-3.5 w-3.5" />
+            {getLabel("chess")}
           </Button>
 
-          {/* 2. Facade */}
           <Button
             variant="ghost"
             size="sm"
@@ -340,13 +310,10 @@ export const ViewModeButtons = ({
             style={buttonStyle("facade")}
             onClick={() => setViewMode("facade")}
           >
-            <Building2
-              className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
-            />
-            {!isMobile && getModeLabel("facade")}
+            <Building2 className="mr-0.5 h-3.5 w-3.5" />
+            {getLabel("facade")}
           </Button>
 
-          {/* 3. List */}
           <Button
             variant="ghost"
             size="sm"
@@ -354,13 +321,10 @@ export const ViewModeButtons = ({
             style={buttonStyle("list")}
             onClick={() => setViewMode("list")}
           >
-            <List
-              className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
-            />
-            {!isMobile && getModeLabel("list")}
+            <List className="mr-0.5 h-3.5 w-3.5" />
+            {getLabel("list")}
           </Button>
 
-          {/* 4. Floor Plan */}
           {projectType !== "object" && (
             <Button
               variant="ghost"
@@ -369,10 +333,8 @@ export const ViewModeButtons = ({
               style={buttonStyle("floor-plan")}
               onClick={() => setViewMode("floor-plan")}
             >
-              <Grid
-                className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
-              />
-              {!isMobile && getModeLabel("floor-plan")}
+              <Grid className="mr-0.5 h-3.5 w-3.5" />
+              {getLabel("floor-plan")}
             </Button>
           )}
 
@@ -384,10 +346,8 @@ export const ViewModeButtons = ({
               style={buttonStyle("map")}
               onClick={() => setViewMode("map")}
             >
-              <MapPin
-                className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
-              />
-              {!isMobile && t("embed.onMap")}
+              <MapPin className="mr-0.5 h-3.5 w-3.5" />
+              {t("embed.onMap")}
             </Button>
           )}
         </>
@@ -396,14 +356,12 @@ export const ViewModeButtons = ({
       <Button
         variant="ghost"
         size="sm"
-        className={`${buttonClass("favorites")} relative`}
+        className={`${buttonClass("favorites")} relative shrink-0`}
         style={buttonStyle("favorites")}
         onClick={() => setViewMode("favorites")}
       >
-        <Heart
-          className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} ${isMobile ? "mr-0" : "mr-1"}`}
-        />
-        {!isMobile && t("favorites.title")}
+        <Heart className="mr-0.5 h-3.5 w-3.5" />
+        {t("favorites.title")}
         {favoritesCount > 0 && (
           <span className="absolute right-0 top-0 flex h-4 w-4 -translate-y-1/2 translate-x-1/2 transform items-center justify-center rounded-full bg-red-500 text-[10px] text-white sm:h-5 sm:w-5 sm:text-xs">
             {favoritesCount > 99 ? "99+" : favoritesCount}

@@ -70,6 +70,7 @@
   "viewDetails": "Посмотреть детали",
   "openMenu": "Открыть меню",
   "closeMenu": "Закрыть меню",
+  "selectViewMode": "Режим просмотра",
   "plan_floor": "План {{floor}} этажа",
   "masterplans": "Генпланы",
   "objects": "Объекты",

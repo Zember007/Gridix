@@ -70,6 +70,7 @@
   "viewDetails": "Detayları görüntüle",
   "openMenu": "Menüyü aç",
   "closeMenu": "Menüyü kapat",
+  "selectViewMode": "Görünüm modu",
   "plan_floor": "Kat {{kat}} planı",
   "masterplans": "Genel Planlar",
   "objects": "Nesneler",

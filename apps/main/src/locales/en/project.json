@@ -70,6 +70,7 @@
   "viewDetails": "View details",
   "openMenu": "Open menu",
   "closeMenu": "Close menu",
+  "selectViewMode": "View mode",
   "plan_floor": "Floor {{floor}} plan",
   "masterplans": "Genplans",
   "objects": "Objects",
