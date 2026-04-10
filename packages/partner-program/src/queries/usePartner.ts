@@ -47,6 +47,8 @@ export function usePartner() {
         return;
       }
 
+      setLoading(true);
+
       const effectivePartnerUserId = scopedPartnerUserId ?? sessionUserId;
 
       const isDelegatedWorkspace =
@@ -223,8 +225,8 @@ export function usePartner() {
   return {
     isPartner,
     partnerProfile,
+    loading: loading || isSessionLoading,
     isDemoAccount,
-    loading,
     createPartnerProfile,
     refetch: checkPartnerStatus,
   };

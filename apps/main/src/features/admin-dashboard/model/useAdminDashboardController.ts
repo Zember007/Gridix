@@ -33,18 +33,24 @@ export const useAdminDashboardController = () => {
 
   useLeadsRealtime(shouldEnableLeads);
   useAdminDashboardInit(setActiveTab);
-  useAdminDashboardTours({
-    loading,
-    activeTab,
-    showCreateModal,
-    user,
-    userProfile,
-  });
+  const { retakeTraining, suppressAdminChecklistChrome } =
+    useAdminDashboardTours({
+      loading,
+      activeTab,
+      showCreateModal,
+      user,
+      userProfile,
+    });
 
   const crmUnreadCount = useMemo(
     () => allLeadsForUnread.filter((lead) => !lead.read_at).length,
     [allLeadsForUnread],
   );
+
+  const effectiveOwnerId = useMemo(() => {
+    if (isManager && developerId) return developerId;
+    return user?.id ?? null;
+  }, [isManager, developerId, user?.id]);
 
   const handleCreateNew = () => {
     if (amoWidget) {
@@ -105,6 +111,7 @@ export const useAdminDashboardController = () => {
     userRole,
     isManager,
     developerId: developerId ?? null,
+    effectiveOwnerId,
     availableWorkspaces,
     crmUnreadCount,
     handleCreateNew,
@@ -112,5 +119,7 @@ export const useAdminDashboardController = () => {
     handleManualCreate,
     handleEditProject,
     handleSignOut,
+    retakeTraining,
+    suppressAdminChecklistChrome,
   };
 };

@@ -7,11 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_MAIN_APP_URL?: string;
   readonly VITE_SUPERADMIN_APP_URL?: string;
-  readonly VITE_USERTOUR_TOKEN?: string;
-  readonly VITE_USERTOUR_PARTNERS_CONTENT_ID?: string;
-  readonly VITE_USERTOUR_ADMIN_CHECKLIST_CONTENT_ID?: string;
-  readonly VITE_USERTOUR_PROJECT_CHECKLIST_CONTENT_ID?: string;
-  readonly VITE_USERTOUR_DEV_TOUR?: string;
+  /** Повторный запуск Driver.js-туров без once (см. `isDriverDevMode`). */
+  readonly VITE_DRIVER_DEV_TOUR?: string;
 }
 
 interface ImportMeta {
@@ -22,5 +19,5 @@ interface ImportMeta {
   ) => Record<string, T | (() => Promise<T>)>;
 }
 
-declare module "usertour.js";
 declare module "browser-image-compression";
+declare module "driver.js/dist/driver.css";

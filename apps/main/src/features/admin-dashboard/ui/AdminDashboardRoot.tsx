@@ -1,6 +1,7 @@
 import { AdminSidebar } from "@/shared/ui/sidebar-component";
 import { ManagerBlockedScreen } from "@/features/auth";
 import ProjectCreationModal from "@/components/projects/ProjectCreationModal";
+import { AdminOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import { useAdminDashboardController } from "../model/useAdminDashboardController";
 import { AdminDashboardContent } from "./AdminDashboardContent";
 import { DemoBanner } from "@/features/demo-cabinet";
@@ -22,6 +23,7 @@ export const AdminDashboardRoot = () => {
     userRole,
     isManager,
     developerId,
+    effectiveOwnerId,
     availableWorkspaces,
     crmUnreadCount,
     handleCreateNew,
@@ -29,6 +31,8 @@ export const AdminDashboardRoot = () => {
     handleManualCreate,
     handleEditProject,
     handleSignOut,
+    retakeTraining,
+    suppressAdminChecklistChrome,
   } = useAdminDashboardController();
 
   const adminAccess = useAdminAccess();
@@ -81,6 +85,13 @@ export const AdminDashboardRoot = () => {
             onManualCreate={handleManualCreate}
           />
         )}
+        <AdminOnboardingChecklistPanel
+          effectiveOwnerId={effectiveOwnerId}
+          onNavigateTab={setActiveTab}
+          onOpenCreateProject={handleCreateNew}
+          onReplayInteractiveOnboarding={retakeTraining}
+          suppressChrome={suppressAdminChecklistChrome}
+        />
       </div>
     </div>
   );
