@@ -928,6 +928,9 @@ importers:
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.27
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.2
       react:
         specifier: ^18.3.1
         version: 18.3.1

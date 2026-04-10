@@ -449,9 +449,10 @@ const MediaTab: React.FC<{
 
       const zipped = await new Promise<Uint8Array>((resolve, reject) => {
         // level 0 = store (fastest; media files are already compressed)
-        zip(files, { level: 0 }, (err, data) => {
+        zip(files, { level: 0 }, (err: Error | null, data?: Uint8Array) => {
           if (err) reject(err);
-          else resolve(data);
+          else if (data) resolve(data);
+          else reject(new Error("ZIP: empty output"));
         });
       });
 
