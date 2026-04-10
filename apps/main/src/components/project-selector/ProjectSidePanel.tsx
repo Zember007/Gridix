@@ -543,7 +543,7 @@ export const ProjectSidePanel = ({
           </div>
           <div className="custom-scrollbar flex-1 overflow-y-auto">
             {/* Plan Image */}
-            <div className="relative flex w-full shrink-0 items-center justify-center overflow-hidden border-b border-gray-100 bg-white p-6">
+            <div className="relative flex h-full w-full shrink-0 items-center justify-center overflow-hidden border-b border-gray-100 bg-white p-6">
               <div className="group relative h-full w-full cursor-zoom-in">
                 {isApartmentCoverLoading(state.apartment.id) ? (
                   <div className="flex h-full items-center justify-center">
@@ -587,7 +587,7 @@ export const ProjectSidePanel = ({
             </div>
 
             {/* Actions */}
-            <div className="flex shrink-0 flex-col gap-3 border-b border-gray-100 bg-white px-6 py-4">
+            <div className="flex shrink-0 flex-col gap-3 bg-white px-6 py-4">
               <Button
                 type="button"
                 className="h-12 w-full rounded-xl text-lg font-semibold text-white shadow-lg transition-all active:scale-[0.98]"

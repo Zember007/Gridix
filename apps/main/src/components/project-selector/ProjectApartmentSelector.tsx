@@ -530,7 +530,7 @@ function ProjectApartmentSelectorLoaded({
   return (
     <div
       ref={containerRef}
-      className={`relative flex ${isWidget ? "h-full min-h-0 overflow-hidden" : "min-h-screen"} select-none flex-col bg-white`}
+      className={`relative flex ${isWidget ? "h-full min-h-0" : "min-h-screen"} select-none flex-col bg-white`}
     >
       <SubscriptionAlert
         isSubscriptionInactive={isSubscriptionInactive}

@@ -62,7 +62,7 @@ export const SidePanelWrapper = ({
     <>
       {/* Desktop push panel */}
       <div
-        className="hidden border-l border-gray-100 bg-white shadow-2xl transition-[width] duration-300 ease-in-out md:block"
+        className="hidden border-l border-gray-100 bg-white transition-[width] duration-300 ease-in-out md:block"
         style={{ width: open ? "35vw" : "0px" }}
       >
         {open && <ProjectSidePanel {...panelProps} />}
@@ -70,7 +70,7 @@ export const SidePanelWrapper = ({
 
       {/* Mobile overlay panel */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full border-l border-gray-100 bg-white shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed right-0 top-0 z-50 h-full border-l border-gray-100 bg-white transition-transform duration-300 ease-in-out md:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         style={{ width: "100vw" }}
