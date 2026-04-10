@@ -108,6 +108,7 @@
     "progressFloorImageOp": "იატაკის გეგმის სურათი → სართული {{floor}}",
     "progressPolygonOp": "პოლიგონები → სართული {{floor}}",
     "applyButton": "{{count}} ელემენტის დუბლიკატი",
+    "floorDuplicating": "დუბლირება…",
     "floorDuplicateSuccess": "დუბლირება დასრულებულია: სართულის გეგმები {{floorPlans}}, პოლიგონები {{polygons}}, გამოტოვებული {{skipped}}",
     "partialSuccess": "დუბლირება დასრულებულია გაფრთხილებით",
     "errorsCount": "შესრულების შეცდომები: {{count}}",

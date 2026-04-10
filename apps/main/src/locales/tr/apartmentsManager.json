@@ -108,6 +108,7 @@
     "progressFloorImageOp": "Kat planı görseli → Kat {{floor}}",
     "progressPolygonOp": "Poligonlar → Kat {{floor}}",
     "applyButton": "{{count}} öğeyi çoğalt",
+    "floorDuplicating": "Çoğaltılıyor…",
     "floorDuplicateSuccess": "Çoğaltma tamamlandı: kat planları {{floorPlans}}, poligonlar {{polygons}}, atlanan {{skipped}}",
     "partialSuccess": "Çoğaltma uyarılarla tamamlandı",
     "errorsCount": "Çalışma hataları: {{count}}",
