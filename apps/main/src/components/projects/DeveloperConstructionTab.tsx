@@ -27,6 +27,7 @@ import {
   SUPPORTED_LANGUAGES,
   type Language,
 } from "@/shared/lib/language-utils";
+import { toast } from "sonner";
 import { useConstructionAttachments } from "./hooks/useConstructionAttachments";
 import { useConstructionUpdates } from "./hooks/useConstructionUpdates";
 
@@ -154,6 +155,7 @@ export const DeveloperConstructionTab = ({
     Record<string, { title?: string; thumbnailUrl?: string; loading: boolean }>
   >({});
   const [newMediaLinks, setNewMediaLinks] = useState<string[]>([]);
+  const [youtubeLinkDraft, setYoutubeLinkDraft] = useState("");
   const [localizedTitles, setLocalizedTitles] = useState<
     Record<string, string>
   >({});
@@ -216,6 +218,21 @@ export const DeveloperConstructionTab = ({
   };
 
   const clearMediaLinks = () => setNewMediaLinks([]);
+
+  const commitYoutubeLinkDraft = useCallback(() => {
+    if (isPublishing) return;
+    const raw = youtubeLinkDraft.trim();
+    if (!raw) return;
+    const youtubeOnly = parseLinksFromText(raw).filter((url) =>
+      getYoutubeVideoId(url),
+    );
+    if (youtubeOnly.length === 0) {
+      toast.error(t("projectList.construction.invalidYoutubeLink"));
+      return;
+    }
+    setNewMediaLinks((prev) => Array.from(new Set([...prev, ...youtubeOnly])));
+    setYoutubeLinkDraft("");
+  }, [isPublishing, youtubeLinkDraft, t]);
 
   useEffect(() => {
     return () => {
@@ -292,25 +309,6 @@ export const DeveloperConstructionTab = ({
 
   const onAttachmentPaste = (e: ReactClipboardEvent<HTMLDivElement>) => {
     const plainText = e.clipboardData.getData("text/plain");
-    const added = addLinksFromText(plainText);
-    if (added > 0) {
-      e.preventDefault();
-    }
-  };
-
-  const onDescriptionPaste = (e: ReactClipboardEvent<HTMLTextAreaElement>) => {
-    const plainText = e.clipboardData.getData("text/plain");
-    const tokens = plainText
-      .split(/[\s,]+/)
-      .map((token) => token.trim())
-      .filter(Boolean);
-    if (tokens.length === 0) return;
-
-    const parsedLinks = parseLinksFromText(plainText);
-    const isLinkOnlyPaste =
-      parsedLinks.length > 0 && parsedLinks.length === tokens.length;
-    if (!isLinkOnlyPaste) return;
-
     const added = addLinksFromText(plainText);
     if (added > 0) {
       e.preventDefault();
@@ -419,7 +417,6 @@ export const DeveloperConstructionTab = ({
           <textarea
             value={draftDescription}
             onChange={(e) => updateDraftDescription(e.target.value)}
-            onPaste={onDescriptionPaste}
             placeholder={t("projectList.construction.descriptionPlaceholder", {
               language: LANGUAGE_CONFIG[selectedContentLanguage].name,
             })}
@@ -498,6 +495,40 @@ export const DeveloperConstructionTab = ({
                 onChange={(e) => onSelectFiles(e.target.files)}
               />
             </label>
+            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+              <div className="mb-2 text-xs font-semibold text-slate-600">
+                {t("projectList.media.linksLabel")}
+              </div>
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                <input
+                  type="text"
+                  value={youtubeLinkDraft}
+                  onChange={(e) => setYoutubeLinkDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitYoutubeLinkDraft();
+                    }
+                  }}
+                  disabled={isPublishing}
+                  placeholder={t(
+                    "projectList.construction.youtubeUrlPlaceholder",
+                  )}
+                  className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={commitYoutubeLinkDraft}
+                  disabled={isPublishing}
+                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t("projectList.media.add")}
+                </button>
+              </div>
+              <p className="mt-1.5 text-[11px] text-slate-500">
+                {t("projectList.construction.youtubeLinkFieldHint")}
+              </p>
+            </div>
             {(newFiles.length > 0 || newMediaLinks.length > 0) && (
               <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
                 {newFiles.length > 0 && (
@@ -684,6 +715,7 @@ export const DeveloperConstructionTab = ({
               if (published) {
                 setLocalizedTitles({});
                 setLocalizedDescriptions({});
+                setYoutubeLinkDraft("");
                 setSelectedContentLanguage(currentLanguage);
               }
             }}

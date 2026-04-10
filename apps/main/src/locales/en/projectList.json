@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "Upload images",
     "videoDropzoneDescription": "Upload videos",
     "presentationDropzoneDescription": "Upload documents",
-    "attachFilesHint": "Drag and drop files here, click to select, or paste a YouTube link",
+    "attachFilesHint": "Drag and drop files here or click to select",
     "selectedFilesCount": "{{count}} file(s) selected",
     "selectedLinksCount": "{{count}} link(s) added",
     "clearSelected": "Clear",
@@ -85,6 +85,9 @@
     "addSuccess": "Update added",
     "addError": "Failed to add update",
     "deleteSuccess": "Deleted",
-    "deleteError": "Failed to delete"
+    "deleteError": "Failed to delete",
+    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeLinkFieldHint": "Paste a link and press Enter or Add",
+    "invalidYoutubeLink": "Enter a valid YouTube link"
   }
 }

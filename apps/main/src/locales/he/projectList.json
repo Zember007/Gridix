@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "העלה תמונות",
     "videoDropzoneDescription": "העלה סרטונים",
     "presentationDropzoneDescription": "העלה מסמכים",
-    "attachFilesHint": "גרור ושחרר קבצים לכאן, לחץ כדי לבחור או הדבק קישור YouTube",
+    "attachFilesHint": "גרור ושחרר קבצים לכאן או לחץ לבחירה",
     "selectedFilesCount": "{{count}} קבצים נבחרו",
     "selectedLinksCount": "{{count}} קישורים נוספו",
     "clearSelected": "נקה",
@@ -85,6 +85,9 @@
     "addSuccess": "העדכון נוסף",
     "addError": "לא ניתן להוסיף עדכון",
     "deleteSuccess": "נמחק",
-    "deleteError": "לא ניתן למחוק"
+    "deleteError": "לא ניתן למחוק",
+    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeLinkFieldHint": "הדבק קישור ולחץ Enter או הוסף",
+    "invalidYoutubeLink": "הזינו קישור YouTube תקף"
   }
 }

@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "ატვირთეთ სურათები",
     "videoDropzoneDescription": "ატვირთეთ ვიდეოები",
     "presentationDropzoneDescription": "ატვირთეთ დოკუმენტები",
-    "attachFilesHint": "გადმოათრიეთ ფაილები აქ, დააჭირეთ ასარჩევად ან ჩასვით YouTube ბმული",
+    "attachFilesHint": "გადმოათრიეთ ფაილები აქ ან დააჭირეთ ასარჩევად",
     "selectedFilesCount": "არჩეული ფაილები: {{count}}",
     "selectedLinksCount": "დამატებული ბმულები: {{count}}",
     "clearSelected": "გასუფთავება",
@@ -85,6 +85,9 @@
     "addSuccess": "განახლება დამატებულია",
     "addError": "განახლების დამატება ვერ მოხერხდა",
     "deleteSuccess": "წაშლილია",
-    "deleteError": "წაშლა ვერ მოხერხდა"
+    "deleteError": "წაშლა ვერ მოხერხდა",
+    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeLinkFieldHint": "ჩასვით ბმული და დააჭირეთ Enter-ს ან დამატებას",
+    "invalidYoutubeLink": "მიუთითეთ სწორი YouTube-ბმული"
   }
 }

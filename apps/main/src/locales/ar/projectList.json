@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "قم بتحميل الصور",
     "videoDropzoneDescription": "قم بتحميل الفيديوهات",
     "presentationDropzoneDescription": "قم بتحميل المستندات",
-    "attachFilesHint": "اسحب الملفات وافلتها هنا او اضغط للاختيار او الصق رابط YouTube",
+    "attachFilesHint": "اسحب الملفات وأفلتها هنا أو اضغط للاختيار",
     "selectedFilesCount": "تم اختيار {{count}} ملف",
     "selectedLinksCount": "تمت اضافة {{count}} رابط",
     "clearSelected": "مسح",
@@ -85,6 +85,9 @@
     "addSuccess": "تمت إضافة التحديث",
     "addError": "تعذرت إضافة التحديث",
     "deleteSuccess": "تم الحذف",
-    "deleteError": "تعذر الحذف"
+    "deleteError": "تعذر الحذف",
+    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeLinkFieldHint": "الصق الرابط واضغط Enter أو إضافة",
+    "invalidYoutubeLink": "أدخل رابط YouTube صالحًا"
   }
 }

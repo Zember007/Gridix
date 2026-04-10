@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "Загрузите изображения",
     "videoDropzoneDescription": "Загрузите видео",
     "presentationDropzoneDescription": "Загрузите документы",
-    "attachFilesHint": "Перетащите файлы сюда, нажмите для выбора или вставьте ссылку YouTube",
+    "attachFilesHint": "Перетащите файлы сюда или нажмите для выбора",
     "selectedFilesCount": "Выбрано файлов: {{count}}",
     "selectedLinksCount": "Добавлено ссылок: {{count}}",
     "clearSelected": "Очистить",
@@ -85,6 +85,9 @@
     "addSuccess": "Обновление добавлено",
     "addError": "Не удалось добавить обновление",
     "deleteSuccess": "Удалено",
-    "deleteError": "Не удалось удалить"
+    "deleteError": "Не удалось удалить",
+    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeLinkFieldHint": "Вставьте ссылку и нажмите Enter или «Добавить»",
+    "invalidYoutubeLink": "Укажите корректную ссылку YouTube"
   }
 }

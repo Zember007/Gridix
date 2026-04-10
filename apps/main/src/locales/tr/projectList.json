@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "Görsel yükleyin",
     "videoDropzoneDescription": "Video yükleyin",
     "presentationDropzoneDescription": "Belge yükleyin",
-    "attachFilesHint": "Dosyalari buraya surukleyip birakin, secmek icin tiklayin veya bir YouTube baglantisi yapistirin",
+    "attachFilesHint": "Dosyalari buraya surukleyip birakin veya secmek icin tiklayin",
     "selectedFilesCount": "{{count}} dosya secildi",
     "selectedLinksCount": "{{count}} baglanti eklendi",
     "clearSelected": "Temizle",
@@ -85,6 +85,9 @@
     "addSuccess": "Güncelleme eklendi",
     "addError": "Güncelleme eklenemedi",
     "deleteSuccess": "Silindi",
-    "deleteError": "Silinemedi"
+    "deleteError": "Silinemedi",
+    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeLinkFieldHint": "Baglantiyi yapistirin ve Enter veya Ekle'ye basin",
+    "invalidYoutubeLink": "Gecerli bir YouTube baglantisi girin"
   }
 }
