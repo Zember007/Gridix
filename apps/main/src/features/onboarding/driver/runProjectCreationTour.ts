@@ -553,8 +553,6 @@ export function startProjectCreationDriverTour(params: {
         })();
       };
 
-      let continueAfterKindChoice: (driver: Driver) => void;
-
       function goBackToKindFromImport(importDriver: Driver): void {
         void (async () => {
           requestProjectCreationTourKindScreen();
@@ -593,7 +591,7 @@ export function startProjectCreationDriverTour(params: {
         })();
       }
 
-      continueAfterKindChoice = (driver: Driver) => {
+      function continueAfterKindChoice(driver: Driver): void {
         void (async () => {
           await nextAnimationFrame();
           await nextAnimationFrame();
@@ -677,7 +675,7 @@ export function startProjectCreationDriverTour(params: {
             }
           }
         })();
-      };
+      }
 
       const hasKindStep = !!document.querySelector(
         ".project_creation_kind_usertour",
