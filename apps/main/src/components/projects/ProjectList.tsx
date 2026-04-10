@@ -27,6 +27,7 @@ import {
   Building2,
   Crown,
   Download,
+  FolderArchive,
   Edit3,
   Eye,
   FileText,
@@ -585,6 +586,7 @@ const ProjectList = ({
       url: string;
       title: string;
     } | null>(null);
+    const [zipping, setZipping] = useState(false);
     const mediaUploadAbortControllersRef = useRef(
       new Map<string, AbortController>(),
     );
@@ -1266,8 +1268,101 @@ const ProjectList = ({
     );
     const projectFilenamePrefix = safeFilename(project.name, "project");
 
+    const downloadAllItemCount =
+      renders.length + videos.length + docs.filter((d) => d.url).length;
+    const canDownloadAll = downloadAllItemCount > 0;
+
+    const handleDownloadAllMediaZip = useCallback(async () => {
+      if (zipping) return;
+      const r = project.media?.renders ?? [];
+      const v = project.media?.videos ?? [];
+      const p = project.media?.presentations ?? [];
+      const items: Array<{ url: string; filename: string }> = [];
+      r.forEach((url, i) => {
+        items.push({
+          url,
+          filename: `${projectFilenamePrefix}-render-${i + 1}${extensionFromUrl(url, ".jpg")}`,
+        });
+      });
+      v.forEach((vid, i) => {
+        items.push({
+          url: vid.url,
+          filename: `${projectFilenamePrefix}-video-${i + 1}-${safeFilename(vid.title, "video")}${extensionFromUrl(vid.url, ".mp4")}`,
+        });
+      });
+      p.forEach((doc) => {
+        if (doc.url) {
+          items.push({
+            url: doc.url,
+            filename: `${projectFilenamePrefix}-${safeFilename(doc.title, "document")}${extensionFromUrl(doc.url, ".pdf")}`,
+          });
+        }
+      });
+
+      if (items.length === 0) return;
+      setZipping(true);
+      try {
+        const { zip } = await import("fflate");
+
+        const fetchResults = await Promise.allSettled(
+          items.map(async ({ url, filename }) => {
+            const res = await fetch(url, { mode: "cors" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const buf = await res.arrayBuffer();
+            return { filename, data: new Uint8Array(buf) };
+          }),
+        );
+
+        const files: Record<string, Uint8Array> = {};
+        for (const result of fetchResults) {
+          if (result.status === "fulfilled") {
+            files[result.value.filename] = result.value.data;
+          } else {
+            console.warn("ZIP: failed to fetch file", result.reason);
+          }
+        }
+
+        if (Object.keys(files).length === 0) {
+          toast.error(t("projectList.media.zipDownloadFailed"));
+          return;
+        }
+
+        const zipped = await new Promise<Uint8Array>((resolve, reject) => {
+          zip(files, { level: 0 }, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+          });
+        });
+
+        const blob = new Blob([zipped.buffer as ArrayBuffer], {
+          type: "application/zip",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${projectFilenamePrefix}-media.zip`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch (e) {
+        console.error("ZIP creation failed", e);
+        toast.error(t("projectList.media.zipDownloadFailed"));
+      } finally {
+        setZipping(false);
+      }
+    }, [zipping, project.media, projectFilenamePrefix, t]);
+
     return (
       <div className="space-y-6 p-4">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => void handleDownloadAllMediaZip()}
+            disabled={!canDownloadAll || zipping}
+            className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FolderArchive size={16} />
+            {zipping ? "…" : t("projectList.media.downloadAll")}
+          </button>
+        </div>
         <div
           onDragOver={handleMediaSectionDragOver("render")}
           onDragEnter={handleMediaSectionDragOver("render")}
@@ -1915,7 +2010,7 @@ const ProjectList = ({
                             style={{ color: ADMIN_THEME.textSecondary }}
                             variant="outline"
                           >
-                            {project.floors ?? 1} {t("projectList.floors")}
+                            {project.floors} {t("projectList.floors")}
                           </Badge>
                           <span style={{ color: ADMIN_THEME.textSecondary }}>
                             {new Date(project.created_at).toLocaleDateString(

@@ -54,6 +54,7 @@
     "invalidLink": "Bir veya daha fazla baglanti gecersiz",
     "download": "İndirmek",
     "downloadAll": "Tümünü indir",
+    "zipDownloadFailed": "Arşiv oluşturulamadı. Bazı dosyalar kullanılamıyor olabilir.",
     "videoUploadDialog": {
       "title": "Yükleme Öncesi Videoları Ayarla",
       "description": "Her video için bir başlık belirleyin ve isterseniz bir küçük resim yükleyin.",

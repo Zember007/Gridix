@@ -39,6 +39,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.3",
     "dotted-map": "^2.2.3",
+    "fflate": "^0.8.2",
     "framer-motion": "^12.23.24",
     "fs-extra": "^11.3.3",
     "google-translate-api-x": "^10.7.2",

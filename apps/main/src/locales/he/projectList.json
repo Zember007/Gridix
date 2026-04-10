@@ -54,6 +54,7 @@
     "invalidLink": "קישור אחד או יותר אינו תקין",
     "download": "הורד",
     "downloadAll": "הורד הכל",
+    "zipDownloadFailed": "לא ניתן ליצור את הארכיון. ייתכן שחלק מהקבצים אינם זמינים.",
     "videoUploadDialog": {
       "title": "הגדרת סרטונים לפני העלאה",
       "description": "הגדר כותרת ובמידת הצורך העלה תמונת thumbnail לכל סרטון.",

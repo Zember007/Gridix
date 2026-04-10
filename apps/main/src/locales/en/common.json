@@ -66,7 +66,8 @@
       "noMaterials": "No materials",
       "restricted": "Access restricted",
       "signToAccess": "Sign the contract with the developer to access the media bank.",
-      "connect": "Connect"
+      "connect": "Connect",
+      "uncategorized": "Uncategorized"
     },
     "construction": {
       "title": "Construction progress",

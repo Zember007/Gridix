@@ -1,4 +1,10 @@
-import React, { ReactNode, useCallback, useMemo, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   X,
@@ -765,6 +771,19 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [activeTab, setActiveTab] =
     useState<SharedProjectDrawerTab>(initialTab);
+  const [visitedTabs, setVisitedTabs] = useState<Set<SharedProjectDrawerTab>>(
+    () => new Set([initialTab]),
+  );
+
+  useEffect(() => {
+    if (!project) return;
+    setVisitedTabs(new Set([initialTab]));
+    setActiveTab(initialTab);
+  }, [project?.id, initialTab]);
+
+  useEffect(() => {
+    setVisitedTabs((prev) => new Set(prev).add(activeTab));
+  }, [activeTab]);
 
   if (!project) return null;
 
@@ -912,34 +931,63 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
           ))}
         </div>
 
-        {/* Content */}
+        {/* Content — keep visited panels mounted so media thumbnails are not refetched on tab switch */}
         <div className="custom-scrollbar flex-1 overflow-y-auto">
-          {activeTab === "overview" && <OverviewTab project={project} t={t} />}
-          {activeTab === "units" &&
-            (renderUnitsTab ? (
-              renderUnitsTab(project)
-            ) : (
-              <div className="p-8 text-center text-slate-400">
-                Units view not implemented
-              </div>
-            ))}
-          {activeTab === "media" &&
-            (renderMediaTab ? (
-              renderMediaTab(project)
-            ) : (
-              <MediaTab
-                project={project}
-                isConnected={isConnected}
-                onConnect={onConnect}
-                t={t}
-              />
-            ))}
-          {activeTab === "construction" &&
-            (renderConstructionTab ? (
-              renderConstructionTab(project)
-            ) : (
-              <ConstructionTab project={project} t={t} language={language} />
-            ))}
+          {visitedTabs.has("overview") ? (
+            <div
+              key="tab-overview"
+              hidden={activeTab !== "overview"}
+              aria-hidden={activeTab !== "overview"}
+            >
+              <OverviewTab project={project} t={t} />
+            </div>
+          ) : null}
+          {visitedTabs.has("units") ? (
+            <div
+              key="tab-units"
+              hidden={activeTab !== "units"}
+              aria-hidden={activeTab !== "units"}
+            >
+              {renderUnitsTab ? (
+                renderUnitsTab(project)
+              ) : (
+                <div className="p-8 text-center text-slate-400">
+                  Units view not implemented
+                </div>
+              )}
+            </div>
+          ) : null}
+          {visitedTabs.has("media") ? (
+            <div
+              key="tab-media"
+              hidden={activeTab !== "media"}
+              aria-hidden={activeTab !== "media"}
+            >
+              {renderMediaTab ? (
+                renderMediaTab(project)
+              ) : (
+                <MediaTab
+                  project={project}
+                  isConnected={isConnected}
+                  onConnect={onConnect}
+                  t={t}
+                />
+              )}
+            </div>
+          ) : null}
+          {visitedTabs.has("construction") ? (
+            <div
+              key="tab-construction"
+              hidden={activeTab !== "construction"}
+              aria-hidden={activeTab !== "construction"}
+            >
+              {renderConstructionTab ? (
+                renderConstructionTab(project)
+              ) : (
+                <ConstructionTab project={project} t={t} language={language} />
+              )}
+            </div>
+          ) : null}
           {/*
           {activeTab === "partners" &&
             isDeveloper &&
@@ -949,15 +997,21 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               <div className="p-8 text-center text-slate-400">Partners view not implemented</div>
             ))}
           */}
-          {activeTab === "settings" &&
-            isDeveloper &&
-            (renderSettingsTab ? (
-              renderSettingsTab(project)
-            ) : (
-              <div className="p-8 text-center text-slate-400">
-                Settings not implemented
-              </div>
-            ))}
+          {isDeveloper && visitedTabs.has("settings") ? (
+            <div
+              key="tab-settings"
+              hidden={activeTab !== "settings"}
+              aria-hidden={activeTab !== "settings"}
+            >
+              {renderSettingsTab ? (
+                renderSettingsTab(project)
+              ) : (
+                <div className="p-8 text-center text-slate-400">
+                  Settings not implemented
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
 
         {/* Footer */}
