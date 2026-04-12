@@ -66,7 +66,8 @@
       "noMaterials": "Malzeme yok",
       "restricted": "Erişim kısıtlı",
       "signToAccess": "Medya bankasına erişmek için geliştiriciyle sözleşmeyi imzalayın.",
-      "connect": "Bağlamak"
+      "connect": "Bağlamak",
+      "uncategorized": "Kategorize edilmemiş"
     },
     "construction": {
       "title": "İnşaat ilerlemesi",

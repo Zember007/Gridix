@@ -54,6 +54,7 @@
     "invalidLink": "يوجد رابط واحد او اكثر غير صالح",
     "download": "تحميل",
     "downloadAll": "تحميل الكل",
+    "zipDownloadFailed": "تعذر إنشاء الأرشيف. قد تكون بعض الملفات غير متاحة.",
     "videoUploadDialog": {
       "title": "إعداد الفيديوهات قبل الرفع",
       "description": "حدد عنوانا لكل فيديو وارفع صورة thumbnail عند الحاجة.",

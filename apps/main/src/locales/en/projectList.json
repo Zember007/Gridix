@@ -54,6 +54,7 @@
     "invalidLink": "One or more links are invalid",
     "download": "Download",
     "downloadAll": "Download all",
+    "zipDownloadFailed": "Could not build the archive. Some files may be unavailable.",
     "videoUploadDialog": {
       "title": "Configure Videos Before Upload",
       "description": "Set a title and optionally upload a thumbnail for each video.",
