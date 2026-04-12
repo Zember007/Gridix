@@ -331,6 +331,24 @@ const ControlledPolygonAnnotator = forwardRef<
       [renderBox, viewportOffset.x, viewportOffset.y, viewportScale],
     );
 
+    /** Host-relative pixels in the same space as `shapeToPixels` (before CSS viewport scale). */
+    const clientToLayerXY = useCallback(
+      (clientX: number, clientY: number): { x: number; y: number } | null => {
+        const host = hostRef.current;
+        if (!host) return null;
+        const rect = host.getBoundingClientRect();
+        const viewportX = clientX - rect.left;
+        const viewportY = clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        return {
+          x: (viewportX - viewportOffset.x - centerX) / viewportScale + centerX,
+          y: (viewportY - viewportOffset.y - centerY) / viewportScale + centerY,
+        };
+      },
+      [viewportOffset.x, viewportOffset.y, viewportScale],
+    );
+
     const handleWheelZoom = useCallback(
       (event: React.WheelEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -441,7 +459,7 @@ const ControlledPolygonAnnotator = forwardRef<
     );
 
     const getEdgeInsertionCandidate = useCallback(
-      (clickPx: { x: number; y: number }) => {
+      (layerPx: { x: number; y: number }) => {
         if (!currentShape || !renderBox) return null;
         const currentPointsPx = shapeToPixels(currentShape);
         if (currentPointsPx.length < 3) return null;
@@ -449,7 +467,7 @@ const ControlledPolygonAnnotator = forwardRef<
         const minVertexDistance = currentPointsPx.reduce((acc, point) => {
           return Math.min(
             acc,
-            Math.hypot(clickPx.x - point.x, clickPx.y - point.y),
+            Math.hypot(layerPx.x - point.x, layerPx.y - point.y),
           );
         }, Number.POSITIVE_INFINITY);
         if (minVertexDistance <= 10) return null;
@@ -462,7 +480,7 @@ const ControlledPolygonAnnotator = forwardRef<
           const start = currentPointsPx[i];
           const end = currentPointsPx[(i + 1) % currentPointsPx.length];
           if (!start || !end) continue;
-          const projection = projectPointToSegment(clickPx, start, end);
+          const projection = projectPointToSegment(layerPx, start, end);
           if (projection.distance < bestEdgeDistance) {
             bestEdgeDistance = projection.distance;
             bestEdgeIndex = i;
@@ -535,15 +553,10 @@ const ControlledPolygonAnnotator = forwardRef<
         }
 
         if (mode === "edit" && currentShape && !isDrawingEnabled) {
-          const host = hostRef.current;
-          if (host) {
-            const rect = host.getBoundingClientRect();
-            const clickPx = {
-              x: event.clientX - rect.left,
-              y: event.clientY - rect.top,
-            };
+          const layerXY = clientToLayerXY(event.clientX, event.clientY);
+          if (layerXY) {
             const candidate =
-              insertPreview ?? getEdgeInsertionCandidate(clickPx);
+              insertPreview ?? getEdgeInsertionCandidate(layerXY);
             if (candidate) {
               const nextPoints = [...currentShape.points];
               nextPoints.splice(
@@ -568,6 +581,7 @@ const ControlledPolygonAnnotator = forwardRef<
         findClickedShapeId,
         isDrawingEnabled,
         insertPreview,
+        clientToLayerXY,
         getEdgeInsertionCandidate,
         mode,
         onClickAnnotationId,
@@ -792,14 +806,10 @@ const ControlledPolygonAnnotator = forwardRef<
                     if (insertPreview) setInsertPreview(null);
                     return;
                   }
-                  const host = hostRef.current;
-                  if (!host) return;
-                  const rect = host.getBoundingClientRect();
-                  const candidate = getEdgeInsertionCandidate({
-                    x: event.clientX - rect.left,
-                    y: event.clientY - rect.top,
-                  });
-                  setInsertPreview(candidate);
+                  const layerXY = clientToLayerXY(event.clientX, event.clientY);
+                  setInsertPreview(
+                    layerXY ? getEdgeInsertionCandidate(layerXY) : null,
+                  );
                 }}
                 onMouseLeave={() => {
                   setInsertPreview(null);
@@ -841,6 +851,13 @@ const ControlledPolygonAnnotator = forwardRef<
                       : isActive
                         ? 3
                         : 2;
+                  const logicalStrokeWidth = isDraggableHover
+                    ? Math.max(baseStrokeWidth, 4)
+                    : isPolygonHoverHighlight
+                      ? Math.max(baseStrokeWidth, 3.5)
+                      : baseStrokeWidth;
+                  // CSS scale(viewportScale) on parent blows up SVG stroke; counter-scale for ~constant screen width.
+                  const polygonStrokeWidth = logicalStrokeWidth / viewportScale;
                   return (
                     <polygon
                       key={shape.id}
@@ -854,13 +871,7 @@ const ControlledPolygonAnnotator = forwardRef<
                             : baseFillOpacity
                       }
                       stroke={isPolygonHoverHighlight ? "#3b82f6" : baseStroke}
-                      strokeWidth={
-                        isDraggableHover
-                          ? Math.max(baseStrokeWidth, 4)
-                          : isPolygonHoverHighlight
-                            ? Math.max(baseStrokeWidth, 3.5)
-                            : baseStrokeWidth
-                      }
+                      strokeWidth={polygonStrokeWidth}
                       strokeOpacity={1}
                       style={{
                         cursor:
@@ -908,48 +919,59 @@ const ControlledPolygonAnnotator = forwardRef<
                 {currentShape &&
                   shapeToPixels(currentShape).map((point, index) => {
                     const isActive = selectedVertexIndex === index;
+                    const invScale = 1 / viewportScale;
                     return (
-                      <circle
+                      <g
                         key={`vertex-${index}`}
-                        cx={point.x}
-                        cy={point.y}
-                        r={isActive ? 5 : 4}
-                        fill={isActive ? "#2563eb" : "#ef4444"}
-                        stroke="#ffffff"
-                        strokeWidth={isActive ? 2 : 1}
-                        style={{ cursor: mode === "edit" ? "grab" : "default" }}
-                        onPointerDown={(e) => {
-                          if (mode !== "edit") return;
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setInsertPreview(null);
-                          onSelectVertexIndex?.(index);
-                          dragStartPointRef.current = {
-                            x: e.clientX,
-                            y: e.clientY,
-                          };
-                          didVertexDragMoveRef.current = false;
-                          dragStateRef.current = {
-                            pointerId: e.pointerId,
-                            vertexIndex: index,
-                          };
-                        }}
-                      />
+                        transform={`translate(${point.x} ${point.y}) scale(${invScale}) translate(${-point.x} ${-point.y})`}
+                      >
+                        <circle
+                          cx={point.x}
+                          cy={point.y}
+                          r={isActive ? 5 : 4}
+                          fill={isActive ? "#2563eb" : "#ef4444"}
+                          stroke="#ffffff"
+                          strokeWidth={isActive ? 2 : 1}
+                          style={{
+                            cursor: mode === "edit" ? "grab" : "default",
+                          }}
+                          onPointerDown={(e) => {
+                            if (mode !== "edit") return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setInsertPreview(null);
+                            onSelectVertexIndex?.(index);
+                            dragStartPointRef.current = {
+                              x: e.clientX,
+                              y: e.clientY,
+                            };
+                            didVertexDragMoveRef.current = false;
+                            dragStateRef.current = {
+                              pointerId: e.pointerId,
+                              vertexIndex: index,
+                            };
+                          }}
+                        />
+                      </g>
                     );
                   })}
                 {mode === "edit" &&
                   currentShape &&
                   !isDrawingEnabled &&
                   insertPreview && (
-                    <circle
-                      cx={insertPreview.pointPx.x}
-                      cy={insertPreview.pointPx.y}
-                      r={5}
-                      fill="#9ca3af"
-                      stroke="#ffffff"
-                      strokeWidth={1.5}
-                      style={{ pointerEvents: "none" }}
-                    />
+                    <g
+                      transform={`translate(${insertPreview.pointPx.x} ${insertPreview.pointPx.y}) scale(${1 / viewportScale}) translate(${-insertPreview.pointPx.x} ${-insertPreview.pointPx.y})`}
+                    >
+                      <circle
+                        cx={insertPreview.pointPx.x}
+                        cy={insertPreview.pointPx.y}
+                        r={5}
+                        fill="#9ca3af"
+                        stroke="#ffffff"
+                        strokeWidth={1.5}
+                        style={{ pointerEvents: "none" }}
+                      />
+                    </g>
                   )}
               </svg>
             )}
