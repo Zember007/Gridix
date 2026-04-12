@@ -47,7 +47,7 @@ export const AdminDashboardRoot = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-svh min-h-0 overflow-hidden bg-background">
       <AdminSidebar
         userEmail={userProfile?.email || user?.email || "Unknown user"}
         activeTab={activeTab}
@@ -62,7 +62,7 @@ export const AdminDashboardRoot = () => {
       />
 
       <div
-        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
         {isDemoWorkspace && isDemoViewer && <DemoBanner />}
 

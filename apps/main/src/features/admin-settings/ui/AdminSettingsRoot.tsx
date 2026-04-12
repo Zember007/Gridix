@@ -90,47 +90,47 @@ export const AdminSettingsRoot = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{t("adminSettings.title")}</h1>
-          <p className="text-muted-foreground">
-            {t("adminSettings.description")}
-          </p>
+    <Tabs
+      value={tab}
+      onValueChange={(v) => setTab(v as never)}
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      <div className="shrink-0 space-y-4 border-b bg-background pb-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">{t("adminSettings.title")}</h1>
+            <p className="text-muted-foreground">
+              {t("adminSettings.description")}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <LanguageToggle />
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                backgroundColor: ADMIN_THEME.primary,
+                color: ADMIN_THEME.textOnPrimary,
+              }}
+              onMouseEnter={(e) => {
+                if (!saving) {
+                  e.currentTarget.style.backgroundColor =
+                    ADMIN_THEME.primaryHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!saving) {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                }
+              }}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? t("adminSettings.saving") : t("adminSettings.save")}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <LanguageToggle />
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              backgroundColor: ADMIN_THEME.primary,
-              color: ADMIN_THEME.textOnPrimary,
-            }}
-            onMouseEnter={(e) => {
-              if (!saving) {
-                e.currentTarget.style.backgroundColor =
-                  ADMIN_THEME.primaryHover;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!saving) {
-                e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-              }
-            }}
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? t("adminSettings.saving") : t("adminSettings.save")}
-          </Button>
-        </div>
-      </div>
 
-      <Tabs
-        value={tab}
-        onValueChange={(v) => setTab(v as never)}
-        className="space-y-6"
-      >
-        <TabsList className="mb-5">
+        <TabsList>
           <div className="w-full sm:hidden">
             <Select value={tab} onValueChange={(v) => setTab(v as never)}>
               <SelectTrigger className="h-9 w-full">
@@ -229,7 +229,9 @@ export const AdminSettingsRoot = ({
             </TabsTrigger>
           </div>
         </TabsList>
+      </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto pt-6">
         <TabsContent value="company">
           <Card>
             <CardHeader>
@@ -325,7 +327,7 @@ export const AdminSettingsRoot = ({
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
+      </div>
+    </Tabs>
   );
 };
