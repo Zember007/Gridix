@@ -70,6 +70,7 @@
   "viewDetails": "დეტალების ნახვა",
   "openMenu": "მენიუს გახსნა",
   "closeMenu": "მენიუს დახურვა",
+  "selectViewMode": "ნახვის რეჟიმი",
   "plan_floor": "{{floor}} სართულის გეგმა",
   "masterplans": "გენგეგმები",
   "objects": "ობიექტები",

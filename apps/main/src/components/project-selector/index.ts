@@ -1,5 +1,5 @@
 export { default as ProjectApartmentSelector } from "./ProjectApartmentSelector";
-export { ViewModeButtons } from "./ViewModeButtons";
+export { ViewModeButtons, ViewModeSelect } from "./ViewModeButtons";
 export { FloorSelector } from "./FloorSelector";
 
 // Filters

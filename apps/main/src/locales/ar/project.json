@@ -70,6 +70,7 @@
   "viewDetails": "عرض التفاصيل",
   "openMenu": "فتح القائمة",
   "closeMenu": "إغلاق القائمة",
+  "selectViewMode": "وضع العرض",
   "plan_floor": "مخطط الطابق {{الطابق}}.",
   "masterplans": "المخططات العامة",
   "objects": "الكائنات",

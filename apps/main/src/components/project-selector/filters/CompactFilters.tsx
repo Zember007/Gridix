@@ -89,7 +89,7 @@ export const CompactFilters = ({
   // (staging + apply/reset lives inside AdvancedFilters component)
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2">
+    <div className="inline-flex shrink-0 flex-nowrap items-center gap-2">
       {/* Left: advanced filters */}
       <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
         <PopoverTrigger
