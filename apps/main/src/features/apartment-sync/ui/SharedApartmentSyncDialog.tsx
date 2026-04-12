@@ -1337,21 +1337,6 @@ const FloorDuplicationModeDialog = ({
               </div>
             )}
 
-            {applyProgress && applyProgress.total > 0 ? (
-              <OperationProgressCard
-                title={t("apartmentsManager.syncDialog.progressTitle")}
-                description={resolveOperationDescription(applyProgress, t)}
-                current={applyProgress.completed}
-                total={applyProgress.total}
-                status={
-                  applyProgress.completed >= applyProgress.total
-                    ? "complete"
-                    : "running"
-                }
-                icon={<Copy className="h-8 w-8" />}
-              />
-            ) : null}
-
             {applyResult?.errors.length ? (
               <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
                 {t("apartmentsManager.syncDialog.errorsCount", {
@@ -1362,7 +1347,22 @@ const FloorDuplicationModeDialog = ({
           </div>
         </div>
 
-        <div className="border-t bg-background px-5 py-4 sm:px-6">
+        <div className="space-y-3 border-t bg-background px-5 py-4 sm:px-6">
+          {isApplying && applyProgress && applyProgress.total > 0 ? (
+            <OperationProgressCard
+              className="gap-3 p-3 [&_.shrink-0_svg]:h-5 [&_.shrink-0_svg]:w-5"
+              title={t("apartmentsManager.syncDialog.progressTitle")}
+              description={resolveOperationDescription(applyProgress, t)}
+              current={applyProgress.completed}
+              total={applyProgress.total}
+              status={
+                applyProgress.completed >= applyProgress.total
+                  ? "complete"
+                  : "running"
+              }
+              icon={<Copy className="h-5 w-5" />}
+            />
+          ) : null}
           <div className="flex gap-2">
             <Button
               onClick={handleApply}
@@ -1373,7 +1373,7 @@ const FloorDuplicationModeDialog = ({
               }}
             >
               {isApplying
-                ? t("apartmentsManager.syncDialog.syncing")
+                ? t("apartmentsManager.syncDialog.floorDuplicating")
                 : t("apartmentsManager.syncDialog.applyButton", {
                     count: preview?.summary.totalOperations ?? 0,
                   })}

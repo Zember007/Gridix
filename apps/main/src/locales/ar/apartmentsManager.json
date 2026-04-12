@@ -108,6 +108,7 @@
     "progressFloorImageOp": "صورة مخطط الطابق ← الطابق {{floor}}",
     "progressPolygonOp": "المضلعات ← الطابق {{floor}}",
     "applyButton": "تكرار {{count}} من العناصر",
+    "floorDuplicating": "جاري التكرار…",
     "floorDuplicateSuccess": "اكتمل التكرار: مخططات الطوابق {{floorPlans}}، المضلعات {{polygons}}، تم تخطيها {{skipped}}",
     "partialSuccess": "اكتمال الازدواجية مع التحذيرات",
     "errorsCount": "أخطاء التنفيذ: {{count}}",

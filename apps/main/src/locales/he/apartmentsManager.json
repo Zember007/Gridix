@@ -108,6 +108,7 @@
     "progressFloorImageOp": "תמונת תוכנית קומה → קומה {{floor}}",
     "progressPolygonOp": "מצולעים → קומה {{floor}}",
     "applyButton": "שכפל {{count}} פריטים",
+    "floorDuplicating": "משכפל…",
     "floorDuplicateSuccess": "השכפול הושלם: תוכניות קומה {{floorPlans}}, מצולעים {{polygons}}, דילוג {{skipped}}",
     "partialSuccess": "השכפול הושלם עם אזהרות",
     "errorsCount": "שגיאות ביצוע: {{count}}",

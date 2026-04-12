@@ -108,6 +108,7 @@
     "progressFloorImageOp": "Floor plan image → Floor {{floor}}",
     "progressPolygonOp": "Polygons → Floor {{floor}}",
     "applyButton": "Duplicate {{count}} items",
+    "floorDuplicating": "Duplicating…",
     "floorDuplicateSuccess": "Duplication complete: floor plans {{floorPlans}}, polygons {{polygons}}, skipped {{skipped}}",
     "partialSuccess": "Duplication completed with warnings",
     "errorsCount": "Execution errors: {{count}}",
