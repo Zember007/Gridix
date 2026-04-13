@@ -5,6 +5,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  useIsNarrowMobileViewport,
 } from "@gridix/ui";
 import { ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
@@ -62,6 +63,10 @@ export const ProjectHeader = ({
   headerTitle,
 }: ProjectHeaderProps) => {
   const { language, setLanguage } = useLanguage();
+  const isNarrowMobileViewport = useIsNarrowMobileViewport();
+  // Full-width view mode row only when width < 425px (see useIsNarrowMobileViewport).
+  const stackViewModeSelectBelow =
+    isMobile && Boolean(isNarrowMobileViewport ?? false);
 
   const titleText = (headerTitle ?? project?.name)?.trim() || "";
 
@@ -93,7 +98,12 @@ export const ProjectHeader = ({
       data-project-header
       className="sticky top-0 z-40 bg-white"
     >
-      <div className="container mx-auto flex flex-col py-2 md:px-6 md:py-3">
+      <div
+        className={cn(
+          "container mx-auto flex flex-col py-2 md:px-6 md:py-3",
+          stackViewModeSelectBelow && "gap-2",
+        )}
+      >
         <div className={cn("flex items-center justify-between gap-2 md:gap-4")}>
           <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden md:gap-3">
             {(!isWidget || onBack) && (
@@ -212,7 +222,7 @@ export const ProjectHeader = ({
               </Sheet>
             )}
 
-            {isMobile && (
+            {isMobile && !stackViewModeSelectBelow ? (
               <ViewModeSelect
                 viewMode={viewMode}
                 setViewMode={setViewMode}
@@ -221,7 +231,7 @@ export const ProjectHeader = ({
                 projectType={projectType}
                 modeContext={modeContext}
               />
-            )}
+            ) : null}
 
             {isWidget ? null : (
               <LanguageToggle
@@ -230,6 +240,20 @@ export const ProjectHeader = ({
             )}
           </div>
         </div>
+
+        {stackViewModeSelectBelow ? (
+          <div className="w-full min-w-0">
+            <ViewModeSelect
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              favoritesCount={favoritesCount}
+              mapVisible={mapVisible}
+              projectType={projectType}
+              modeContext={modeContext}
+              className="w-full min-w-0 max-w-none"
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

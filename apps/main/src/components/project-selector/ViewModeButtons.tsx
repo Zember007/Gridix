@@ -124,7 +124,7 @@ function getModeLabel(
   }
 }
 
-/** Mobile: compact Select (same pattern as EmbedProjectsPage filters) next to language toggle */
+/** Mobile: compact Select (same pattern as EmbedProjectsPage filters) */
 export const ViewModeSelect = ({
   viewMode,
   setViewMode,
@@ -132,7 +132,8 @@ export const ViewModeSelect = ({
   projectType,
   mapVisible,
   modeContext = "default",
-}: Omit<ViewModeButtonsProps, "isMobile" | "className" | "isWidget">) => {
+  className,
+}: Omit<ViewModeButtonsProps, "isMobile" | "isWidget" | "themeColor">) => {
   const { t } = useLanguage();
   const isMultiSub = modeContext === "project-multi-sub";
 
@@ -142,7 +143,12 @@ export const ViewModeSelect = ({
   );
 
   return (
-    <div className="flex max-w-[min(46vw,12rem)] shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-0.5">
+    <div
+      className={cn(
+        "flex max-w-[min(46vw,12rem)] shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-0.5",
+        className,
+      )}
+    >
       <Select
         value={viewMode}
         onValueChange={(v) => setViewMode(v as ViewMode)}
