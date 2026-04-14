@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "قم بتحميل الصور",
     "videoDropzoneDescription": "قم بتحميل الفيديوهات",
     "presentationDropzoneDescription": "قم بتحميل المستندات",
-    "attachFilesHint": "اسحب الملفات وأفلتها هنا أو اضغط للاختيار",
+    "attachFilesHint": "اسحب الملفات وأفلتها، أو انقر للاختيار، أو الصق رابطًا هنا أو في حقل الوصف أعلاه",
     "selectedFilesCount": "تم اختيار {{count}} ملف",
     "selectedLinksCount": "تمت اضافة {{count}} رابط",
     "clearSelected": "مسح",
@@ -77,7 +77,9 @@
   "construction": {
     "addNews": "إضافة تحديث",
     "titlePlaceholder": "العنوان",
-    "descriptionPlaceholder": "الوصف...",
+    "descriptionPlaceholder": "الوصف... الصق رابط فيديو أو ملف هنا أو في المرفقات أدناه — سيظهر كنص رابط قصير.",
+    "linkAnchorYoutube": "فيديو",
+    "linkAnchorWeb": "رابط",
     "languageSection": "لغات محتوى الأخبار",
     "publish": "نشر",
     "noUpdates": "لا توجد تحديثات",
@@ -85,9 +87,6 @@
     "addSuccess": "تمت إضافة التحديث",
     "addError": "تعذرت إضافة التحديث",
     "deleteSuccess": "تم الحذف",
-    "deleteError": "تعذر الحذف",
-    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
-    "youtubeLinkFieldHint": "الصق الرابط واضغط Enter أو إضافة",
-    "invalidYoutubeLink": "أدخل رابط YouTube صالحًا"
+    "deleteError": "تعذر الحذف"
   }
 }

@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "Загрузите изображения",
     "videoDropzoneDescription": "Загрузите видео",
     "presentationDropzoneDescription": "Загрузите документы",
-    "attachFilesHint": "Перетащите файлы сюда или нажмите для выбора",
+    "attachFilesHint": "Перетащите файлы, нажмите для выбора или вставьте ссылку сюда или в поле описания выше",
     "selectedFilesCount": "Выбрано файлов: {{count}}",
     "selectedLinksCount": "Добавлено ссылок: {{count}}",
     "clearSelected": "Очистить",
@@ -77,7 +77,9 @@
   "construction": {
     "addNews": "Добавить новость",
     "titlePlaceholder": "Заголовок ({{language}})",
-    "descriptionPlaceholder": "Описание ({{language}})...",
+    "descriptionPlaceholder": "Описание ({{language}})... Вставьте ссылку на видео или файл сюда или в блок вложений ниже — в тексте она отобразится короткой подписью-ссылкой.",
+    "linkAnchorYoutube": "видео",
+    "linkAnchorWeb": "ссылка",
     "languageSection": "Языки контента новости",
     "publish": "Опубликовать",
     "noUpdates": "Нет обновлений",
@@ -85,9 +87,6 @@
     "addSuccess": "Обновление добавлено",
     "addError": "Не удалось добавить обновление",
     "deleteSuccess": "Удалено",
-    "deleteError": "Не удалось удалить",
-    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
-    "youtubeLinkFieldHint": "Вставьте ссылку и нажмите Enter или «Добавить»",
-    "invalidYoutubeLink": "Укажите корректную ссылку YouTube"
+    "deleteError": "Не удалось удалить"
   }
 }

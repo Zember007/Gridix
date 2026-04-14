@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "Görsel yükleyin",
     "videoDropzoneDescription": "Video yükleyin",
     "presentationDropzoneDescription": "Belge yükleyin",
-    "attachFilesHint": "Dosyalari buraya surukleyip birakin veya secmek icin tiklayin",
+    "attachFilesHint": "Dosyaları sürükleyip bırakın, seçmek için tıklayın veya bağlantıyı buraya ya da üstteki açıklama alanına yapıştırın",
     "selectedFilesCount": "{{count}} dosya secildi",
     "selectedLinksCount": "{{count}} baglanti eklendi",
     "clearSelected": "Temizle",
@@ -77,7 +77,9 @@
   "construction": {
     "addNews": "Güncelleme ekle",
     "titlePlaceholder": "Başlık",
-    "descriptionPlaceholder": "Açıklama...",
+    "descriptionPlaceholder": "Açıklama... Video veya dosya bağlantısını buraya veya alttaki ekler alanına yapıştırın — metinde kısa bir bağlantı olarak görünür.",
+    "linkAnchorYoutube": "video",
+    "linkAnchorWeb": "bağlantı",
     "languageSection": "Haber içeriği dilleri",
     "publish": "Yayınla",
     "noUpdates": "Güncelleme yok",
@@ -85,9 +87,6 @@
     "addSuccess": "Güncelleme eklendi",
     "addError": "Güncelleme eklenemedi",
     "deleteSuccess": "Silindi",
-    "deleteError": "Silinemedi",
-    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
-    "youtubeLinkFieldHint": "Baglantiyi yapistirin ve Enter veya Ekle'ye basin",
-    "invalidYoutubeLink": "Gecerli bir YouTube baglantisi girin"
+    "deleteError": "Silinemedi"
   }
 }

@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "ატვირთეთ სურათები",
     "videoDropzoneDescription": "ატვირთეთ ვიდეოები",
     "presentationDropzoneDescription": "ატვირთეთ დოკუმენტები",
-    "attachFilesHint": "გადმოათრიეთ ფაილები აქ ან დააჭირეთ ასარჩევად",
+    "attachFilesHint": "გადმოათრიეთ ფაილები, დააჭირეთ ასარჩევად ან ჩასვით ბმული აქ ან ზემოთ აღწერის ველში",
     "selectedFilesCount": "არჩეული ფაილები: {{count}}",
     "selectedLinksCount": "დამატებული ბმულები: {{count}}",
     "clearSelected": "გასუფთავება",
@@ -77,7 +77,7 @@
   "construction": {
     "addNews": "განახლების დამატება",
     "titlePlaceholder": "სათაური",
-    "descriptionPlaceholder": "აღწერა...",
+    "descriptionPlaceholder": "აღწერა... ჩასვით ვიდეოს ან ფაილის ბმული აქ ან ქვემოთ თანდართულებში — ტექსტში ჩანს მოკლე ბმული.",
     "languageSection": "ახალი ამბების შინაარსის ენები",
     "publish": "გამოქვეყნება",
     "noUpdates": "განახლებები არ არის",
@@ -88,6 +88,8 @@
     "deleteError": "წაშლა ვერ მოხერხდა",
     "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
     "youtubeLinkFieldHint": "ჩასვით ბმული და დააჭირეთ Enter-ს ან დამატებას",
-    "invalidYoutubeLink": "მიუთითეთ სწორი YouTube-ბმული"
+    "invalidYoutubeLink": "მიუთითეთ სწორი YouTube-ბმული",
+    "linkAnchorYoutube": "ვიდეო",
+    "linkAnchorWeb": "ბმული"
   }
 }

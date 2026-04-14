@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, PlayCircle, X } from "lucide-react";
 
@@ -75,6 +75,36 @@ const getDocTypeFromUrl = (url: string): AttachmentFileType => {
   if (name.endsWith(".docx")) return "DOCX";
   if (name.endsWith(".doc")) return "DOC";
   return "LINK";
+};
+
+const renderDescriptionWithMarkdownLinks = (text: string): ReactNode => {
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  let match: RegExpExecArray | null;
+  const pattern = /\[([^\][]+)\]\((https?:[^)\s]+)\)/g;
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > last) {
+      nodes.push(text.slice(last, match.index));
+    }
+    const href = match[2];
+    nodes.push(
+      <a
+        key={`desc-link-${key++}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-800"
+      >
+        {match[1]}
+      </a>,
+    );
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) {
+    nodes.push(text.slice(last));
+  }
+  return nodes.length > 0 ? nodes : text;
 };
 
 export const ConstructionUpdateAttachments = ({
@@ -207,7 +237,7 @@ export const ConstructionUpdateAttachments = ({
   return (
     <>
       <p className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-line text-slate-600">
-        {description}
+        {renderDescriptionWithMarkdownLinks(description)}
       </p>
       {media.length > 0 && (
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

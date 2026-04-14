@@ -43,7 +43,7 @@
     "renderDropzoneDescription": "Upload images",
     "videoDropzoneDescription": "Upload videos",
     "presentationDropzoneDescription": "Upload documents",
-    "attachFilesHint": "Drag and drop files here or click to select",
+    "attachFilesHint": "Drag and drop files, click to select, or paste a link here or in the description field above",
     "selectedFilesCount": "{{count}} file(s) selected",
     "selectedLinksCount": "{{count}} link(s) added",
     "clearSelected": "Clear",
@@ -77,7 +77,9 @@
   "construction": {
     "addNews": "Add update",
     "titlePlaceholder": "Title ({{language}})",
-    "descriptionPlaceholder": "Description ({{language}})...",
+    "descriptionPlaceholder": "Description ({{language}})... Paste a video or file link here or in attachments below — it will show as a short link in the text.",
+    "linkAnchorYoutube": "video",
+    "linkAnchorWeb": "link",
     "languageSection": "News content languages",
     "publish": "Publish",
     "noUpdates": "No updates",
@@ -85,9 +87,6 @@
     "addSuccess": "Update added",
     "addError": "Failed to add update",
     "deleteSuccess": "Deleted",
-    "deleteError": "Failed to delete",
-    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
-    "youtubeLinkFieldHint": "Paste a link and press Enter or Add",
-    "invalidYoutubeLink": "Enter a valid YouTube link"
+    "deleteError": "Failed to delete"
   }
 }
