@@ -1,9 +1,4 @@
-import type {
-  DriveStep,
-  Driver,
-  DriverHook,
-  Side,
-} from "@gridix/utils/integrations";
+import type { DriveStep, Driver, Side } from "@gridix/utils/integrations";
 import {
   createGridixDriver,
   hasDriverTourCompletedOnce,
@@ -22,7 +17,8 @@ type TourPopoverButtons = NonNullable<
   NonNullable<DriveStep["popover"]>["showButtons"]
 >;
 
-const PHASE1_NAV_BUTTONS: TourPopoverButtons = ["next", "previous"];
+/** Как в остальных турах: всегда есть «Закрыть» (×). Иначе merge в driver.js оставляет только next/prev. */
+const PHASE1_NAV_BUTTONS: TourPopoverButtons = ["next", "previous", "close"];
 /** Шаги «клик по подсветке»: только Назад и закрытие тура (без «Далее»). */
 const CLICK_ADVANCE_STEP_BUTTONS: TourPopoverButtons = ["previous", "close"];
 
@@ -62,13 +58,6 @@ function filterStepsWithDomTargets(steps: DriveStep[]): DriveStep[] {
     if (typeof el === "string") return !!document.querySelector(el);
     return true;
   });
-}
-
-function chainHighlighted(...hooks: (DriverHook | undefined)[]): DriverHook {
-  const list = hooks.filter(Boolean) as DriverHook[];
-  return (element, step, opts) => {
-    for (const fn of list) fn(element, step, opts);
-  };
 }
 
 /**
@@ -148,21 +137,12 @@ function buildPhase1ImportSteps(
     showButtons: CLICK_ADVANCE_STEP_BUTTONS,
   };
 
-  /** Driver.js `setConfig` заменяет конфиг целиком; без spread теряется `steps` → «No steps to drive through». */
-  const phase1AllowCloseHook: DriverHook = (_el, _s, { driver }) => {
-    driver.setConfig({ ...driver.getConfig(), allowClose: false });
-  };
-
-  const phase1OpenHook: DriverHook = (_el, _s, { driver }) => {
-    driver.setConfig({ ...driver.getConfig(), allowClose: true });
-  };
-
   const firstImportPopoverExtras =
     options?.onPrevFromFirstImport != null
       ? {
           /**
-           * По умолчанию Driver отключает «Назад» на шаге 0; без пустого disableButtons
-           * кнопка не покажется.
+           * На первом шаге Driver добавляет «Назад» в disableButtons; пустой массив
+           * оставляет кнопку активной для onPrevFromFirstImport (возврат к выбору типа).
            */
           disableButtons: [] as unknown as NonNullable<
             NonNullable<DriveStep["popover"]>["disableButtons"]
@@ -193,7 +173,6 @@ function buildPhase1ImportSteps(
     {
       element: ".project_import_excel_usertour",
       disableActiveInteraction: true,
-      onHighlighted: chainHighlighted(phase1AllowCloseHook),
       popover: {
         title: t("driverOnboarding.projectCreation.phase1Step1Title"),
         description: t(
@@ -208,7 +187,6 @@ function buildPhase1ImportSteps(
     {
       element: ".project_import_excel_usertour",
       disableActiveInteraction: true,
-      onHighlighted: chainHighlighted(phase1AllowCloseHook),
       popover: {
         title: t("driverOnboarding.projectCreation.phase1Step2Title"),
         description: t(
@@ -223,10 +201,7 @@ function buildPhase1ImportSteps(
       const clickAdvance = clickToAdvanceOnHighlight((d) => d.moveNext());
       return {
         element: ".project_import_demo_usertour",
-        onHighlighted: chainHighlighted(
-          phase1OpenHook,
-          clickAdvance.onHighlighted,
-        ),
+        onHighlighted: clickAdvance.onHighlighted,
         onDeselected: clickAdvance.onDeselected,
         popover: {
           title: t("driverOnboarding.projectCreation.phase1Step3Title"),
@@ -243,10 +218,7 @@ function buildPhase1ImportSteps(
       const clickAdvance = clickToAdvanceOnHighlight(onAwaitMapperThenContinue);
       return {
         element: ".project_import_upload_usertour",
-        onHighlighted: chainHighlighted(
-          phase1OpenHook,
-          clickAdvance.onHighlighted,
-        ),
+        onHighlighted: clickAdvance.onHighlighted,
         onDeselected: clickAdvance.onDeselected,
         popover: {
           title: t("driverOnboarding.projectCreation.phase1Step4Title"),
@@ -266,24 +238,12 @@ function buildKindStep(
   t: Translate,
   onAfterKindChoice: (driver: Driver) => void,
 ): DriveStep {
-  const phase1AllowCloseHook: DriverHook = (_el, _s, { driver }) => {
-    driver.setConfig({ ...driver.getConfig(), allowClose: false });
-  };
-
-  const phase1OpenHook: DriverHook = (_el, _s, { driver }) => {
-    driver.setConfig({ ...driver.getConfig(), allowClose: true });
-  };
-
   const clickAdvance = clickToAdvanceOnHighlight(onAfterKindChoice);
 
   return {
     element: ".project_creation_kind_usertour",
     disableActiveInteraction: false,
-    onHighlighted: chainHighlighted(
-      phase1AllowCloseHook,
-      phase1OpenHook,
-      clickAdvance.onHighlighted,
-    ),
+    onHighlighted: clickAdvance.onHighlighted,
     onDeselected: clickAdvance.onDeselected,
     popover: {
       title: t("driverOnboarding.projectCreation.phase1KindTitle"),
@@ -417,7 +377,7 @@ function createProjectCreationPhase1Driver(params: {
 }): Driver {
   const { userId, t, finish } = params;
   const driver = createGridixDriver({
-    allowClose: false,
+    allowClose: true,
     allowKeyboardControl: false,
     disableActiveInteraction: false,
     showProgress: true,

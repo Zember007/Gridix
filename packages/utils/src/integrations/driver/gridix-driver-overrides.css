@@ -17,3 +17,14 @@ body.driver-active .driver-active-element:not(.sidebar_usertour *) {
     0 0 0 3px rgba(255, 255, 255, 0.5),
     0 0 16px 4px rgba(255, 255, 255, 0.25) !important;
 }
+
+/*
+ * Driver.js помечает недоступные «Назад»/«Далее» классом .driver-popover-btn-disabled
+ * (например «Назад» на первом шаге). Показывать серую неактивную кнопку не нужно —
+ * скрываем только кнопки в блоке навигации, не трогая .driver-popover-close-btn.
+ */
+.gridix-driver-popover
+  .driver-popover-navigation-btns
+  .driver-popover-btn-disabled {
+  display: none !important;
+}
