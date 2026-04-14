@@ -53,6 +53,7 @@ import { useAdminAccess } from "@/entities/admin-access";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { resolveExternalVideoEmbedForZip } from "@/shared/lib/externalVideoZipHtml";
 import { LeadsStats } from "@/entities/lead/ui/LeadsNotification";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
@@ -1284,10 +1285,13 @@ const ProjectList = ({
           filename: `${projectFilenamePrefix}-render-${i + 1}${extensionFromUrl(url, ".jpg")}`,
         });
       });
-      v.forEach((vid, i) => {
+      let hostedVideoIndex = 0;
+      v.forEach((vid) => {
+        if (isExternalVideoUrl(vid.url)) return;
+        hostedVideoIndex += 1;
         items.push({
           url: vid.url,
-          filename: `${projectFilenamePrefix}-video-${i + 1}-${safeFilename(vid.title, "video")}${extensionFromUrl(vid.url, ".mp4")}`,
+          filename: `${projectFilenamePrefix}-video-${hostedVideoIndex}-${safeFilename(vid.title, "video")}${extensionFromUrl(vid.url, ".mp4")}`,
         });
       });
       p.forEach((doc) => {
@@ -1299,10 +1303,82 @@ const ProjectList = ({
         }
       });
 
-      if (items.length === 0) return;
+      const escapeHtmlText = (s: string) =>
+        s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+
+      const escapeHtmlAttr = (s: string) =>
+        escapeHtmlText(s).replace(/'/g, "&#39;");
+
+      const externalVideoListItems: string[] = [];
+      for (const vid of v) {
+        if (!isExternalVideoUrl(vid.url)) continue;
+        const title = String(vid.title ?? "").trim();
+        const href = escapeHtmlAttr(vid.url);
+        const linkLabel = escapeHtmlText(title || vid.url);
+        const resolved = resolveExternalVideoEmbedForZip(vid.url);
+
+        if (resolved) {
+          const embedAttr = escapeHtmlAttr(resolved.embedSrc);
+          const titleAttr = escapeHtmlAttr(title || "Video");
+          const posterBlock = resolved.posterSrc
+            ? `<a class="zip-ext-video__poster" href="${href}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtmlAttr(resolved.posterSrc)}" alt="" width="640" height="360" loading="lazy" decoding="async" /></a>`
+            : "";
+          externalVideoListItems.push(
+            `<li class="zip-ext-video"><div class="zip-ext-video__title"><a href="${href}" target="_blank" rel="noopener noreferrer">${linkLabel}</a></div>${posterBlock}<div class="zip-ext-video__player"><iframe src="${embedAttr}" title="${titleAttr}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></li>`,
+          );
+        } else {
+          externalVideoListItems.push(
+            `<li class="zip-ext-video zip-ext-video--fallback"><a href="${href}" target="_blank" rel="noopener noreferrer">${linkLabel}</a></li>`,
+          );
+        }
+      }
+
+      const externalVideoLinksHtml =
+        externalVideoListItems.length > 0
+          ? `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtmlText(`${projectFilenamePrefix} — external videos`)}</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#0f172a}
+h1{font-size:1.125rem;font-weight:700;margin:0 0 1rem}
+ul{list-style:none;padding:0;margin:0}
+.zip-ext-video{margin-bottom:1.25rem;padding:0.75rem 1rem;background:#f8fafc;border-radius:0.5rem;border:1px solid #e2e8f0}
+.zip-ext-video__title{font-weight:600;margin-bottom:0.5rem}
+.zip-ext-video__title a,.zip-ext-video--fallback a{color:#2563eb;text-decoration:underline;word-break:break-word}
+.zip-ext-video__title a:hover,.zip-ext-video--fallback a:hover{color:#1d4ed8}
+.zip-ext-video__poster{display:block;margin:0 0 0.5rem;border-radius:0.375rem;overflow:hidden;border:1px solid #e2e8f0}
+.zip-ext-video__poster img{width:100%;height:auto;vertical-align:middle;display:block;aspect-ratio:16/9;object-fit:cover;background:#0f172a}
+.zip-ext-video__player{position:relative;width:100%;aspect-ratio:16/9;background:#0f172a;border-radius:0.375rem;overflow:hidden}
+.zip-ext-video__player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.zip-ext-video--fallback{font-weight:600}
+</style>
+</head>
+<body>
+<h1>${escapeHtmlText(projectFilenamePrefix)} — external video links</h1>
+<ul>
+${externalVideoListItems.join("\n")}
+</ul>
+</body>
+</html>`
+          : "";
+
+      if (items.length === 0 && !externalVideoLinksHtml) return;
       setZipping(true);
       try {
         const { zip } = await import("fflate");
+
+        const files: Record<string, Uint8Array> = {};
+        if (externalVideoLinksHtml) {
+          files[`${projectFilenamePrefix}-external-video-links.html`] =
+            new TextEncoder().encode(externalVideoLinksHtml);
+        }
 
         const fetchResults = await Promise.allSettled(
           items.map(async ({ url, filename }) => {
@@ -1313,7 +1389,6 @@ const ProjectList = ({
           }),
         );
 
-        const files: Record<string, Uint8Array> = {};
         for (const result of fetchResults) {
           if (result.status === "fulfilled") {
             files[result.value.filename] = result.value.data;
