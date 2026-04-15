@@ -18,6 +18,9 @@
     "step8Description": "Click “Create project”. When the modal opens, the next tour about import and project creation will start automatically."
   },
   "projectCreation": {
+    "phase1KindTitle": "Proje oluşturuyoruz",
+    "phase1KindDescription": "Gelişiminize uyan düzeni seçin. Ayrıntıları daha sonra düzenleyicide değiştirebilirsiniz. Devam etmek için bir karta tıklayın.",
+    "phase1Progress": "{{step}} / {{count}}",
     "phase1Step1Title": "Create a project",
     "phase1Step1Description": "Choose a path: quick import from a file (recommended) or manual setup.",
     "phase1Step2Title": "Import from Excel / CSV",
