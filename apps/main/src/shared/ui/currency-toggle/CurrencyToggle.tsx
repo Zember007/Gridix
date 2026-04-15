@@ -22,7 +22,12 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
   className = "gap-2",
 }) => {
   type Currency = CurrencyType;
-  const preferredOrder: Array<Exclude<Currency, "RUB">> = ["USD", "GEL", "EUR"];
+  const preferredOrder: Array<Exclude<Currency, "RUB">> = [
+    "USD",
+    "GEL",
+    "EUR",
+    "KZT",
+  ];
   const baseProjectCurrency: Currency = isValidCurrency(String(projectCurrency))
     ? (projectCurrency as Currency)
     : "RUB";

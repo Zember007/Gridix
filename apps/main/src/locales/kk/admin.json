@@ -1,0 +1,785 @@
+{
+  "analytics": {
+    "title": "Аналитика",
+    "loading": "Аналитика жүктелуде...",
+    "filters": "Сүзгілер",
+    "period": "Кезең",
+    "periods": {
+      "7days": "7 күн",
+      "30days": "30 күн",
+      "90days": "90 күн",
+      "all": "Барлық уақытта"
+    },
+    "dateFrom": "Күні",
+    "dateTo": "Күні",
+    "project": "Жоба",
+    "allProjects": "Барлық жобалар",
+    "totalViews": "Жалпы көру саны",
+    "totalLeads": "Жалпы нәтижелер",
+    "conversionRate": "Конверсия жылдамдығы",
+    "totalApartments": "Жалпы пәтерлер",
+    "projectViews": "Жоба көріністері",
+    "projectViewsDescription": "Көру динамикасын күндер бойынша",
+    "leads": "Жетекші",
+    "leadsDescription": "Күндер бойынша динамика бойынша жетекші",
+    "topProjects": "Үздік жобалар",
+    "topProjectsDescription": "Көрулер бойынша үздік 10 жоба",
+    "views": "Көрулер",
+    "topApartments": "Көріністері бойынша үздік пәтерлер",
+    "topApartmentsDescription": "Көру саны бойынша үздік 10 пәтер",
+    "apartment": "Пәтер",
+    "apartmentsStats": "Пәтер статистикасы",
+    "apartmentsStatsDescription": "Пәтерлерді статус бойынша бөлу",
+    "apartments": {
+      "available": "Қол жетімді",
+      "sold": "Сатылған",
+      "reserved": "Резервтелген"
+    },
+    "projectsTable": "Жобалар бойынша егжей-тегжейлі статистика",
+    "projectsTableDescription": "Әрбір жоба бойынша толық ақпарат",
+    "conversion": "Түрлендіру",
+    "noData": "Деректер жоқ"
+  },
+  "analyticsComingSoon": "Аналитика мүмкіндігі кейінірек қосылады",
+  "analyticsDescription": "Жобалар мен пәтерлер бойынша статистика",
+  "back": "Артқа",
+  "dashboard": "Әкімші бақылау тақтасы",
+  "dashboardDescription": "Жобалар мен параметрлерді басқарыңыз",
+  "leads": "Жетекші",
+  "crm": "CRM",
+  "agent_network": "Агент желісі",
+  "contacts": "Контактілер",
+  "contactsPage": {
+    "title": "Контактілер",
+    "description": "Жетекшілер мен агенттер/серіктестер клиенттері.",
+    "searchPlaceholder": "Аты, телефоны немесе электрондық поштасы бойынша іздеу...",
+    "filterAll": "Барлығы",
+    "filterClients": "Клиенттер",
+    "filterAgents": "Агенттер",
+    "tableContact": "Байланыс",
+    "tableType": "Түр",
+    "tablePhone": "Телефон",
+    "tableEmail": "Электрондық пошта",
+    "tableDetails": "Мәліметтер",
+    "tableDate": "Күн",
+    "loading": "Жүктелуде...",
+    "noContacts": "Ешбір контакт табылмады",
+    "typeAgent": "Агент",
+    "typeClient": "Клиент",
+    "detailsLeads": "{{count}} ықтимал тұтынушылар",
+    "noName": "Аты жоқ",
+    "exportBtn": "Экспорттау",
+    "toastNothingToExportTitle": "Экспортқа ештеңе жоқ",
+    "toastNothingToExportDesc": "Экспортталатын контактілер жоқ.",
+    "toastExportDoneTitle": "Экспорттау аяқталды",
+    "toastExportDoneDesc": "Контактілер Excel бағдарламасына экспортталды."
+  },
+  "project": {
+    "create": {
+      "description": "Жобаны жасау жолын таңдаңыз",
+      "googleSheets": "Google Sheets:",
+      "import": {
+        "benefit": {
+          "fresh": "Деректер әрқашан жаңартылған",
+          "noReupload": "Файлды қайта жүктеп салудың қажеті жоқ",
+          "sync": "Деректер өзгерген кезде автоматты синхрондау"
+        },
+        "benefitsTitle": "Сілтеме арқылы импорттаудың артықшылықтары:",
+        "byLink": "Сілтеме арқылы импорттау",
+        "description": "Жобаны автоматты түрде жасау үшін пәтер деректері бар Excel файлын жүктеңіз",
+        "processing": "Өңдеуде...",
+        "template": "Үлгіні жүктеп алу",
+        "demo": "Демонстрацияны жүктеп алыңыз",
+        "title": "Excel бағдарламасынан импорттау",
+        "uploadButton": "Excel файлын жүктеп салыңыз",
+        "uploadTab": "Файлды жүктеп салу",
+        "urlTab": "Сілтеме бойынша"
+      },
+      "infoText": "Кез келген сілтеме пішімі, автоматты түрлендіру және синхрондау",
+      "layout": {
+        "different": {
+          "help": "Әр қабатты бөлек конфигурациялау қажет"
+        },
+        "question": "Барлық қабаттарда орналасу бірдей ме?",
+        "same": {
+          "help": "Пәтерлерді бір рет белгілеп, барлық қабаттарға автоматты түрде қолдануға болады"
+        },
+        "title": "Еденнің орналасуы"
+      },
+      "manual": {
+        "description": "Жобаны нөлден жасаңыз және бәрін өзіңіз конфигурациялаңыз",
+        "start": "Қолмен жасауды бастаңыз",
+        "title": "Қолмен орнату"
+      },
+      "requiredData": {
+        "title": "Қажетті деректер:",
+        "fields": "Пәтер нөмірлері, қабаттар, бөлмелер, аудан, баға, статус"
+      },
+      "supportedFormats": "Қолдау көрсетілетін форматтар:",
+      "title": "Жаңа жоба жасаңыз",
+      "kind": {
+        "stepDescription": "Әзірлеуіңізге сәйкес орналасуды таңдаңыз. Мәліметтерді кейінірек өңдегіште өзгерте аласыз.",
+        "question": "Бұл қандай жоба?",
+        "back": "Жоба түрін өзгерту",
+        "selectedLabel": "Түр",
+        "building": {
+          "title": "Тұрғын үй",
+          "description": "Едендері мен блоктары бар бір ғимарат — бүкіл үй үшін бір қасбеттің алдын ала көрінісі."
+        },
+        "object": {
+          "title": "Виллалар / таунхаустар",
+          "description": "Бөлінген немесе жол бірліктері — бір нысанға алдын ала қарау және көпбұрыштар."
+        },
+        "genplan": {
+          "title": "Бас жоспар — бірнеше қосалқы жобалар",
+          "description": "Бірнеше ғимараттары бар сайттың жоспары; әрбір қосалқы жобаның өз қасбеті мен пәтерлері бар. Редакторда қолмен орнатыңыз."
+        }
+      }
+    }
+  },
+  "demo": {
+    "bannerTitle": "Демо режимі",
+    "bannerDescription": "Сіз демонстрациялық жұмыс кеңістігін қарап жатырсыз. Деректер тек демонстрациялық мақсаттарға арналған. Жобаларды жасау және өңдеу мүмкін емес.",
+    "joinButton": "Демо кабинетті қолданып көріңіз",
+    "joining": "Қосылуда...",
+    "joinError": "Демонстрацияға қосылу мүмкін болмады. Қайталап көріңіз.",
+    "joinSuccess": "Демо жұмыс кеңістігіне қосылған",
+    "exitButton": "Демонстрациядан шығу",
+    "exitShort": "Шығу"
+  },
+  "partners": "Серіктестік",
+  "projects": "Жобалар",
+  "settings": "Параметрлер",
+  "subscription": "Жазылым",
+  "billing": "Төлем",
+  "integrations": "Интеграциялар",
+  "integrationsDescription": "Сыртқы қызметтерді жұмыс кеңістігіңізге қосыңыз.",
+  "projectsConfig": "Жобалардың конфигурациясы",
+  "configureProjects": "Жобаларды конфигурациялау",
+  "common": {
+    "active": "Белсенді",
+    "inactive": "Белсенді емес",
+    "comingSoon": "Жақында",
+    "cancel": "Болдырмау",
+    "confirm": "Растау"
+  },
+  "amocrm": {
+    "description": "AmoCRM интеграциясы арқылы сатылымдарды автоматтандырыңыз және ықтимал тұтынушыларды басқарыңыз.",
+    "connectedTo": "Қосылған",
+    "disconnect": "Ажырату",
+    "reconnect": "Қайта қосылу",
+    "tokenExpired": "Токеннің мерзімі аяқталды",
+    "connectAmoCRM": "AmoCRM қосыңыз",
+    "disconnectWarningTitle": "Интеграцияны ажырату керек пе?",
+    "disconnectWarningMessage": "Бұл барлық синхрондау процестерін тоқтатады. Кейінірек қайта қосылуға болады.",
+    "disconnectSuccess": "Ажыратылды",
+    "disconnectError": "Ажыратылмады",
+    "settingsLoadError": "Параметрлерді жүктеу сәтсіз аяқталды",
+    "authError": "Аутентификация сәтсіз аяқталды",
+    "saveSuccess": "Параметрлер сәтті сақталды",
+    "saveError": "Параметрлерді сақтау мүмкін болмады",
+    "pipeline": "Құбыр",
+    "status": "Күй",
+    "responsible": "Жауапты пайдаланушы",
+    "selectPipeline": "Құбырды таңдаңыз",
+    "selectStatus": "Күйді таңдаңыз",
+    "selectUser": "Пайдаланушыны таңдаңыз",
+    "notConnected": "Қосылмаған",
+    "connectInAdmin": "Әкімші тақтасында қосылыңыз",
+    "connectInAdminDescription": "Алдымен Әкімші тақтасында AmoCRM қосылуы керек.",
+    "goToAdmin": "Әкімші тақтасына өтіңіз",
+    "confirm": "Растау"
+  },
+  "bitrix24": {
+    "description": "CRM, тапсырмалар және жобаны басқару бір жерде.",
+    "connectedTo": "Қосылған",
+    "disconnect": "Ажырату",
+    "installApp": "Қолданбаны орнату",
+    "howToConnect": "Қосылу жолы:",
+    "step1": "Bitrix24 Marketplace ашыңыз",
+    "step2": "«Gridix» қолданбасын орнатыңыз",
+    "step3": "Кодты осы жерге енгізіңіз",
+    "enterCode": "Қосылым кодын енгізіңіз",
+    "connect": "Қосылу",
+    "checking": "Тексерілуде...",
+    "disconnectWarningTitle": "Bitrix24 ажыратылсын ба?",
+    "disconnectWarningMessage": "Бұл қосылымды жояды және синхрондауды тоқтатады.",
+    "disconnectSuccess": "Ажыратылды",
+    "disconnectError": "Ажыратылмады",
+    "connectError": "Қосылу мүмкін болмады",
+    "invalidCode": "Жарамсыз немесе мерзімі өтіп кеткен код",
+    "settingsLoadError": "Параметрлерді жүктеу сәтсіз аяқталды",
+    "category": "Мәміле санаты",
+    "stage": "Мәміле кезеңі",
+    "selectCategory": "Санатты таңдаңыз",
+    "selectStage": "Кезеңді таңдаңыз",
+    "notConnected": "Қосылмаған",
+    "connectInAdmin": "Әкімші тақтасында қосылыңыз",
+    "connectInAdminDescription": "Алдымен әкімші тақтасында Bitrix24 қосу керек.",
+    "marketplaceHint": "Қосылу үшін порталдағы Bitrix24 Marketplace жүйесінен Gridix қолданбасын орнатыңыз.",
+    "attached": "Қосылды",
+    "attachError": "Қосылу мүмкін болмады",
+    "detached": "Ажыратылған",
+    "detachError": "Ажыратылмады",
+    "configureProjectDesc": "Осы жоба үшін Bitrix24 шұңқырын таңдаңыз.",
+    "funnel": "Шұңқыр",
+    "selectFunnel": "Шұңқырды таңдаңыз",
+    "selectFunnelDesc": "Кезеңдерді синхрондау үшін шұңқырды таңдаңыз.",
+    "statusesSynced": "кезеңдері синхрондалады",
+    "funnelSynced": "Шұңқыр синхрондалды",
+    "syncError": "Шұңқырды синхрондау сәтсіз аяқталды",
+    "enterDomain": "Bitrix24 мекенжайыңызды енгізіңіз",
+    "domainPlaceholder": "b24-example.bitrix24.com",
+    "invalidDomain": "Жарамды Bitrix24 мекенжайын енгізіңіз",
+    "ruRegionUnavailable": "Ресей аймағы үшін ашық қолжетімділікте интеграция уақытша қолжетімсіз. Қолдау қызметіне хабарласыңыз.",
+    "openMarketplace": "Marketplace сайтына өтіңіз"
+  },
+  "widgets": "Виджеттер",
+  "documentation": "Құжаттама",
+  "subscriptionPage": {
+    "title": "Жазылымдарыңыз",
+    "description": "Сіздің бизнесіңізге сәйкес келетін жоспарды таңдаңыз.",
+    "refresh": "Жаңарту",
+    "projects": {
+      "emptyTitle": "Жобалар жоқ",
+      "emptyDescription": "Жазылымды белсендіру және барлық мүмкіндіктердің құлпын ашу үшін «Жобалар» бөлімінде бірінші жобаңызды жасаңыз.",
+      "tariff": "Жоспар",
+      "expiresAt": "Мерзімі бітеді",
+      "expiresLabel": "Мерзімі өткен:",
+      "renewsOnLabel": "Жаңартылған күні:",
+      "accessUntilLabel": "Қол жеткізу:",
+      "noPlan": "Белсенді жоспар жоқ",
+      "notSelected": "Таңдалмаған",
+      "status": {
+        "active": "БЕЛСЕНДІ",
+        "expired": "МЕРЗІМІ ӨТКЕН",
+        "inactive": "БЕЛСЕНДІ ЕМЕС",
+        "cancelAtPeriodEnd": "Автоматты жаңарту өшірілген"
+      },
+      "buttons": {
+        "extend": "Ұзарту",
+        "activate": "Іске қосу",
+        "manage": "Басқару",
+        "changePlan": "Жоспарды өзгерту",
+        "changeCard": "Төлем әдісін өзгерту",
+        "cancel": "Болдырмау",
+        "resume": "Резюме",
+        "saveCard": "Төлем әдісін сақтаңыз"
+      },
+      "confirmCancel": "Осы жобаға жазылудан бас тарту керек пе? Қол жеткізу ақылы кезеңнің соңына дейін қолжетімді болады."
+    },
+    "durations": {
+      "1": "1 ай",
+      "6": "6 ай",
+      "12": "12 ай",
+      "24": "2 жыл",
+      "36": "3 жыл"
+    },
+    "hints": {
+      "6": "💰 6 айға төлегенде жақсы үнемдеу.",
+      "12": "👍 Керемет таңдау! Ең танымал жоспар.",
+      "36": "🔥 Керемет үнемдеу! Барлық кезеңге 40% жеңілдік."
+    },
+    "pricing": {
+      "availablePlansTitle": "Қолжетімді жоспарлар",
+      "availablePlansDescription": "Сізге ең қолайлы жоспарды таңдаңыз.",
+      "usdPerMonth": "АҚШ доллары/ай",
+      "perProject": "жобаға",
+      "billedEvery": "Әрқайсысы төленеді",
+      "monthsShort": "ай",
+      "monthsShortPlural": "айлар",
+      "savings": "үнемдеу",
+      "choosePlan": "{{name}} таңдаңыз",
+      "planContent": {
+        "basic": {
+          "description": "Функционалдылығы шектеулі шағын жобаларға арналған негізгі жоспар",
+          "features": {
+            "1": "Жобаны басқару",
+            "2": "Интерактивті каталог – 500 лотқа дейін",
+            "3": "Интерактивті шахмат тақтасы",
+            "4": "Түс схемасы және GRIDIX ескертпесі бар брендинг",
+            "5": "Сұраныс талдауы",
+            "6": "Динамикалық баға белгілеу",
+            "7": "Кірістірілген CRM модулі",
+            "8": "Веб-сайтыңызға арналған шахмат тақтасы виджеті",
+            "9": "Бөліп төлеу/ипотекалық несиені басқару",
+            "10": "PDF презентациялары",
+            "11": "Валюта таңдау",
+            "12": "Тіл таңдау",
+            "13": "Теңшелетін өрістер",
+            "14": "Рөлдер мен рұқсаттарды басқару"
+          }
+        },
+        "pro": {
+          "description": "CRM интеграциясы және White Label қолдауы бар кәсіби жоспар",
+          "features": {
+            "1": "Барлығы Basic + құрамына кіреді",
+            "2": "Интерактивті каталог – шектеусіз лоттар",
+            "3": "AmoCRM / Bitrix24 және басқалармен интеграциялар",
+            "4": "Жаппай жаңартулар",
+            "5": "GRIDIX аталмаған ақ белгі",
+            "6": "Арнаулы домен (мысалы, sales.company.com)",
+            "7": "Кеңейтілген CRM модулі",
+            "8": "Жетілдірілген аналитика",
+            "9": "Агенттік желі модулі / серіктес тіркелгісі",
+            "10": "Ипотека калькуляторы (жақында)",
+            "11": "Онлайн брондау (жақында)",
+            "12": "Жылжымайтын мүлік порталдарына деректерді экспорттау модулі (жақында)",
+            "13": "Басымдық қолдау"
+          }
+        }
+      }
+    },
+    "history": {
+      "title": "Тапсырыс тарихы",
+      "filters": {
+        "all": "Барлығы",
+        "paid": "Ақылы",
+        "pending": "Орындалуда"
+      },
+      "table": {
+        "date": "Күні / ID",
+        "projects": "Жобалар",
+        "tariff": "Жоспар",
+        "method": "Әдіс",
+        "amount": "Сома",
+        "status": "Күй",
+        "actions": "Әрекеттер"
+      },
+      "status": {
+        "paid": "Ақылы",
+        "pending": "Орындалуда",
+        "cancelled": "Бас тартылды"
+      },
+      "methodLabels": {
+        "invoice": "Шот-фактура",
+        "card": "Банк картасы",
+        "manual": "Нұсқаулық",
+        "unknown": "Белгісіз"
+      },
+      "unknownProject": "Белгіленген жоқ",
+      "projectsCount": "{{count}} жоба(лар)",
+      "downloadInvoice": "Шот-фактураны жүктеп алыңыз",
+      "empty": "Тапсырыс табылмады"
+    },
+    "checkout": {
+      "title": "Шығу",
+      "selectPlan": "Жоспар таңдаңыз",
+      "selectProjects": "Жобаларды таңдаңыз",
+      "projectsSelected": "{{count}} таңдалды",
+      "projectsHint": "Жазылым әр жоба үшін төленеді. Жалпы құны келесідей есептеледі: Жоспар бағасы × Жобалар саны.",
+      "noProjects": "Сізде әлі жобалар жоқ. Төлемес бұрын жоба жасаңыз.",
+      "payerType": {
+        "individual": "Жеке",
+        "company": "Компания"
+      },
+      "fields": {
+        "contactName": "Аты-жөні / Байланыстағы тұлға",
+        "email": "Электрондық пошта",
+        "phone": "Телефон",
+        "companyName": "Компания атауы",
+        "taxId": "Салық идентификаторы",
+        "address": "Заңды мекенжайы"
+      },
+      "placeholders": {
+        "contactName": "Джон Смит",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "ACME LLC"
+      },
+      "errors": {
+        "enterName": "Атын енгізіңіз",
+        "enterEmail": "Электрондық поштаны енгізіңіз",
+        "invalidEmail": "Жарамсыз электрондық пошта",
+        "enterPhone": "Телефонды енгізіңіз",
+        "shortPhone": "Телефон нөмірі тым қысқа",
+        "enterCompanyName": "Компания атауын енгізіңіз",
+        "selectAtLeastOneProject": "Төлеу үшін кемінде бір жобаны таңдаңыз.",
+        "selectPlan": "Жоспар таңдаңыз",
+        "noProjectsSelected": "Кем дегенде бір жобаны таңдаңыз"
+      },
+      "summary": {
+        "period": "Есеп айырысу кезеңі",
+        "totalToPay": "Төлеуге жалпы",
+        "plan": "Жоспар",
+        "projects": "Жобалар:",
+        "payer": "Төлеуші:"
+      },
+      "planChangeSingleProject": "Жоспарды өзгерту тек таңдалған белсенді жоба үшін қол жетімді.",
+      "methods": {
+        "card": {
+          "title": "Банк картасы",
+          "description": "Visa, Mastercard, Apple Pay",
+          "unavailable": "Қолжетімсіз"
+        },
+        "invoice": {
+          "title": "Шот-фактура",
+          "description": "PDF құру (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "Барлығы:",
+        "next": "Келесі",
+        "confirmPayment": "Растау",
+        "processing": "Өңдеуде..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "Шот-фактура сәтті сұралды. Сіз оны тапсырыстар журналында жүктей аласыз.",
+      "invoiceRequestedMultiple": "{{count}} жоба үшін шот-фактуралар сұралды",
+      "portalUnavailable": "Жазылымды басқару қазір қолжетімсіз. Тағы жасауды сәл кейінірек көріңізді өтінеміз.",
+      "planChanged": "Жоспар өзгерді. Ескі жазылым тоқтатылды және пайдаланылмаған кезең үшін төлем қайтарылды.",
+      "projectCancelled": "Жобаға жазылу тоқтатылды. Қол жеткізу ақылы кезеңнің соңына дейін қолжетімді болады.",
+      "subscriptionResumed": "Автоматты жаңарту қосылды. Жазылым кезеңнің соңында жаңартылады.",
+      "cardUpdated": "Төлем әдісі барлық белсенді жобалар үшін жаңартылды.",
+      "planAlreadyActiveWithPeriod": "Бұл жоспар таңдалған кезең үшін белсенді.",
+      "projectsAdded": "Жазылымға жобалар қосылды."
+    },
+    "stripeInvoices": {
+      "title": "Жолақты шот-фактуралар",
+      "number": "Сан",
+      "date": "Күн",
+      "amount": "Сома",
+      "status": "Күй",
+      "view": "Көру"
+    },
+    "error": "Жазылымдарды жүктеу қатесі"
+  },
+  "superadmin": {
+    "sidebar": {
+      "group": "Супер админ",
+      "users": "Пайдаланушылар",
+      "subscriptions": "Жазылымдар",
+      "projects": "Жобалар",
+      "stats": "Аналитика",
+      "partners": "Серіктестер",
+      "partnerPayouts": "Төлемдер",
+      "settings": "Параметрлер"
+    },
+    "projectsManagement": {
+      "title": "Жобаларды басқару",
+      "loading": "Жүктелуде...",
+      "emptyValue": "—",
+      "confirmDelete": "Бұл жобаны шынымен жойғыңыз келе ме?",
+      "toast": {
+        "errorTitle": "Қате",
+        "successTitle": "Сәттілік",
+        "loadProjectsError": "Жобалар жүктелмеді",
+        "projectPublished": "Жоба жарияланды",
+        "projectHidden": "Жоба жасырылған",
+        "updateVisibilityError": "Жобаның көрінуі өзгертілмеді",
+        "projectAddedToFeatured": "Жоба таңдаулыларға қосылды",
+        "projectRemovedFromFeatured": "Жоба таңдаулылардан жойылды",
+        "updateStatusError": "Жоба күйін өзгерту мүмкін болмады",
+        "projectDeleted": "Жоба жойылды",
+        "deleteProjectError": "Жоба жойылмады"
+      },
+      "table": {
+        "name": "Аты",
+        "owner": "Меншік иесі",
+        "views": "Көрулер",
+        "status": "Күй",
+        "createdAt": "Құрылған",
+        "actions": "Әрекеттер"
+      },
+      "badges": {
+        "public": "Қоғамдық",
+        "featured": "Таңдаулы"
+      },
+      "actions": {
+        "hide": "Жасыру",
+        "publishShort": "Паб.",
+        "feature": "Feat."
+      }
+    },
+    "partnersManagement": {
+      "title": "Серіктестерді басқару",
+      "description": "Серіктес бағдарламасы мен серіктес күйлерін басқарыңыз",
+      "toast": {
+        "errorTitle": "Қате",
+        "successTitle": "Сәттілік",
+        "loadPartnersError": "Серіктестер тізімі жүктелмеді",
+        "partnerSuspended": "Серіктес тоқтатылды",
+        "partnerActivated": "Серіктес іске қосылды",
+        "updatePartnerStatusError": "Серіктес күйін жаңарту мүмкін болмады"
+      },
+      "stats": {
+        "totalPartners": "Жалпы серіктестер",
+        "activeCount": "{{count}} белсенді",
+        "totalEarnings": "Жалпы табыс",
+        "earnedByPartners": "Серіктестер тапқан",
+        "paidOut": "Төленді",
+        "withdrawnByPartners": "Серіктестер қайтарып алды",
+        "suspended": "Уақытша тоқтатылды",
+        "inactivePartners": "Белсенді емес серіктестер"
+      },
+      "filters": {
+        "title": "Сүзгілер",
+        "search": "Іздеу",
+        "searchPlaceholder": "Аты, электрондық поштасы немесе код бойынша іздеу...",
+        "status": "Күй",
+        "allStatuses": "Барлық күйлер"
+      },
+      "table": {
+        "title": "Серіктестер",
+        "count": "{{total}} серіктестен {{сүзілген}}",
+        "partner": "Серіктес",
+        "code": "Код",
+        "status": "Күй",
+        "earned": "Табылды",
+        "withdrawn": "Шығарылды",
+        "registeredAt": "Тіркеу күні",
+        "actions": "Әрекеттер"
+      },
+      "status": {
+        "active": "Белсенді",
+        "suspended": "Уақытша тоқтатылды",
+        "inactive": "Белсенді емес"
+      },
+      "actions": {
+        "suspend": "Тоқтату",
+        "activate": "Іске қосу"
+      },
+      "dialog": {
+        "suspendTitle": "Серіктесті тоқтата тұру",
+        "activateTitle": "Серіктесті белсендіру",
+        "suspendDescription": "Осы серіктесті тоқтатқыңыз келетініне сенімдісіз бе? Олар жаңа комиссияларды алмайды.",
+        "activateDescription": "Осы серіктесті шынымен белсендіргіңіз келе ме? Олар қайтадан комиссия алады.",
+        "codeLabel": "Код",
+        "processing": "Өңдеуде..."
+      }
+    },
+    "partnerPayouts": {
+      "title": "Төлемдерді басқару",
+      "description": "Серіктестік төлем сұрауларын қарап шығыңыз және өңдеңіз",
+      "toast": {
+        "loadPayoutsError": "Төлемдер тізімі жүктелмеді",
+        "payoutApproved": "Төлем мақұлданды",
+        "payoutRejected": "Төлем қабылданбады",
+        "payoutMarkedAsPaid": "Төлем төленген деп белгіленді",
+        "updatePayoutStatusError": "Төлем күйін жаңарту мүмкін болмады"
+      },
+      "status": {
+        "pending": "Қарау күтілуде",
+        "approved": "Бекітілді",
+        "paid": "Ақылы",
+        "rejected": "Қабылданбады",
+        "unknown": "Белгісіз"
+      },
+      "stats": {
+        "pendingReview": "Қарау күтілуде",
+        "pendingAmount": "Төлеуге ${{amount}}",
+        "waitingPayment": "Төлем күтілуде",
+        "completedPayouts": "Аяқталған төлемдер",
+        "rejectedRequests": "Қабылданбаған сұраулар"
+      },
+      "filters": {
+        "title": "Сүзгілер",
+        "search": "Іздеу",
+        "searchPlaceholder": "Серіктес бойынша іздеу...",
+        "status": "Күй",
+        "allStatuses": "Барлық күйлер"
+      },
+      "table": {
+        "title": "Төлем туралы сұраулар",
+        "count": "{{total}} сұраудың {{сүзілген}}",
+        "partner": "Серіктес",
+        "amount": "Сома",
+        "status": "Күй",
+        "paymentMethod": "Төлем әдісі",
+        "contactInfo": "Байланыс ақпараты",
+        "requestedAt": "Сұраныс күні",
+        "actions": "Әрекеттер"
+      },
+      "emptyPaymentMethod": "Белгіленген жоқ",
+      "emptyContactInfo": "Белгіленген жоқ",
+      "actions": {
+        "approve": "Мақұлдау",
+        "reject": "Қабылдамау",
+        "markPaid": "Төленген деп белгілеңіз"
+      },
+      "dialog": {
+        "approveTitle": "Төлемді мақұлдау",
+        "rejectTitle": "Төлемді қабылдамау",
+        "markPaidTitle": "Төленген деп белгілеңіз",
+        "approveDescription": "Бұл төлемді растағыңыз келетініне сенімдісіз бе?",
+        "rejectDescription": "Бұл төлемді шынымен қабылдағыңыз келе ме?",
+        "markPaidDescription": "Бұл төлемнің аяқталғанына сенімдісіз бе?",
+        "codeLabel": "Код",
+        "amountLabel": "Сома",
+        "methodLabel": "Әдіс",
+        "contactInfoLabel": "Байланыс ақпараты:",
+        "noteLabel": "Ескертпе (міндетті емес)",
+        "notePlaceholder": "Бұл әрекетке ескертпе қосыңыз...",
+        "processing": "Өңдеуде..."
+      }
+    },
+    "usersManagement": {
+      "title": "Пайдаланушыларды басқару",
+      "loading": "Жүктелуде...",
+      "creating": "Жасалуда...",
+      "searchPlaceholder": "Электрондық пошта, аты немесе компания бойынша іздеу...",
+      "toast": {
+        "errorTitle": "Қате",
+        "successTitle": "Сәттілік",
+        "loadUsersError": "Пайдаланушыларды жүктеу мүмкін болмады",
+        "userBanned": "Пайдаланушыға тыйым салынды",
+        "banUserError": "Пайдаланушыға тыйым салынбады",
+        "userUnbanned": "Пайдаланушы тыйым салынды",
+        "unbanUserError": "Пайдаланушыға тыйым салынбады",
+        "emailPasswordRequired": "Электрондық пошта мен құпия сөз қажет",
+        "userCreated": "Пайдаланушы құрылды",
+        "createUserError": "Пайдаланушы жасалмады",
+        "impersonateUserError": "Осы пайдаланушы ретінде кіру мүмкін болмады"
+      },
+      "actions": {
+        "addUser": "Пайдаланушы қосу",
+        "createUser": "Пайдаланушы жасау",
+        "ban": "Тыйым салу",
+        "unban": "Тыйымнан шығару",
+        "loginAs": "Кіру"
+      },
+      "dialogs": {
+        "createTitle": "Жаңа пайдаланушы қосу",
+        "banTitle": "Пайдаланушыға тыйым салу",
+        "banTarget": "Сіз тыйым салғалы тұрсыз:"
+      },
+      "fields": {
+        "password": "Құпия сөз",
+        "fullName": "Толық аты-жөні",
+        "company": "Компания",
+        "phone": "Телефон",
+        "banReason": "Тыйым салу себебі"
+      },
+      "placeholders": {
+        "fullName": "Джон Смит",
+        "company": "ACME LLC",
+        "banReason": "Себебін көрсетіңіз..."
+      },
+      "table": {
+        "name": "Аты",
+        "company": "Компания",
+        "status": "Күй",
+        "registeredAt": "Тіркеу күні",
+        "actions": "Әрекеттер"
+      },
+      "status": {
+        "active": "Белсенді",
+        "banned": "Тыйым салынған"
+      }
+    },
+    "subscriptionsManagement": {
+      "title": "Жазылымдарды басқару",
+      "loading": "Жүктелуде...",
+      "pendingCount": "{{count}} шот-фактура сұрауы өңдеуді күтуде",
+      "planOption": "{{name}} - ${{price}}/ай",
+      "toast": {
+        "errorTitle": "Қате",
+        "successTitle": "Сәттілік",
+        "loadSubscriptionsError": "Жазылымдар жүктелмеді",
+        "fillRequiredFields": "Барлық қажетті өрістерді толтырыңыз",
+        "subscriptionCreated": "Жазылым жасалды",
+        "createSubscriptionError": "Жазылым жасалмады",
+        "invoiceGenerated": "PDF шот-фактура жасалды және жіберілді",
+        "generateInvoiceError": "Шот-фактура жасалмады",
+        "paymentConfirmed": "Төлем расталды, жазылым іске қосылды",
+        "activateSubscriptionError": "Жазылым іске қосылмады",
+        "subscriptionCancelled": "Жазылым тоқтатылды",
+        "cancelSubscriptionError": "Жазылымнан бас тарту мүмкін болмады",
+        "subscriptionUpdated": "Жазылым жаңартылды",
+        "updateSubscriptionError": "Жазылым жаңартылмады"
+      },
+      "actions": {
+        "create": "Жазылым жасау",
+        "saveChanges": "Өзгерістерді сақтау",
+        "editTitle": "Жазылымды өңдеу",
+        "edit": "Өңдеу",
+        "cancel": "Болдырмау"
+      },
+      "dialogs": {
+        "createTitle": "Жаңа жазылым жасау",
+        "editTitle": "Жазылымды өңдеу",
+        "labels": {
+          "user": "Пайдаланушы",
+          "project": "Жоба",
+          "currentPlan": "Ағымдағы жоспар",
+          "currentStatus": "Ағымдағы күй",
+          "endsAt": "Аяқталады"
+        }
+      },
+      "fields": {
+        "userEmail": "Пайдаланушы электрондық поштасы",
+        "project": "Жоба",
+        "plan": "Жоспар",
+        "durationMonths": "Ұзақтығы (айлар)",
+        "invoiceNumber": "Шот-фактура нөмірі",
+        "invoiceUrl": "Шот-фактураның URL мекенжайы",
+        "tariffPlan": "Тариф (жоспар)",
+        "status": "Күй",
+        "infiniteSubscription": "Шексіз жазылым (2099 жылға дейін)",
+        "customEndDate": "Немесе аяқталу күнін қолмен орнатыңыз"
+      },
+      "placeholders": {
+        "selectProject": "Жобаны таңдаңыз",
+        "selectPlan": "Жоспарды таңдаңыз"
+      },
+      "hints": {
+        "endDateAuto": "Аяқталу күні ағымдағы басталу күнінен бастап автоматты түрде есептеледі",
+        "customDateOverrides": "Егер күн берілсе, ол ұзақтықты есептеудің орнына пайдаланылады",
+        "applyWarning": "Өзгерістер дереу қолданылады. Күй мен аяқталу күнін өзгерткенде абай болыңыз."
+      },
+      "status": {
+        "active": "Белсенді",
+        "trial": "Сынақ",
+        "trialing": "Сынақ",
+        "pendingPayment": "Төлем күтілуде",
+        "expired": "Мерзімі бітті",
+        "cancelled": "Бас тартылды",
+        "trialExpired": "Сынақ мерзімі аяқталды"
+      },
+      "pendingRequests": {
+        "title": "Шот-фактура сұраулары",
+        "table": {
+          "user": "Пайдаланушы",
+          "project": "Жоба",
+          "plan": "Жоспар",
+          "amount": "Сома",
+          "requestedAt": "Сұраныс",
+          "actions": "Әрекеттер"
+        },
+        "actions": {
+          "generatePdf": "PDF жасау",
+          "view": "Көру",
+          "viewPdf": "PDF қарау",
+          "download": "Жүктеп алу",
+          "confirmPayment": "Төлемді растау",
+          "confirmAndActivate": "Төлемді растаңыз және іске қосыңыз"
+        },
+        "dialog": {
+          "title": "Төлемді растау",
+          "invoiceLabel": "Шот-фактура",
+          "warning": "Жазылымды белсендіруді растамас бұрын төлемнің қабылданғанына көз жеткізіңіз.",
+          "labels": {
+            "project": "Жоба",
+            "user": "Пайдаланушы",
+            "plan": "Жоспар",
+            "amount": "Сома",
+            "invoiceNumber": "Шот-фактура нөмірі"
+          }
+        }
+      },
+      "allSubscriptions": {
+        "title": "Барлық жазылымдар",
+        "table": {
+          "user": "Пайдаланушы",
+          "project": "Жоба",
+          "plan": "Жоспар",
+          "status": "Күй",
+          "endDate": "Аяқталу күні",
+          "invoice": "Шот-фактура",
+          "actions": "Әрекеттер"
+        }
+      }
+    }
+  }
+}

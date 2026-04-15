@@ -5,7 +5,7 @@ import {
   DEFAULT_LANGUAGE,
 } from "@gridix/utils/lib";
 
-const SUPPORTED_LANGUAGES = ["ru", "en", "ka", "ar", "he", "tr"] as const;
+const SUPPORTED_LANGUAGES = ["ru", "en", "ka", "ar", "he", "tr", "kk"] as const;
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const lazyLocaleModules = import.meta.glob<{
@@ -131,7 +131,7 @@ function detectInitialLanguage(): SupportedLanguage {
   }
 
   const match = window.location.pathname.match(
-    /^\/(ru|en|ka|ar|he|tr)(?:\/|$)/,
+    /^\/(ru|en|ka|ar|he|tr|kk)(?:\/|$)/,
   );
   return (match?.[1] as SupportedLanguage | undefined) ?? "en";
 }

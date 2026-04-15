@@ -264,7 +264,7 @@ export default defineConfig(({ mode }) => {
             }
 
             const localeMatch = normalizedId.match(
-              /\/src\/locales\/(ru|en|ka|ar|he|tr)\//,
+              /\/src\/locales\/(ru|en|ka|ar|he|tr|kk)\//,
             );
             if (localeMatch?.[1]) {
               return `locale-${localeMatch[1]}`;

@@ -1,0 +1,16 @@
+{
+  "myWorkspace": "Менің жұмыс кеңістігім",
+  "managerMode": "Менеджер",
+  "switchWorkspace": "Жұмыс кеңістігін ауыстырыңыз",
+  "projectAccess": "Жобаға қол жеткізу",
+  "selectProjects": "Жобаларды таңдаңыз",
+  "allProjects": "Барлық жобалар",
+  "customAccess": "Пайдаланушы қатынасы",
+  "manageAccess": "Access басқару",
+  "noProjectsSelected": "Ешбір жоба таңдалмаған",
+  "accessUpdated": "Кіру жаңартылды",
+  "errorUpdatingAccess": "Кіру рұқсатын жаңарту қатесі",
+  "grantAccessToProjects": "Жобаларға рұқсат беріңіз",
+  "managerWillSeeProjects": "Менеджер таңдалған жобаларды ғана көреді",
+  "leaveEmptyForAll": "Барлық жобаларға қол жеткізу үшін бос қалдырыңыз"
+}

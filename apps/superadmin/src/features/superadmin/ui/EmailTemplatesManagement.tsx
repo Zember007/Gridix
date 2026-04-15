@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
+import { SUPPORTED_LOCALES } from "@gridix/utils/react";
 import { Button } from "@gridix/ui";
 import { Card, CardContent } from "@gridix/ui";
 import { Input } from "@gridix/ui";
@@ -17,6 +18,13 @@ import {
   DialogTrigger,
 } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gridix/ui";
 import {
   Loader2,
   Plus,
@@ -99,6 +107,10 @@ export const EmailTemplatesManagement = () => {
     .filter((t) => t.key === selectedKey)
     .map((t) => t.locale)
     .sort();
+
+  const localesAvailableToAdd = SUPPORTED_LOCALES.filter(
+    (loc) => !availableLocalesForKey.includes(loc),
+  );
 
   const handleCreateTemplate = async () => {
     if (!newTemplateKey || !newTemplateSubject) {
@@ -458,13 +470,26 @@ export const EmailTemplatesManagement = () => {
 
                       <Dialog
                         open={isAddLocaleDialogOpen}
-                        onOpenChange={setIsAddLocaleDialogOpen}
+                        onOpenChange={(open) => {
+                          setIsAddLocaleDialogOpen(open);
+                          if (open) {
+                            setNewLocale(localesAvailableToAdd[0] ?? "");
+                          } else {
+                            setNewLocale("");
+                          }
+                        }}
                       >
                         <DialogTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-8 gap-1 text-muted-foreground hover:text-primary"
+                            disabled={localesAvailableToAdd.length === 0}
+                            title={
+                              localesAvailableToAdd.length === 0
+                                ? "All supported locales are already added"
+                                : undefined
+                            }
                           >
                             <Plus className="h-3 w-3" /> Add Locale
                           </Button>
@@ -484,19 +509,45 @@ export const EmailTemplatesManagement = () => {
                                 htmlFor="new-locale"
                                 className="text-right"
                               >
-                                Locale Code
+                                Locale
                               </Label>
-                              <Input
-                                id="new-locale"
-                                value={newLocale}
-                                onChange={(e) => setNewLocale(e.target.value)}
-                                placeholder="e.g. fr, de, es"
-                                className="col-span-3"
-                              />
+                              <div className="col-span-3">
+                                <Select
+                                  value={newLocale}
+                                  onValueChange={setNewLocale}
+                                  disabled={localesAvailableToAdd.length === 0}
+                                >
+                                  <SelectTrigger
+                                    id="new-locale"
+                                    className="w-full"
+                                  >
+                                    <SelectValue placeholder="Select locale" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {localesAvailableToAdd.map((loc) => (
+                                      <SelectItem key={loc} value={loc}>
+                                        {loc.toUpperCase()}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
+                            {localesAvailableToAdd.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                All supported locales are already added for this
+                                template.
+                              </p>
+                            )}
                           </div>
                           <DialogFooter>
-                            <Button type="submit" onClick={handleAddLocale}>
+                            <Button
+                              type="submit"
+                              onClick={handleAddLocale}
+                              disabled={
+                                !newLocale || localesAvailableToAdd.length === 0
+                              }
+                            >
                               Add Locale
                             </Button>
                           </DialogFooter>

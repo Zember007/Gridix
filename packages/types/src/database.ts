@@ -4076,7 +4076,7 @@ export type Database = {
       apartment_type: "apartment" | "commercial" | "parking";
       app_role: "superadmin" | "admin" | "moderator" | "user";
       crm_funnel_trigger_event: "on_stage_entry" | "timer" | "on_tag_add";
-      currency_type: "RUB" | "USD" | "EUR" | "GEL";
+      currency_type: "RUB" | "USD" | "EUR" | "GEL" | "KZT";
       lead_history_type:
         | "status_change"
         | "call"
@@ -4224,7 +4224,7 @@ export const Constants = {
       apartment_type: ["apartment", "commercial", "parking"],
       app_role: ["superadmin", "admin", "moderator", "user"],
       crm_funnel_trigger_event: ["on_stage_entry", "timer", "on_tag_add"],
-      currency_type: ["RUB", "USD", "EUR", "GEL"],
+      currency_type: ["RUB", "USD", "EUR", "GEL", "KZT"],
       lead_history_type: [
         "status_change",
         "call",

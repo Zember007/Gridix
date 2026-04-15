@@ -1,0 +1,13 @@
+{
+  "allCities": "Барлық қалалар",
+  "allStatuses": "Барлық күйлер",
+  "applyFilters": "Сүзгілерді қолданыңыз",
+  "city": "Қала",
+  "maxPrice": "Максималды баға",
+  "minPrice": "Минималды баға",
+  "priceRange": "Баға диапазоны",
+  "resetFilters": "Сүзгілерді қалпына келтіру",
+  "noFiltersAvailable": "Сүзгілер жоқ",
+  "search": "Іздеу...",
+  "status": "Күй"
+}

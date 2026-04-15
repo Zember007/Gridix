@@ -1,0 +1,50 @@
+{
+  "errors": {
+    "installStatusCheck": "Орнату күйін тексеру мүмкін болмады",
+    "connectionGeneric": "Қосылым қатесі",
+    "claimInstall": "Орнатуды байланыстыру сәтсіз аяқталды",
+    "claimGeneric": "Байланыстыру қатесі"
+  },
+  "topBar": {
+    "catalog": "Каталог",
+    "currentDeal": "Ағымдағы мәміле"
+  },
+  "install": {
+    "title": "Gridix - Bitrix24 қосылымы",
+    "paramsTitle": "Параметрлер",
+    "entrypointDescription": "Бұл бет Bitrix24 қосылымының кіру нүктесі болып табылады. Оны домен және member_id параметрлерімен ашыңыз.",
+    "bindTitle": "Gridix тіркелгісіне сілтеме",
+    "claimedSuccess": "Дайын. Интеграция тіркелгіңізге байланысты.",
+    "needsInstallPrimary": "Алдымен Bitrix24 базарынан Gridix қолданбасын орнатыңыз. Орнатқаннан кейін сіз аяқтау бетіне қайта бағытталасыз.",
+    "needsInstallSecondary": "Қолданба әлдеқашан орнатылған болса, оны қайта орнатыңыз немесе осы бетті жаңартыңыз.",
+    "loginHint": "Gridix жүйесіне кіріңіз немесе тіркеліңіз - байланыстыру автоматты түрде аяқталады.",
+    "loginButton": "Gridix жүйесіне кіріңіз",
+    "claimHint": "Осы Bitrix орнатуын {{email}} есептік жазбасымен байланыстыру үшін төмендегі түймені басыңыз.",
+    "claimButton": "Bitrix орнатуын тіркелгімен байланыстырыңыз",
+    "toast": {
+      "connected": "Bitrix сіздің Gridix тіркелгіңізге байланысты",
+      "missingInstallParams": "Орнату параметрлері жоқ (domain/member_id)",
+      "loginFirst": "Алдымен Gridix жүйесіне кіріңіз",
+      "claimFailed": "Орнатуды байланыстыру сәтсіз аяқталды"
+    }
+  },
+  "page": {
+    "title": "Gridix - Bitrix",
+    "refresh": "Жаңарту",
+    "connectButton": "Bitrix24 қосыңыз",
+    "missingParams": "Битрикс параметрлері жоқ (domain/member_id). Бұл бетті Bitrix24 ішіндегі Gridix қолданбасынан ашыңыз."
+  },
+  "proGuard": {
+    "title": "Pro жоспары қажет",
+    "description": "Bitrix интеграциясын пайдалану үшін осы жоба үшін Pro жазылымын белсендіріңіз.",
+    "cta": "Жазылым параметрлерін ашыңыз"
+  },
+  "apartmentDetails": {
+    "linkDealWithId": "№{{dealId}} мәмілесіне сілтеме",
+    "linkExistingDeal": "Қолданыстағы келісімге сілтеме",
+    "linkDeal": "Мәмілеге сілтеме",
+    "createDealInBitrix": "Bitrix-те мәміле жасаңыз",
+    "createDeal": "Мәміле жасау",
+    "syncHint": "Пәтер деректері (баға/нөмір/жоба/мекен-жай, т.б.) Bitrix мәмілесіне жазылады және синхрондау үшін Gridix-те жергілікті тұтынушы жасалады."
+  }
+}

@@ -34,7 +34,7 @@ function flattenTranslations(
 const resources: Record<string, { translation: Record<string, string> }> = {};
 
 Object.entries(localeModules).forEach(([path, mod]) => {
-  const match = path.match(/\/locales\/(ru|en|ka|ar|he|tr)\/(.+)\.json$/);
+  const match = path.match(/\/locales\/(ru|en|ka|ar|he|tr|kk)\/(.+)\.json$/);
   if (!match) return;
 
   const lng = match[1];

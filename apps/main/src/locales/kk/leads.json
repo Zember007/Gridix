@@ -1,0 +1,416 @@
+{
+  "actions": {
+    "cancel": "Болдырмау",
+    "copy": "Көшіру",
+    "editNotes": "Жазбаларды өңдеу",
+    "openInCrm": "CRM жүйесінде ашыңыз"
+  },
+  "cancel": "Болдырмау",
+  "crm": {
+    "notSent": "Жіберілмеген",
+    "connected": "Қосылды",
+    "lastSync": "Соңғы синхрондау",
+    "systemName": "Жүйе"
+  },
+  "description": "CRM жеткізу күйі бар барлық клиент сұраулары",
+  "empty": "Ешқандай мүмкіндіктер табылмады",
+  "error": "Қате",
+  "filters": {
+    "dateFrom": "Күні",
+    "dateTo": "Күні",
+    "status": "Күй",
+    "title": "Сүзгілер",
+    "search": "Іздеу және сүзу",
+    "searchPlaceholder": "Аты, тақырыбы бойынша іздеу...",
+    "source": "Дереккөз",
+    "allSources": "Барлық көздер",
+    "budgetFrom": "Бюджеттен",
+    "budgetTo": "дейін",
+    "stages": "Кезеңдер",
+    "allStages": "Барлық кезеңдері",
+    "selectedStages": "Кезеңдер таңдалды",
+    "managers": "Менеджерлер",
+    "allManagers": "Барлық менеджерлер",
+    "selectedManagers": "Таңдалған",
+    "apply": "Қолдану",
+    "reset": "Қалпына келтіру",
+    "clearAll": "Барлығын өшіру",
+    "found": "Табылды"
+  },
+  "loading": "Мүмкіндіктер жүктелуде...",
+  "notes": {
+    "client": "Клиент",
+    "placeholder": "Жазбаларды енгізіңіз...",
+    "title": "Негізгі ноталар"
+  },
+  "save": "Сақтау",
+  "stats": {
+    "cancelled": "Бас тартылды",
+    "failed": "Сәтсіз",
+    "pending": "Күтуде",
+    "savedOnly": "Тек сақталды",
+    "sent": "CRM жүйесіне жіберілді",
+    "total": "Жалпы нәтижелер",
+    "deals": "мәмілелер"
+  },
+  "status": {
+    "all": "Барлығы",
+    "cancelled": "Бас тартылды",
+    "failed": "Сәтсіз",
+    "pending": "Күтуде",
+    "saved_only": "Тек сақталды",
+    "sent_to_crm": "CRM жүйесіне жіберілді"
+  },
+  "table": {
+    "actions": "Әрекеттер",
+    "apartment": "Пәтер",
+    "client": "Клиент",
+    "contacts": "Контактілер",
+    "crm": "CRM",
+    "date": "Күн",
+    "project": "Жоба",
+    "status": "Күй"
+  },
+  "title": "Жетекші",
+  "toast": {
+    "cancelError": {
+      "desc": "Жеткізу мүмкіндігін жою мүмкін болмады",
+      "title": "Қате"
+    },
+    "cancelled": {
+      "desc": "Жеткізу күші жойылды",
+      "title": "Сәттілік"
+    },
+    "copied": {
+      "desc": "Негізгі ақпарат алмасу буферіне көшірілді",
+      "title": "Көшірілген"
+    },
+    "copyError": {
+      "desc": "Ақпаратты көшіру мүмкін болмады",
+      "title": "Қате"
+    },
+    "notesError": {
+      "desc": "Жазбаларды жаңарту мүмкін болмады",
+      "title": "Қате"
+    },
+    "notesSaved": {
+      "desc": "Жазбалар жаңартылды",
+      "title": "Сәттілік"
+    },
+    "leadCreated": {
+      "title": "Сәттілік",
+      "desc": "Жаңа мәміле жасалды"
+    },
+    "leadUpdated": {
+      "title": "Сәттілік",
+      "desc": "Мәміле жаңартылды"
+    },
+    "statusChanged": {
+      "title": "Күй өзгерді",
+      "desc": "Мәміле кезеңі жаңартылды"
+    },
+    "funnelSaved": {
+      "title": "Сәттілік",
+      "desc": "Шұңқыр параметрлері сақталды"
+    },
+    "exportDone": {
+      "title": "Дайын",
+      "desc": "Excel файлы жүктелді"
+    },
+    "importDone": {
+      "title": "Импорттау аяқталды",
+      "desc": "Контактілер жүктелді"
+    },
+    "nothingToExport": {
+      "title": "Деректер жоқ",
+      "desc": "Тізім бос, экспортталатын ештеңе жоқ."
+    },
+    "duplicatesNotFound": {
+      "title": "Таза",
+      "desc": "Көшірмелер табылмады"
+    },
+    "error": {
+      "title": "Қате",
+      "updateFailed": "Жеткізу мүмкіндігін жаңарту мүмкін болмады",
+      "missingFields": "Барлық қажетті өрістерді толтырыңыз",
+      "notAuthenticated": "Пайдаланушы аутентификацияланбаған",
+      "noAccessToProjects": "Жобаларға қолжетімділік жоқ",
+      "noProjects": "Жобалар табылмады",
+      "noApartments": "Пәтер табылмады",
+      "createFailed": "Жетекші жасау мүмкін болмады",
+      "addTagFailed": "Тег қосу сәтсіз аяқталды",
+      "removeTagFailed": "Тегті жою мүмкін болмады",
+      "masterNotFound": "Негізгі жетекші табылмады",
+      "mergeFailed": "Мүмкіндіктерді біріктіру сәтсіз аяқталды"
+    },
+    "mergeSuccess": {
+      "title": "Сәттілік",
+      "desc": "Біріктірілген {{count}} қайталанатын тұтынушы(лар)"
+    }
+  },
+  "kanban": {
+    "noDeals": "Мәмілелер жоқ",
+    "dragHere": "Осы жерге сүйреңіз",
+    "createDeal": "Мәміле жасау",
+    "changeStage": "Кезеңді өзгерту",
+    "budget": "Бюджет",
+    "noTasks": "Тапсырмалар жоқ",
+    "empty": "Бос",
+    "moveHere": "Мұнда жылжытыңыз",
+    "quickAdd": "+ Жылдам қосу..."
+  },
+  "list": {
+    "selectAll": "Барлығын таңдаңыз",
+    "selected": "таңдалған",
+    "client": "Клиент",
+    "status": "Күй",
+    "task": "Тапсырма",
+    "project": "Жоба",
+    "budget": "Бюджет",
+    "unknown": "Белгісіз",
+    "noTasks": "Тапсырмалар жоқ",
+    "call": "Қоңырау",
+    "whatsapp": "WhatsApp",
+    "today": "Бүгін",
+    "yesterday": "Кеше",
+    "daysAgo": "күн бұрын"
+  },
+  "drawer": {
+    "contact": "Байланыс",
+    "details": "Мәміле мәліметтері",
+    "tasks": "Тапсырмалар",
+    "history": "Тарих",
+    "addTask": "Тапсырма қосу",
+    "addNote": "Ескертпе қосыңыз",
+    "tags": "Тегтер",
+    "source": "Дереккөз",
+    "budget": "Бюджет",
+    "apartment": "Пәтер",
+    "created": "Құрылды",
+    "close": "Жабу",
+    "edit": "Өңдеу",
+    "save": "Сақтау",
+    "info": "Ақпарат",
+    "call": "Қоңырау",
+    "whatsapp": "WhatsApp",
+    "editing": "Өңдеу",
+    "phone": "Телефон",
+    "project": "Жоба",
+    "addTag": "+ Тег қосу",
+    "overdue": "Мерзімі өткен",
+    "today": "Бүгін",
+    "future": "Болашақ",
+    "completed": "Аяқталды",
+    "noPlannedTasks": "Жоспарланған тапсырмалар жоқ",
+    "writeNote": "Жазба жазу...",
+    "ctrlEnterToSend": "Жіберу үшін Ctrl+Enter"
+  },
+  "createModal": {
+    "title": "Жаңа мәміле",
+    "name": "Клиент аты",
+    "phone": "Телефон",
+    "email": "Электрондық пошта (міндетті емес)",
+    "create": "Жасау",
+    "cancel": "Болдырмау",
+    "duplicateWarning": "Ұқсас жетекші табылды!",
+    "duplicateDesc": "Жүйеде осы телефон нөмірі бар ықтимал тұтынушы бұрыннан бар:",
+    "clientLabel": "Клиент",
+    "namePlaceholder": "Аты және тегі",
+    "phonePlaceholder": "+1 555 000 0000",
+    "duplicateFound": "Көшірме табылды",
+    "duplicateExists": "{{name}} клиенті дерекқорда әлдеқашан бар.",
+    "goToCard": "Картаға өтіңіз",
+    "budgetLabel": "Бюджет",
+    "sourceLabel": "Дереккөз",
+    "tagsLabel": "Тегтер",
+    "tagPlaceholder": "Тегті енгізіп, Enter пернесін басыңыз",
+    "duplicateNotAllowed": "Көшірме жасауға рұқсат етілмейді",
+    "createDeal": "Мәміле жасау"
+  },
+  "funnel": {
+    "title": "Шұңқырды орнату",
+    "funnels": "Шұңқырлар",
+    "addFunnel": "Шұңқыр қосыңыз",
+    "archived": "Мұрағатталған шұңқырлар",
+    "addStage": "Кезеңді қосыңыз",
+    "defaultFunnelName": "Негізгі шұңқыр",
+    "newFunnelName": "Жаңа шұңқыр",
+    "newStageName": "Жаңа кезең",
+    "stageUnparsed": "Талданбаған",
+    "stageNewLead": "Жаңа жетекші",
+    "stageTakenForWork": "Жұмысқа алынған",
+    "stageNoContact": "Байланыс жоқ",
+    "deleteStage": "Кезеңді жою",
+    "rename": "Атын өзгерту",
+    "triggers": "Автоматтандыру",
+    "addTrigger": "Триггерді қосыңыз",
+    "noAutomations": "Автоматтандырулар жоқ",
+    "automationDesc": "Осы кезеңге кіру кезінде әрекеттерді қосыңыз",
+    "back": "Артқа",
+    "save": "Сақтау",
+    "deleteAllTriggers": "Барлық триггерлерді жойыңыз",
+    "moveHere": "Мұнда жылжытыңыз",
+    "doubleClickToEdit": "Атын өзгерту үшін екі рет басыңыз",
+    "insertStage": "Кезеңді енгізу"
+  },
+  "settings": {
+    "import": "Импорттау",
+    "export": "Экспорттау (Excel)",
+    "funnelSetup": "Шұңқырды орнату",
+    "cardAppearance": "Картаның сыртқы түрі",
+    "findDuplicates": "Көшірмелерді табыңыз",
+    "massActions": "Жаппай шаралар"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "Веб-сайт",
+    "referral": "Жолдама",
+    "walk_in": "Кіру",
+    "facebook": "Facebook",
+    "admin": "Админ"
+  },
+  "toolbar": {
+    "selected": "таңдалған",
+    "changeStatus": "Күйді өзгерту",
+    "assign": "Тағайындау",
+    "delete": "Жою",
+    "manager": "Менеджер"
+  },
+  "emptyState": {
+    "notFound": "Ештеңе табылмады",
+    "tryChangingFilters": "Іздеу параметрлерін немесе сүзгілерін өзгертіп көріңіз.",
+    "resetFilters": "Сүзгілерді қалпына келтіру"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "Ескерту: пәтер күйінің қажетті триггерлері жоқ",
+    "funnelTriggersDesc": "Брондау мен сатылымдарды дұрыс өңдеу үшін әрбір шұңқырда байланыстырылған пәтер күйін «Бақталған» және «Сатылған» күйіне өзгертетін триггерлерді орнатыңыз.",
+    "missingFunnels": "Шұңқырларда триггерлер жоқ",
+    "funnelTriggersCta": "Шұңқыр орнатуды ашыңыз"
+  },
+  "cardAppearance": {
+    "title": "Картаның сыртқы түрі",
+    "options": "Параметрлер",
+    "showAvatar": "Контакт аватарын көрсету",
+    "showDate": "Жасалу күнін көрсету",
+    "fieldsInCard": "Картадағы өрістер",
+    "preview": "Алдын ала қарау",
+    "today": "Бүгін",
+    "cancel": "Болдырмау",
+    "save": "Сақтау"
+  },
+  "import": {
+    "title": "Контактілерді импорттау",
+    "step": "3 қадамнан {қадам}",
+    "dragFile": "Файлды осы жерге сүйреңіз",
+    "orClick": "немесе таңдау үшін басыңыз",
+    "supportedFormats": "Қолдау көрсетіледі: .csv, .xlsx, .xls",
+    "important": "Маңызды:",
+    "headersNote": "Файлда бірінші жолда тақырыптар бар екеніне көз жеткізіңіз. Бұл бізге деректерді дұрыс тануға көмектеседі.",
+    "downloadTemplate": "Файл үлгісін жүктеп алыңыз",
+    "fieldMapping": "Өрісті картаға түсіру",
+    "importing": "Деректер импортталуда...",
+    "dontClose": "Терезені жаппаңыз.",
+    "done": "Дайын!",
+    "successfullyAdded": "{count} контакт сәтті қосылды.",
+    "backToList": "Тізімге оралу",
+    "cancel": "Болдырмау",
+    "next": "Келесі",
+    "startImport": "Импорттауды бастаңыз",
+    "fields": {
+      "name": "Аты",
+      "phone": "Телефон",
+      "email": "Электрондық пошта",
+      "price": "Бюджет",
+      "project": "Жоба",
+      "source": "Дереккөз",
+      "skip": "Импорттамаңыз"
+    }
+  },
+  "duplicates": {
+    "title": "Көшірмелерді табыңыз және біріктіріңіз",
+    "scanning": "Дерекқор сканерленуде...",
+    "foundGroups": "Қайталанатын топтар табылды: {{count}}",
+    "searching": "Сәйкестіктер ізделуде...",
+    "noDuplicates": "Көшірмелер жоқ",
+    "perfectOrder": "Байланыс дерекқорыңыз тамаша тәртіпте.",
+    "scanAgain": "Қайта сканерлеңіз",
+    "selectMaster": "Негізгі болып қалатын картаны таңдаңыз (Мастер). Басқалары жойылады және олардың тарихы біріктіріледі.",
+    "created": "Жасалған:",
+    "project": "Жоба:",
+    "budget": "Бюджет:",
+    "keepThis": "Осыны сақтау (Біріктіру)",
+    "selectGroup": "Салыстыру үшін сол жақтан қайталанатын топты таңдаңыз"
+  },
+  "tasks": {
+    "types": {
+      "call": "Байланыс",
+      "meeting": "Кездесу",
+      "message": "Жазыңыз",
+      "payment": "Төлем",
+      "other": "Басқа"
+    },
+    "newTask": "Жаңа тапсырма",
+    "example": "Мысалы: Клиентпен байланысыңыз және бюджетті нақтылаңыз...",
+    "today": "Бүгін",
+    "tomorrow": "Ертең",
+    "plus3Days": "+3 күн",
+    "addTask": "Тапсырма қосу",
+    "result": "Аяқтау нәтижесі",
+    "whatHappened": "Не болды? (мысалы: кездесу туралы келісілді)",
+    "completeTask": "Тапсырманы орындау",
+    "return": "Қайту",
+    "edit": "Өңдеу",
+    "delete": "Жою",
+    "responsible": "Жауапты:",
+    "recipient": "Алушы:",
+    "task": "Тапсырма",
+    "noSettings": "Параметрлер жоқ"
+  },
+  "triggers": {
+    "onStageEntry": "Сахнаға кіру",
+    "through": "{кешікте} {бірлік}",
+    "tag": "Тег: {tagName}",
+    "trigger": "Триггер",
+    "edit": "Өңдеу",
+    "delete": "Жою",
+    "whenToRun": "Триггер минут сайын жұмыс істейді",
+    "whatToDo": "Не істеу керек",
+    "description": "Әрекет сипаттамасы",
+    "minutes": "минут",
+    "hours": "сағат",
+    "days": "күндер",
+    "tagNamePlaceholder": "Тег аты",
+    "willTrigger": "Қорғасын осы кезеңге кіргенде бірден іске қосылады.",
+    "taskText": "Тапсырма мәтіні",
+    "notificationText": "Хабарландыру мәтіні",
+    "assignResponsible": "Жауапты тағайындаңыз",
+    "selectStage": "Жылжыту үшін кезеңді таңдаңыз",
+    "noAdditionalSettings": "Бұл әрекет түріне арналған қосымша параметрлер жоқ.",
+    "descriptionRequired": "Сипаттама бос болмауы керек.",
+    "tagsToAddPlaceholder": "Қосылатын тегтер (үтірмен бөлінген)",
+    "apartmentStatusReserved": "Резервтелген",
+    "apartmentStatusSold": "Сатылған",
+    "apartmentStatusAvailable": "Қол жетімді",
+    "icons": {
+      "clock": "Кешіктіру",
+      "distribution": "Тарату",
+      "task": "Тапсырма",
+      "statusChange": "Күйдің өзгеруі",
+      "editField": "Өңдеу өрісі",
+      "addTag": "Тег қосыңыз",
+      "notification": "Хабарландыру",
+      "apartmentStatus": "Пәтер мәртебесі"
+    },
+    "onStageEntryOption": "Сахнаға кіру",
+    "timerOption": "Таймер бойынша",
+    "onTagAddOption": "Тегке қосыңыз"
+  },
+  "cardFields": {
+    "none": "Мән жоқ",
+    "name": "Мәміле атауы",
+    "project": "Жоба",
+    "price": "Бюджет",
+    "tags": "Тегтер",
+    "assignedTo": "Жауапты"
+  }
+}

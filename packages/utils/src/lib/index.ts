@@ -1,6 +1,7 @@
 export * from "./admin-theme-config";
 export * from "./cn";
 export * from "./currency-utils";
+export * from "./exchange-rates";
 export * from "./datetime";
 export * from "./google-sheets-utils";
 export * from "./i18n";

@@ -57,7 +57,7 @@ export default function SubProjectEditorPage() {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handlePasteCoords = useCallback(

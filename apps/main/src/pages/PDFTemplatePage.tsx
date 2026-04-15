@@ -9,6 +9,7 @@ import { Badge } from "@gridix/ui";
 import type { Tables } from "@gridix/types/database";
 import { loadPdfTemplateData } from "@/features/projectSelector/api/projectSelectorApi";
 import { normalizeSubProjectKind } from "@/components/project-selector/lib/subProjectDisplay";
+import { useExchangeRatesEpoch } from "@/app/providers";
 
 interface PDFTemplatePageProps {
   useId?: boolean;
@@ -32,6 +33,7 @@ const PDFTemplatePage = ({
   apartmentIdProp = "",
   projectIdProp = "",
 }: PDFTemplatePageProps) => {
+  useExchangeRatesEpoch();
   const { projectSlug, projectId, apartmentNumber, apartmentId, subSlug } =
     useParams<{
       projectSlug?: string;

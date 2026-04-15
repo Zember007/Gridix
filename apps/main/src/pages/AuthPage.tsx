@@ -255,7 +255,7 @@ const AuthPage = () => {
         // и обычные языковые роуты (/ru/*, /en/*, /ka/*, /ar/*).
         if (redirectTo && redirectTo.startsWith("/")) {
           if (
-            redirectTo.match(/^\/(ru|en|ka|ar)\//) ||
+            redirectTo.match(/^\/(ru|en|ka|ar|he|tr|kk)\//) ||
             redirectTo.startsWith("/embed/")
           ) {
             window.location.href = redirectTo;
@@ -295,7 +295,7 @@ const AuthPage = () => {
       onSuccess={() => {
         if (redirectTo && redirectTo.startsWith("/")) {
           if (
-            redirectTo.match(/^\/(ru|en|ka|ar)\//) ||
+            redirectTo.match(/^\/(ru|en|ka|ar|he|tr|kk)\//) ||
             redirectTo.startsWith("/embed/")
           ) {
             window.location.href = redirectTo;
