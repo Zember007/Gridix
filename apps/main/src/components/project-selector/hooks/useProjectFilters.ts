@@ -5,6 +5,7 @@ import {
   DEFAULT_CURRENCY,
   isValidCurrency,
 } from "@gridix/utils/lib";
+import { useExchangeRatesEpoch } from "@/app/providers";
 
 // ── Types ──
 
@@ -414,6 +415,8 @@ export const useProjectFilters = ({
   visibleFilterFields = DEFAULT_FILTER_VISIBILITY,
   subProjectKinds = {},
 }: UseProjectFiltersProps) => {
+  const exchangeRatesEpoch = useExchangeRatesEpoch();
+
   const visibility = useMemo(
     () => ({ ...DEFAULT_FILTER_VISIBILITY, ...visibleFilterFields }),
     [visibleFilterFields],
@@ -441,7 +444,7 @@ export const useProjectFilters = ({
 
   const bounds = useMemo(
     () => computeBounds(apartments, project?.currency, selectedCurrency),
-    [apartments, project?.currency, selectedCurrency],
+    [apartments, project?.currency, selectedCurrency, exchangeRatesEpoch],
   );
   const priceBounds: [number, number] = [bounds.minPrice, bounds.maxPrice];
   const areaBounds: [number, number] = [bounds.minArea, bounds.maxArea];
@@ -627,7 +630,14 @@ export const useProjectFilters = ({
         visibility,
         subProjectKinds,
       ),
-    [apartments, project?.currency, state, visibility, subProjectKinds],
+    [
+      apartments,
+      project?.currency,
+      state,
+      visibility,
+      subProjectKinds,
+      exchangeRatesEpoch,
+    ],
   );
 
   const getUniqueFloors = useCallback(

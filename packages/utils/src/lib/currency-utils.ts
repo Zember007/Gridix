@@ -1,4 +1,4 @@
-export type CurrencyType = "RUB" | "USD" | "EUR" | "GEL";
+export type CurrencyType = "RUB" | "USD" | "EUR" | "GEL" | "KZT";
 
 export interface CurrencyInfo {
   code: CurrencyType;
@@ -31,6 +31,12 @@ export const CURRENCIES: Record<CurrencyType, CurrencyInfo> = {
     symbol: "₾",
     name: "Georgian Lari",
     translationKey: "currency.gel",
+  },
+  KZT: {
+    code: "KZT",
+    symbol: "₸",
+    name: "Kazakhstani Tenge",
+    translationKey: "currency.kzt",
   },
 };
 
@@ -87,13 +93,27 @@ export const formatMoney = (
   return formatPriceWithCurrency(price, currency, locale);
 };
 
-// Exchange rates represented as RUB per 1 unit of currency
-const RUB_PER_UNIT: Record<CurrencyType, number> = {
+/** Static fallback: RUB per 1 unit of currency (used before live rates load or if API fails). */
+export const FALLBACK_RUB_PER_UNIT: Record<CurrencyType, number> = {
   RUB: 1,
   USD: 90.9090909091,
   EUR: 100,
   GEL: 33.3333333333,
+  KZT: 0.2,
 };
+
+let liveRubPerUnit: Record<CurrencyType, number> | null = null;
+
+/** Replaces multipliers used by `convertPrice` (typically from open.er-api.com). */
+export function setLiveRubPerUnit(
+  rates: Record<CurrencyType, number> | null,
+): void {
+  liveRubPerUnit = rates;
+}
+
+function getActiveRubPerUnit(): Record<CurrencyType, number> {
+  return liveRubPerUnit ?? FALLBACK_RUB_PER_UNIT;
+}
 
 export const convertPrice = (
   price: number,
@@ -101,12 +121,13 @@ export const convertPrice = (
   toCurrency: string | null | undefined,
 ): number => {
   if (!price) return 0;
+  const rubPerUnit = getActiveRubPerUnit();
   const from: CurrencyType = isValidCurrency(String(fromCurrency))
     ? (fromCurrency as CurrencyType)
     : "RUB";
   const to: CurrencyType = isValidCurrency(String(toCurrency))
     ? (toCurrency as CurrencyType)
     : "RUB";
-  const priceInRub = price * RUB_PER_UNIT[from];
-  return priceInRub / RUB_PER_UNIT[to];
+  const priceInRub = price * rubPerUnit[from];
+  return priceInRub / rubPerUnit[to];
 };

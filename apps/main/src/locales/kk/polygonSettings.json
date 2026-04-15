@@ -1,0 +1,23 @@
+{
+  "buildingTitle": "Полигон параметрлерін құру",
+  "genplanTitle": "Жасалған көпбұрыш параметрлері",
+  "floorTitle": "Floor Polygon параметрлері",
+  "colors": "Түстер",
+  "buildingColor": "Ғимарат түсі",
+  "hoverEffects": "Меңзер әсерлері",
+  "colorChange": "Түс өзгерту",
+  "opacityChange": "Мөлдірліктің өзгеруі",
+  "glow": "Жарқырау",
+  "display": "Дисплей",
+  "showNumbers": "Сандарды көрсету",
+  "showTooltip": "Құралдар кеңестерін көрсету",
+  "showArea": "Аймақты көрсету",
+  "showPrice": "Бағаны көрсету",
+  "opacity": "Мөлдірлік",
+  "normalOpacity": "Қалыпты күй",
+  "hoverOpacity": "Hover бойынша",
+  "save": "Параметрлерді сақтау",
+  "saving": "Сақталуда...",
+  "saved": "Параметрлер сақталды",
+  "saveError": "Параметрлерді сақтау қатесі"
+}

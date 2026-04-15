@@ -39,6 +39,7 @@ import ApartmentReservationForm from "@/features/apartment-reservation/ui/Apartm
 import InstallmentCalculator from "@/components/InstallmentCalculator";
 import { useInstallment } from "@/hooks/useInstallment";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useExchangeRatesEpoch } from "@/app/providers";
 
 interface ApartmentDetailsPageProps {
   useId?: boolean;
@@ -53,6 +54,7 @@ const ApartmentDetailsPage = ({
   projectIdProp = "",
   onClose,
 }: ApartmentDetailsPageProps) => {
+  useExchangeRatesEpoch();
   const location = useLocation();
   const navigate = useNavigate();
   const {

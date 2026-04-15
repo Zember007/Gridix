@@ -6,6 +6,7 @@ import { Toaster as GridixToaster } from "@gridix/utils/lib";
 import { I18nextProvider } from "react-i18next";
 import { createAppQueryClient } from "@gridix/utils/api";
 import i18n from "@/shared/lib/i18n";
+import { ExchangeRatesProvider } from "./ExchangeRatesProvider";
 
 const queryClient = createAppQueryClient();
 
@@ -20,7 +21,7 @@ export function BaseProviders({ children }: BaseProvidersProps) {
         <TooltipProvider>
           <Toaster />
           <GridixToaster />
-          {children}
+          <ExchangeRatesProvider>{children}</ExchangeRatesProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </I18nextProvider>

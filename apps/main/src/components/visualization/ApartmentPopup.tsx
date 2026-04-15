@@ -2,6 +2,7 @@ import React from "react";
 import { Apartment } from "@/entities/apartment/model/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
+import { useExchangeRatesEpoch } from "@/app/providers";
 
 type PopupSettings = {
   showNumbers: boolean;
@@ -82,6 +83,7 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(
     ref,
   ) => {
     const { t } = useLanguage();
+    useExchangeRatesEpoch();
 
     if (
       !settings.showTooltip ||

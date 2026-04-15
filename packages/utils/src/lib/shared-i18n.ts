@@ -1,6 +1,6 @@
 import type i18n from "i18next";
 
-type SharedLanguage = "ar" | "en" | "he" | "ka" | "ru" | "tr";
+type SharedLanguage = "ar" | "en" | "he" | "ka" | "kk" | "ru" | "tr";
 
 type SharedLocaleModule = {
   default: Record<string, unknown>;
@@ -14,6 +14,7 @@ const SHARED_LOCALE_LOADERS: Record<
   en: () => import("../locales/shared/en.json"),
   he: () => import("../locales/shared/he.json"),
   ka: () => import("../locales/shared/ka.json"),
+  kk: () => import("../locales/shared/kk.json"),
   ru: () => import("../locales/shared/ru.json"),
   tr: () => import("../locales/shared/tr.json"),
 };

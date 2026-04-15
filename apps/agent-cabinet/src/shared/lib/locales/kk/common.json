@@ -1,0 +1,310 @@
+{
+  "demoCabinetButton": "Әзірлеуші ​​кабинеті",
+  "app": {
+    "title": "Агенттер кабинеті"
+  },
+  "nav": {
+    "dashboard": "Бақылау тақтасы",
+    "application": "Қолданба",
+    "projects": "Каталог",
+    "contacts": "Контактілер",
+    "leads": "Жетекші",
+    "payouts": "Төлемдер",
+    "analytics": "Аналитика",
+    "partnerProgram": "Серіктестік бағдарламасы",
+    "settings": "Параметрлер"
+  },
+  "common": {
+    "loading": "Жүктелуде...",
+    "save": "Сақтау",
+    "cancel": "Болдырмау",
+    "continue": "Жалғастыру",
+    "empty": "—"
+  },
+  "auth": {
+    "email": "Электрондық пошта",
+    "sendLink": "Сиқырлы сілтеме жіберіңіз",
+    "signOut": "Шығу",
+    "checkEmailTitle": "Электрондық поштаңызды тексеріңіз",
+    "magicLinkSent": "Сиқырлы сілтеме жіберілді.",
+    "processingLogin": "Жүйеге кіру өңделуде…",
+    "setPasswordTitle": "Құпия сөзді орнату",
+    "setPasswordDescription": "Құпия сөзіңіз әлі орнатылмаған. Жалғастыру үшін құпия сөз жасаңыз.",
+    "password": "Құпия сөз",
+    "confirmPassword": "Құпия сөзді Растау",
+    "savePassword": "Құпия сөзді сақтау",
+    "passwordUpdated": "Құпия сөз жаңартылды"
+  },
+  "errors": {
+    "emailRequired": "Электрондық пошта қажет.",
+    "failedToSendLink": "Сілтеме жіберілмеді.",
+    "passwordMinLength": "Құпия сөз кемінде 8 таңбадан тұруы керек.",
+    "passwordsDontMatch": "Құпия сөздер сәйкес келмейді.",
+    "failedToUpdatePassword": "Құпия сөзді жаңарту мүмкін болмады."
+  },
+  "notFound": {
+    "title": "Бет табылмады",
+    "goHome": "Үйге бар"
+  },
+  "workspace": {
+    "noActiveTitle": "Белсенді жұмыс кеңістігі жоқ",
+    "pickInSidebar": "Бүйірлік тақтадан жұмыс кеңістігін таңдаңыз."
+  },
+  "moduleHeader": {
+    "searchPlaceholder": "Іздеу…",
+    "financeTitle": "Қаржы",
+    "balanceLabel": "Сіздің балансыңыз",
+    "create": "Жасау"
+  },
+  "dashboard": {
+    "title": "Менің бақылау тақтам",
+    "subtitleWorkspace": "Жұмыс кеңістігі: {{workspace}}",
+    "subtitleNoWorkspace": "Жұмыс кеңістігін таңдаңыз",
+    "metrics": {
+      "leads": "Жетекші",
+      "contactsSubtext": "Контактілер: {{count}}",
+      "commissionPaid": "Комиссия төленді",
+      "commissionPending": "Комиссия күтуде",
+      "projectsSubtext": "Жобалар: {{count}}",
+      "catalog": "Каталог",
+      "availableProjects": "Қолжетімді жобалар"
+    },
+    "blocks": {
+      "dynamicsTitle": "Динамика",
+      "inProgress": "Орындалуда",
+      "pulseTitle": "Импульс",
+      "latestEvents": "Соңғы оқиғалар",
+      "pulseLeads": "Жетекшілер: {{count}}",
+      "pulsePayouts": "Төлемдер:"
+    },
+    "chart": {
+      "title": "Кіріс динамикасы",
+      "subtitle": "6 айдан астам комиссиялық кіріс"
+    },
+    "activity": {
+      "title": "Әрекет арнасы",
+      "empty": "Соңғы әрекет жоқ",
+      "system": "Жүйе",
+      "newLead": "жаңа жетекші",
+      "leadsLabel": "жетекшілік етеді",
+      "commissionPaid": "төленген комиссия",
+      "pendingPayout": "күтудегі төлем",
+      "recent": "жақында",
+      "thisMonth": "осы айда",
+      "inPipeline": "құбырда"
+    }
+  },
+  "catalog": {
+    "title": "Каталог",
+    "subtitle": "Бірыңғай жаңа құрылыстар каталогы",
+    "subtitleWithWorkspace": "Бірыңғай жаңа құрастыру каталогы • {{жұмыс кеңістігі}}",
+    "searchPlaceholder": "Жоба атауы бойынша іздеу…",
+    "filtersPlaceholder": "Сүзгілер 'gridix-visual' (орын/бағалар/күйлер) ішінен 1:1 тасымалданады.",
+    "noProjects": "Таңдалған жұмыс кеңістігіне арналған жалпы жобалар әлі жоқ.",
+    "open": "Ашық",
+    "details": "Мәліметтер",
+    "share": "Бөлісу",
+    "clientLinkPrompt": "Клиент сілтемесі"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "Шолу",
+      "units": "Бірліктер",
+      "construction": "Құрылыс",
+      "media": "БАҚ",
+      "partners": "Серіктестер",
+      "settings": "Параметрлер"
+    },
+    "commission": {
+      "title": "Сіздің комиссияңыз",
+      "active": "Белсенді",
+      "requiresContract": "Шартты талап етеді",
+      "condition": "Төлем шарты",
+      "signOffer": "Клиенттерді құлыптау және комиссия алу үшін әзірлеушімен ұсынысқа қол қойыңыз."
+    },
+    "stats": {
+      "roi": "ROI",
+      "completion": "Аяқтау",
+      "priceFrom": "бастап бағасы",
+      "units": "Бірліктер"
+    },
+    "about": {
+      "title": "Жоба туралы",
+      "description": "Беделді аудандағы заманауи тұрғын үй кешені. Өмір сүруге және инвестициялауға өте ыңғайлы."
+    },
+    "quickAccess": "Жылдам қол жеткізу",
+    "media": {
+      "title": "Жобалық медиабанк",
+      "downloadAll": "Барлығын жүктеп алу (ZIP)",
+      "renders": "Көрсетеді",
+      "videos": "Бейнелер",
+      "presentations": "Презентациялар",
+      "noMaterials": "Материалдар жоқ",
+      "restricted": "Қол жеткізу шектелген",
+      "signToAccess": "Медиабанкке кіру үшін әзірлеушімен келісімшартқа қол қойыңыз.",
+      "connect": "Қосылу"
+    },
+    "construction": {
+      "title": "Құрылыстың барысы",
+      "noUpdates": "Жаңартулар жоқ",
+      "openDocument": "Құжатты ашу",
+      "openLink": "Сілтемені ашу",
+      "linkType": "Сілтеме",
+      "attachmentAlt": "Құрылысты жаңарту қосымшасы"
+    },
+    "units": {
+      "legend": {
+        "available": "Қол жетімді",
+        "booked": "Брондалды",
+        "sold": "Сатылған"
+      },
+      "empty": "Бірліктер жоқ",
+      "downloadPdf": "PDF файлын жүктеп алыңыз"
+    },
+    "actions": {
+      "lock": "Клиентті құлыптау",
+      "favorite": "Жинаққа қосу",
+      "share": "Бөлісу",
+      "becomePartner": "Серіктес болыңыз",
+      "pendingConfirmation": "Растау күтілуде",
+      "partnershipUnavailable": "Серіктестік қолжетімді емес",
+      "openPage": "Бетті ашу"
+    }
+  },
+  "contacts": {
+    "title": "Контактілер",
+    "subtitle": "{{count}} контакт",
+    "subtitleWithWorkspace": "{{count}} контакт • {{жұмыс кеңістігі}}",
+    "searchPlaceholder": "Іздеу және сүзу",
+    "notFound": "Ешбір контакт табылмады.",
+    "columns": {
+      "contact": "Байланыс"
+    },
+    "drawer": {
+      "leadsAndLast": "Жетекшілер: {{count}} • Соңғы: {{соңғы}}",
+      "contactsSection": "Контактілер",
+      "projectsSection": "Жобалар",
+      "notSelected": "Ешбір контакт таңдалмаған."
+    }
+  },
+  "analytics": {
+    "title": "Аналитика",
+    "subtitle": "Негізгі өнімділікке шолу",
+    "subtitleWithWorkspace": "Негізгі көрсеткіштерге шолу • {{жұмыс кеңістігі}}",
+    "export": "Экспорттау",
+    "views": {
+      "sales": "Сатылымдар",
+      "finance": "Қаржы",
+      "crm": "CRM"
+    },
+    "period": {
+      "last7": "Соңғы 7 күн",
+      "last30": "Соңғы 30 күн",
+      "quarter": "Осы тоқсан",
+      "year": "Бұл жылы"
+    },
+    "loadError": "Аналитика жүктелмеді.",
+    "sales": {
+      "totalLeads": "Жалпы нәтижелер",
+      "funnelByStage": "Шұңқыр (кезең бойынша)",
+      "noStageData": "Кезең деректері жоқ.",
+      "sources": "Дереккөздер",
+      "noSourceData": "Бастапқы деректер жоқ."
+    },
+    "crm": {
+      "totalLeads": "Жалпы нәтижелер",
+      "inFunnel": "Шұңқырда",
+      "conversion": "Түрлендіру",
+      "sources": "Дереккөздер",
+      "funnelTitle": "Сату шұңқыры",
+      "sourceBreakdown": "Жетекші көздер"
+    },
+    "finance": {
+      "paid": "Ақылы",
+      "pending": "Күтуде",
+      "payoutsCount": "Төлемдер",
+      "registry": "Төлем тізілімі",
+      "registryTitle": "Комиссия тізілімі",
+      "registryDescription": "Әзірлеушілерден комиссиялық төлем күйлерін қадағалаңыз. Мәміле күйінің өзгеруі туралы деректер автоматты түрде жаңартылады.",
+      "noPayouts": "Төлемдер жоқ.",
+      "pipeline": "Құбыр",
+      "inProgress": "Орындалуда",
+      "dealsInWork": "жұмыстағы мәмілелер",
+      "received": "Алынған",
+      "success": "Сәттілік",
+      "successDeals": "Сәтті мәмілелер",
+      "total": "Барлығы",
+      "allTime": "Барлық уақытта",
+      "export": "Экспорттау",
+      "colAmount": "Сома",
+      "colProject": "Жоба",
+      "colDate": "Күн",
+      "colStatus": "Күй",
+      "statusPaid": "Ақылы",
+      "statusPending": "Күтуде"
+    }
+  },
+  "agent": {
+    "selectDeveloper": "Әзірлеуші ​​идентификаторы (шақыру сілтемесінен)",
+    "application": {
+      "title": "Әзірлеушіге өтініш",
+      "fullName": "Толық аты-жөні",
+      "phone": "Телефон",
+      "bankDetails": "Банк деректемелері",
+      "agreements": "Келісімдер",
+      "signature": "Қол қою",
+      "drawSignature": "Сурет салу",
+      "uploadSignature": "Жүктеп салу",
+      "replaceSignature": "Қолтаңбаны ауыстырыңыз",
+      "clear": "Таза",
+      "sign": "Келісімге қол қою",
+      "submit": "Өтінім жіберу",
+      "currentSignaturePrompt": "Бұл келісім-шарттар үшін пайдаланылатын ағымдағы қолтаңба.",
+      "uploadHint": "Қолтаңбаңыздың жоғары сапалы кескінін жүктеңіз (PNG немесе JPG).",
+      "signaturePreviewAlt": "Қолтаңбаны алдын ала қарау",
+      "missingSignature": "Қолтаңба жоқ",
+      "signatureUpdated": "Қолтаңба жаңартылды",
+      "signatureUpdateError": "Қолтаңбаны жаңарту мүмкін болмады"
+    },
+    "status": {
+      "pending": "Күтуде",
+      "approved": "Бекітілді",
+      "rejected": "Қабылданбады"
+    }
+  },
+  "settings": {
+    "title": "Параметрлер",
+    "subtitle": "Тіркелгіңізді, хабарландыруларды және келісімшарт мәліметтерін басқарыңыз",
+    "contractTitle": "Келісімшарт мәліметтері",
+    "contractDesc": "Агенттік келісімдегі ақпарат",
+    "fullName": "Толық аты-жөні",
+    "companyName": "Компания атауы",
+    "type": "Түр",
+    "taxId": "Салық идентификаторы",
+    "legalAddress": "Заңды мекенжайы",
+    "phone": "Телефон",
+    "bankDetails": "Банк деректемелері",
+    "agentCompanyType": "Компания түрі",
+    "agentRegisteredOffice": "Тіркелген кеңсе",
+    "agentRepresentativeName": "Өкіл аты",
+    "agentRepresentativeTitle": "Өкіл атағы",
+    "status": "Күй",
+    "agreementSignedAt": "Келісімге қол қойылды",
+    "commissionRate": "Комиссия мөлшерлемесі",
+    "savingProfile": "Сақталуда…",
+    "profileSaved": "Профиль сақталды",
+    "profileSaveError": "Профиль сақталмады",
+    "notificationsSaved": "Хабарландыру теңшелімдері сақталды",
+    "notificationsSaveError": "Хабарландыру теңшелімдері сақталмады",
+    "saveAll": "Барлығын сақтау",
+    "loadError": "Келісімшарт деректері жүктелмеді",
+    "signedContractsTitle": "Келісімшарттарға қол қойылды",
+    "signedContractsDesc": "Қол қою кезінде жасалған келісім-шарттарды жүктеп алыңыз.",
+    "refreshContracts": "Тізімді жаңарту",
+    "signedContractsLoadError": "Келісімшарттар жүктелмеді. Қайталап көріңіз.",
+    "noSignedContracts": "Әзірге келісімшарттар жоқ",
+    "noSignedContractsDesc": "Оны көру үшін бірінші келісімшартқа қол қойыңыз.",
+    "contractLabel": "Шарт",
+    "pdfLabel": "PDF"
+  }
+}

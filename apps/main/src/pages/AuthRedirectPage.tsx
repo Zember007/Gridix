@@ -20,7 +20,7 @@ export default function AuthRedirectPage() {
         : null;
 
     // Preserve whether user opened /auth/signup or /auth/signin
-    const clean = location.pathname.replace(/^\/(ru|en|ka|ar|he|tr)\//, "/");
+    const clean = location.pathname.replace(/^\/(ru|en|ka|ar|he|tr|kk)\//, "/");
     const targetPath = clean.startsWith("/auth/signup")
       ? "auth/signup"
       : clean.startsWith("/auth/signin")

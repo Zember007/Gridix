@@ -1,0 +1,20 @@
+{
+  "apply": "Бөліп төлеуге өтініш беріңіз",
+  "calculator": "Бөліп төлеу калькуляторы",
+  "downPayment": "Кепілақы",
+  "downPaymentFrom": "бастап бастапқы төлем",
+  "info": {
+    "contactManager": "Өтініш беру үшін менеджерге хабарласыңыз",
+    "earlyPayment": "Ерте төлеу мүмкіндігі бар",
+    "noInterest": "Пайызсыз бөліп төлеу"
+  },
+  "low": "Бөліп төлеу 0%",
+  "maximum": "Максимум",
+  "minimum": "Ең аз",
+  "month": "ай",
+  "monthlyPayment": "Ай сайынғы төлем",
+  "months": "айлар",
+  "period": "Қосулы",
+  "perMonth": "ай",
+  "remainingAmount": "Қалған сома"
+}

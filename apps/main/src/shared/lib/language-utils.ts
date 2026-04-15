@@ -1,4 +1,4 @@
-export type Language = "ru" | "en" | "ka" | "ar" | "he" | "tr";
+export type Language = "ru" | "en" | "ka" | "ar" | "he" | "tr" | "kk";
 
 export const LANGUAGE_CONFIG = {
   en: {
@@ -36,6 +36,12 @@ export const LANGUAGE_CONFIG = {
     urlPrefix: "/tr",
     name: "Türkçe",
     flag: "🇹🇷",
+  },
+  kk: {
+    code: "kk",
+    urlPrefix: "/kk",
+    name: "Қазақша",
+    flag: "🇰🇿",
   },
 } as const;
 

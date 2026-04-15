@@ -1,0 +1,21 @@
+{
+  "add": "қосу",
+  "addFloor": "Еденді қосыңыз",
+  "addFloorError": "Еденді қосу қатесі",
+  "addFloorSuccess": "{{қабат}} қабаты сәтті қосылды",
+  "apartment": "пәтер",
+  "apartments": "пәтерлер",
+  "deleteFloorConfirm": "{{floor}} қабатын шынымен жойғыңыз келе ме?",
+  "deleteFloorError": "Еденді жою қатесі",
+  "deleteFloorSuccess": "{{қабат}} қабат сәтті жойылды",
+  "deleteFloorWithApartmentsConfirm": "{{floor}} қабатын шынымен жойғыңыз келе ме? Онда жойылатын {{count}} пәтер бар.",
+  "description": "Жобаға едендерді қосыңыз немесе алып тастаңыз",
+  "existingFloors": "Қолданыстағы едендер",
+  "floor": "Еден",
+  "floorAlreadyExists": "{{қабат}} қабат әлдеқашан бар",
+  "floorNumber": "Қабат нөмірі",
+  "invalidFloorNumber": "Қабат нөмірі жарамсыз",
+  "manageFloors": "Қабаттарды басқару",
+  "noFloors": "Ешқандай едендер жасалмады",
+  "title": "Еденді басқару"
+}
