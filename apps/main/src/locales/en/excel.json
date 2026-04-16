@@ -86,7 +86,9 @@
       "title": "Import data",
       "description": "Upload a file or provide a link to a spreadsheet with apartment data",
       "matchBy": "Matching:",
-      "matchByDesc": "Apartments are updated by number. No new apartments are created."
+      "matchByDesc": "Apartments are updated by number. No new apartments are created.",
+      "allowNew": "Also import new apartments",
+      "allowNewDesc": "Apartments from the file that are not yet in the project will be created automatically."
     },
     "columns": {
       "title": "Map Excel columns",
@@ -101,7 +103,9 @@
     },
     "result": {
       "success": "Sync complete: {{updated}} apartments updated",
-      "withNotFound": "Updated {{updated}} of {{total}}. Not found: {{notFound}}"
+      "withNotFound": "Updated {{updated}} of {{total}}. Not found: {{notFound}}",
+      "withCreated": "Sync complete: {{updated}} updated, {{created}} new apartments added",
+      "withCreatedAndNotFound": "Updated {{updated}}, created {{created}}. Not found: {{notFound}}"
     },
     "syncing": "Syncing...",
     "syncButton": "Sync"

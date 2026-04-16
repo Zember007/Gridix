@@ -86,7 +86,9 @@
       "title": "ייבוא נתונים",
       "description": "העלה קובץ או ספק קישור לגיליון עם נתוני דירות",
       "matchBy": "התאמה:",
-      "matchByDesc": "הדירות מתעדכנות לפי מספר. לא נוצרות דירות חדשות."
+      "matchByDesc": "הדירות מתעדכנות לפי מספר. לא נוצרות דירות חדשות.",
+      "allowNew": "ייבא גם דירות חדשות",
+      "allowNewDesc": "דירות מהקובץ שעדיין אינן בפרויקט ייווצרו אוטומטית."
     },
     "columns": {
       "title": "מפה עמודות Excel",
@@ -101,7 +103,9 @@
     },
     "result": {
       "success": "הסנכרון הושלם: {{updated}} דירות עודכנו",
-      "withNotFound": "עודכנו {{updated}} מתוך {{total}}. לא נמצאו: {{notFound}}"
+      "withNotFound": "עודכנו {{updated}} מתוך {{total}}. לא נמצאו: {{notFound}}",
+      "withCreated": "הסנכרון הושלם: עודכנו {{updated}}, נוספו {{created}} דירות חדשות",
+      "withCreatedAndNotFound": "עודכנו {{updated}}, נוצרו {{created}}. לא נמצאו: {{notFound}}"
     },
     "syncing": "מסנכרן...",
     "syncButton": "סנכרן"

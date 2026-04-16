@@ -615,6 +615,7 @@ export interface ApartmentSyncUpdate {
 
 export interface SyncApartmentsResult {
   updatedCount: number;
+  createdCount: number;
   notFound: string[];
   total: number;
 }
@@ -622,7 +623,7 @@ export interface SyncApartmentsResult {
 export async function syncApartmentsFromExcel(
   projectId: string,
   updates: ApartmentSyncUpdate[],
-  options?: { subProjectId?: string },
+  options?: { subProjectId?: string; importNew?: boolean },
 ): Promise<SyncApartmentsResult> {
   const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, {
     body: {
@@ -630,6 +631,7 @@ export async function syncApartmentsFromExcel(
       projectId,
       updates,
       ...(options?.subProjectId ? { subProjectId: options.subProjectId } : {}),
+      ...(options?.importNew ? { importNew: true } : {}),
     },
   });
 
@@ -637,6 +639,7 @@ export async function syncApartmentsFromExcel(
 
   return {
     updatedCount: result.updatedCount ?? 0,
+    createdCount: result.createdCount ?? 0,
     notFound: result.notFound ?? [],
     total: result.total ?? 0,
   };

@@ -86,7 +86,9 @@
       "title": "استيراد البيانات",
       "description": "قم بتحميل ملف أو قدم رابطًا لجدول بيانات يحتوي على بيانات الشقق",
       "matchBy": "المطابقة:",
-      "matchByDesc": "يتم تحديث الشقق حسب الرقم. لا يتم إنشاء شقق جديدة."
+      "matchByDesc": "يتم تحديث الشقق حسب الرقم. لا يتم إنشاء شقق جديدة.",
+      "allowNew": "استيراد الشقق الجديدة أيضاً",
+      "allowNewDesc": "سيتم إنشاء الشقق من الملف غير الموجودة في المشروع تلقائياً."
     },
     "columns": {
       "title": "ربط أعمدة Excel",
@@ -101,7 +103,9 @@
     },
     "result": {
       "success": "اكتملت المزامنة: تم تحديث {{updated}} شقة",
-      "withNotFound": "تم تحديث {{updated}} من {{total}}. لم يتم العثور على: {{notFound}}"
+      "withNotFound": "تم تحديث {{updated}} من {{total}}. لم يتم العثور على: {{notFound}}",
+      "withCreated": "اكتملت المزامنة: تم تحديث {{updated}} وإضافة {{created}} شقة جديدة",
+      "withCreatedAndNotFound": "تم تحديث {{updated}}، إنشاء {{created}}. لم يتم العثور على: {{notFound}}"
     },
     "syncing": "جارٍ المزامنة...",
     "syncButton": "مزامنة"

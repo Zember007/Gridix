@@ -86,7 +86,9 @@
       "title": "Verileri içe aktar",
       "description": "Daire verileri içeren bir dosya yükleyin veya bir e-tablo bağlantısı sağlayın",
       "matchBy": "Eşleştirme:",
-      "matchByDesc": "Daireler numaraya göre güncellenir. Yeni daire oluşturulmaz."
+      "matchByDesc": "Daireler numaraya göre güncellenir. Yeni daire oluşturulmaz.",
+      "allowNew": "Yeni daireleri de içe aktar",
+      "allowNewDesc": "Dosyadaki projede henüz bulunmayan daireler otomatik olarak oluşturulacak."
     },
     "columns": {
       "title": "Excel sütunlarını eşle",
@@ -101,7 +103,9 @@
     },
     "result": {
       "success": "Senkronizasyon tamamlandı: {{updated}} daire güncellendi",
-      "withNotFound": "{{total}} daireden {{updated}} güncellendi. Bulunamadı: {{notFound}}"
+      "withNotFound": "{{total}} daireden {{updated}} güncellendi. Bulunamadı: {{notFound}}",
+      "withCreated": "Senkronizasyon tamamlandı: {{updated}} güncellendi, {{created}} yeni daire eklendi",
+      "withCreatedAndNotFound": "{{updated}} güncellendi, {{created}} oluşturuldu. Bulunamadı: {{notFound}}"
     },
     "syncing": "Senkronize ediliyor...",
     "syncButton": "Senkronize et"

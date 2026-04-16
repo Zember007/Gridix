@@ -17,6 +17,7 @@ import {
 import { Label } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
+import { Switch } from "@gridix/ui";
 import { Check, ArrowRight, Plus, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
@@ -127,6 +128,7 @@ const ExcelApartmentSyncMapper = ({
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [importNew, setImportNew] = useState(false);
 
   const [statusMapping, setStatusMapping] = useState<StatusMapping>({
     available: "available",
@@ -536,9 +538,30 @@ const ExcelApartmentSyncMapper = ({
       const validUpdates = updates.filter((u) => u.apartment_number.length > 0);
       const result = await syncApartmentsFromExcel(projectId, validUpdates, {
         subProjectId,
+        importNew,
       });
 
-      if (result.notFound.length > 0) {
+      const hasCreated = result.createdCount > 0;
+      const hasNotFound = result.notFound.length > 0;
+
+      if (hasCreated && hasNotFound) {
+        toast.warning(
+          t("excel.sync.result.withCreatedAndNotFound")
+            .replace("{{updated}}", String(result.updatedCount))
+            .replace("{{created}}", String(result.createdCount))
+            .replace(
+              "{{notFound}}",
+              result.notFound.slice(0, 10).join(", ") +
+                (result.notFound.length > 10 ? "..." : ""),
+            ),
+        );
+      } else if (hasCreated) {
+        toast.success(
+          t("excel.sync.result.withCreated")
+            .replace("{{updated}}", String(result.updatedCount))
+            .replace("{{created}}", String(result.createdCount)),
+        );
+      } else if (hasNotFound) {
         toast.warning(
           t("excel.sync.result.withNotFound")
             .replace("{{updated}}", String(result.updatedCount))
@@ -576,6 +599,7 @@ const ExcelApartmentSyncMapper = ({
     customFields,
     projectId,
     subProjectId,
+    importNew,
     onSyncDone,
     onComplete,
     t,
@@ -1014,6 +1038,18 @@ const ExcelApartmentSyncMapper = ({
         allFields={allFields}
         columnMapping={columnMapping}
       />
+
+      <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+        <div className="space-y-0.5">
+          <Label className="text-sm font-medium">
+            {t("excel.sync.import.allowNew")}
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            {t("excel.sync.import.allowNewDesc")}
+          </p>
+        </div>
+        <Switch checked={importNew} onCheckedChange={setImportNew} />
+      </div>
 
       <ActionsBar
         t={t}
