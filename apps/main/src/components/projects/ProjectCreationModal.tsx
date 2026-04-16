@@ -41,19 +41,16 @@ const ExcelUrlImporter = lazy(
   () => import("@/features/data-import/import-from-url/ui/ExcelUrlImporter"),
 );
 import { useLanguage } from "@/contexts/LanguageContext";
+import { registerProjectCreationTourKindNav } from "@/features/onboarding/driver/projectCreationTourNavBridge";
 import type { Tables } from "@gridix/types/database";
 import type { MainProjectCreationKind } from "./mainProjectCreationKind";
 
 /**
- * Radix закрывает Dialog при outside-dismiss. Во время Driver.js это ломает тур двумя способами:
- * 1) Попап тура в `body` — клики по «Далее»/«Назад» считаются снаружи контента.
- * 2) У шага с `disableActiveInteraction` контент модалки с `pointer-events: none` — клик
- *    «по модалке» проходит на оверлей и тоже даёт dismiss.
- *
- * Пока на `body` есть `driver-active`, внешние закрытия для этого окна отключаем (выход — кнопка
- * закрытия в хедере модалки или завершение тура).
+ * Попап Driver в `body` — для Radix это «снаружи» Dialog. Без обработки закрывается модалка
+ * при клике по туру; `preventDefault` на попапе гасит `click`. Поэтому: для `.driver-popover`
+ * не вызываем preventDefault, а закрытие по такому жесту отсекаем в `onOpenChange`.
  */
-function suppressDialogOutsideDismissWhileDriverTour(event: {
+function suppressDialogOutsideWhileDriverTour(event: {
   preventDefault: () => void;
   target: EventTarget | null;
 }): void {
@@ -61,7 +58,6 @@ function suppressDialogOutsideDismissWhileDriverTour(event: {
     event.target instanceof Element &&
     event.target.closest(".driver-popover")
   ) {
-    event.preventDefault();
     return;
   }
   if (
@@ -174,6 +170,22 @@ const ProjectCreationModal = ({
     }
     setRootStep("kind");
     setSelectedKind(null);
+  }, [open, isRootFlow]);
+
+  useEffect(() => {
+    if (!open || !isRootFlow) {
+      registerProjectCreationTourKindNav(null);
+      return;
+    }
+    registerProjectCreationTourKindNav({
+      requestKindScreen: () => {
+        setRootStep("kind");
+        setSelectedKind(null);
+      },
+    });
+    return () => {
+      registerProjectCreationTourKindNav(null);
+    };
   }, [open, isRootFlow]);
 
   const handleFileUpload = async (
@@ -345,13 +357,41 @@ const ProjectCreationModal = ({
     onClose();
   }, [onClose]);
 
+  const lastPointerDownTargetRef = useRef<EventTarget | null>(null);
+  useEffect(() => {
+    const onPointerDownCapture = (e: PointerEvent) => {
+      lastPointerDownTargetRef.current = e.target;
+    };
+    document.addEventListener("pointerdown", onPointerDownCapture, true);
+    return () =>
+      document.removeEventListener("pointerdown", onPointerDownCapture, true);
+  }, []);
+
+  const handleProjectCreationDialogOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen) return;
+      const t = lastPointerDownTargetRef.current;
+      const fromDriverPopover =
+        t instanceof Element && t.closest(".driver-popover") !== null;
+      if (
+        typeof document !== "undefined" &&
+        document.body.classList.contains("driver-active") &&
+        fromDriverPopover
+      ) {
+        return;
+      }
+      handleCloseModal();
+    },
+    [handleCloseModal],
+  );
+
   if (showColumnMapper) {
     return (
-      <Dialog open={open} onOpenChange={handleCloseModal}>
+      <Dialog open={open} onOpenChange={handleProjectCreationDialogOpenChange}>
         <DialogContent
           className="max-h-[90vh] max-w-6xl overflow-y-auto"
-          onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
-          onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+          onPointerDownOutside={suppressDialogOutsideWhileDriverTour}
+          onInteractOutside={suppressDialogOutsideWhileDriverTour}
         >
           <DialogHeader></DialogHeader>
           <Suspense>
@@ -371,11 +411,11 @@ const ProjectCreationModal = ({
 
   if (showUrlImporter) {
     return (
-      <Dialog open={open} onOpenChange={handleCloseModal}>
+      <Dialog open={open} onOpenChange={handleProjectCreationDialogOpenChange}>
         <DialogContent
           className="max-h-[90vh] max-w-4xl overflow-y-auto"
-          onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
-          onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+          onPointerDownOutside={suppressDialogOutsideWhileDriverTour}
+          onInteractOutside={suppressDialogOutsideWhileDriverTour}
         >
           <DialogHeader>
             <div className="flex">
@@ -411,11 +451,11 @@ const ProjectCreationModal = ({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={handleCloseModal}>
+    <Dialog open={open} onOpenChange={handleProjectCreationDialogOpenChange}>
       <DialogContent
         className="project_creation_modal_usertour max-h-[90vh] max-w-5xl overflow-y-auto border-border/80"
-        onPointerDownOutside={suppressDialogOutsideDismissWhileDriverTour}
-        onInteractOutside={suppressDialogOutsideDismissWhileDriverTour}
+        onPointerDownOutside={suppressDialogOutsideWhileDriverTour}
+        onInteractOutside={suppressDialogOutsideWhileDriverTour}
       >
         <DialogHeader className="space-y-1 text-left">
           <DialogTitle className="text-xl font-semibold tracking-tight">
@@ -433,7 +473,7 @@ const ProjectCreationModal = ({
         </DialogHeader>
 
         {isRootFlow && rootStep === "kind" && (
-          <div className="space-y-4 py-2">
+          <div className="project_creation_kind_usertour space-y-4 py-2">
             <p className="text-sm font-medium text-foreground">
               {t("admin.project.create.kind.question")}
             </p>

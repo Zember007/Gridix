@@ -7,6 +7,7 @@ import {
   type ClipboardEvent as ReactClipboardEvent,
   type DragEvent as ReactDragEvent,
 } from "react";
+import { flushSync } from "react-dom";
 import {
   ConstructionUpdateAttachments,
   resolveConstructionUpdateLocale,
@@ -146,6 +147,7 @@ export const DeveloperConstructionTab = ({
   const currentLanguage = normalizeLanguageCode(language);
   const isMountedRef = useRef(true);
   const pendingLinkRequestsRef = useRef<Set<string>>(new Set());
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedContentLanguage, setSelectedContentLanguage] =
     useState<Language>(currentLanguage);
   const [selectedPreviewLanguage, setSelectedPreviewLanguage] =
@@ -299,6 +301,7 @@ export const DeveloperConstructionTab = ({
   };
 
   const onDescriptionPaste = (e: ReactClipboardEvent<HTMLTextAreaElement>) => {
+    if (isPublishing) return;
     const plainText = e.clipboardData.getData("text/plain");
     const tokens = plainText
       .split(/[\s,]+/)
@@ -311,10 +314,49 @@ export const DeveloperConstructionTab = ({
       parsedLinks.length > 0 && parsedLinks.length === tokens.length;
     if (!isLinkOnlyPaste) return;
 
+    e.preventDefault();
     const added = addLinksFromText(plainText);
-    if (added > 0) {
-      e.preventDefault();
+    if (added === 0) return;
+
+    const ta = e.currentTarget;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const linkLines = parsedLinks.map((url) => {
+      const label = getYoutubeVideoId(url)
+        ? t("projectList.construction.linkAnchorYoutube")
+        : t("projectList.construction.linkAnchorWeb");
+      return `[${label}](${url})`;
+    });
+    let insertion = linkLines.join("\n");
+    const before = draftDescription.slice(0, start);
+    const after = draftDescription.slice(end);
+    if (
+      before.length > 0 &&
+      !/\s$/.test(before) &&
+      insertion.length > 0 &&
+      !/^\s/.test(insertion)
+    ) {
+      insertion = ` ${insertion}`;
     }
+    const newVal = before + insertion + after;
+    flushSync(() => {
+      if (isCurrentLanguageSelected) {
+        setNewDesc(newVal);
+      } else {
+        setLocalizedDescriptions((prev) => ({
+          ...prev,
+          [selectedContentLanguage]: newVal,
+        }));
+      }
+    });
+    const cursor = start + insertion.length;
+    requestAnimationFrame(() => {
+      const el = descriptionTextareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(cursor, cursor);
+      }
+    });
   };
 
   useEffect(() => {
@@ -417,6 +459,7 @@ export const DeveloperConstructionTab = ({
             className="w-full rounded border p-2 text-sm"
           />
           <textarea
+            ref={descriptionTextareaRef}
             value={draftDescription}
             onChange={(e) => updateDraftDescription(e.target.value)}
             onPaste={onDescriptionPaste}
