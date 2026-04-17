@@ -354,10 +354,6 @@ svg text {
   .mobile-stack {
     flex-direction: column;
   }
-
-  body {
-    padding-bottom: 50px;
-  }
 }
 
 @theme inline {
