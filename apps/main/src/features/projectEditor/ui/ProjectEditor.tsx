@@ -1107,8 +1107,8 @@ const ProjectEditor = ({
         className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
       >
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="sticky top-0 z-10 shrink-0 border-b bg-white">
-            <div className="px-6 py-4">
+          <div className="sticky top-0 z-50 shrink-0 border-b bg-white">
+            <div className="px-3 py-4 sm:px-4 lg:px-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Button
@@ -1122,8 +1122,8 @@ const ProjectEditor = ({
                       {t("projectEditor.back")}
                     </span>
                   </Button>
-                  <div className="hidden lg:block">
-                    <h1 className="text-2xl font-bold">
+                  <div className="hidden min-w-0 lg:block">
+                    <h1 className="truncate text-2xl font-bold">
                       {isNew ? t("projectEditor.newProject") : project.name}
                     </h1>
                     <p className="text-sm text-muted-foreground">
@@ -1132,8 +1132,8 @@ const ProjectEditor = ({
                         : t("projectEditor.editProject")}
                     </p>
                   </div>
-                  <div className="lg:hidden">
-                    <h1 className="text-lg font-bold">
+                  <div className="min-w-0 lg:hidden">
+                    <h1 className="truncate text-lg font-bold">
                       {isNew ? t("projectEditor.newProject") : project.name}
                     </h1>
                     <p className="text-xs text-muted-foreground">
