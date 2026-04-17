@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   Eye,
@@ -13,6 +13,7 @@ import {
   CardContent,
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@gridix/ui";
@@ -38,6 +39,19 @@ import {
   ProjectsDetailTable,
 } from "@/entities/analytics";
 
+function getScrollParent(startEl: HTMLElement | null): HTMLElement | null {
+  let el = startEl?.parentElement ?? null;
+  while (el) {
+    const { overflowY, overflow } = getComputedStyle(el);
+    const oy = overflowY || overflow;
+    if (/(auto|scroll|overlay)/.test(oy)) {
+      return el;
+    }
+    el = el.parentElement;
+  }
+  return null;
+}
+
 export const AdminAnalytics = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -47,27 +61,24 @@ export const AdminAnalytics = () => {
   const adminAccess = useAdminAccess();
   const activeProjects = adminAccess?.activeProjects ?? [];
 
-  const [dateRange, setDateRange] = useState<DateRange>("30");
+  const [dateRange, setDateRange] = useState<DateRange>("all");
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [isFiltersCompact, setIsFiltersCompact] = useState(false);
+  const analyticsRootRef = useRef<HTMLDivElement>(null);
+
+  const [draftDateRange, setDraftDateRange] = useState<DateRange>("all");
+  const [draftSelectedProject, setDraftSelectedProject] =
+    useState<string>("all");
+  const [draftDateFrom, setDraftDateFrom] = useState<string>("");
+  const [draftDateTo, setDraftDateTo] = useState<string>("");
   const appliedFiltersCount =
     Number(dateRange !== "all") +
     Number(Boolean(dateFrom)) +
     Number(Boolean(dateTo)) +
     Number(selectedProject !== "all");
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsFiltersCompact(window.scrollY > 80);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const {
     data: analyticsDataRaw,
@@ -85,6 +96,49 @@ export const AdminAnalytics = () => {
   });
 
   const analyticsData = analyticsDataRaw ?? EMPTY_ANALYTICS;
+
+  const syncDraftFromApplied = () => {
+    setDraftDateRange(dateRange);
+    setDraftDateFrom(dateFrom);
+    setDraftDateTo(dateTo);
+    setDraftSelectedProject(selectedProject);
+  };
+
+  const handleApplyFilters = () => {
+    setDateRange(draftDateRange);
+    setDateFrom(draftDateFrom);
+    setDateTo(draftDateTo);
+    setSelectedProject(draftSelectedProject);
+    setFiltersOpen(false);
+  };
+
+  const handleResetDraftFilters = () => {
+    setDraftDateRange("all");
+    setDraftDateFrom("");
+    setDraftDateTo("");
+    setDraftSelectedProject("all");
+  };
+
+  useLayoutEffect(() => {
+    if (!(adminAccess?.canViewAnalytics ?? false)) return;
+    if (isLoading || queryError) return;
+
+    const scrollEl = getScrollParent(analyticsRootRef.current);
+    const target: HTMLElement | Window = scrollEl ?? window;
+
+    const getScrollTop = () =>
+      target === window
+        ? window.scrollY || document.documentElement.scrollTop
+        : (target as HTMLElement).scrollTop;
+
+    const handleScroll = () => {
+      setIsFiltersCompact(getScrollTop() > 80);
+    };
+
+    handleScroll();
+    target.addEventListener("scroll", handleScroll, { passive: true });
+    return () => target.removeEventListener("scroll", handleScroll);
+  }, [adminAccess?.canViewAnalytics, isLoading, queryError]);
 
   if (!(adminAccess?.canViewAnalytics ?? false)) {
     return <AdminAccessNotice variant="subscription" />;
@@ -119,55 +173,95 @@ export const AdminAnalytics = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div
-        className={
-          isFiltersCompact
-            ? "pointer-events-none fixed right-4 top-20 z-40 md:right-6"
-            : "flex justify-end"
-        }
-      >
-        <Button
-          variant="outline"
-          className={
-            isFiltersCompact
-              ? "pointer-events-auto relative h-11 w-11 rounded-full p-0 shadow-sm"
-              : "relative rounded-full px-4"
-          }
-          onClick={() => setFiltersOpen(true)}
-          aria-label={t("admin.analytics.filters")}
-        >
-          <SlidersHorizontal
-            className={isFiltersCompact ? "h-4 w-4" : "mr-2 h-4 w-4"}
-          />
-          {!isFiltersCompact && t("admin.analytics.filters")}
-          {appliedFiltersCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--admin-primary)] px-1 text-[10px] font-semibold text-[var(--admin-text-on-primary)]">
-              {appliedFiltersCount}
-            </span>
-          )}
-        </Button>
+    <div ref={analyticsRootRef} className="space-y-6">
+      <div className="flex min-h-[2.75rem] justify-end">
+        {!isFiltersCompact ? (
+          <Button
+            variant="outline"
+            className="relative rounded-full px-4"
+            onClick={() => {
+              syncDraftFromApplied();
+              setFiltersOpen(true);
+            }}
+            aria-label={t("admin.analytics.filters")}
+          >
+            <SlidersHorizontal className="mr-2 h-4 w-4" />
+            {t("admin.analytics.filters")}
+            {appliedFiltersCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--admin-primary)] px-1 text-[10px] font-semibold text-[var(--admin-text-on-primary)]">
+                {appliedFiltersCount}
+              </span>
+            )}
+          </Button>
+        ) : (
+          <div className="h-11 shrink-0" aria-hidden />
+        )}
       </div>
-      <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+      {isFiltersCompact && (
+        <div className="pointer-events-none fixed right-8 top-3 z-40 md:right-6">
+          <Button
+            variant="outline"
+            className="pointer-events-auto relative h-11 w-11 rounded-full p-0 shadow-sm"
+            onClick={() => {
+              syncDraftFromApplied();
+              setFiltersOpen(true);
+            }}
+            aria-label={t("admin.analytics.filters")}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {appliedFiltersCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--admin-primary)] px-1 text-[10px] font-semibold text-[var(--admin-text-on-primary)]">
+                {appliedFiltersCount}
+              </span>
+            )}
+          </Button>
+        </div>
+      )}
+      <Dialog
+        open={filtersOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            syncDraftFromApplied();
+          }
+          setFiltersOpen(open);
+        }}
+      >
         <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>{t("admin.analytics.filters")}</DialogTitle>
           </DialogHeader>
           <AnalyticsFilters
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            dateFrom={dateFrom}
-            onDateFromChange={setDateFrom}
-            dateTo={dateTo}
-            onDateToChange={setDateTo}
-            selectedProject={selectedProject}
-            onProjectChange={setSelectedProject}
+            dateRange={draftDateRange}
+            onDateRangeChange={setDraftDateRange}
+            dateFrom={draftDateFrom}
+            onDateFromChange={setDraftDateFrom}
+            dateTo={draftDateTo}
+            onDateToChange={setDraftDateTo}
+            selectedProject={draftSelectedProject}
+            onProjectChange={setDraftSelectedProject}
             projects={
               activeProjects.length > 0 ? activeProjects : workspaceProjects
             }
             t={t}
             withCard={false}
           />
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-lg border-slate-200"
+              onClick={handleResetDraftFilters}
+            >
+              {t("admin.analytics.resetFilters")}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleApplyFilters}
+              className="rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-all hover:bg-[var(--admin-primary-hover)] active:scale-95 active:bg-[var(--admin-primary-active)]"
+            >
+              {t("admin.analytics.applyFilters")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
