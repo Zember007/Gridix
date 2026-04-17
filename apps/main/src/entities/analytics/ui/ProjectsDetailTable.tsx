@@ -33,11 +33,11 @@ export function ProjectsDetailTable({
 }: ProjectsDetailTableProps) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
         <Table>
           <TableHeader>
             <TableRow>

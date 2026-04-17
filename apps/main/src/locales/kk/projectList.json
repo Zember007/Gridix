@@ -79,6 +79,8 @@
     "addNews": "Жаңарту қосу",
     "titlePlaceholder": "Атауы ({{language}})",
     "descriptionPlaceholder": "Сипаттама ({{language}})...",
+    "linkAnchorYoutube": "бейне",
+    "linkAnchorWeb": "сілтеме",
     "languageSection": "Жаңалықтар мазмұны тілдері",
     "publish": "Жариялау",
     "noUpdates": "Жаңартулар жоқ",

@@ -89,10 +89,12 @@ export const AdminDashboardContent = ({
       className={cn(
         "min-h-0 flex-1",
         showAdminSettings
-          ? "flex flex-col overflow-hidden px-6 py-4 lg:py-6"
+          ? "flex flex-col overflow-hidden px-3 py-3 sm:px-6 sm:py-4 lg:py-6"
           : "overflow-y-auto",
         !showAdminSettings && activeTab === "subscription" && "mx-auto",
-        !showAdminSettings && activeTab !== "leads" && "px-6 py-4 lg:py-6",
+        !showAdminSettings &&
+          activeTab !== "leads" &&
+          "px-3 py-3 sm:px-6 sm:py-4 lg:py-6",
       )}
     >
       {activeTab === "projects" && (
