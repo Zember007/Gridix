@@ -214,7 +214,7 @@ export const ProjectSubscriptionsList: React.FC<
                   key={project.id}
                   className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
                 >
-                  <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center">
+                  <div className="flex flex-col gap-5 p-4 md:flex-row md:items-center md:p-5">
                     <div className="flex min-w-[250px] items-center gap-4">
                       <div
                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold uppercase ${

@@ -198,7 +198,7 @@ export const AdminAnalytics = () => {
         )}
       </div>
       {isFiltersCompact && (
-        <div className="pointer-events-none fixed right-8 top-3 z-40 md:right-6">
+        <div className="pointer-events-none fixed right-3 top-3 z-40 sm:right-6">
           <Button
             variant="outline"
             className="pointer-events-auto relative h-11 w-11 rounded-full p-0 shadow-sm"

@@ -183,7 +183,7 @@ export default function SubProjectEditorPage() {
         <div className="flex min-h-0 flex-1 flex-col">
           {/* Sticky header */}
           <div className="sticky top-0 z-10 shrink-0 border-b bg-white">
-            <div className="px-6 py-4">
+            <div className="px-3 py-3 sm:px-6 sm:py-4 lg:px-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Button variant="ghost" size="sm" onClick={handleBack}>
@@ -229,7 +229,7 @@ export default function SubProjectEditorPage() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto py-4 lg:px-6 lg:py-6">
+          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
             {activeTab === "general" && (
               <div className="space-y-6">
                 <Card>

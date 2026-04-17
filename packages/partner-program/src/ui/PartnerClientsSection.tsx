@@ -613,9 +613,9 @@ export const PartnerClientsSection: React.FC<PartnerClientsSectionProps> = ({
       })()}
 
       {/* Шапка секции */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="w-full text-left sm:w-auto">
             <h2 className="text-2xl font-bold text-slate-900">
               {t("partners.clients")}
             </h2>
@@ -707,7 +707,7 @@ export const PartnerClientsSection: React.FC<PartnerClientsSectionProps> = ({
           return (
             <div
               key={client.id}
-              className={`relative rounded-xl border bg-white p-5 shadow-sm transition-all hover:shadow-md ${
+              className={`relative rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md md:p-6 ${
                 isSelected
                   ? "border-blue-500 bg-blue-50/20 ring-1 ring-blue-500"
                   : "border-slate-200"

@@ -69,7 +69,7 @@ export const PartnerInstructionsSection: React.FC<
       />
 
       {/* Как работает партнёрка */}
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
         <div className="mb-6 flex flex-col items-start justify-between md:flex-row md:items-center">
           <div>
             <h2 className="mb-1 text-xl font-bold text-gray-900">
@@ -91,7 +91,7 @@ export const PartnerInstructionsSection: React.FC<
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg border border-gray-100 bg-gray-50 p-5">
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 md:p-5">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm">
               <ExternalLink size={20} />
             </div>
@@ -104,7 +104,7 @@ export const PartnerInstructionsSection: React.FC<
             </p>
           </div>
 
-          <div className="rounded-lg border border-gray-100 bg-gray-50 p-5">
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 md:p-5">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-green-600 shadow-sm">
               <DollarSign size={20} />
             </div>
@@ -117,7 +117,7 @@ export const PartnerInstructionsSection: React.FC<
             </p>
           </div>
 
-          <div className="rounded-lg border border-gray-100 bg-gray-50 p-5">
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 md:p-5">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-purple-600 shadow-sm">
               <Wallet size={20} />
             </div>
@@ -151,7 +151,7 @@ export const PartnerInstructionsSection: React.FC<
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Готовые материалы */}
-        <section className="h-full rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="h-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
             <Download size={20} className="text-gray-400" />
             {t("partners.instructionsMaterialsTitle") || "Готовые материалы"}
@@ -208,7 +208,7 @@ export const PartnerInstructionsSection: React.FC<
         </section>
 
         {/* Видео */}
-        <section className="h-full rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="h-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
             <PlayCircle size={20} className="text-gray-400" />
             {t("partners.instructionsVideosTitle") || "Обучающие видео"}
@@ -259,7 +259,7 @@ export const PartnerInstructionsSection: React.FC<
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Как находить клиентов */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
+        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6 lg:col-span-2">
           <h2 className="mb-4 text-lg font-bold text-gray-900">
             {t("partners.instructionsAudienceTitle") || "Как находить клиентов"}
           </h2>
@@ -286,7 +286,7 @@ export const PartnerInstructionsSection: React.FC<
         </section>
 
         {/* Демо */}
-        <section className="flex flex-col justify-between rounded-xl bg-gradient-to-br from-gray-900 to-black p-6 text-white shadow-lg">
+        <section className="flex flex-col justify-between rounded-xl bg-gradient-to-br from-gray-900 to-black p-4 text-white shadow-lg md:p-6">
           <div>
             <h2 className="mb-2 text-lg font-bold">
               {t("partners.instructionsDemoTitle") || "Демонстрация"}
@@ -309,7 +309,7 @@ export const PartnerInstructionsSection: React.FC<
 
       {/* FAQ */}
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 p-6">
+        <div className="border-b border-gray-100 p-4 md:p-6">
           <h2 className="text-xl font-bold text-gray-900">
             {t("partners.instructionsFaqTitle") || "FAQ (Вопросы партнёров)"}
           </h2>
@@ -321,12 +321,12 @@ export const PartnerInstructionsSection: React.FC<
               value={`item-${index}`}
               className="border-b border-gray-100"
             >
-              <AccordionTrigger className="px-6 py-4 text-left hover:bg-gray-50">
+              <AccordionTrigger className="px-4 py-4 text-left hover:bg-gray-50 md:px-6">
                 <span className="text-sm font-medium text-gray-900 md:text-base">
                   {t(`partners.${item.questionKey}`)}
                 </span>
               </AccordionTrigger>
-              <AccordionContent className="px-6 pb-6 text-sm leading-relaxed text-gray-600">
+              <AccordionContent className="px-4 pb-6 text-sm leading-relaxed text-gray-600 md:px-6">
                 {t(`partners.${item.answerKey}`)}
               </AccordionContent>
             </AccordionItem>

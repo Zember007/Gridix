@@ -92,13 +92,13 @@ export function GlobalAccountSecuritySection({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-6">
           <CardTitle>{t("adminSettings.changeEmail")}</CardTitle>
           <CardDescription>
             {t("adminSettings.accountInfoDesc")}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
           <div>
             <Label htmlFor="current_email">
               {t("adminSettings.currentEmail")}
@@ -136,13 +136,13 @@ export function GlobalAccountSecuritySection({
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-6">
           <CardTitle>{t("adminSettings.changePassword")}</CardTitle>
           <CardDescription>
             {t("adminSettings.accountInfoDesc")}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
           <div>
             <Label htmlFor="new_password">
               {t("adminSettings.newPassword")}

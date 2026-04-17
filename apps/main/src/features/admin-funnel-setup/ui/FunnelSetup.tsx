@@ -237,7 +237,7 @@ export const FunnelSetup: React.FC<FunnelSetupProps> = ({
     <div
       ref={ref}
       {...scrollHandlers}
-      className="custom-scrollbar flex h-full cursor-grab select-none overflow-auto bg-slate-50/50 p-6"
+      className="custom-scrollbar flex h-full cursor-grab select-none overflow-auto bg-slate-50/50 px-3 py-3 sm:px-6 sm:py-4 lg:p-6"
     >
       <div className="flex h-full items-start gap-4">
         {stages.map((stage) => {
