@@ -9,6 +9,8 @@
   "available": "ხელმისაწვდომია",
   "cancel": "გაუქმება",
   "deleteConfirm": "დარწმუნებული ხართ, რომ გსურთ ამ ბინის წაშლა?",
+  "deleteDialogButton": "წაშლა",
+  "deleteDialogTitle": "წავშალოთ ბინა {{number}}?",
   "deleteError": "ბინის წაშლის შეცდომა",
   "deleteSuccess": "ბინა წაშლილია",
   "description": "ბინების და მათი მახასიათებლების მართვა",

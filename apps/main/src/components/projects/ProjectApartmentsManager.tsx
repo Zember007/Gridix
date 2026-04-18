@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   Input,
@@ -36,6 +37,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { Warning } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
@@ -123,6 +125,10 @@ const ProjectApartmentsManager = ({
   const [floorDuplicateSourceFloor, setFloorDuplicateSourceFloor] = useState<
     number | null
   >(null);
+  const [apartmentIdPendingDelete, setApartmentIdPendingDelete] = useState<
+    string | null
+  >(null);
+  const [isDeletingApartment, setIsDeletingApartment] = useState(false);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(1);
   const { t } = useLanguage();
   const { project } = useProjectInEditorScope(projectId);
@@ -366,22 +372,40 @@ const ProjectApartmentsManager = ({
     }
   };
 
-  const handleDeleteApartment = async (apartmentId: string) => {
-    if (!confirm(t("apartmentsManager.deleteConfirm"))) return;
+  const apartmentPendingDelete = useMemo(
+    () =>
+      apartmentIdPendingDelete
+        ? (apartments.find((a) => a.id === apartmentIdPendingDelete) ?? null)
+        : null,
+    [apartments, apartmentIdPendingDelete],
+  );
 
+  const closeDeleteApartmentDialog = () => {
+    if (!isDeletingApartment) setApartmentIdPendingDelete(null);
+  };
+
+  const confirmDeleteApartment = async () => {
+    if (!apartmentIdPendingDelete) return;
+
+    setIsDeletingApartment(true);
     try {
       const { error } = await supabase
         .from("apartments")
         .delete()
-        .eq("id", apartmentId);
+        .eq("id", apartmentIdPendingDelete);
 
       if (error) throw error;
 
-      setApartments((prev) => prev.filter((apt) => apt.id !== apartmentId));
+      setApartments((prev) =>
+        prev.filter((apt) => apt.id !== apartmentIdPendingDelete),
+      );
       toast.success(t("apartmentsManager.deleteSuccess"));
+      setApartmentIdPendingDelete(null);
     } catch (error) {
       console.error("Error deleting apartment:", error);
       toast.error(t("apartmentsManager.deleteError"));
+    } finally {
+      setIsDeletingApartment(false);
     }
   };
 
@@ -1163,7 +1187,7 @@ const ProjectApartmentsManager = ({
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    handleDeleteApartment(apartment.id)
+                                    setApartmentIdPendingDelete(apartment.id)
                                   }
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -1254,6 +1278,55 @@ const ProjectApartmentsManager = ({
           loadApartments();
         }}
       />
+
+      <Dialog
+        open={apartmentIdPendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteApartmentDialog();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                <Warning size={20} className="text-red-600" />
+              </div>
+              <div>
+                <DialogTitle>
+                  {t("apartmentsManager.deleteDialogTitle", {
+                    number: apartmentPendingDelete
+                      ? String(apartmentPendingDelete.apartment_number)
+                      : "",
+                  })}
+                </DialogTitle>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {t("apartmentsManager.deleteConfirm")}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeDeleteApartmentDialog}
+              disabled={isDeletingApartment}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void confirmDeleteApartment()}
+              disabled={isDeletingApartment}
+            >
+              {isDeletingApartment
+                ? t("common.saving")
+                : t("apartmentsManager.deleteDialogButton")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Диалог управления этажами */}
       <Dialog open={floorManagementOpen} onOpenChange={setFloorManagementOpen}>
