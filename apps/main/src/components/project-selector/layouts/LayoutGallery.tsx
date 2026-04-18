@@ -195,8 +195,8 @@ export const LayoutGallery = ({
           )}
         </div>
 
-        {/* Layout cards grid */}
-        <div className={`flex flex-wrap gap-4`}>
+        {/* Layout cards: auto-fit so narrow viewports get full-width cards */}
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
           {(() => {
             // Group apartments by layout depending on type
             const layoutGroups: { [key: string]: Apartment[] } = {};
@@ -299,7 +299,7 @@ export const LayoutGallery = ({
               return (
                 <Card
                   key={key}
-                  className="w-[318px] max-w-full overflow-hidden transition-shadow hover:shadow-lg"
+                  className="w-full min-w-0 overflow-hidden transition-shadow hover:shadow-lg"
                 >
                   <div className="relative aspect-[4/3] bg-gray-100">
                     {(() => {
