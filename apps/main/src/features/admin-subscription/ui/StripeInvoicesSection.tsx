@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ExternalLink, FileText, Loader2, Receipt } from "lucide-react";
-import { Button } from "@gridix/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gridix/ui";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   fetchStripeInvoices,
@@ -11,12 +21,40 @@ interface StripeInvoicesSectionProps {
   title?: string;
 }
 
+const statusBadgeClass = (status: string) => {
+  const map: Record<string, string> = {
+    paid: "bg-green-100 text-green-700",
+    open: "bg-yellow-100 text-yellow-700",
+    draft: "bg-slate-100 text-slate-500",
+    uncollectible: "bg-red-100 text-red-700",
+    void: "bg-slate-100 text-slate-400",
+  };
+  return map[status] ?? "bg-slate-100 text-slate-500";
+};
+
 export const StripeInvoicesSection: React.FC<StripeInvoicesSectionProps> = ({
   title,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [invoices, setInvoices] = useState<StripeInvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const dateLocale = useMemo(() => {
+    switch (language) {
+      case "ru":
+        return "ru-RU";
+      case "tr":
+        return "tr-TR";
+      case "he":
+        return "he-IL";
+      case "ar":
+        return "ar";
+      case "ka":
+        return "ka-GE";
+      default:
+        return "en-US";
+    }
+  }, [language]);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,16 +90,12 @@ export const StripeInvoicesSection: React.FC<StripeInvoicesSectionProps> = ({
 
   if (invoices.length === 0) return null;
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      paid: "bg-green-100 text-green-700",
-      open: "bg-yellow-100 text-yellow-700",
-      draft: "bg-slate-100 text-slate-500",
-      uncollectible: "bg-red-100 text-red-700",
-      void: "bg-slate-100 text-slate-400",
-    };
-    return map[status] ?? "bg-slate-100 text-slate-500";
-  };
+  const numberLabel = t("admin.subscriptionPage.stripeInvoices.number") || "#";
+  const dateLabel = t("admin.subscriptionPage.stripeInvoices.date") || "Date";
+  const amountLabel =
+    t("admin.subscriptionPage.stripeInvoices.amount") || "Amount";
+  const statusLabel =
+    t("admin.subscriptionPage.stripeInvoices.status") || "Status";
 
   return (
     <section className="space-y-4">
@@ -70,60 +104,58 @@ export const StripeInvoicesSection: React.FC<StripeInvoicesSectionProps> = ({
           t("admin.subscriptionPage.stripeInvoices.title") ||
           "Stripe Invoices"}
       </h2>
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-500">
-                <th className="px-5 py-3">
-                  {t("admin.subscriptionPage.stripeInvoices.number") || "#"}
-                </th>
-                <th className="px-5 py-3">
-                  {t("admin.subscriptionPage.stripeInvoices.date") || "Date"}
-                </th>
-                <th className="px-5 py-3">
-                  {t("admin.subscriptionPage.stripeInvoices.amount") ||
-                    "Amount"}
-                </th>
-                <th className="px-5 py-3">
-                  {t("admin.subscriptionPage.stripeInvoices.status") ||
-                    "Status"}
-                </th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.map((inv) => (
-                <tr
-                  key={inv.id}
-                  className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50"
-                >
-                  <td className="whitespace-nowrap px-5 py-3 font-medium text-slate-700">
-                    <span className="flex items-center gap-1.5">
-                      <Receipt size={14} className="text-slate-400" />
-                      {inv.number || "—"}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-slate-600">
-                    {new Date(inv.created * 1000).toLocaleDateString("ru-RU")}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 font-medium text-slate-800">
-                    {(inv.total / 100).toFixed(2)} {inv.currency.toUpperCase()}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${statusBadge(inv.status)}`}
-                    >
-                      {inv.status}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right">
+      <Card className="min-w-0 overflow-hidden">
+        <CardContent className="p-4 sm:p-6">
+          <div className="space-y-3 lg:hidden">
+            {invoices.map((inv) => (
+              <div
+                key={inv.id}
+                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
+                      <Receipt size={14} className="shrink-0 text-slate-400" />
+                      <span className="truncate">{inv.number || "—"}</span>
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${statusBadgeClass(inv.status)}`}
+                  >
+                    {inv.status}
+                  </span>
+                </div>
+
+                <dl className="mt-3 divide-y divide-slate-100">
+                  <div className="flex flex-col gap-1 py-3 first:pt-0">
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      {dateLabel}
+                    </dt>
+                    <dd className="text-sm font-medium text-slate-800">
+                      {new Date(inv.created * 1000).toLocaleDateString(
+                        dateLocale,
+                      )}
+                    </dd>
+                  </div>
+                  <div className="flex flex-col gap-1 py-3">
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      {amountLabel}
+                    </dt>
+                    <dd className="font-mono text-sm font-bold text-slate-900">
+                      {(inv.total / 100).toFixed(2)}{" "}
+                      {inv.currency.toUpperCase()}
+                    </dd>
+                  </div>
+                </dl>
+
+                {(inv.hosted_invoice_url || inv.invoice_pdf) && (
+                  <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
                     {inv.hosted_invoice_url && (
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="inline-flex items-center gap-1.5 text-xs"
+                        className="inline-flex w-full items-center justify-center gap-1.5 text-xs"
                         onClick={() =>
                           window.open(inv.hosted_invoice_url!, "_blank")
                         }
@@ -138,20 +170,96 @@ export const StripeInvoicesSection: React.FC<StripeInvoicesSectionProps> = ({
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="ml-2 inline-flex items-center gap-1.5 text-xs"
+                        className="inline-flex w-full items-center justify-center gap-1.5 text-xs"
                         onClick={() => window.open(inv.invoice_pdf!, "_blank")}
                       >
                         <FileText size={12} />
                         PDF
                       </Button>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden min-w-0 lg:block">
+            <Table className="w-full text-left text-sm">
+              <TableHeader className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-500">
+                <TableRow>
+                  <TableHead>{numberLabel}</TableHead>
+                  <TableHead>{dateLabel}</TableHead>
+                  <TableHead>{amountLabel}</TableHead>
+                  <TableHead>{statusLabel}</TableHead>
+                  <TableHead className="text-right" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoices.map((inv) => (
+                  <TableRow
+                    key={inv.id}
+                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50"
+                  >
+                    <TableCell className="whitespace-nowrap font-medium text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Receipt size={14} className="text-slate-400" />
+                        {inv.number || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">
+                      {new Date(inv.created * 1000).toLocaleDateString(
+                        dateLocale,
+                      )}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-medium text-slate-800">
+                      {(inv.total / 100).toFixed(2)}{" "}
+                      {inv.currency.toUpperCase()}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${statusBadgeClass(inv.status)}`}
+                      >
+                        {inv.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-right">
+                      {inv.hosted_invoice_url && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="inline-flex items-center gap-1.5 text-xs"
+                          onClick={() =>
+                            window.open(inv.hosted_invoice_url!, "_blank")
+                          }
+                        >
+                          <ExternalLink size={12} />
+                          {t("admin.subscriptionPage.stripeInvoices.view") ||
+                            "View"}
+                        </Button>
+                      )}
+                      {inv.invoice_pdf && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="ml-2 inline-flex items-center gap-1.5 text-xs"
+                          onClick={() =>
+                            window.open(inv.invoice_pdf!, "_blank")
+                          }
+                        >
+                          <FileText size={12} />
+                          PDF
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 };
