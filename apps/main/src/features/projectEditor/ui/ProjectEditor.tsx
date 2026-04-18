@@ -1108,7 +1108,7 @@ const ProjectEditor = ({
       >
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="sticky top-0 z-50 shrink-0 border-b bg-white">
-            <div className="px-3 py-3 sm:px-6 sm:py-4 lg:px-6">
+            <div className="px-4 py-3 sm:px-6 sm:py-4 lg:px-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Button
@@ -1185,7 +1185,7 @@ const ProjectEditor = ({
               <LoadingProgress />
             </div>
           ) : isRestrictedProject ? (
-            <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
+            <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
               <div className="space-y-6">
                 <AdminAccessNotice variant="subscription" />
                 <Card>
@@ -1228,7 +1228,7 @@ const ProjectEditor = ({
               </div>
             </div>
           ) : (
-            <div className="project_editor_content_usertour flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
+            <div className="project_editor_content_usertour flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
               {/* Show content based on activeTab without Tabs wrapper */}
 
               {(activeTab === "basic" || activeTab === "building") && (
