@@ -70,7 +70,7 @@ export const LayoutGallery = ({
     isActive ? "text-white" : "border-gray-300";
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-4 py-8 md:px-6">
       <div className="space-y-6">
         <h2
           className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-900`}

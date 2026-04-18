@@ -39,7 +39,7 @@ export const FloorPlanSection = ({
   isMobile,
   selectedCurrency,
 }: FloorPlanSectionProps) => (
-  <div className="h-full min-h-[600px] w-full bg-white">
+  <div className="h-full min-h-[600px] w-full bg-white px-4 md:px-0">
     <div className={`flex ${isMobile ? "flex-col" : "flex-row"} h-full`}>
       {/* Main floor plan area */}
       <div className="relative flex-1">
