@@ -79,6 +79,8 @@
     "addNews": "განახლების დამატება",
     "titlePlaceholder": "სათაური",
     "descriptionPlaceholder": "აღწერა... ჩასვით ვიდეოს ან ფაილის ბმული აქ ან ქვემოთ თანდართულებში — ტექსტში ჩანს მოკლე ბმული.",
+    "linkAnchorYoutube": "ვიდეო",
+    "linkAnchorWeb": "ბმული",
     "languageSection": "ახალი ამბების შინაარსის ენები",
     "publish": "გამოქვეყნება",
     "noUpdates": "განახლებები არ არის",
@@ -86,11 +88,6 @@
     "addSuccess": "განახლება დამატებულია",
     "addError": "განახლების დამატება ვერ მოხერხდა",
     "deleteSuccess": "წაშლილია",
-    "deleteError": "წაშლა ვერ მოხერხდა",
-    "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=…",
-    "youtubeLinkFieldHint": "ჩასვით ბმული და დააჭირეთ Enter-ს ან დამატებას",
-    "invalidYoutubeLink": "მიუთითეთ სწორი YouTube-ბმული",
-    "linkAnchorYoutube": "ვიდეო",
-    "linkAnchorWeb": "ბმული"
+    "deleteError": "წაშლა ვერ მოხერხდა"
   }
 }
