@@ -209,7 +209,7 @@ export const PartnerReferralsSection: React.FC = () => {
   }
 
   return (
-    <div className="animate-in fade-in space-y-6 duration-500">
+    <div className="animate-in fade-in min-w-0 space-y-6 duration-500">
       {/* QR modal */}
       {isQrModalOpen && (
         <div
@@ -279,10 +279,13 @@ export const PartnerReferralsSection: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="group relative flex flex-1 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-sm break-all text-gray-600">
-              <LinkIcon size={16} className="shrink-0 text-gray-400" />
-              <span className="truncate">{generatedLink}</span>
+          <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
+            <div className="group relative flex w-full min-w-0 flex-1 items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 font-mono text-xs leading-relaxed break-all text-gray-600 sm:px-4 sm:text-sm lg:items-center">
+              <LinkIcon
+                size={16}
+                className="mt-0.5 shrink-0 text-gray-400 lg:mt-0"
+              />
+              <span className="min-w-0 flex-1">{generatedLink}</span>
             </div>
             <div className="flex gap-2 sm:shrink-0">
               <button
@@ -465,7 +468,7 @@ export const PartnerReferralsSection: React.FC = () => {
       </div>
 
       {/* Поиск по рефералам + таблица */}
-      <div className="flex flex-col items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row">
+      <div className="flex min-w-0 flex-col items-stretch justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
         <h2 className="text-lg font-bold text-gray-900">
           {t("partners.referralsListTitle")}
         </h2>
@@ -482,36 +485,14 @@ export const PartnerReferralsSection: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                  {t("partners.client") || "Пользователь"}
-                </th>
-                <th className="px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                  {t("partners.registrationDate") || "Дата регистрации"}
-                </th>
-                <th className="px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                  {t("partners.statusLabel") || "Статус"}
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                  {t("partners.income") || "Доход"}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {referralClients.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-6 text-center text-sm text-gray-400"
-                  >
-                    {t("partners.noReferrals") || "Пока нет рефералов"}
-                  </td>
-                </tr>
-              )}
+      <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        {referralClients.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-gray-400 md:px-6">
+            {t("partners.noReferrals") || "Пока нет рефералов"}
+          </div>
+        ) : (
+          <>
+            <ul className="divide-y divide-gray-100 md:hidden">
               {referralClients.slice(0, 20).map((client) => {
                 const fullName =
                   client.user_profiles.full_name || client.user_profiles.email;
@@ -539,51 +520,159 @@ export const PartnerReferralsSection: React.FC = () => {
                         : "bg-slate-100 text-slate-600";
 
                 return (
-                  <tr
-                    key={client.id}
-                    className="transition-colors hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-50 text-purple-600">
-                          <span className="text-sm font-semibold">
-                            {initial}
-                          </span>
-                        </div>
+                  <li key={client.id} className="px-4 py-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600">
+                        <span className="text-sm font-semibold">{initial}</span>
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-3">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium break-words text-gray-900">
                             {fullName}
                           </div>
-                          <div className="text-xs text-gray-400">
+                          <div className="mt-0.5 text-xs break-all text-gray-400">
                             {client.utm_source
                               ? `Source: ${client.utm_source}`
                               : "Source: Direct"}
                           </div>
                         </div>
+                        <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                          <div>
+                            <div className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">
+                              {t("partners.registrationDate") ||
+                                "Дата регистрации"}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-2 text-gray-600">
+                              <Calendar
+                                size={14}
+                                className="shrink-0 text-gray-400"
+                              />
+                              {new Date(client.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">
+                              {t("partners.statusLabel") || "Статус"}
+                            </div>
+                            <div className="mt-0.5">
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}
+                              >
+                                {statusLabel}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <div className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">
+                              {t("partners.income") || "Доход"}
+                            </div>
+                            <div className="mt-0.5 font-medium text-gray-400">
+                              —
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-gray-400" />
-                        {new Date(client.created_at).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}
-                      >
-                        {statusLabel}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right font-medium text-gray-400">
-                      {/* Доход по клиенту пока не считается отдельно */}—
-                    </td>
-                  </tr>
+                    </div>
+                  </li>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </ul>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-0 text-left">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50">
+                    <th className="px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase md:px-6 md:py-4">
+                      {t("partners.client") || "Пользователь"}
+                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase md:px-6 md:py-4">
+                      {t("partners.registrationDate") || "Дата регистрации"}
+                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase md:px-6 md:py-4">
+                      {t("partners.statusLabel") || "Статус"}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase md:px-6 md:py-4">
+                      {t("partners.income") || "Доход"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {referralClients.slice(0, 20).map((client) => {
+                    const fullName =
+                      client.user_profiles.full_name ||
+                      client.user_profiles.email;
+                    const initial =
+                      fullName && fullName.trim().length > 0
+                        ? fullName.trim()[0]?.toUpperCase()
+                        : (client.user_profiles.email || "?")[0]?.toUpperCase();
+
+                    const statusLabel =
+                      client.subscription_status === "active"
+                        ? t("partners.statusActive") || "Активен"
+                        : client.subscription_status === "trialing"
+                          ? t("partners.statusTrial") || "Пробный период"
+                          : client.subscription_status === "expired"
+                            ? t("partners.statusExpired") || "Просрочена"
+                            : t("partners.statusRegistered") ||
+                              "Зарегистрирован";
+
+                    const statusClass =
+                      client.subscription_status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : client.subscription_status === "trialing"
+                          ? "bg-purple-100 text-purple-800"
+                          : client.subscription_status === "expired"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-slate-100 text-slate-600";
+
+                    return (
+                      <tr
+                        key={client.id}
+                        className="transition-colors hover:bg-gray-50"
+                      >
+                        <td className="min-w-0 px-4 py-3 md:px-6 md:py-4">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600">
+                              <span className="text-sm font-semibold">
+                                {initial}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium break-words text-gray-900">
+                                {fullName}
+                              </div>
+                              <div className="text-xs break-all text-gray-400">
+                                {client.utm_source
+                                  ? `Source: ${client.utm_source}`
+                                  : "Source: Direct"}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-600 md:px-6 md:py-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-gray-400" />
+                            {new Date(client.created_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 md:px-6 md:py-4">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}
+                          >
+                            {statusLabel}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-gray-400 md:px-6 md:py-4">
+                          —
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
