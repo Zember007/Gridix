@@ -79,6 +79,7 @@ const ProjectUnitsChessEditorTab = ({
   const { scope: buildingScope, isReady: buildingScopeReady } =
     useDefaultSubProjectBuildingScope(projectId);
   const [loading, setLoading] = useState(true);
+  const [projectCurrency, setProjectCurrency] = useState<string | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(
     null,
@@ -119,6 +120,25 @@ const ProjectUnitsChessEditorTab = ({
   useEffect(() => {
     void loadApartments();
   }, [loadApartments]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("currency")
+        .eq("id", projectId)
+        .maybeSingle();
+      if (cancelled || error) return;
+      const c = data?.currency;
+      if (c != null && String(c).trim() !== "") {
+        setProjectCurrency(String(c));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   const apartmentsByFloor = useMemo(() => {
     const map = new Map<number, Apartment[]>();
@@ -433,6 +453,7 @@ const ProjectUnitsChessEditorTab = ({
       {!editingApartment && (
         <UnitsChessboard
           units={apartments}
+          currency={projectCurrency}
           loading={loading}
           loadingText={t("apartmentsManager.loading")}
           emptyText={t("apartmentsManager.noApartments")}

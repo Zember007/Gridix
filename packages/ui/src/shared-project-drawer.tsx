@@ -90,6 +90,8 @@ export interface ProjectUnit {
 export interface SharedProject {
   id: string;
   name: string;
+  /** Default project currency from developer settings (ISO code). */
+  currency?: string | null | undefined;
   location?: string | undefined;
   developerName?: string | undefined;
   imageUrl?: string | undefined;

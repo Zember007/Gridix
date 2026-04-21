@@ -1,6 +1,18 @@
 import { useMemo } from "react";
+import {
+  DEFAULT_CURRENCY,
+  getCurrencySymbol,
+  isValidCurrency,
+  type CurrencyType,
+} from "@gridix/utils";
 
 export type UnitsChessStatusGroup = "available" | "booked" | "sold";
+
+function resolveDisplayCurrency(
+  currency: string | null | undefined,
+): CurrencyType {
+  return currency && isValidCurrency(currency) ? currency : DEFAULT_CURRENCY;
+}
 
 export interface UnitsChessItem {
   id: string;
@@ -21,6 +33,8 @@ export interface UnitsChessboardProps<
 > {
   units: TUnit[];
   labels: UnitsChessboardLabels;
+  /** Project currency from settings (ISO code). When missing or invalid, falls back to app default. */
+  currency?: string | null;
   loading?: boolean;
   loadingText?: string;
   emptyText?: string;
@@ -32,6 +46,7 @@ export interface UnitsChessboardProps<
     unit: TUnit,
     status: UnitsChessStatusGroup,
     labels: UnitsChessboardLabels,
+    displayCurrency: CurrencyType,
   ) => string;
 }
 
@@ -48,6 +63,7 @@ const defaultRenderUnitMeta = <TUnit extends UnitsChessItem>(
   unit: TUnit,
   status: UnitsChessStatusGroup,
   labels: UnitsChessboardLabels,
+  displayCurrency: CurrencyType = DEFAULT_CURRENCY,
 ): string => {
   if (status === "sold") return labels.sold;
   if (status === "booked") return labels.booked;
@@ -58,13 +74,15 @@ const defaultRenderUnitMeta = <TUnit extends UnitsChessItem>(
   ) {
     return "-";
   }
-  if (unit.price >= 1000) return `$${Math.round(unit.price / 1000)}K`;
-  return `$${Math.round(unit.price)}`;
+  const symbol = getCurrencySymbol(displayCurrency);
+  if (unit.price >= 1000) return `${Math.round(unit.price / 1000)}K ${symbol}`;
+  return `${Math.round(unit.price)}${symbol}`;
 };
 
 export function UnitsChessboard<TUnit extends UnitsChessItem>({
   units,
   labels,
+  currency: projectCurrency,
   loading = false,
   loadingText = "Loading...",
   emptyText = "No units",
@@ -74,6 +92,11 @@ export function UnitsChessboard<TUnit extends UnitsChessItem>({
   getUnitStatusGroup = defaultGetUnitStatusGroup,
   renderUnitMeta = defaultRenderUnitMeta,
 }: UnitsChessboardProps<TUnit>) {
+  const displayCurrency = useMemo(
+    () => resolveDisplayCurrency(projectCurrency),
+    [projectCurrency],
+  );
+
   const { floors, unitsByFloor, statusById, statusStats } = useMemo(() => {
     const floorSet = new Set<number>();
     const byFloor = new Map<number, TUnit[]>();
@@ -173,7 +196,7 @@ export function UnitsChessboard<TUnit extends UnitsChessItem>({
                           type="button"
                           onClick={() => onUnitClick?.(unit)}
                           className={[
-                            "flex h-12 w-[62px] shrink-0 flex-col items-center justify-center rounded-md border px-1 text-center transition-colors",
+                            "flex h-12 w-[80px] shrink-0 flex-col items-center justify-center rounded-md border px-1 text-center transition-colors",
                             statusColor,
                             selectedUnitId === unit.id
                               ? "ring-2 ring-slate-700 ring-offset-1"
@@ -181,11 +204,16 @@ export function UnitsChessboard<TUnit extends UnitsChessItem>({
                           ].join(" ")}
                           title={unit.apartment_number ?? "-"}
                         >
-                          <span className="truncate text-[13px] leading-none font-semibold">
+                          <span className="font-semibol max-w-full truncate text-[13px] leading-none">
                             {unit.apartment_number ?? "-"}
                           </span>
                           <span className="mt-0.5 truncate text-[9px] leading-none font-semibold text-white">
-                            {renderUnitMeta(unit, status, labels)}
+                            {renderUnitMeta(
+                              unit,
+                              status,
+                              labels,
+                              displayCurrency,
+                            )}
                           </span>
                         </button>
                       );

@@ -3,6 +3,7 @@
 export type Project = {
   id: string;
   name: string;
+  currency?: string | null;
   slug: string | null;
   address: string | null;
   building_image_url: string | null;
@@ -35,6 +36,7 @@ export interface ProjectDrawerResponse {
   error?: string;
   project?: {
     id: string;
+    currency?: string | null;
     name?: string;
     slug?: string;
     location?: string;

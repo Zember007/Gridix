@@ -12,6 +12,7 @@ export function toSharedProject(project: Project): SharedProject {
   return {
     id: project.id,
     name: project.name,
+    currency: project.currency ?? undefined,
     location: project.address ?? undefined,
     developerName: project.developer_name ?? undefined,
     imageUrl: project.building_image_url ?? undefined,

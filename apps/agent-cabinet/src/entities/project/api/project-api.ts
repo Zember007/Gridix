@@ -33,7 +33,10 @@ export async function getProjectDrawer(
 export async function listProjectUnits(
   applicationId: string,
   projectId: string,
-): Promise<{ project?: { slug?: string | null }; units?: ProjectUnit[] }> {
+): Promise<{
+  project?: { slug?: string | null; currency?: string | null };
+  units?: ProjectUnit[];
+}> {
   const { data, error } = await supabase.functions.invoke("agent-program", {
     body: {
       action: "list_project_units",
@@ -42,5 +45,8 @@ export async function listProjectUnits(
     },
   });
   if (error) throw error;
-  return data as { project?: { slug?: string | null }; units?: ProjectUnit[] };
+  return data as {
+    project?: { slug?: string | null; currency?: string | null };
+    units?: ProjectUnit[];
+  };
 }

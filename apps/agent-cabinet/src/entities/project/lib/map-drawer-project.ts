@@ -12,6 +12,7 @@ export function mapDrawerProject(
   return {
     id: String(api.id),
     name: String(api.name ?? ""),
+    currency: api.currency ?? undefined,
     location: api.location ?? undefined,
     imageUrl: api.imageUrl ?? undefined,
     description: api.description ?? undefined,

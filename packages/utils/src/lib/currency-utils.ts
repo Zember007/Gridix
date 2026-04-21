@@ -69,6 +69,25 @@ export const getCurrencySymbolSafe = (currency: string | null): string => {
   return isValidCurrency(currency) ? getCurrencySymbol(currency) : "₽";
 };
 
+/** Groups integer digits with ASCII spaces only (no commas, NBSP, or locale quirks). */
+export function formatIntegerWithSpaceGrouping(value: number): string {
+  const rounded = Math.round(value);
+  const sign = rounded < 0 ? "-" : "";
+  const abs = Math.abs(rounded).toString();
+  return sign + abs.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+/** Like `formatPriceWithCurrency` but thousands separated with ordinary spaces only. */
+export const formatPriceWithCurrencySpaces = (
+  price: number,
+  currency: string | null,
+): string => {
+  if (!price) return "Цена по запросу";
+
+  const symbol = getCurrencySymbolSafe(currency);
+  return `${formatIntegerWithSpaceGrouping(price)} ${symbol}`;
+};
+
 export const formatPriceWithCurrency = (
   price: number,
   currency: string | null,

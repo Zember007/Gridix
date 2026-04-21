@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatPriceWithCurrency, convertPrice } from "@gridix/utils/lib";
+import { formatPriceWithCurrencySpaces, convertPrice } from "@gridix/utils/lib";
 import { Language } from "@gridix/utils/lib";
 import { Loader } from "@gridix/ui";
 import { useState, useEffect } from "react";
@@ -220,17 +220,28 @@ const PDFTemplatePage = ({
     value: unknown,
     fieldType: string,
     fieldName: string,
-  ) => {
+  ): string => {
     if (value === null || value === undefined) return "-";
 
     if (fieldName === "price") {
       return typeof value === "number"
-        ? formatPriceWithCurrency(value, project?.currency || null)
+        ? formatPriceWithCurrencySpaces(
+            convertPrice(value, project?.currency || null, selectedCurrency),
+            selectedCurrency,
+          )
         : "-";
     }
 
     if (fieldName === "area") {
-      return `${value} м²`;
+      return `${value} ${t("apartment.sqm")}`;
+    }
+
+    if (fieldName === "status") {
+      const s = String(value);
+      if (s === "available" || s === "sold" || s === "reserved") {
+        return t(`apartment.${s}`);
+      }
+      return s;
     }
 
     if (fieldName === "floor_number" || fieldName === "floor") {
@@ -309,6 +320,25 @@ const PDFTemplatePage = ({
     return null;
   }
 
+  const installmentMonths = project.max_installment_months;
+  const downPaymentPercent = project.min_down_payment_percent;
+  const installmentActive = project.installment_enabled === true;
+  const showInstallmentTermsBlock =
+    installmentActive &&
+    ((installmentMonths != null && installmentMonths > 0) ||
+      downPaymentPercent != null);
+  const showMonthlyInstallmentEstimate =
+    installmentActive &&
+    Boolean(apartment.price) &&
+    installmentMonths != null &&
+    installmentMonths > 0;
+
+  const formatConvertedPdfPrice = (amount: number) =>
+    formatPriceWithCurrencySpaces(
+      convertPrice(amount, project.currency || null, selectedCurrency),
+      selectedCurrency,
+    );
+
   return (
     <div className="min-h-screen bg-white">
       {/* PDF Template Content */}
@@ -349,7 +379,7 @@ const PDFTemplatePage = ({
                 {apartment.rooms == 0
                   ? t("apartment.studio")
                   : `${apartment.rooms} ${typeof apartment.rooms === "number" ? t("apartment.rooms") : ""}`}{" "}
-                {apartment.area} m²
+                {apartment.area} {t("apartment.sqm")}
               </h2>
               <p className="text-gray-600">
                 {apartment.type === "apartment"
@@ -364,48 +394,39 @@ const PDFTemplatePage = ({
             <div className="text-center">
               <div className="mb-2 text-xl font-semibold text-gray-900">
                 {apartment.price && priceVisible
-                  ? formatPriceWithCurrency(
-                      convertPrice(
-                        apartment.price,
-                        project?.currency || null,
-                        selectedCurrency,
-                      ),
-                      selectedCurrency,
-                    )
+                  ? formatConvertedPdfPrice(apartment.price)
                   : t("common.priceOnRequest")}
               </div>
-              {project?.installment_enabled && apartment.price && (
-                <div className="mb-3 text-lg text-gray-600">
-                  {t("project.from")}{" "}
-                  {formatPriceWithCurrency(
-                    convertPrice(
-                      Math.round(
-                        apartment.price /
-                          (project?.max_installment_months || 24),
-                      ),
-                      project?.currency || null,
-                      selectedCurrency,
-                    ),
-                    selectedCurrency,
-                  )}{" "}
-                  / {t("installment.perMonth")}
-                </div>
-              )}
+              {showMonthlyInstallmentEstimate &&
+                apartment.price != null &&
+                installmentMonths != null && (
+                  <div className="mb-3 text-lg text-gray-600">
+                    {t("project.from")}{" "}
+                    {formatConvertedPdfPrice(
+                      Math.round(apartment.price / installmentMonths),
+                    )}{" "}
+                    / {t("installment.perMonth")}
+                  </div>
+                )}
             </div>
-            <div className="flex flex-col items-start">
-              <Badge className="mb-1 rounded-[10px] bg-green-500 px-[16px] text-sm font-medium text-white hover:bg-green-600">
-                {t("installment.low")}
-              </Badge>
-              <div className="text-sm text-gray-600">
-                {t("installment.period")}{" "}
-                {project?.max_installment_months || 12}{" "}
-                {t("installment.months")}
+            {showInstallmentTermsBlock && (
+              <div className="flex flex-col items-start">
+                <Badge className="mb-1 rounded-[10px] bg-green-500 px-[16px] text-sm font-medium text-white hover:bg-green-600">
+                  {t("installment.low")}
+                </Badge>
+                {installmentMonths != null && installmentMonths > 0 && (
+                  <div className="text-sm text-gray-600">
+                    {t("installment.period")} {installmentMonths}{" "}
+                    {t("installment.months")}
+                  </div>
+                )}
+                {downPaymentPercent != null && (
+                  <div className="text-sm text-gray-600">
+                    {t("installment.downPaymentFrom")} {downPaymentPercent}%
+                  </div>
+                )}
               </div>
-              <div className="text-sm text-gray-600">
-                {t("installment.downPaymentFrom")}{" "}
-                {project?.min_down_payment_percent ?? 30}%
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -463,7 +484,7 @@ const PDFTemplatePage = ({
                     </span>
                     <span className="text-sm font-medium text-gray-900">
                       {field.field_name === "price"
-                        ? formatPriceWithCurrency(
+                        ? formatPriceWithCurrencySpaces(
                             convertPrice(
                               value as number,
                               project?.currency || null,

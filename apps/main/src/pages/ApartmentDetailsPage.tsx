@@ -1154,9 +1154,10 @@ const ApartmentDetailsPage = ({
                               </Badge>
                             </div>
                             {priceVisible && (
-                              <div className="flex flex-col gap-[10px]">
-                                <div className="flex">
+                              <div className="flex min-w-0 flex-col gap-[10px]">
+                                <div className="flex w-full shrink-0 justify-end">
                                   <CurrencyToggle
+                                    variant="select"
                                     selectedCurrency={selectedCurrency}
                                     onChange={(c) => setSelectedCurrency(c)}
                                     projectCurrency={project?.currency}

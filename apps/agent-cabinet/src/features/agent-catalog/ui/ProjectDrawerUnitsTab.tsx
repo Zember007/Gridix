@@ -22,6 +22,7 @@ export function ProjectDrawerUnitsTab({
   const payload = unitsQuery.data;
   const slug = payload?.project?.slug ?? null;
   const units = payload?.units ?? [];
+  const unitsCurrency = payload?.project?.currency ?? project.currency ?? null;
 
   const openUnit = (apartmentNumber: string | null) => {
     const url = createUnitUrl({
@@ -38,6 +39,7 @@ export function ProjectDrawerUnitsTab({
   return (
     <UnitsChessboard
       units={units}
+      currency={unitsCurrency}
       loading={unitsQuery.isLoading}
       loadingText={t("common.common.loading")}
       emptyText={t("common.drawer.units.empty")}
