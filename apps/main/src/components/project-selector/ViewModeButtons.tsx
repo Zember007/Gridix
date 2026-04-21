@@ -162,14 +162,17 @@ export const ViewModeSelect = ({
             "[&>*:last-child]:hidden",
           )}
         >
-          <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-            <SelectValue placeholder={getModeLabel(viewMode, isMultiSub, t)} />
-            {viewMode === "favorites" && favoritesCount > 0 ? (
-              <span className="flex h-4 min-w-[1rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] leading-none text-white">
-                {favoritesCount > 99 ? "99+" : favoritesCount}
-              </span>
-            ) : null}
-          </span>
+          <div className="flex min-w-0 flex-1 flex-row items-center gap-1.5 overflow-hidden">
+            <ModeGlyph
+              mode={viewMode}
+              className="h-4 w-4 shrink-0 text-gray-600"
+            />
+            <span className="min-w-0 flex-1 truncate">
+              <SelectValue placeholder={getModeLabel(viewMode, isMultiSub, t)}>
+                {getModeLabel(viewMode, isMultiSub, t)}
+              </SelectValue>
+            </span>
+          </div>
           <ChevronDown
             className="h-4 w-4 shrink-0 text-gray-600 opacity-80"
             aria-hidden
@@ -362,14 +365,14 @@ export const ViewModeButtons = ({
       <Button
         variant="ghost"
         size="sm"
-        className={`${buttonClass("favorites")} relative shrink-0`}
+        className={`${buttonClass("favorites")} inline-flex shrink-0 items-center gap-1 overflow-visible`}
         style={buttonStyle("favorites")}
         onClick={() => setViewMode("favorites")}
       >
-        <Heart className="mr-0.5 h-3.5 w-3.5" />
-        {t("favorites.title")}
+        <Heart className="h-3.5 w-3.5 shrink-0" />
+        <span className="whitespace-nowrap">{t("favorites.title")}</span>
         {favoritesCount > 0 && (
-          <span className="absolute right-0 top-0 flex h-4 w-4 -translate-y-1/2 translate-x-1/2 transform items-center justify-center rounded-full bg-red-500 text-[10px] text-white sm:h-5 sm:w-5 sm:text-xs">
+          <span className="flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium tabular-nums text-white">
             {favoritesCount > 99 ? "99+" : favoritesCount}
           </span>
         )}

@@ -27,11 +27,11 @@ export const WidgetLinksCard = ({
 }: WidgetLinksCardProps) => {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6">
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4 pb-4 pt-0 md:px-6 md:pb-6">
         {selectedProject !== "all" && (
           <div className="space-y-2">
             <Label>{selectedProjectLabel}</Label>

@@ -3,6 +3,8 @@
     "title": "Analitik",
     "loading": "Analizler yükleniyor...",
     "filters": "Filtreler",
+    "applyFilters": "Uygula",
+    "resetFilters": "Sıfırla",
     "period": "Dönem",
     "periods": {
       "7days": "7 gün",

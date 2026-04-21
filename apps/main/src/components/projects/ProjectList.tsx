@@ -1351,7 +1351,7 @@ const ProjectList = ({
     }, [zipping, project.media, projectFilenamePrefix, t]);
 
     return (
-      <div className="space-y-6 p-4">
+      <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
@@ -1959,7 +1959,7 @@ const ProjectList = ({
                   key={project.id}
                   className={`project_card_usertour group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${crmBlocked ? "opacity-75" : ""}`}
                 >
-                  <CardHeader className="pb-4">
+                  <CardHeader className="px-4 pb-4 pt-4 md:px-6 md:pb-4 md:pt-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle
@@ -1980,7 +1980,7 @@ const ProjectList = ({
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
+                  <CardContent className="px-4 pb-4 pt-0 md:px-6 md:pb-6">
                     <div className="space-y-4">
                       {project.building_image_url ? (
                         <div className="aspect-video overflow-hidden rounded-lg bg-real-estate-50">

@@ -94,7 +94,7 @@ export const LeadsManagerContent = ({
           onReorderTrigger={onReorderTrigger}
         />
       ) : (
-        <div className="h-full p-4">
+        <div className="h-full px-3 py-3 sm:px-6 sm:py-4 lg:py-6">
           {missingApartmentStatusFunnels.length > 0 &&
             !isFunnelTriggersWarningDismissed && (
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">

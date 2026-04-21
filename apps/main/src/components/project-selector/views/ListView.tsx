@@ -237,7 +237,7 @@ export const ListView = ({
   }, []);
 
   return (
-    <div className="container mx-auto flex grow py-3 md:px-6">
+    <div className="container mx-auto flex grow px-4 py-3 md:px-6">
       <div
         className={`${project?.has_commercial || project?.has_parking ? "space-y-3" : "space-y-1"} relative flex w-full flex-col`}
       >

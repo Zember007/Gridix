@@ -9,6 +9,8 @@
   "available": "זָמִין",
   "cancel": "לְבַטֵל",
   "deleteConfirm": "האם אתה בטוח שברצונך למחוק את הדירה הזו?",
+  "deleteDialogButton": "מחיקה",
+  "deleteDialogTitle": "למחוק את דירה {{number}}?",
   "deleteError": "שגיאה במחיקת דירה",
   "deleteSuccess": "הדירה נמחקה",
   "description": "ניהול דירות ומאפייניהן",

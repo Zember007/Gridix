@@ -12,7 +12,7 @@ const AdminAnalyticsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6 lg:py-10">
+      <div className="mx-auto w-full max-w-[1400px] px-3 py-3 sm:px-6 sm:py-4 lg:py-6">
         <AdminAnalytics />
       </div>
     </div>

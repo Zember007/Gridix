@@ -192,7 +192,7 @@ const FloorPlanView = ({
   if (loading) {
     return (
       <div
-        className={`flex h-full grow items-center justify-center p-6 ${apartments ? "min-h-[400px]" : "min-h-[100px]"}`}
+        className={`flex h-full grow items-center justify-center p-0 md:p-6 ${apartments ? "min-h-[400px]" : "min-h-[100px]"}`}
       >
         <Spinner size="md" style={{ borderColor: themeColor }} />
       </div>
@@ -202,7 +202,7 @@ const FloorPlanView = ({
   if (!floorPlan || !floorPlan.image_url) {
     return (
       <div
-        className={`flex h-full grow flex-col items-center justify-center p-6 text-gray-500 ${apartments ? "min-h-[400px]" : "min-h-[100px]"}`}
+        className={`flex h-full grow flex-col items-center justify-center p-0 text-gray-500 md:p-6 ${apartments ? "min-h-[400px]" : "min-h-[100px]"}`}
       >
         <p>{t("floorPlan.viewer.notLoaded", { floor: floorNumber })}</p>
         <p className="mt-1 text-sm">{t("floorPlan.viewer.contactAdmin")}</p>
@@ -211,7 +211,7 @@ const FloorPlanView = ({
   }
 
   return (
-    <div className="flex h-full grow flex-col rounded-none p-6">
+    <div className="flex h-full grow flex-col rounded-none p-0 md:p-6">
       <div
         ref={viewerWrapRef}
         className="relative flex flex-1 items-center justify-center rounded-lg bg-gray-50"

@@ -3,6 +3,8 @@
     "title": "אנליטיקס",
     "loading": "טוען ניתוח...",
     "filters": "מסננים",
+    "applyFilters": "החל",
+    "resetFilters": "איפוס",
     "period": "תְקוּפָה",
     "periods": {
       "7days": "7 ימים",

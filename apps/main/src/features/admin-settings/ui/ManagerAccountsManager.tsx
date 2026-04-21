@@ -107,13 +107,13 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       {managers.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>{t("managerAccounts.activeManagers")}</CardTitle>
             <CardDescription>
               {t("managerAccounts.activeManagersDesc")}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
             <div className="space-y-4">
               {managers.map((manager) => (
                 <ManagerCard

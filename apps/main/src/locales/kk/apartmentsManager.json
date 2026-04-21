@@ -9,6 +9,8 @@
   "available": "Қол жетімді",
   "cancel": "Болдырмау",
   "deleteConfirm": "Бұл пәтерді шынымен жойғыңыз келе ме?",
+  "deleteDialogButton": "Жою",
+  "deleteDialogTitle": "{{number}} пәтерін жою керек пе?",
   "deleteError": "Пәтерді жою қатесі",
   "deleteSuccess": "Пәтер жойылды",
   "description": "Пәтерлерді және олардың сипаттамаларын басқарыңыз",

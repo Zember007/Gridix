@@ -1256,7 +1256,7 @@ const PolygonPlanImageView = ({
     <>
       <div
         ref={outerRef}
-        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 md:rounded-lg ${isMobile ? "touch-manipulation" : ""}`}
+        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 px-4 md:rounded-lg md:px-0 ${isMobile ? "touch-manipulation" : ""}`}
         style={{
           minHeight: isMobile ? "auto" : 600,
           height: isMobile

@@ -228,7 +228,7 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
                   <div
                     key={`${file.name}-${file.lastModified}-${index}`}
                     className={cn(
-                      "relative z-40 mx-auto mt-4 flex w-full flex-col items-start justify-start overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm",
+                      "relative z-10 mx-auto mt-4 flex w-full flex-col items-start justify-start overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm",
                       "md:h-24",
                     )}
                   >
@@ -258,7 +258,7 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
                 <>
                   <div
                     className={cn(
-                      "relative z-40 mx-auto mt-3 flex w-full flex-col items-center justify-center rounded-2xl border bg-white/95 shadow-[0px_18px_40px_rgba(15,23,42,0.10)] transition-all duration-200 ease-out",
+                      "relative z-10 mx-auto mt-3 flex w-full flex-col items-center justify-center rounded-2xl border bg-white/95 shadow-[0px_18px_40px_rgba(15,23,42,0.10)] transition-all duration-200 ease-out",
                       isCompact ? "h-20 max-w-[9rem]" : "h-24 max-w-[11rem]",
                       isDragActive
                         ? "border-sky-300 text-sky-600 shadow-[0px_24px_50px_rgba(14,165,233,0.14)]"
@@ -286,7 +286,7 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
 
                   <div
                     className={cn(
-                      "pointer-events-none absolute inset-0 z-30 mx-auto mt-3 flex w-full items-center justify-center rounded-2xl border transition-opacity duration-200",
+                      "pointer-events-none absolute inset-0 z-20 mx-auto mt-3 flex w-full items-center justify-center rounded-2xl border transition-opacity duration-200",
                       isCompact ? "h-20 max-w-[9rem]" : "h-24 max-w-[11rem]",
                       isDragActive
                         ? "border-dashed border-sky-400/80 bg-sky-50/20 opacity-100"

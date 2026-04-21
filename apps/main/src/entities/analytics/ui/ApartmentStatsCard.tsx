@@ -37,11 +37,11 @@ export function ApartmentStatsCard({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
         <div className="mb-6 grid grid-cols-3 gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-green-600">

@@ -3,6 +3,8 @@
     "title": "ანალიტიკა",
     "loading": "ანალიტიკის ჩატვირთვა...",
     "filters": "ფილტრები",
+    "applyFilters": "გამოყენება",
+    "resetFilters": "განულება",
     "period": "პერიოდი",
     "periods": {
       "7days": "7 დღე",

@@ -624,10 +624,12 @@ function ProjectApartmentSelectorLoaded({
                   ) : viewMode === "map" ? (
                     <Suspense fallback={loaderFallback}>
                       {mapDisplayProject ? (
-                        <InteractiveProjectsMap
-                          project={mapDisplayProject}
-                          onProjectSelect={() => setViewMode("list")}
-                        />
+                        <div className="h-full min-h-0 px-4 md:px-0">
+                          <InteractiveProjectsMap
+                            project={mapDisplayProject}
+                            onProjectSelect={() => setViewMode("list")}
+                          />
+                        </div>
                       ) : (
                         <div className="flex h-[80vh] items-center justify-center px-4 text-center text-sm text-muted-foreground">
                           {t("project.mapNoCoordinates")}
@@ -635,7 +637,7 @@ function ProjectApartmentSelectorLoaded({
                       )}
                     </Suspense>
                   ) : viewMode === "favorites" ? (
-                    <div className="container mx-auto grow py-8">
+                    <div className="container mx-auto grow px-4 py-8 md:px-6">
                       <Suspense fallback={loaderFallback}>
                         <FavoritesTab
                           fieldVisible={visibleFields.map(

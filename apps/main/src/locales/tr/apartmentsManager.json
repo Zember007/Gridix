@@ -9,6 +9,8 @@
   "available": "Mevcut",
   "cancel": "İptal etmek",
   "deleteConfirm": "Bu daireyi silmek istediğinizden emin misiniz?",
+  "deleteDialogButton": "Sil",
+  "deleteDialogTitle": "{{number}} numaralı daire silinsin mi?",
   "deleteError": "Daire silinirken hata oluştu",
   "deleteSuccess": "Daire silindi",
   "description": "Daireleri ve özelliklerini yönetin",

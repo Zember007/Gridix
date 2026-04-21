@@ -3,6 +3,8 @@
     "title": "Аналитика",
     "loading": "Аналитика жүктелуде...",
     "filters": "Сүзгілер",
+    "applyFilters": "Қолдану",
+    "resetFilters": "Тастау",
     "period": "Кезең",
     "periods": {
       "7days": "7 күн",

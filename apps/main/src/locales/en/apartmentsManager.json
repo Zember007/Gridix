@@ -9,6 +9,8 @@
   "available": "Available",
   "cancel": "Cancel",
   "deleteConfirm": "Are you sure you want to delete this apartment?",
+  "deleteDialogButton": "Delete",
+  "deleteDialogTitle": "Delete apartment {{number}}?",
   "deleteError": "Error deleting apartment",
   "deleteSuccess": "Apartment deleted",
   "description": "Manage apartments and their characteristics",

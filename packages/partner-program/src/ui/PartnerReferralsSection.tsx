@@ -167,11 +167,11 @@ export const PartnerReferralsSection: React.FC = () => {
     return (
       <div className="animate-in fade-in space-y-6 duration-500">
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 p-5 md:p-6">
+          <div className="border-b border-gray-100 p-4 md:p-6">
             <div className="mb-2 h-5 w-48 animate-pulse rounded bg-gray-200" />
             <div className="h-4 w-64 animate-pulse rounded bg-gray-100" />
           </div>
-          <div className="space-y-3 p-5">
+          <div className="space-y-3 p-4 md:p-5">
             <div className="h-10 w-full animate-pulse rounded bg-gray-100" />
             <div className="h-10 w-full animate-pulse rounded bg-gray-100" />
           </div>
@@ -181,7 +181,7 @@ export const PartnerReferralsSection: React.FC = () => {
           {[0, 1, 2].map((idx) => (
             <div
               key={idx}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+              className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6"
             >
               <div className="mb-3 h-4 w-24 animate-pulse rounded bg-gray-200" />
               <div className="mb-2 h-7 w-16 animate-pulse rounded bg-gray-200" />
@@ -195,7 +195,7 @@ export const PartnerReferralsSection: React.FC = () => {
             <div className="mb-2 h-5 w-40 animate-pulse rounded bg-gray-200" />
             <div className="h-4 w-72 animate-pulse rounded bg-gray-100" />
           </div>
-          <div className="space-y-3 p-6">
+          <div className="space-y-3 p-4 md:p-6">
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
@@ -251,7 +251,7 @@ export const PartnerReferralsSection: React.FC = () => {
 
       {/* Реферальная ссылка */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 p-5 md:p-6">
+        <div className="border-b border-gray-100 p-4 md:p-6">
           <div className="mb-4 flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
             <div>
               <h3 className="mb-1 text-lg font-bold text-gray-900">
@@ -304,7 +304,7 @@ export const PartnerReferralsSection: React.FC = () => {
         </div>
 
         {/* UTM-конструктор */}
-        <div className="bg-gray-50/50 px-5 py-3">
+        <div className="bg-gray-50/50 px-4 py-3 md:px-5">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowUtmBuilder((v) => !v)}
@@ -389,7 +389,7 @@ export const PartnerReferralsSection: React.FC = () => {
 
       {/* Карточки статистики */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-200 hover:shadow-md">
+        <div className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md md:p-6">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-transform group-hover:scale-110">
             <MousePointerClick size={24} />
           </div>
@@ -411,7 +411,7 @@ export const PartnerReferralsSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-purple-200 hover:shadow-md">
+        <div className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-purple-200 hover:shadow-md md:p-6">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition-transform group-hover:scale-110">
             <UserPlus size={24} />
           </div>
@@ -437,7 +437,7 @@ export const PartnerReferralsSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-green-200 hover:shadow-md">
+        <div className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-green-200 hover:shadow-md md:p-6">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600 transition-transform group-hover:scale-110">
             <UserCheck size={24} />
           </div>

@@ -108,7 +108,7 @@ export const LeadsManagerHeader = ({
 
   if (isFunnelSetupMode && activeFunnel) {
     return (
-      <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 md:px-6">
+      <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-3 sm:px-6">
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-lg font-bold text-slate-900">
             {t("leads.funnel.title")}: {activeFunnel.name}

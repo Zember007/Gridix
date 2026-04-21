@@ -385,7 +385,7 @@ export const LeadsKanban: React.FC<{
     <div
       ref={ref}
       {...scrollHandlers}
-      className="flex h-full flex-col space-y-6 px-2 pb-4 md:cursor-grab md:select-none md:flex-row md:items-stretch md:gap-4 md:space-y-0 md:overflow-x-auto"
+      className="flex h-full flex-col space-y-6 md:cursor-grab md:select-none md:flex-row md:items-stretch md:gap-4 md:space-y-0 md:overflow-x-auto md:px-2 md:pb-4"
     >
       {funnelStages.map((stage) => {
         const columnLeads = leads.filter((l) => l.status === stage.id);
@@ -437,7 +437,7 @@ export const LeadsKanban: React.FC<{
             </div>
 
             {stage.id === firstStageId && !readOnly && (
-              <div className="mb-3 px-2">
+              <div className="mb-3 md:px-2">
                 <input
                   type="text"
                   placeholder={t("leads.kanban.quickAdd")}
@@ -454,7 +454,7 @@ export const LeadsKanban: React.FC<{
               </div>
             )}
 
-            <div className="custom-scrollbar min-h-[150px] flex-1 space-y-3 overflow-y-auto px-2 pb-20">
+            <div className="custom-scrollbar min-h-[150px] flex-1 space-y-3 overflow-y-auto pb-20 md:px-2">
               {columnLeads.map((lead) => (
                 <KanbanCard
                   key={lead.id}
