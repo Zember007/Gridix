@@ -162,7 +162,7 @@ const FavoritesTab = ({
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
         {projectFavorites.map((apartment) => (
           <Card
             key={apartment.id}

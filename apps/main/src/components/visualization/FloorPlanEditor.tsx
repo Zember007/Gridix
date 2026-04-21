@@ -1295,7 +1295,7 @@ const FloorPlanEditor = ({
               {t("projectEditor.floor")} {floorNumber}
             </Badge>
           </div>
-          <div className="flex w-full gap-2 lg:w-auto">
+          <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:flex-nowrap [&>button]:w-full lg:[&>button]:w-auto">
             {imageUrl && !floorPlanUploadProgress ? (
               <>
                 <Button

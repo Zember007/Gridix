@@ -117,7 +117,7 @@ const ProjectFloorsManager = ({
             >
               <Card className="overflow-hidden">
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer py-2 transition-colors hover:bg-accent/50">
+                  <CardHeader className="cursor-pointer px-4 py-2 transition-colors hover:bg-accent/50 sm:px-6 sm:py-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">

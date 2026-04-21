@@ -92,11 +92,11 @@ export const WidgetSettingsCard = ({
 }: WidgetSettingsCardProps) => {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6">
         <CardTitle>{t("adminWidgets.settings")}</CardTitle>
         <CardDescription>{t("adminWidgets.settingsDesc")}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4 pb-4 pt-0 md:px-6 md:pb-6">
         <div>
           <Label htmlFor="project-select">
             {t("adminWidgets.selectProject")}

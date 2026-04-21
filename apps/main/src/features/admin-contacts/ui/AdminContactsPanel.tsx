@@ -35,7 +35,7 @@ export function AdminContactsPanel() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center">
+        <div className="flex flex-col gap-3 border-b border-slate-100 px-3 py-3 sm:px-6 sm:py-4 md:flex-row md:items-center">
           <div className="relative max-w-xl flex-1">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"

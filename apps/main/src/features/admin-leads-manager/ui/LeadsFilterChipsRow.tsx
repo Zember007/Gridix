@@ -25,7 +25,7 @@ export const LeadsFilterChipsRow = ({
   }
 
   return (
-    <div className="no-scrollbar flex flex-wrap items-center gap-2 overflow-x-auto px-4 pb-3 pt-1 lg:px-6">
+    <div className="no-scrollbar flex flex-wrap items-center gap-2 overflow-x-auto px-3 pb-3 pt-1 sm:px-6">
       {filters.source !== "all" && (
         <FilterChip
           label={`${t("leads.filters.source")}: ${

@@ -176,7 +176,7 @@ export const FloorSelector = ({
 
   return (
     <div
-      className={`${isMobile ? "h-20 w-full" : "w-15"} flex ${isMobile ? "flex-row" : "flex-col"} items-center justify-center p-4`}
+      className={`${isMobile ? "h-20 w-full" : "w-15"} flex ${isMobile ? "flex-row" : "flex-col"} items-center justify-center p-0 md:p-4`}
     >
       <div
         className={`flex ${isMobile ? "w-full flex-row items-center gap-4" : "h-full flex-col items-center gap-3"}`}

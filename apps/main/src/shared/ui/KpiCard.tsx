@@ -11,7 +11,7 @@ type KpiCardProps = {
 export function KpiCard({ title, value, icon, className }: KpiCardProps) {
   return (
     <Card className={className}>
-      <CardContent className="flex h-full items-center justify-between p-6">
+      <CardContent className="flex h-full items-center justify-between p-4 sm:p-6">
         <div className="flex h-full flex-1 justify-between">
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>

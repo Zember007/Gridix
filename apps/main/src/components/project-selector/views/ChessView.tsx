@@ -104,7 +104,7 @@ export const ChessView = ({
   };
 
   return (
-    <div className="mx-auto flex grow select-none flex-col overflow-hidden bg-white px-2 py-8 md:container lg:px-6">
+    <div className="mx-auto flex grow select-none flex-col overflow-hidden bg-white px-4 py-8 md:container md:px-6">
       <div className="flex shrink-0 gap-4 border-b border-gray-50 pb-4">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <div

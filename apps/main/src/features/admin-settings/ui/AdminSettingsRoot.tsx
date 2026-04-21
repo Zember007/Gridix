@@ -234,13 +234,13 @@ export const AdminSettingsRoot = ({
       <div className="min-h-0 flex-1 overflow-y-auto pt-6">
         <TabsContent value="company">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle>{t("adminSettings.companyInfo")}</CardTitle>
               <CardDescription>
                 {t("adminSettings.companyInfoDesc")}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
               <AdminSettingsCompanyTab
                 settingsCompanyName={companySettings.company_name || ""}
                 onBrandNameChange={(value) =>
@@ -260,13 +260,13 @@ export const AdminSettingsRoot = ({
 
         <TabsContent value="billing">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle>{t("adminSettings.billingInfo")}</CardTitle>
               <CardDescription>
                 {t("adminSettings.billingInfoDesc")}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
               <AdminSettingsBillingTab
                 companySettings={companySettings}
                 onCompanyFieldChange={handleCompanyInputChange}
@@ -310,13 +310,13 @@ export const AdminSettingsRoot = ({
 
         <TabsContent value="data">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle>{t("adminSettings.dataManagement")}</CardTitle>
               <CardDescription>
                 {t("adminSettings.dataManagementDesc")}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <AdminSettingsDataTab
                 exportingBackup={exportingBackup}
                 resettingSettings={resettingSettings}

@@ -3,6 +3,8 @@
     "title": "Аналитика",
     "loading": "Загрузка аналитики...",
     "filters": "Фильтры",
+    "applyFilters": "Применить",
+    "resetFilters": "Сбросить",
     "period": "Период",
     "periods": {
       "7days": "7 дней",

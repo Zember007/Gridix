@@ -9,6 +9,8 @@
   "available": "Свободна",
   "cancel": "Отмена",
   "deleteConfirm": "Вы уверены, что хотите удалить эту квартиру?",
+  "deleteDialogButton": "Удалить",
+  "deleteDialogTitle": "Удалить квартиру {{number}}?",
   "deleteError": "Ошибка удаления квартиры",
   "deleteSuccess": "Квартира удалена",
   "description": "Управление квартирами и их характеристиками",

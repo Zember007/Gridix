@@ -3,6 +3,8 @@
     "title": "التحليلات",
     "loading": "جارٍ تحميل التحليلات...",
     "filters": "المرشحات",
+    "applyFilters": "تطبيق",
+    "resetFilters": "إعادة الضبط",
     "period": "الفترة",
     "periods": {
       "7days": "7 أيام",

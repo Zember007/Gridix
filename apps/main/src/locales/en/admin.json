@@ -3,6 +3,8 @@
     "title": "Analytics",
     "loading": "Loading analytics...",
     "filters": "Filters",
+    "applyFilters": "Apply",
+    "resetFilters": "Reset",
     "period": "Period",
     "periods": {
       "7days": "7 days",

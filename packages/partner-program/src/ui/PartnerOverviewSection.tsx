@@ -191,7 +191,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           {[0, 1, 2].map((idx) => (
             <div
               key={idx}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6"
+              className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6"
             >
               <div className="mb-3 h-4 w-24 animate-pulse rounded bg-gray-200" />
               <div className="mb-2 h-8 w-20 animate-pulse rounded bg-gray-200" />
@@ -200,14 +200,14 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           ))}
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <div className="mb-2 h-5 w-40 animate-pulse rounded bg-gray-200" />
           <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-100" />
           <div className="h-40 w-full animate-pulse rounded bg-gray-100" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-4 h-5 w-40 animate-pulse rounded bg-gray-200" />
             <div className="space-y-4">
               {[0, 1, 2].map((idx) => (
@@ -218,7 +218,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-4 h-5 w-40 animate-pulse rounded bg-gray-200" />
             <div className="space-y-3">
               {[0, 1, 2, 3].map((idx) => (
@@ -238,8 +238,8 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
     <div className="animate-in fade-in space-y-6 duration-500">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
-        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-          <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-black">
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
+          <div className="absolute top-4 right-4 text-gray-300 transition-colors group-hover:text-black md:top-5 md:right-5">
             <Users size={20} />
           </div>
           <div>
@@ -256,8 +256,8 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         </div>
 
-        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-          <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-green-600">
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
+          <div className="absolute top-4 right-4 text-gray-300 transition-colors group-hover:text-green-600 md:top-5 md:right-5">
             <DollarSign size={20} />
           </div>
           <div>
@@ -273,8 +273,8 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         </div>
 
-        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-          <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-green-600">
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
+          <div className="absolute top-4 right-4 text-gray-300 transition-colors group-hover:text-green-600 md:top-5 md:right-5">
             <Percent size={20} />
           </div>
           <div>
@@ -300,7 +300,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       </div>
 
       {/* Income Chart */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
         <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
@@ -328,7 +328,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
       {/* Funnel & sources */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
             <MousePointerClick size={20} className="text-gray-400" />
             {t("partners.funnelTitle")}
@@ -409,7 +409,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
             <PieChart size={20} className="text-gray-400" />
             {t("partners.trafficTitle")}
@@ -432,7 +432,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           )}
         </div>
         {trafficMediumStats.length > 0 && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
               <PieChart size={20} className="text-gray-400" />
               {t("partners.trafficByMedium")}
@@ -451,7 +451,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         )}
         {trafficCampaignStats.length > 0 && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
               <PieChart size={20} className="text-gray-400" />
               {t("partners.trafficByCampaign")}
@@ -481,7 +481,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div
             onClick={() => onNavigate && onNavigate("referrals")}
-            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
+            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-blue-300 hover:shadow-md md:p-6"
           >
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
               <Link size={20} />
@@ -499,7 +499,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
           <div
             onClick={() => onNavigate && onNavigate("clients")}
-            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-purple-300 hover:shadow-md"
+            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-purple-300 hover:shadow-md md:p-6"
           >
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-600 group-hover:text-white">
               <UserPlus size={20} />
@@ -517,7 +517,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
           <div
             onClick={() => onNavigate && onNavigate("account")}
-            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-green-300 hover:shadow-md"
+            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-green-300 hover:shadow-md md:p-6"
           >
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 text-green-600 transition-colors group-hover:bg-green-600 group-hover:text-white">
               <Wallet size={20} />

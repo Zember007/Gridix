@@ -9,6 +9,8 @@
   "available": "متاح",
   "cancel": "يلغي",
   "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذه الشقة؟",
+  "deleteDialogButton": "حذف",
+  "deleteDialogTitle": "حذف الشقة {{number}}؟",
   "deleteError": "خطأ في حذف الشقة",
   "deleteSuccess": "تم حذف الشقة",
   "description": "إدارة الشقق وخصائصها",
