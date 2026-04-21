@@ -732,7 +732,6 @@ const PolygonPlanImageView = ({
       if (isMobile) {
         handleFloorHover(firstFloor);
       } else {
-        // Desktop: no default "selected" polygon — highlight follows hover only.
         setSelectedFloor(null);
         setHoveredFloor(null);
         setShowPopup(false);
