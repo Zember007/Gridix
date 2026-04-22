@@ -611,6 +611,7 @@ function ProjectApartmentSelectorLoaded({
                       <Suspense fallback={loaderFallback}>
                         <ChessView
                           project={project as Project}
+                          subProject={subProject}
                           apartments={filters.filteredApartments}
                           onApartmentSelect={openApartmentPreview}
                           onOpenFloorPlan={openFloorPlanFromPanel}
@@ -700,6 +701,7 @@ function ProjectApartmentSelectorLoaded({
                         <Suspense fallback={loaderFallback}>
                           <FloorPlanSection
                             project={project as Project}
+                            subProjectId={subProjectId}
                             filteredApartments={filters.filteredApartments}
                             allApartments={apartments}
                             selectedFloorForPlan={selectedFloorForPlan}

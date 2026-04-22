@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
+import type { Tables } from "@gridix/types/database";
 import { cn } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
 import {
@@ -21,6 +22,8 @@ type ApartmentWithSection = Apartment & {
 
 type Props = {
   project: Project;
+  /** When set (building URL), floor polygon colors come from `sub_projects.polygon_settings_floor`. */
+  subProject?: Tables<"sub_projects"> | null;
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
   onOpenFloorPlan: (floorNumber: number) => void;
@@ -48,6 +51,7 @@ const getStatusColorClass = (status: Apartment["status"]) => {
 
 export const ChessView = ({
   project,
+  subProject,
   apartments,
   onApartmentSelect,
   onOpenFloorPlan,
@@ -91,17 +95,21 @@ export const ChessView = ({
     });
   }, [apartments]);
 
-  const floorSettings = project.polygon_settings_floor as
-    | {
-        colors?: { available?: string; reserved?: string; sold?: string };
-      }
-    | undefined;
-
-  const colors = {
-    available: floorSettings?.colors?.available || "#3b82f6",
-    reserved: floorSettings?.colors?.reserved || "#f59e0b",
-    sold: floorSettings?.colors?.sold || "#ef4444",
-  };
+  const colors = useMemo(() => {
+    const raw =
+      subProject?.polygon_settings_floor ?? project.polygon_settings_floor;
+    const floorSettings = raw as
+      | {
+          colors?: { available?: string; reserved?: string; sold?: string };
+        }
+      | undefined
+      | null;
+    return {
+      available: floorSettings?.colors?.available ?? "#3b82f6",
+      reserved: floorSettings?.colors?.reserved ?? "#f59e0b",
+      sold: floorSettings?.colors?.sold ?? "#ef4444",
+    };
+  }, [subProject?.polygon_settings_floor, project.polygon_settings_floor]);
 
   return (
     <div className="mx-auto flex grow select-none flex-col overflow-hidden bg-white px-4 py-8 md:container md:px-6">

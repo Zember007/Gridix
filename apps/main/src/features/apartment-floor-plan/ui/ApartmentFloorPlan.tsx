@@ -9,6 +9,7 @@ import { loadSelectorFloorsLight } from "@/features/projectSelector/api/projectS
 
 interface ApartmentFloorPlanProps {
   projectId: string;
+  subProjectId?: string | null;
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
   selectedFloorNumber?: number;
@@ -27,6 +28,7 @@ interface BuildingFloor {
 const ApartmentFloorPlan = ({
   project,
   projectId,
+  subProjectId,
   apartments,
   onApartmentSelect,
   selectedFloorNumber,
@@ -82,6 +84,7 @@ const ApartmentFloorPlan = ({
     <FloorPlanView
       currency={project?.currency}
       projectId={projectId}
+      subProjectId={subProjectId}
       floorNumber={selectedFloor}
       apartments={floorApartments}
       onApartmentSelect={onApartmentSelect}

@@ -11,6 +11,8 @@ import { Spinner } from "@/shared/ui/Spinner";
 
 interface FloorPlanViewProps {
   projectId: string;
+  /** When the selector is scoped to a building, floor plan image + `polygon_settings_floor` are loaded for this sub-project. */
+  subProjectId?: string | null;
   floorNumber: number;
   apartments?: Apartment[];
   onApartmentSelect?: (apartment: Apartment) => void;
@@ -42,13 +44,17 @@ type FloorSettings = {
   };
 };
 
+const DEFAULT_FLOOR_COLORS = {
+  available: "#3b82f6",
+  reserved: "#f59e0b",
+  sold: "#ef4444",
+} as const;
+
+const DEFAULT_FLOOR_OPACITY = { normal: 0.3, hover: 0.5 } as const;
+
 const DEFAULT_FLOOR_SETTINGS: FloorSettings = {
-  colors: {
-    available: "#3b82f6",
-    reserved: "#f59e0b",
-    sold: "#ef4444",
-  },
-  opacity: { normal: 0.3, hover: 0.5 },
+  colors: { ...DEFAULT_FLOOR_COLORS },
+  opacity: { ...DEFAULT_FLOOR_OPACITY },
   display: {
     showNumbers: true,
     showTooltip: false,
@@ -58,8 +64,35 @@ const DEFAULT_FLOOR_SETTINGS: FloorSettings = {
   hoverEffects: { glow: true, colorChange: true, opacityChange: true },
 };
 
+function mergeFloorSettings(fromApi: unknown): FloorSettings {
+  const src =
+    fromApi && typeof fromApi === "object" ? (fromApi as FloorSettings) : null;
+  if (!src) {
+    return { ...DEFAULT_FLOOR_SETTINGS };
+  }
+  const colors = {
+    available: src.colors?.available ?? DEFAULT_FLOOR_COLORS.available,
+    reserved: src.colors?.reserved ?? DEFAULT_FLOOR_COLORS.reserved,
+    sold: src.colors?.sold ?? DEFAULT_FLOOR_COLORS.sold,
+  };
+  const opacity = {
+    normal: src.opacity?.normal ?? DEFAULT_FLOOR_OPACITY.normal,
+    hover: src.opacity?.hover ?? DEFAULT_FLOOR_OPACITY.hover,
+  };
+  return {
+    colors,
+    opacity,
+    display: { ...DEFAULT_FLOOR_SETTINGS.display, ...(src.display ?? {}) },
+    hoverEffects: {
+      ...DEFAULT_FLOOR_SETTINGS.hoverEffects,
+      ...(src.hoverEffects ?? {}),
+    },
+  };
+}
+
 const FloorPlanView = ({
   projectId,
+  subProjectId,
   floorNumber,
   apartments,
   onApartmentSelect,
@@ -91,17 +124,19 @@ const FloorPlanView = ({
     const loadData = async () => {
       try {
         setLoading(true);
-        const result = await loadSelectorFloorPlan(projectId, floorNumber);
+        const result = await loadSelectorFloorPlan(
+          projectId,
+          floorNumber,
+          subProjectId ?? undefined,
+        );
         if (cancelled) return;
 
         setFloorPlan(result.floorPlan);
-        setFloorSettings(
-          (result.floorSettings as FloorSettings) ?? DEFAULT_FLOOR_SETTINGS,
-        );
+        setFloorSettings(mergeFloorSettings(result.floorSettings));
       } catch (error) {
         if (cancelled) return;
         console.error("Error loading floor plan:", error);
-        setFloorSettings(DEFAULT_FLOOR_SETTINGS);
+        setFloorSettings(mergeFloorSettings(null));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -112,7 +147,7 @@ const FloorPlanView = ({
     return () => {
       cancelled = true;
     };
-  }, [projectId, floorNumber]);
+  }, [projectId, floorNumber, subProjectId]);
 
   const getApartmentColor = useCallback(
     (apartment: Apartment) => {
@@ -225,6 +260,7 @@ const FloorPlanView = ({
           showLabels={floorSettings?.display?.showNumbers !== false}
           labelsById={labelsById}
           getStyleById={getStyleById}
+          viewHoverEffects={floorSettings?.hoverEffects}
           zoomToSelection={true}
           onHoverAnnotationId={(id) => {
             if (!(floorSettings?.display?.showTooltip ?? false)) return;

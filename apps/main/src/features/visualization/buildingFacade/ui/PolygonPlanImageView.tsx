@@ -1257,7 +1257,7 @@ const PolygonPlanImageView = ({
     <>
       <div
         ref={outerRef}
-        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 px-4 md:rounded-lg md:px-0 ${isMobile ? "touch-manipulation" : ""}`}
+        className={`relative flex min-h-0 w-full flex-col items-stretch justify-center overflow-hidden bg-gray-50 px-4 md:px-0 ${isMobile ? "touch-manipulation" : ""}`}
         style={{
           minHeight: isMobile ? "auto" : 600,
           height: isMobile
@@ -1265,6 +1265,10 @@ const PolygonPlanImageView = ({
             : planKind === "masterplan"
               ? "100%"
               : "calc(100dvh - 200px)",
+          maxHeight:
+            !isMobile && planKind === "masterplan"
+              ? "calc(100dvh - 60px)"
+              : undefined,
           width: "100%",
           maxWidth: "100%",
           boxShadow: "0 8px 32px rgba(0,0,0,0.12)",

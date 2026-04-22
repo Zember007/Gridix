@@ -12,6 +12,7 @@ const FloorSelector = lazy(() =>
 
 interface FloorPlanSectionProps {
   project: Project;
+  subProjectId?: string | null;
   filteredApartments: Apartment[];
   allApartments: Apartment[];
   selectedFloorForPlan: number | null;
@@ -27,6 +28,7 @@ interface FloorPlanSectionProps {
 
 export const FloorPlanSection = ({
   project,
+  subProjectId,
   filteredApartments,
   allApartments,
   selectedFloorForPlan,
@@ -46,6 +48,7 @@ export const FloorPlanSection = ({
         <ApartmentFloorPlan
           project={project}
           projectId={project.id}
+          subProjectId={subProjectId}
           apartments={filteredApartments.filter((apt) =>
             selectedFloorForPlan !== null
               ? apt.floor_number === selectedFloorForPlan

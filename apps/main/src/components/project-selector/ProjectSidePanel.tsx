@@ -392,6 +392,7 @@ export const ProjectSidePanel = ({
               <FloorPlanView
                 floorNumber={state.floorNumber}
                 projectId={project.id}
+                subProjectId={subProject?.id}
                 selectedCurrency={selectedCurrency}
               />
             </div>

@@ -57,6 +57,13 @@ export interface PolygonAnnotatorProps {
   onHoverAnnotationId?: (id: string | null) => void;
   zoomToSelection?: boolean;
   getStyleById?: (id: string) => DrawingStyle;
+  /** View mode (Annotorious / OpenSeadragon): mirrors controlled engine hover; source is usually `polygon_settings_floor.hoverEffects`. */
+  viewHoverEffects?: {
+    glow?: boolean;
+    colorChange?: boolean;
+    opacityChange?: boolean;
+    scale?: boolean;
+  };
   showLabels?: boolean;
   labelsById?: Record<string, string | number | null | undefined>;
   className?: string;
@@ -999,6 +1006,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
       onHoverAnnotationId,
       zoomToSelection = false,
       getStyleById,
+      viewHoverEffects,
       showLabels = false,
       labelsById,
     },
@@ -1758,23 +1766,62 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
           (mode !== "view" &&
             currentShape &&
             annotation.id === currentShape.id);
+        const isHovered =
+          mode === "view" && !!hovered && annotation.id === hovered.id;
+        const hoverColorChange = viewHoverEffects?.colorChange !== false;
+        const hoverOpacityChange = viewHoverEffects?.opacityChange !== false;
 
         const baseFillOpacity = base.fillOpacity ?? (isSelected ? 0.5 : 0.25);
         const baseStrokeWidth = base.strokeWidth ?? 2;
+        const baseFill =
+          (base.fill as string) ?? (isSelected ? "#3b82f6" : "#00ff00");
+        const baseStroke = (base.stroke as string) ?? baseFill;
+
+        if (isSelected) {
+          return {
+            fill: baseFill,
+            fillOpacity: Math.min(1, baseFillOpacity + 0.15),
+            stroke: baseStroke,
+            strokeOpacity: base.strokeOpacity ?? 1,
+            strokeWidth: Math.max(baseStrokeWidth, 3),
+          };
+        }
+
+        if (isHovered) {
+          const hoverFill = hoverColorChange ? "#3b82f6" : baseFill;
+          const hoverStroke = hoverColorChange ? "#3b82f6" : baseStroke;
+          let fillOpacity = baseFillOpacity;
+          if (hoverOpacityChange) {
+            fillOpacity = Math.max(
+              baseFillOpacity,
+              hoverColorChange ? 0.5 : baseFillOpacity + 0.2,
+            );
+          }
+          return {
+            fill: hoverFill,
+            fillOpacity: Math.min(1, fillOpacity),
+            stroke: hoverStroke,
+            strokeOpacity: base.strokeOpacity ?? 1,
+            strokeWidth: Math.max(baseStrokeWidth, 3.5),
+          };
+        }
 
         return {
-          fill: base.fill ?? (isSelected ? "#3b82f6" : "#00ff00"),
-          fillOpacity: isSelected
-            ? Math.min(1, baseFillOpacity + 0.15)
-            : baseFillOpacity,
-          stroke: base.stroke ?? (isSelected ? "#3b82f6" : "#00ff00"),
+          fill: baseFill,
+          fillOpacity: baseFillOpacity,
+          stroke: baseStroke,
           strokeOpacity: base.strokeOpacity ?? 1,
-          strokeWidth: isSelected
-            ? Math.max(baseStrokeWidth, 3)
-            : baseStrokeWidth,
+          strokeWidth: baseStrokeWidth,
         };
       },
-      [currentShape, getStyleById, mode, selectedAnnotationId],
+      [
+        currentShape,
+        getStyleById,
+        hovered,
+        mode,
+        selectedAnnotationId,
+        viewHoverEffects,
+      ],
     );
 
     // Labels (viewer mode): render as OSD overlays anchored to polygon visual centers
@@ -1978,7 +2025,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         className="relative flex h-full w-full flex-col gap-2"
       >
         {/* Область аннотирования */}
-        <div className="flex-1 overflow-hidden rounded-lg border">
+        <div className="flex-1 overflow-hidden border">
           <OpenSeadragonAnnotator
             style={annotationStyle}
             drawingMode="click"
