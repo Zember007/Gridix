@@ -68,7 +68,6 @@ const PDFTemplatePage = ({
       image_url: string;
       description?: string | null;
       order_index: number;
-      type: "layout" | "apartment";
     }>
   >([]);
   const [floorPlan, setFloorPlan] = useState<{
@@ -111,15 +110,11 @@ const PDFTemplatePage = ({
         setCompanyName(result.companyName);
         setCompanyLogoUrl(result.companyLogoUrl);
 
-        const layoutPhotos = (result.layoutPhotos ?? []).map((photo) => ({
-          ...photo,
-          type: "layout" as const,
-        }));
-        const apartmentPhotos = (result.apartmentPhotos ?? []).map((photo) => ({
-          ...photo,
-          type: "apartment" as const,
-        }));
-        setPhotos([...layoutPhotos, ...apartmentPhotos]);
+        const apartmentSorted = [...(result.apartmentPhotos ?? [])].sort(
+          (a, b) => a.order_index - b.order_index,
+        );
+        const firstApartmentPhoto = apartmentSorted[0];
+        setPhotos(firstApartmentPhoto ? [firstApartmentPhoto] : []);
 
         if (
           result.floorPlan?.image_url &&
@@ -353,7 +348,7 @@ const PDFTemplatePage = ({
                 className="h-10 w-10 rounded-md object-contain"
               />
             )}
-            <span className="text-lg font-semibold text-gray-700">
+            <span className="text-xl font-semibold text-gray-900">
               {companyName || "Company"}
             </span>
           </div>
@@ -378,7 +373,7 @@ const PDFTemplatePage = ({
               <h2 className="mb-2 text-xl font-semibold text-gray-900">
                 {apartment.rooms == 0
                   ? t("apartment.studio")
-                  : `${apartment.rooms} ${typeof apartment.rooms === "number" ? t("apartment.rooms") : ""}`}{" "}
+                  : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}{" "}
                 {apartment.area} {t("apartment.sqm")}
               </h2>
               <p className="text-gray-600">
@@ -511,19 +506,14 @@ const PDFTemplatePage = ({
             <h3 className="text-xl font-semibold text-gray-900">
               {t("pdf.photos")}
             </h3>
-            <div className="grid grid-cols-3 gap-6">
-              {photos.slice(0, 3).map((photo, index) => (
+            <div className="grid max-w-2xl grid-cols-1 gap-6">
+              {photos.map((photo) => (
                 <div key={photo.id} className="relative">
                   <img
                     src={photo.image_url}
-                    alt={`${photo.type === "layout" ? t("pdf.layout") : t("pdf.apartmentPhoto")} ${index + 1}`}
+                    alt={t("pdf.apartmentPhoto")}
                     className="h-auto w-full rounded-lg border border-gray-200 object-cover"
                   />
-                  {photo.type === "layout" && (
-                    <div className="absolute bottom-2 left-2 rounded bg-black bg-opacity-50 px-2 py-1 text-xs text-white">
-                      {t("pdf.layout")}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
