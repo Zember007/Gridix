@@ -732,7 +732,7 @@ const PolygonPlanImageView = ({
       if (isMobile) {
         handleFloorHover(firstFloor);
       } else {
-        setSelectedFloor(firstFloor);
+        setSelectedFloor(null);
         setHoveredFloor(null);
         setShowPopup(false);
         setPopupAnchor(null);
@@ -982,6 +982,7 @@ const PolygonPlanImageView = ({
       setMasterplanTooltipAreaId(null);
     }
     if (!isMobile) {
+      setSelectedFloor(null);
       setShowPopup(false);
       setPopupAnchor(null);
       setPopupPosition(null);
@@ -1333,6 +1334,8 @@ const PolygonPlanImageView = ({
                     const baseColor = getFloorFillColor(floor);
                     const isHovered = hoveredFloor === floor.floor_number;
                     const isActive = selectedFloor === floor.floor_number;
+                    const polygonEmphasized =
+                      isHovered || (!!isMobile && isActive);
                     const labelText =
                       planKind === "masterplan" &&
                       facadeSettings?.display?.showNumbers &&
@@ -1354,7 +1357,7 @@ const PolygonPlanImageView = ({
                           points={points}
                           fill={baseColor}
                           fillOpacity={
-                            isHovered || isActive
+                            polygonEmphasized
                               ? (facadeSettings?.opacity.hover ?? 0.7)
                               : (facadeSettings?.opacity.normal ?? 0.4)
                           }
