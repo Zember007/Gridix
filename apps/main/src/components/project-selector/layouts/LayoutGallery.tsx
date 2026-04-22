@@ -100,18 +100,20 @@ export const LayoutGallery = ({
           >
             {t("project.allTypes")}
           </Button>
-          <Button
-            variant={selectedRooms === "0" ? "default" : "outline"}
-            size="sm"
-            className={getButtonClass(selectedRooms === "0")}
-            style={getButtonStyle(selectedRooms === "0")}
-            onClick={() => {
-              setSelectedType("all");
-              setSelectedRooms("0");
-            }}
-          >
-            {t("apartment.studio")}
-          </Button>
+          {getUniqueRoomCounts().includes(0) && (
+            <Button
+              variant={selectedRooms === "0" ? "default" : "outline"}
+              size="sm"
+              className={getButtonClass(selectedRooms === "0")}
+              style={getButtonStyle(selectedRooms === "0")}
+              onClick={() => {
+                setSelectedType("all");
+                setSelectedRooms("0");
+              }}
+            >
+              {t("apartment.studio")}
+            </Button>
+          )}
           {getUniqueRoomCounts()
             .filter((rooms) => rooms > 0)
             .map((rooms) => (
@@ -145,26 +147,6 @@ export const LayoutGallery = ({
               {t("apartment.freeLayout")}
             </Button>
           )}
-          <Button
-            variant={selectedRooms === "4+" ? "default" : "outline"}
-            size="sm"
-            className={getButtonClass(selectedRooms === "4+")}
-            style={getButtonStyle(selectedRooms === "4+")}
-            onClick={() => {
-              // Handle 4+ rooms filter - includes free_layout
-              const fourPlusApartments = apartments.filter(
-                (apt) =>
-                  apt.type === "apartment" &&
-                  (Number(apt.rooms) >= 4 || apt.rooms === "free_layout"),
-              );
-              if (fourPlusApartments.length > 0) {
-                setSelectedRooms("4+");
-                setSelectedType("apartment");
-              }
-            }}
-          >
-            4+
-          </Button>
           {project?.has_commercial && (
             <Button
               variant={selectedType === "commercial" ? "default" : "outline"}
@@ -196,7 +178,7 @@ export const LayoutGallery = ({
         </div>
 
         {/* Layout cards: auto-fit so narrow viewports get full-width cards */}
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
+        <div className="flex flex-wrap gap-4">
           {(() => {
             // Group apartments by layout depending on type
             const layoutGroups: { [key: string]: Apartment[] } = {};
@@ -299,7 +281,7 @@ export const LayoutGallery = ({
               return (
                 <Card
                   key={key}
-                  className="w-full min-w-0 overflow-hidden transition-shadow hover:shadow-lg"
+                  className="w-full min-w-0 max-w-[calc(min(100%,338px))] overflow-hidden transition-shadow hover:shadow-lg"
                 >
                   <div className="relative aspect-[4/3] bg-gray-100">
                     {(() => {
@@ -470,9 +452,7 @@ export const LayoutGallery = ({
                           } else {
                             setSelectedType("apartment");
                             setSelectedRooms(
-                              Number(representativeApt?.rooms ?? 0) >= 4
-                                ? "4+"
-                                : String(representativeApt?.rooms ?? 0),
+                              String(representativeApt?.rooms ?? 0),
                             );
                           }
                           setViewMode("list");
