@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -12,6 +13,23 @@ import type { TablesInsert } from "@gridix/types/database";
 
 import { supabase } from "@/shared/api/supabase";
 import type { CompanySettings } from "./types";
+
+const companySettingsSignature = (s: CompanySettings) =>
+  JSON.stringify({
+    company_name: s.company_name || "",
+    tax_id: s.tax_id,
+    address: s.address,
+    phone: s.phone,
+    email: s.email,
+    bank_name: s.bank_name,
+    iban: s.iban,
+    currency: s.currency,
+    vat_payer: s.vat_payer,
+    website: s.website,
+    industry: s.industry,
+    description: s.description,
+    logo_url: s.logo_url,
+  });
 
 type UseAdminSettingsActionsParams = {
   userProfile: SupabaseUser;
@@ -34,8 +52,22 @@ export const useAdminSettingsActions = ({
   const [saving, setSaving] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const companySettingsRef = useRef(companySettings);
+  const lastCommittedCompanySignatureRef = useRef<string | null>(null);
+  const companyPersistInFlight = useRef(false);
   const profileSaveFnRef = useRef<(() => Promise<void>) | null>(null);
   const notificationSaveFnRef = useRef<(() => Promise<void>) | null>(null);
+
+  useEffect(() => {
+    companySettingsRef.current = companySettings;
+  }, [companySettings]);
+
+  // Sync committed snapshot when the row is loaded or refreshed from the server.
+  useEffect(() => {
+    if (!userProfile?.id) return;
+    lastCommittedCompanySignatureRef.current =
+      companySettingsSignature(companySettings);
+  }, [userProfile?.id, companySettings.id, companySettings.updated_at]);
 
   const onProfileReady = useCallback(
     (api: { saveProfile: () => Promise<void> }) => {
@@ -50,6 +82,83 @@ export const useAdminSettingsActions = ({
     },
     [],
   );
+
+  const persistCompanySettingsIfDirty = useCallback(
+    async (options?: { force?: boolean; silent?: boolean }) => {
+      if (!userProfile?.id || companyPersistInFlight.current) return;
+
+      const current = companySettingsRef.current;
+      const nextSignature = companySettingsSignature(current);
+      if (
+        !options?.force &&
+        nextSignature === lastCommittedCompanySignatureRef.current
+      ) {
+        return;
+      }
+
+      companyPersistInFlight.current = true;
+      try {
+        const companyData: TablesInsert<"company_settings"> = {
+          user_id: userProfile.id,
+          company_name: current.company_name || "",
+          tax_id: current.tax_id,
+          address: current.address,
+          phone: current.phone,
+          email: current.email,
+          bank_name: current.bank_name,
+          iban: current.iban,
+          currency: current.currency,
+          vat_payer: current.vat_payer,
+          website: current.website,
+          industry: current.industry,
+          description: current.description,
+          logo_url: current.logo_url,
+          system_domain: getSystemDomain(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: companyResult, error: companyError } = await supabase
+          .from("company_settings")
+          .upsert(companyData, { onConflict: "user_id" })
+          .select()
+          .single();
+
+        if (companyError) {
+          console.error("Supabase company settings error:", companyError);
+          throw companyError;
+        }
+
+        if (companyResult) {
+          setCompanySettings((prev) => ({
+            ...prev,
+            ...(companyResult as CompanySettings),
+            user_id: userProfile.id,
+          }));
+          lastCommittedCompanySignatureRef.current = companySettingsSignature({
+            ...(companyResult as CompanySettings),
+            user_id: userProfile.id,
+          });
+        } else {
+          lastCommittedCompanySignatureRef.current = nextSignature;
+        }
+      } catch (error) {
+        console.error("Error saving company settings:", error);
+        if (!options?.silent) {
+          toast.error(t("adminSettings.errorSaving"));
+        }
+        throw error;
+      } finally {
+        companyPersistInFlight.current = false;
+      }
+    },
+    [getSystemDomain, setCompanySettings, t, userProfile?.id],
+  );
+
+  const scheduleCompanyAutoSave = useCallback(() => {
+    window.setTimeout(() => {
+      void persistCompanySettingsIfDirty({ silent: true });
+    }, 0);
+  }, [persistCompanySettingsIfDirty]);
 
   const handleLogoFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -189,43 +298,7 @@ export const useAdminSettingsActions = ({
         await profileSaveFnRef.current();
       }
 
-      const companyData: TablesInsert<"company_settings"> = {
-        user_id: userProfile.id,
-        company_name: companySettings.company_name || "",
-        tax_id: companySettings.tax_id,
-        address: companySettings.address,
-        phone: companySettings.phone,
-        email: companySettings.email,
-        bank_name: companySettings.bank_name,
-        iban: companySettings.iban,
-        currency: companySettings.currency,
-        vat_payer: companySettings.vat_payer,
-        website: companySettings.website,
-        industry: companySettings.industry,
-        description: companySettings.description,
-        logo_url: companySettings.logo_url,
-        system_domain: getSystemDomain(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data: companyResult, error: companyError } = await supabase
-        .from("company_settings")
-        .upsert(companyData, { onConflict: "user_id" })
-        .select()
-        .single();
-
-      if (companyError) {
-        console.error("Supabase company settings error:", companyError);
-        throw companyError;
-      }
-
-      if (companyResult) {
-        setCompanySettings((prev) => ({
-          ...prev,
-          ...(companyResult as CompanySettings),
-          user_id: userProfile.id,
-        }));
-      }
+      await persistCompanySettingsIfDirty({ force: true, silent: true });
 
       if (notificationSaveFnRef.current) {
         await notificationSaveFnRef.current();
@@ -252,5 +325,6 @@ export const useAdminSettingsActions = ({
     handleExportBackup,
     handleResetSettings,
     handleSave,
+    scheduleCompanyAutoSave,
   };
 };

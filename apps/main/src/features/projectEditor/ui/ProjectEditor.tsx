@@ -82,6 +82,27 @@ import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshA
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
 
+const projectPersistSignature = (p: ProjectEditorProject) =>
+  JSON.stringify({
+    name: p.name.trim(),
+    description: p.description || null,
+    address: p.address || null,
+    floors: p.floors,
+    has_parking: p.has_parking,
+    has_commercial: p.has_commercial,
+    latitude: p.latitude,
+    longitude: p.longitude,
+    currency: p.currency,
+    installment_enabled: p.installment_enabled,
+    min_down_payment_percent: p.min_down_payment_percent,
+    max_installment_months: p.max_installment_months,
+    pdf_presentation_url: p.pdf_presentation_url,
+    theme_color: p.theme_color,
+    project_type: p.project_type || "building",
+    available_languages: p.available_languages,
+    has_masterplan: p.has_masterplan,
+  });
+
 interface ProjectEditorProps {
   projectId: string;
   isNew: boolean;
@@ -600,6 +621,9 @@ const ProjectEditor = ({
   const editorDataContext = useProjectEditorDataContext();
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
+  const projectRef = useRef(project);
+  const lastCommittedProjectSigRef = useRef<string | null>(null);
+  const projectPersistInFlight = useRef(false);
 
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -615,6 +639,15 @@ const ProjectEditor = ({
   useEffect(() => {
     floorsSyncedFromSubProjectRef.current = null;
   }, [projectId]);
+
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
+
+  useEffect(() => {
+    if (isNew || !project.id) return;
+    lastCommittedProjectSigRef.current = projectPersistSignature(project);
+  }, [isNew, projectId, project.id]);
 
   useEffect(() => {
     if (
@@ -663,7 +696,7 @@ const ProjectEditor = ({
   useEffect(() => {
     const page = searchParams.get("page");
     if (page) {
-      // Валидируем, что page является допустимой вкладкой
+      const normalized = page === "general" ? "basic" : page;
       const validTabs = [
         "basic",
         "building",
@@ -674,8 +707,8 @@ const ProjectEditor = ({
         "genplan",
         "domains",
       ];
-      if (validTabs.includes(page)) {
-        setActiveTab(page);
+      if (validTabs.includes(normalized)) {
+        setActiveTab(normalized);
       }
     }
   }, [searchParams]);
@@ -853,6 +886,125 @@ const ProjectEditor = ({
     user?.id,
   ]);
 
+  const persistProjectIfDirty = useCallback(
+    async (options?: { force?: boolean; showSuccessToast?: boolean }) => {
+      if (
+        isNew ||
+        readOnly ||
+        isRestrictedProject ||
+        projectPersistInFlight.current
+      ) {
+        return false;
+      }
+      const current = projectRef.current;
+      if (!current.id || !user) return false;
+      if (!current.name.trim()) {
+        if (options?.showSuccessToast) {
+          toast.error(t("projectEditor.projectNameRequired"));
+        }
+        return false;
+      }
+
+      const nextSig = projectPersistSignature(current);
+      if (!options?.force && nextSig === lastCommittedProjectSigRef.current) {
+        return true;
+      }
+
+      const canEdit =
+        user &&
+        (cachedProject?.user_id === user.id ||
+          (isManagerMode &&
+            activeWorkspaceId &&
+            cachedProject?.user_id === activeWorkspaceId) ||
+          (isManager &&
+            cachedProject?.user_id &&
+            developerIds.includes(cachedProject.user_id)));
+
+      if (!canEdit) {
+        toast.error(t("projectEditor.errorSaving"));
+        return false;
+      }
+
+      projectPersistInFlight.current = true;
+      try {
+        const saveData = {
+          name: current.name.trim(),
+          description: current.description || null,
+          address: current.address || null,
+          has_parking: current.has_parking,
+          has_commercial: current.has_commercial,
+          latitude: current.latitude,
+          longitude: current.longitude,
+          currency: current.currency,
+          installment_enabled: current.installment_enabled,
+          min_down_payment_percent: current.min_down_payment_percent,
+          max_installment_months: current.max_installment_months,
+          pdf_presentation_url: current.pdf_presentation_url,
+          theme_color: current.theme_color,
+          project_type: current.project_type || "building",
+          available_languages: current.available_languages,
+          has_masterplan: current.has_masterplan,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+          .from("projects")
+          .update(saveData)
+          .eq("id", current.id);
+
+        if (error) throw error;
+
+        if (!current.has_masterplan) {
+          const { error: subErr } = await supabase
+            .from("sub_projects")
+            .update({
+              name: current.name.trim(),
+              type: current.project_type === "object" ? "object" : "building",
+              floors: current.floors,
+              has_parking: current.has_parking,
+              has_commercial: current.has_commercial,
+              address: current.address || null,
+              latitude: current.latitude,
+              longitude: current.longitude,
+            })
+            .eq("project_id", current.id)
+            .eq("is_default", true);
+          if (subErr) throw subErr;
+        }
+
+        lastCommittedProjectSigRef.current = nextSig;
+        if (options?.showSuccessToast) {
+          toast.success(t("projectEditor.projectSaved"));
+        }
+        return true;
+      } catch (error) {
+        console.error("Error saving project:", error);
+        toast.error(t("projectEditor.errorSaving"));
+        return false;
+      } finally {
+        projectPersistInFlight.current = false;
+      }
+    },
+    [
+      isNew,
+      readOnly,
+      isRestrictedProject,
+      user,
+      cachedProject?.user_id,
+      isManagerMode,
+      activeWorkspaceId,
+      isManager,
+      developerIds,
+      t,
+    ],
+  );
+
+  const scheduleProjectAutoSave = useCallback(() => {
+    window.setTimeout(() => {
+      void persistProjectIfDirty();
+    }, 0);
+  }, [persistProjectIfDirty]);
+
   const handleSave = async () => {
     if (!project.name.trim()) {
       toast.error(t("projectEditor.projectNameRequired"));
@@ -922,45 +1074,7 @@ const ProjectEditor = ({
         });
         navigate(`/admin/project/${data.id}`);
       } else {
-        const canEdit =
-          user &&
-          (cachedProject?.user_id === user.id ||
-            (isManagerMode &&
-              activeWorkspaceId &&
-              cachedProject?.user_id === activeWorkspaceId) ||
-            (isManager &&
-              cachedProject?.user_id &&
-              developerIds.includes(cachedProject.user_id)));
-
-        if (!canEdit) {
-          throw new Error("У вас нет прав на редактирование этого проекта");
-        }
-
-        const { error } = await supabase
-          .from("projects")
-          .update(saveData)
-          .eq("id", project.id);
-
-        if (error) throw error;
-
-        if (!project.has_masterplan) {
-          await supabase
-            .from("sub_projects")
-            .update({
-              name: project.name.trim(),
-              type: project.project_type === "object" ? "object" : "building",
-              floors: project.floors,
-              has_parking: project.has_parking,
-              has_commercial: project.has_commercial,
-              address: project.address || null,
-              latitude: project.latitude,
-              longitude: project.longitude,
-            })
-            .eq("project_id", project.id)
-            .eq("is_default", true);
-        }
-
-        toast.success(t("projectEditor.projectSaved"));
+        await persistProjectIfDirty({ force: true, showSuccessToast: true });
       }
     } catch (error) {
       console.error("Error saving project:", error);
@@ -982,11 +1096,18 @@ const ProjectEditor = ({
         longitude: parseFloat(parsedLon ?? "0"),
       }));
       e.preventDefault(); // предотвращаем вставку в одно поле
+      scheduleProjectAutoSave();
     }
   };
-  const handlePdfUrlChange = useCallback((pdfUrl: string | null) => {
-    setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
-  }, []);
+  const handlePdfUrlChange = useCallback(
+    (pdfUrl: string | null) => {
+      setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
+      window.setTimeout(() => {
+        void persistProjectIfDirty();
+      }, 0);
+    },
+    [persistProjectIfDirty],
+  );
 
   const handleBuildingImageUrlChange = useCallback((url: string | null) => {
     setProject((prev) => ({ ...prev, building_image_url: url }));
@@ -1283,6 +1404,7 @@ const ProjectEditor = ({
                                   name: e.target.value,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t("projectEditor.projectName")}
                             />
                           </div>
@@ -1299,6 +1421,7 @@ const ProjectEditor = ({
                                   description: e.target.value,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t("projectEditor.description")}
                               rows={3}
                             />
@@ -1316,6 +1439,7 @@ const ProjectEditor = ({
                                   address: e.target.value,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t("projectEditor.address")}
                             />
                           </div>
@@ -1379,6 +1503,7 @@ const ProjectEditor = ({
                                             ),
                                           };
                                         });
+                                        scheduleProjectAutoSave();
                                       }}
                                     />
                                     <Label
@@ -1404,15 +1529,16 @@ const ProjectEditor = ({
                                   </Label>
                                   <Select
                                     value={editorScopeKind}
-                                    onValueChange={(v) =>
+                                    onValueChange={(v) => {
                                       setProject((prev) => ({
                                         ...prev,
                                         project_type:
                                           v === "object"
                                             ? "object"
                                             : "building",
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                   >
                                     <SelectTrigger id="project-type">
                                       <SelectValue />
@@ -1446,6 +1572,7 @@ const ProjectEditor = ({
                                           floors: parseInt(e.target.value) || 1,
                                         }))
                                       }
+                                      onBlur={scheduleProjectAutoSave}
                                     />
                                   </div>
                                 )}
@@ -1456,12 +1583,13 @@ const ProjectEditor = ({
                                   <Switch
                                     id="has-parking"
                                     checked={project.has_parking}
-                                    onCheckedChange={(checked) =>
+                                    onCheckedChange={(checked) => {
                                       setProject((prev) => ({
                                         ...prev,
                                         has_parking: checked,
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                   />
                                   <Label htmlFor="has-parking">
                                     {t("projectEditor.hasParking")}
@@ -1472,12 +1600,13 @@ const ProjectEditor = ({
                                   <Switch
                                     id="has-commercial"
                                     checked={project.has_commercial}
-                                    onCheckedChange={(checked) =>
+                                    onCheckedChange={(checked) => {
                                       setProject((prev) => ({
                                         ...prev,
                                         has_commercial: checked,
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                   />
                                   <Label htmlFor="has-commercial">
                                     {t("projectEditor.hasCommercial")}
@@ -1504,6 +1633,7 @@ const ProjectEditor = ({
                                     : null,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t(
                                 "projectEditor.latitudePlaceholder",
                               )}
@@ -1530,6 +1660,7 @@ const ProjectEditor = ({
                                     : null,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t(
                                 "projectEditor.longitudePlaceholder",
                               )}
@@ -1544,12 +1675,13 @@ const ProjectEditor = ({
                             </Label>
                             <Select
                               value={project.currency}
-                              onValueChange={(value: CurrencyType) =>
+                              onValueChange={(value: CurrencyType) => {
                                 setProject((prev) => ({
                                   ...prev,
                                   currency: value,
-                                }))
-                              }
+                                }));
+                                scheduleProjectAutoSave();
+                              }}
                             >
                               <SelectTrigger>
                                 <SelectValue
@@ -1580,12 +1712,14 @@ const ProjectEditor = ({
                                   id="theme-color"
                                   type="color"
                                   value={project.theme_color}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
                                     setProject((prev) => ({
                                       ...prev,
                                       theme_color: e.target.value,
-                                    }))
-                                  }
+                                    }));
+                                    scheduleProjectAutoSave();
+                                  }}
+                                  onBlur={scheduleProjectAutoSave}
                                   className="h-10 w-20 cursor-pointer rounded border p-1"
                                 />
                                 <Input
@@ -1597,6 +1731,7 @@ const ProjectEditor = ({
                                       theme_color: e.target.value,
                                     }))
                                   }
+                                  onBlur={scheduleProjectAutoSave}
                                   placeholder="#000000"
                                   className="flex-1"
                                 />
@@ -1617,12 +1752,13 @@ const ProjectEditor = ({
                                     type="button"
                                     className="h-8 w-8 rounded-full border-2 border-gray-300 transition-colors hover:border-gray-400"
                                     style={{ backgroundColor: color }}
-                                    onClick={() =>
+                                    onClick={() => {
                                       setProject((prev) => ({
                                         ...prev,
                                         theme_color: color,
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                     title={color}
                                   />
                                 ))}
@@ -1659,12 +1795,13 @@ const ProjectEditor = ({
                               <Switch
                                 id="installment-enabled"
                                 checked={project.installment_enabled}
-                                onCheckedChange={(checked) =>
+                                onCheckedChange={(checked) => {
                                   setProject((prev) => ({
                                     ...prev,
                                     installment_enabled: checked,
-                                  }))
-                                }
+                                  }));
+                                  scheduleProjectAutoSave();
+                                }}
                               />
                               <Label htmlFor="installment-enabled">
                                 {t("projectEditor.enableInstallment")}
@@ -1695,6 +1832,7 @@ const ProjectEditor = ({
                                         ),
                                       }))
                                     }
+                                    onBlur={scheduleProjectAutoSave}
                                     placeholder="20"
                                   />
                                   <p className="mt-1 text-xs text-gray-500">
@@ -1724,6 +1862,7 @@ const ProjectEditor = ({
                                         ),
                                       }))
                                     }
+                                    onBlur={scheduleProjectAutoSave}
                                     placeholder="24"
                                   />
                                   <p className="mt-1 text-xs text-gray-500">

@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, type ClipboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Button,
@@ -42,6 +48,18 @@ type Tab =
   | "photos"
   | "fields";
 
+const subProjectPersistSignature = (sp: SubProject) =>
+  JSON.stringify({
+    name: sp.name,
+    type: sp.type,
+    floors: sp.floors,
+    has_parking: sp.has_parking,
+    has_commercial: sp.has_commercial,
+    address: sp.address?.trim() || null,
+    latitude: sp.latitude,
+    longitude: sp.longitude,
+  });
+
 export default function SubProjectEditorPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -59,28 +77,9 @@ export default function SubProjectEditorPage() {
   const [saving, setSaving] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  const handlePasteCoords = useCallback(
-    (e: ClipboardEvent<HTMLInputElement>) => {
-      const text = e.clipboardData.getData("Text");
-      const parts = text.split(",").map((part) => part.trim());
-
-      if (parts.length === 2) {
-        const [parsedLat, parsedLon] = parts;
-        setSubProject((prev) =>
-          prev
-            ? {
-                ...prev,
-                latitude: parseFloat(parsedLat ?? "0"),
-                longitude: parseFloat(parsedLon ?? "0"),
-              }
-            : prev,
-        );
-        e.preventDefault();
-      }
-    },
-    [],
-  );
+  const subProjectRef = useRef<SubProject | null>(null);
+  const lastCommittedSubProjectSig = useRef<string | null>(null);
+  const subProjectPersistInFlight = useRef(false);
 
   const load = useCallback(async () => {
     if (!projectSlug || !subProjectSlug) return;
@@ -116,28 +115,92 @@ export default function SubProjectEditorPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    subProjectRef.current = subProject;
+  }, [subProject]);
+
+  useEffect(() => {
+    if (!subProject?.id) return;
+    lastCommittedSubProjectSig.current = subProjectPersistSignature(subProject);
+  }, [subProject?.id]);
+
+  const persistSubProjectIfDirty = useCallback(
+    async (options?: { force?: boolean; showSuccessToast?: boolean }) => {
+      if (subProjectPersistInFlight.current) return false;
+      const sp = subProjectRef.current;
+      if (!sp?.id) return false;
+
+      const nextSig = subProjectPersistSignature(sp);
+      if (!options?.force && nextSig === lastCommittedSubProjectSig.current) {
+        return true;
+      }
+
+      subProjectPersistInFlight.current = true;
+      try {
+        const { error } = await supabase
+          .from("sub_projects")
+          .update({
+            name: sp.name,
+            type: sp.type,
+            floors: sp.floors,
+            has_parking: sp.has_parking,
+            has_commercial: sp.has_commercial,
+            address: sp.address?.trim() || null,
+            latitude: sp.latitude,
+            longitude: sp.longitude,
+          })
+          .eq("id", sp.id);
+        if (error) throw error;
+        lastCommittedSubProjectSig.current = nextSig;
+        if (options?.showSuccessToast) {
+          toast.success(t("projectEditor.projectSaved"));
+        }
+        return true;
+      } catch (err) {
+        console.error("Error saving sub-project:", err);
+        toast.error(t("projectEditor.saveError"));
+        return false;
+      } finally {
+        subProjectPersistInFlight.current = false;
+      }
+    },
+    [t],
+  );
+
+  const scheduleSubProjectAutoSave = useCallback(() => {
+    window.setTimeout(() => {
+      void persistSubProjectIfDirty();
+    }, 0);
+  }, [persistSubProjectIfDirty]);
+
+  const handlePasteCoords = useCallback(
+    (e: ClipboardEvent<HTMLInputElement>) => {
+      const text = e.clipboardData.getData("Text");
+      const parts = text.split(",").map((part) => part.trim());
+
+      if (parts.length === 2) {
+        const [parsedLat, parsedLon] = parts;
+        setSubProject((prev) =>
+          prev
+            ? {
+                ...prev,
+                latitude: parseFloat(parsedLat ?? "0"),
+                longitude: parseFloat(parsedLon ?? "0"),
+              }
+            : prev,
+        );
+        e.preventDefault();
+        scheduleSubProjectAutoSave();
+      }
+    },
+    [scheduleSubProjectAutoSave],
+  );
+
   const handleSave = async () => {
     if (!subProject) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("sub_projects")
-        .update({
-          name: subProject.name,
-          type: subProject.type,
-          floors: subProject.floors,
-          has_parking: subProject.has_parking,
-          has_commercial: subProject.has_commercial,
-          address: subProject.address?.trim() || null,
-          latitude: subProject.latitude,
-          longitude: subProject.longitude,
-        })
-        .eq("id", subProject.id);
-      if (error) throw error;
-      toast.success(t("projectEditor.projectSaved"));
-    } catch (err) {
-      console.error("Error saving sub-project:", err);
-      toast.error(t("projectEditor.saveError"));
+      await persistSubProjectIfDirty({ force: true, showSuccessToast: true });
     } finally {
       setSaving(false);
     }
@@ -250,6 +313,7 @@ export default function SubProjectEditorPage() {
                             prev ? { ...prev, name: e.target.value } : prev,
                           )
                         }
+                        onBlur={scheduleSubProjectAutoSave}
                       />
                     </div>
 
@@ -265,6 +329,7 @@ export default function SubProjectEditorPage() {
                             prev ? { ...prev, address: e.target.value } : prev,
                           )
                         }
+                        onBlur={scheduleSubProjectAutoSave}
                         placeholder={t("projectEditor.address")}
                       />
                     </div>
@@ -292,6 +357,7 @@ export default function SubProjectEditorPage() {
                                 : prev,
                             )
                           }
+                          onBlur={scheduleSubProjectAutoSave}
                           placeholder={t("projectEditor.latitudePlaceholder")}
                         />
                         <p className="mt-1 text-xs text-gray-500">
@@ -320,6 +386,7 @@ export default function SubProjectEditorPage() {
                                 : prev,
                             )
                           }
+                          onBlur={scheduleSubProjectAutoSave}
                           placeholder={t("projectEditor.longitudePlaceholder")}
                         />
                         <p className="mt-1 text-xs text-gray-500">
@@ -334,11 +401,12 @@ export default function SubProjectEditorPage() {
                         <Label>{t("projectEditor.projectType")}</Label>
                         <Select
                           value={subProject.type || "building"}
-                          onValueChange={(v: string) =>
+                          onValueChange={(v: string) => {
                             setSubProject((prev) =>
                               prev ? { ...prev, type: v } : prev,
-                            )
-                          }
+                            );
+                            scheduleSubProjectAutoSave();
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -372,6 +440,7 @@ export default function SubProjectEditorPage() {
                                   : prev,
                               )
                             }
+                            onBlur={scheduleSubProjectAutoSave}
                           />
                         </div>
                       )}
@@ -382,22 +451,24 @@ export default function SubProjectEditorPage() {
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={subProject.has_parking ?? false}
-                          onCheckedChange={(v) =>
+                          onCheckedChange={(v) => {
                             setSubProject((prev) =>
                               prev ? { ...prev, has_parking: v } : prev,
-                            )
-                          }
+                            );
+                            scheduleSubProjectAutoSave();
+                          }}
                         />
                         <Label>{t("projectEditor.hasParking")}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={subProject.has_commercial ?? false}
-                          onCheckedChange={(v) =>
+                          onCheckedChange={(v) => {
                             setSubProject((prev) =>
                               prev ? { ...prev, has_commercial: v } : prev,
-                            )
-                          }
+                            );
+                            scheduleSubProjectAutoSave();
+                          }}
                         />
                         <Label>{t("projectEditor.hasCommercial")}</Label>
                       </div>
