@@ -1113,7 +1113,7 @@ const ApartmentDetailsPage = ({
                           {apartment.floor_number} {t("apartment.floor")}
                         </div>
                       </div>
-                      <div className="flex justify-between gap-[15px]">
+                      <div className="flex flex-wrap justify-between gap-[15px]">
                         {apartment.status === "available" ? (
                           <>
                             <div className="flex flex-col items-start gap-4 whitespace-nowrap">

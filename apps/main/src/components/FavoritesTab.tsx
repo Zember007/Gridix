@@ -15,6 +15,8 @@ interface FavoritesTabProps {
   selectedCurrency: string;
   handleViewApartment: (apartment: Apartment) => void;
   fieldVisible: string[];
+  /** Fallback when favorite was saved without image (e.g. before layout + gallery fallback). */
+  firstApartmentPhotoById?: Record<string, string | null>;
 }
 
 const FavoritesTab = ({
@@ -23,6 +25,7 @@ const FavoritesTab = ({
   selectedCurrency,
   handleViewApartment,
   fieldVisible,
+  firstApartmentPhotoById = {},
 }: FavoritesTabProps) => {
   const { t } = useLanguage();
   const { favorites, removeFromFavorites } = useFavorites();
@@ -162,107 +165,115 @@ const FavoritesTab = ({
         </Button>
       </div>
 
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
-        {projectFavorites.map((apartment) => (
-          <Card
-            key={apartment.id}
-            className="cursor-pointer transition-shadow duration-200 hover:shadow-lg"
-            onClick={() => handleViewApartment(toApartment(apartment))}
-          >
-            <CardContent className="p-4">
-              <div className="mb-4">
-                <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100">
-                  {apartment.image_url ? (
-                    <img
-                      src={apartment.image_url}
-                      alt={`${t("apartment.apartment")} № ${apartment.apartment_number}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200">
-                      <Home className="h-10 w-10 text-slate-300" />
+      <div className="flex flex-wrap gap-4">
+        {projectFavorites.map((apartment) => {
+          const thumbnailUrl =
+            apartment.image_url ??
+            firstApartmentPhotoById[apartment.id] ??
+            null;
+          return (
+            <Card
+              key={apartment.id}
+              className="max-w-[calc(min(100%,326px))] cursor-pointer transition-shadow duration-200 hover:shadow-lg"
+              onClick={() => handleViewApartment(toApartment(apartment))}
+            >
+              <CardContent className="p-4">
+                <div className="mb-4">
+                  <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100">
+                    {thumbnailUrl ? (
+                      <img
+                        src={thumbnailUrl}
+                        alt={`${t("apartment.apartment")} № ${apartment.apartment_number}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200">
+                        <Home className="h-10 w-10 text-slate-300" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="mb-3 flex items-start justify-between">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">
+                      {t("apartment.apartment")} № {apartment.apartment_number}
+                    </h4>
+                    {fieldVisible.includes("floor_number") && (
+                      <p className="text-sm text-gray-500">
+                        {apartment.floor_number} {t("apartment.floor")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className="px-2 py-1 text-xs text-white"
+                      style={getStatusStyle(apartment.status)}
+                    >
+                      {getStatusLabel(apartment.status)}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      onClick={(e) =>
+                        handleRemoveFromFavorites(apartment.id, e)
+                      }
+                    >
+                      <Heart className="h-4 w-4 fill-current" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mb-3 space-y-2">
+                  {fieldVisible.includes("rooms") && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Home className="h-4 w-4" />
+                      <span>
+                        {apartment.rooms == 0
+                          ? t("apartment.studio")
+                          : `${apartment.rooms} ${t("apartment.rooms")}`}
+                      </span>
+                    </div>
+                  )}
+                  {fieldVisible.includes("area") && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Square className="h-4 w-4" />
+                      <span>{apartment.area} м²</span>
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="mb-3 flex items-start justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-900">
-                    {t("apartment.apartment")} № {apartment.apartment_number}
-                  </h4>
-                  {fieldVisible.includes("floor_number") && (
-                    <p className="text-sm text-gray-500">
-                      {apartment.floor_number} {t("apartment.floor")}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    className="px-2 py-1 text-xs text-white"
-                    style={getStatusStyle(apartment.status)}
-                  >
-                    {getStatusLabel(apartment.status)}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-                    onClick={(e) => handleRemoveFromFavorites(apartment.id, e)}
-                  >
-                    <Heart className="h-4 w-4 fill-current" />
-                  </Button>
-                </div>
-              </div>
 
-              <div className="mb-3 space-y-2">
-                {fieldVisible.includes("rooms") && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Home className="h-4 w-4" />
-                    <span>
-                      {apartment.rooms == 0
-                        ? t("apartment.studio")
-                        : `${apartment.rooms} ${t("apartment.rooms")}`}
-                    </span>
-                  </div>
-                )}
-                {fieldVisible.includes("area") && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Square className="h-4 w-4" />
-                    <span>{apartment.area} м²</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <div className="text-lg font-bold text-gray-900">
-                  {apartment.price && fieldVisible.includes("price")
-                    ? formatMoney(
-                        convertPrice(
-                          apartment.price,
-                          projectCurrency || null,
+                <div className="mb-3">
+                  <div className="text-lg font-bold text-gray-900">
+                    {apartment.price && fieldVisible.includes("price")
+                      ? formatMoney(
+                          convertPrice(
+                            apartment.price,
+                            projectCurrency || null,
+                            selectedCurrency,
+                          ),
                           selectedCurrency,
-                        ),
-                        selectedCurrency,
-                      )
-                    : t("common.priceOnRequest")}
+                        )
+                      : t("common.priceOnRequest")}
+                  </div>
                 </div>
-              </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewApartment(toApartment(apartment));
-                }}
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                {t("common.view")}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewApartment(toApartment(apartment));
+                  }}
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  {t("common.view")}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

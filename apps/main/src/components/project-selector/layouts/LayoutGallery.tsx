@@ -281,7 +281,7 @@ export const LayoutGallery = ({
               return (
                 <Card
                   key={key}
-                  className="w-full min-w-0 max-w-[calc(min(100%,338px))] overflow-hidden transition-shadow hover:shadow-lg"
+                  className="w-full min-w-0 max-w-[calc(min(100%,326px))] overflow-hidden transition-shadow hover:shadow-lg"
                 >
                   <div className="relative aspect-[4/3] bg-gray-100">
                     {(() => {
