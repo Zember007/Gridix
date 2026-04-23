@@ -1,6 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatPriceWithCurrencySpaces, convertPrice } from "@gridix/utils/lib";
+import {
+  formatPriceWithCurrencySpaces,
+  convertPrice,
+  isValidCurrency,
+} from "@gridix/utils/lib";
 import { Language } from "@gridix/utils/lib";
 import { Loader } from "@gridix/ui";
 import { useState, useEffect } from "react";
@@ -75,7 +79,6 @@ const PDFTemplatePage = ({
     image_url: string;
     floor_number: number;
   } | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [subProjectEntityKind, setSubProjectEntityKind] = useState<
     "building" | "object"
@@ -139,12 +142,11 @@ const PDFTemplatePage = ({
     loadData();
   }, [projectIdentifier, apartmentIdentifier, t, useId, subSlug]);
 
-  // Initialize currency from project if available
-  useEffect(() => {
-    if (project?.currency) {
-      setSelectedCurrency(project.currency);
-    }
-  }, [project?.currency]);
+  /** Синхронно из проекта — иначе headless /pdf снимает кадр до useEffect и валюта/конверсия неверны. */
+  const pdfCurrency: string =
+    project?.currency && isValidCurrency(project.currency)
+      ? project.currency
+      : "RUB";
 
   // Generate QR code when data is ready
   useEffect(() => {
@@ -221,8 +223,8 @@ const PDFTemplatePage = ({
     if (fieldName === "price") {
       return typeof value === "number"
         ? formatPriceWithCurrencySpaces(
-            convertPrice(value, project?.currency || null, selectedCurrency),
-            selectedCurrency,
+            convertPrice(value, project?.currency || null, pdfCurrency),
+            pdfCurrency,
           )
         : "-";
     }
@@ -330,8 +332,8 @@ const PDFTemplatePage = ({
 
   const formatConvertedPdfPrice = (amount: number) =>
     formatPriceWithCurrencySpaces(
-      convertPrice(amount, project.currency || null, selectedCurrency),
-      selectedCurrency,
+      convertPrice(amount, project.currency || null, pdfCurrency),
+      pdfCurrency,
     );
 
   return (
@@ -483,9 +485,9 @@ const PDFTemplatePage = ({
                             convertPrice(
                               value as number,
                               project?.currency || null,
-                              selectedCurrency,
+                              pdfCurrency,
                             ),
-                            selectedCurrency,
+                            pdfCurrency,
                           )
                         : formatFieldValue(
                             value,
