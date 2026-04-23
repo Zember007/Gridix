@@ -8,10 +8,7 @@ import {
 import { Language } from "@gridix/utils/lib";
 import { Loader } from "@gridix/ui";
 import { useState, useEffect } from "react";
-import {
-  Apartment,
-  normalizeApartmentData,
-} from "@/entities/apartment/model/types";
+import { Apartment } from "@/entities/apartment/model/types";
 import { Badge } from "@gridix/ui";
 import type { Tables } from "@gridix/types/database";
 import { loadPdfTemplateData } from "@/features/projectSelector/api/projectSelectorApi";
@@ -34,15 +31,6 @@ interface PdfFieldSetting {
   sort_order: number;
   field_label_translations?: Partial<Record<Language, string>>;
 }
-
-/** Уже показаны в шапке карточки — не дублируем в блоке деталей. */
-const PDF_DETAILS_EXCLUDED_FIELD_NAMES = new Set([
-  "rooms",
-  "area",
-  "floor",
-  "price",
-  "number",
-]);
 
 const PDFTemplatePage = ({
   useId = false,
@@ -117,46 +105,10 @@ const PDFTemplatePage = ({
 
         setProject(result.project);
         setSubProjectEntityKind(normalizeSubProjectKind(result.subProjectType));
-        setApartment(
-          result.apartment ? normalizeApartmentData(result.apartment) : null,
+        setApartment(result.apartment as Apartment | null);
+        setFieldSettings(
+          (result.fieldSettings ?? []) as unknown as PdfFieldSetting[],
         );
-
-        const mergedFields: PdfFieldSetting[] = [
-          ...(result.fieldSettings ?? []).map((f) => {
-            const row = f as Record<string, unknown>;
-            return {
-              id: String(f.id),
-              field_name: f.field_name as string,
-              field_label: f.field_label as string,
-              field_type: f.field_type as string,
-              is_visible: Boolean(f.is_visible),
-              is_custom: Boolean(f.is_custom),
-              sort_order: Number(f.sort_order),
-              field_label_translations:
-                (row.field_label_translations as Partial<
-                  Record<Language, string>
-                >) || undefined,
-            };
-          }),
-          ...(result.customFields ?? []).map((f) => {
-            const row = f as Record<string, unknown>;
-            return {
-              id: String(f.id),
-              field_name: f.field_name as string,
-              field_label: f.field_label as string,
-              field_type: f.field_type as string,
-              is_custom: true,
-              is_visible: f.is_visible !== false,
-              sort_order: Number(f.sort_order) || 999,
-              field_label_translations:
-                (row.field_label_translations as Partial<
-                  Record<Language, string>
-                >) || {},
-            };
-          }),
-        ].sort((a, b) => a.sort_order - b.sort_order);
-        setFieldSettings(mergedFields);
-
         setProjectDomains(result.projectDomains ?? []);
         setCompanyName(result.companyName);
         setCompanyLogoUrl(result.companyLogoUrl);
@@ -164,8 +116,7 @@ const PDFTemplatePage = ({
         const apartmentSorted = [...(result.apartmentPhotos ?? [])].sort(
           (a, b) => a.order_index - b.order_index,
         );
-        const firstIndividualPhoto = apartmentSorted[0];
-        setPhotos(firstIndividualPhoto ? [firstIndividualPhoto] : []);
+        setPhotos([...apartmentSorted.slice(0, 3)]);
 
         if (
           result.floorPlan?.image_url &&
@@ -250,12 +201,9 @@ const PDFTemplatePage = ({
 
   const getVisibleFields = () => {
     return fieldSettings
-      .filter(
-        (field) =>
-          field.is_visible &&
-          !PDF_DETAILS_EXCLUDED_FIELD_NAMES.has(field.field_name),
-      )
-      .sort((a, b) => a.sort_order - b.sort_order);
+      .filter((field) => field.is_visible)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .slice(0, 6);
   };
 
   const getCustomFieldValue = (apt: Apartment, fieldName: string) => {
@@ -297,17 +245,16 @@ const PDFTemplatePage = ({
     }
 
     if (fieldName === "rooms") {
-      const num = Number(value);
-      if (Number.isNaN(num)) return "-";
-      if (num === 0) {
+      if (Number.isNaN(value)) return "-";
+      if (value === 0) {
         return t("apartment.studio");
       }
-      return `${num} ${t("apartment.room").toLowerCase()}`;
+      return `${value} ${t("apartment.room").toLowerCase()}`;
     }
 
     switch (fieldType) {
       case "boolean":
-        return value ? t("apartment.yes") : t("apartment.no");
+        return value ? "Да" : "Нет";
       case "number":
         return typeof value === "number" ? value.toString() : String(value);
       case "select":
@@ -495,7 +442,7 @@ const PDFTemplatePage = ({
                 } else {
                   switch (field.field_name) {
                     case "rooms":
-                      if (!isNaN(Number(apartment.rooms))) {
+                      if (typeof apartment.rooms === "number") {
                         value = apartment.rooms;
                       }
                       break;
@@ -560,13 +507,13 @@ const PDFTemplatePage = ({
             <h3 className="text-xl font-semibold text-gray-900">
               {t("pdf.photos")}
             </h3>
-            <div className="grid max-w-2xl grid-cols-1 gap-6">
+            <div className="grid grid-cols-3 gap-6">
               {photos.map((photo) => (
                 <div key={photo.id} className="relative">
                   <img
                     src={photo.image_url}
                     alt={t("pdf.apartmentPhoto")}
-                    className="h-auto w-full rounded-lg border border-gray-200 object-cover"
+                    className="max-h-[250px] rounded-lg border border-gray-200 object-cover"
                   />
                 </div>
               ))}
@@ -583,7 +530,7 @@ const PDFTemplatePage = ({
             <img
               src={floorPlan.image_url}
               alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
-              className="mx-auto h-full max-h-[400px] w-auto"
+              className="mx-auto h-full max-h-[300px] w-auto"
             />
           </>
         )}
