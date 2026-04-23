@@ -423,6 +423,7 @@ export interface PdfTemplateDataResult {
   apartment: Record<string, unknown> | null;
   subProjectType: string | null;
   fieldSettings: Tables<"project_field_settings">[];
+  customFields: Tables<"project_custom_fields">[];
   apartmentPhotos: {
     id: string;
     image_url: string;
@@ -495,6 +496,7 @@ export async function loadPdfTemplateData(
     apartment: result.apartment ?? null,
     subProjectType: (result.subProjectType as string | null) ?? null,
     fieldSettings: result.fieldSettings ?? [],
+    customFields: result.customFields ?? [],
     apartmentPhotos: result.apartmentPhotos ?? [],
     layoutPhotos: result.layoutPhotos ?? [],
     floorPlan: result.floorPlan ?? null,
