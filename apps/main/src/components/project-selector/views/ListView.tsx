@@ -551,7 +551,7 @@ export const ListView = ({
                         className="group cursor-pointer overflow-hidden rounded-[30px] bg-white transition-shadow hover:shadow-md"
                         onClick={() => openApartmentDetails(apartment)}
                       >
-                        <CardContent className="p-0">
+                        <CardContent className="!p-0">
                           <div className="flex h-[89px] items-center">
                             {/* Apartment Image */}
                             <div className="ml-[57px] flex-shrink-0">
