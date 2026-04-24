@@ -586,6 +586,7 @@ const ExcelColumnMapper = ({
           slug: null,
           currency: "USD" as const,
           available_languages: ["ru", "en"],
+          available_currencies: [],
           is_public: true,
           is_featured: false,
           installment_enabled: false,
