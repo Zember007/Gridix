@@ -8,7 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@gridix/ui";
-import { cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
+import {
+  cn,
+  CurrencyType,
+  getCurrencySymbolSafe,
+  isValidCurrency,
+} from "@gridix/utils/lib";
 import { RotateCcw } from "lucide-react";
 import { CurrencyToggle } from "@/shared/ui/currency-toggle";
 import {
@@ -80,6 +85,13 @@ export const AdvancedFilters = (props: AdvancedFiltersProps) => {
           <div className="text-xs text-gray-500">{t("project.currency")}</div>
           <CurrencyToggle
             projectCurrency={project?.currency || null}
+            availableCurrencies={
+              project?.available_currencies
+                ? (project.available_currencies.filter(
+                    isValidCurrency,
+                  ) as CurrencyType[])
+                : null
+            }
             selectedCurrency={advCurrency}
             onChange={handleCurrencyChange}
             themeColor={themeColor}

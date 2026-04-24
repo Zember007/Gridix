@@ -11,6 +11,7 @@ export type ProjectLike = {
   currency?: string | null;
   has_commercial?: boolean | null;
   has_parking?: boolean | null;
+  available_currencies?: string[] | null;
 };
 
 export type AdvancedFiltersProps = {

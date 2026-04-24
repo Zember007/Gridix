@@ -20,6 +20,7 @@ interface Project {
   currency?: string | null;
   has_commercial?: boolean | null;
   has_parking?: boolean | null;
+  available_currencies?: string[] | null;
 }
 
 interface UseProjectFiltersProps {
@@ -495,6 +496,18 @@ export const useProjectFilters = ({
   useEffect(() => {
     dispatch({ type: "SET_CURRENCY", value: baseCurrency });
   }, [baseCurrency]);
+
+  useEffect(() => {
+    const allowed = project?.available_currencies;
+    if (!allowed || allowed.length === 0) return;
+    if (allowed.includes(selectedCurrency)) return;
+    const fallback = allowed.includes(baseCurrency) ? baseCurrency : allowed[0];
+    if (fallback) dispatch({ type: "SET_CURRENCY", value: fallback });
+  }, [
+    project?.available_currencies?.join(","),
+    selectedCurrency,
+    baseCurrency,
+  ]);
 
   useEffect(() => {
     if (
