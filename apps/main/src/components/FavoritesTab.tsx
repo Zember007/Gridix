@@ -1,13 +1,22 @@
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { convertPrice, formatMoney } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
 import { Card, CardContent } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Heart, Home, Square, ExternalLink, Share2 } from "lucide-react";
+import {
+  Heart,
+  Home,
+  Square,
+  ExternalLink,
+  Loader2,
+  Share2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Apartment } from "@/entities/apartment/model/types";
+import { PARAM_FAVORITES } from "@/components/project-selector/hooks/useUrlState";
 
 interface FavoritesTabProps {
   projectId: string;
@@ -29,6 +38,7 @@ const FavoritesTab = ({
 }: FavoritesTabProps) => {
   const { t } = useLanguage();
   const { favorites, removeFromFavorites } = useFavorites();
+  const [isSharing, setIsSharing] = useState(false);
 
   //
 
@@ -107,14 +117,14 @@ const FavoritesTab = ({
     const url = new URL(window.location.href);
     if (projectFavorites.length > 0) {
       url.searchParams.set(
-        "favorites",
+        PARAM_FAVORITES,
         projectFavorites
           .map((f) => String(f.apartment_number).trim())
           .filter(Boolean)
           .join(","),
       );
     } else {
-      url.searchParams.delete("favorites");
+      url.searchParams.delete(PARAM_FAVORITES);
     }
     return url.toString();
   };
@@ -122,6 +132,7 @@ const FavoritesTab = ({
   const handleShareFavorites = async () => {
     const url = buildShareUrl();
     const title = t("favorites.title");
+    setIsSharing(true);
     try {
       if (navigator.share) {
         await navigator.share({ title, url });
@@ -136,6 +147,8 @@ const FavoritesTab = ({
       } catch (err) {
         console.error("Error copying link to clipboard:", err);
       }
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -159,8 +172,18 @@ const FavoritesTab = ({
         <h2 className="text-lg font-semibold text-gray-900">
           {t("favorites.title")} ({projectFavorites.length})
         </h2>
-        <Button variant="outline" size="sm" onClick={handleShareFavorites}>
-          <Share2 className="mr-2 h-4 w-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleShareFavorites}
+          disabled={isSharing}
+          aria-busy={isSharing}
+        >
+          {isSharing ? (
+            <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />
+          ) : (
+            <Share2 className="mr-2 h-4 w-4 shrink-0" />
+          )}
           {t("common.share")}
         </Button>
       </div>
@@ -193,7 +216,7 @@ const FavoritesTab = ({
                     )}
                   </div>
                 </div>
-                <div className="mb-3 flex items-start justify-between">
+                <div className="mb-3 flex items-start justify-between gap-2">
                   <div>
                     <h4 className="font-semibold text-gray-900">
                       {t("apartment.apartment")} № {apartment.apartment_number}

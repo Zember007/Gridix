@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useLayoutEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   loadSelectorSubProject,
@@ -19,6 +19,7 @@ interface UseProjectSelectorSubProjectResult {
   subProject: SubProjectRow | null;
   subProjectId: string | null;
   apartments: Apartment[];
+  fetchedApartmentCount: number;
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
   apartmentsLoaded: boolean;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
@@ -57,7 +58,7 @@ export const useProjectSelectorSubProject = (
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (rawApartments.length > 0) {
       setApartments(rawApartments);
     }
@@ -76,6 +77,7 @@ export const useProjectSelectorSubProject = (
       (query.data?.subProject as SubProjectRow | null)?.id ??
       null,
     apartments,
+    fetchedApartmentCount: rawApartments.length,
     setApartments,
     apartmentsLoaded: !query.isLoading,
     preloadedLayoutPhotosByRooms:
