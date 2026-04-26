@@ -32,8 +32,9 @@ const FILTERS_SHELL_CLASS = "max-w-full shrink-0";
 const VIEWMODE_WRAP_CLASS = "min-w-0 shrink-0 overflow-visible";
 const HEADER_ROW_CLASS = "flex items-center justify-between gap-2 md:gap-4";
 const TRAILING_CLUSTER_CLASS = "flex shrink-0 items-center gap-2";
+/** Match `CompactFilters` PopoverTrigger so mobile sheet control matches desktop. */
 const SHEET_TRIGGER_FILTERS =
-  "inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-2 text-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300";
 
 function getIntrinsicNavWidth(navEl: HTMLElement | null): number {
   if (!navEl) return 0;
@@ -480,7 +481,7 @@ export const ProjectHeader = ({
                   aria-label="Open filters"
                   className={SHEET_TRIGGER_FILTERS}
                 >
-                  <SlidersHorizontal className="h-3 w-3" />
+                  <SlidersHorizontal className="h-4 w-4 text-gray-700" />
                 </SheetTrigger>
                 <SheetContent side="top" className="h-[90dvh] p-0">
                   <div className="mt-6 h-full overflow-y-auto">
