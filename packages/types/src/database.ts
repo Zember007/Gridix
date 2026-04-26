@@ -3037,6 +3037,7 @@ export type Database = {
       projects: {
         Row: {
           address: string | null;
+          available_currencies: string[];
           available_languages: string[];
           building_image_url: string | null;
           created_at: string;
@@ -3073,6 +3074,7 @@ export type Database = {
         };
         Insert: {
           address?: string | null;
+          available_currencies?: string[];
           available_languages?: string[];
           building_image_url?: string | null;
           created_at?: string;
@@ -3109,6 +3111,7 @@ export type Database = {
         };
         Update: {
           address?: string | null;
+          available_currencies?: string[];
           available_languages?: string[];
           building_image_url?: string | null;
           created_at?: string;

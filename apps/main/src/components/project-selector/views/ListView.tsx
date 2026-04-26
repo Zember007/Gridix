@@ -48,6 +48,8 @@ interface ListViewProps {
   hasObjects?: boolean;
   openApartmentDetails: (apartment: Apartment) => void;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  /** First apartment gallery photo per id (from selector initial payload). */
+  firstApartmentPhotoById: Record<string, string | null>;
   getVisibleFields: () => FieldSetting[];
   getCustomFieldValue: (apartment: Apartment, fieldName: string) => unknown;
   formatFieldValue: (
@@ -81,6 +83,7 @@ export const ListView = ({
   setSelectedType,
   openApartmentDetails,
   preloadedLayoutPhotosByRooms,
+  firstApartmentPhotoById,
   getVisibleFields,
   getCustomFieldValue,
   formatFieldValue,
@@ -162,8 +165,16 @@ export const ListView = ({
     );
   };
 
+  const getApartmentListThumbnailUrl = (
+    apartment: Apartment,
+  ): string | null => {
+    const bound = getApartmentLayoutPhoto(apartment);
+    if (bound) return bound.image_url;
+    return firstApartmentPhotoById[apartment.id] ?? null;
+  };
+
   const getFavoriteImageUrl = (apartment: Apartment): string | null =>
-    getApartmentLayoutPhoto(apartment)?.image_url ?? null;
+    getApartmentListThumbnailUrl(apartment);
 
   const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
@@ -374,11 +385,11 @@ export const ListView = ({
                             <div className="flex-shrink-0">
                               <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
                                 {(() => {
-                                  const photo =
-                                    getApartmentLayoutPhoto(apartment);
-                                  return photo ? (
+                                  const thumbUrl =
+                                    getApartmentListThumbnailUrl(apartment);
+                                  return thumbUrl ? (
                                     <img
-                                      src={photo.image_url}
+                                      src={thumbUrl}
                                       alt={
                                         apartment.rooms == 0
                                           ? t("apartment.studio")
@@ -551,17 +562,17 @@ export const ListView = ({
                         className="group cursor-pointer overflow-hidden rounded-[30px] bg-white transition-shadow hover:shadow-md"
                         onClick={() => openApartmentDetails(apartment)}
                       >
-                        <CardContent className="p-0">
+                        <CardContent className="!p-0">
                           <div className="flex h-[89px] items-center">
                             {/* Apartment Image */}
                             <div className="ml-[57px] flex-shrink-0">
                               <div className="flex h-[64px] w-[60px] items-center justify-center overflow-hidden rounded-lg bg-gray-100">
                                 {(() => {
-                                  const photo =
-                                    getApartmentLayoutPhoto(apartment);
-                                  return photo ? (
+                                  const thumbUrl =
+                                    getApartmentListThumbnailUrl(apartment);
+                                  return thumbUrl ? (
                                     <img
-                                      src={photo.image_url}
+                                      src={thumbUrl}
                                       alt={
                                         apartment.rooms == 0
                                           ? t("apartment.studio")

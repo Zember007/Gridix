@@ -2,7 +2,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Project } from "@/entities/project/queries/useProjects";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
-import { formatPriceWithCurrency, convertPrice } from "@gridix/utils/lib";
+import {
+  formatPriceWithCurrency,
+  convertPrice,
+  CurrencyType,
+} from "@gridix/utils/lib";
 import { CurrencyToggle } from "@/shared/ui/currency-toggle";
 import { Language } from "@gridix/utils/lib";
 import { Badge } from "@gridix/ui";
@@ -1113,7 +1117,7 @@ const ApartmentDetailsPage = ({
                           {apartment.floor_number} {t("apartment.floor")}
                         </div>
                       </div>
-                      <div className="flex justify-between gap-[15px]">
+                      <div className="flex flex-wrap justify-between gap-[15px]">
                         {apartment.status === "available" ? (
                           <>
                             <div className="flex flex-col items-start gap-4 whitespace-nowrap">
@@ -1161,6 +1165,11 @@ const ApartmentDetailsPage = ({
                                     selectedCurrency={selectedCurrency}
                                     onChange={(c) => setSelectedCurrency(c)}
                                     projectCurrency={project?.currency}
+                                    availableCurrencies={
+                                      project?.available_currencies?.length
+                                        ? (project.available_currencies as CurrencyType[])
+                                        : null
+                                    }
                                     themeColor={
                                       ((
                                         project as unknown as Record<

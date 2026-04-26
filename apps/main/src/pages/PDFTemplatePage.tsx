@@ -1,6 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatPriceWithCurrencySpaces, convertPrice } from "@gridix/utils/lib";
+import {
+  formatPriceWithCurrencySpaces,
+  convertPrice,
+  isValidCurrency,
+} from "@gridix/utils/lib";
 import { Language } from "@gridix/utils/lib";
 import { Loader } from "@gridix/ui";
 import { useState, useEffect } from "react";
@@ -75,7 +79,6 @@ const PDFTemplatePage = ({
     image_url: string;
     floor_number: number;
   } | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [subProjectEntityKind, setSubProjectEntityKind] = useState<
     "building" | "object"
@@ -113,8 +116,7 @@ const PDFTemplatePage = ({
         const apartmentSorted = [...(result.apartmentPhotos ?? [])].sort(
           (a, b) => a.order_index - b.order_index,
         );
-        const firstApartmentPhoto = apartmentSorted[0];
-        setPhotos(firstApartmentPhoto ? [firstApartmentPhoto] : []);
+        setPhotos([...apartmentSorted.slice(0, 3)]);
 
         if (
           result.floorPlan?.image_url &&
@@ -139,12 +141,11 @@ const PDFTemplatePage = ({
     loadData();
   }, [projectIdentifier, apartmentIdentifier, t, useId, subSlug]);
 
-  // Initialize currency from project if available
-  useEffect(() => {
-    if (project?.currency) {
-      setSelectedCurrency(project.currency);
-    }
-  }, [project?.currency]);
+  /** Синхронно из проекта — иначе headless /pdf снимает кадр до useEffect и валюта/конверсия неверны. */
+  const pdfCurrency: string =
+    project?.currency && isValidCurrency(project.currency)
+      ? project.currency
+      : "RUB";
 
   // Generate QR code when data is ready
   useEffect(() => {
@@ -221,8 +222,8 @@ const PDFTemplatePage = ({
     if (fieldName === "price") {
       return typeof value === "number"
         ? formatPriceWithCurrencySpaces(
-            convertPrice(value, project?.currency || null, selectedCurrency),
-            selectedCurrency,
+            convertPrice(value, project?.currency || null, pdfCurrency),
+            pdfCurrency,
           )
         : "-";
     }
@@ -330,8 +331,8 @@ const PDFTemplatePage = ({
 
   const formatConvertedPdfPrice = (amount: number) =>
     formatPriceWithCurrencySpaces(
-      convertPrice(amount, project.currency || null, selectedCurrency),
-      selectedCurrency,
+      convertPrice(amount, project.currency || null, pdfCurrency),
+      pdfCurrency,
     );
 
   return (
@@ -483,9 +484,9 @@ const PDFTemplatePage = ({
                             convertPrice(
                               value as number,
                               project?.currency || null,
-                              selectedCurrency,
+                              pdfCurrency,
                             ),
-                            selectedCurrency,
+                            pdfCurrency,
                           )
                         : formatFieldValue(
                             value,
@@ -506,13 +507,13 @@ const PDFTemplatePage = ({
             <h3 className="text-xl font-semibold text-gray-900">
               {t("pdf.photos")}
             </h3>
-            <div className="grid max-w-2xl grid-cols-1 gap-6">
+            <div className="grid grid-cols-3 gap-6">
               {photos.map((photo) => (
                 <div key={photo.id} className="relative">
                   <img
                     src={photo.image_url}
                     alt={t("pdf.apartmentPhoto")}
-                    className="h-auto w-full rounded-lg border border-gray-200 object-cover"
+                    className="max-h-[250px] rounded-lg border border-gray-200 object-cover"
                   />
                 </div>
               ))}
@@ -529,7 +530,7 @@ const PDFTemplatePage = ({
             <img
               src={floorPlan.image_url}
               alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
-              className="mx-auto h-full max-h-[400px] w-auto"
+              className="mx-auto h-full max-h-[300px] w-auto"
             />
           </>
         )}

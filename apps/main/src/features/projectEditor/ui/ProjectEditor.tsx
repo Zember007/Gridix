@@ -27,6 +27,7 @@ import {
   CurrencyType,
   DEFAULT_CURRENCY,
   getAdminThemeVariables,
+  isValidCurrency,
   Language,
   LANGUAGE_CONFIG,
   SUPPORTED_LANGUAGES,
@@ -74,6 +75,7 @@ import { startProjectEditorDriverTour } from "@/features/onboarding/driver";
 import { resetProjectEditorInteractiveOnboardingStorage } from "@/features/onboarding/resetInteractiveOnboardingStorage";
 import { ProjectOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import {
+  ALL_CURRENCIES,
   DEFAULT_PROJECT_EDITOR_PROJECT,
   type ProjectEditorProject,
 } from "@/features/projectEditor/model/types";
@@ -132,6 +134,7 @@ type EditorProjectSource = {
   theme_color?: string | null;
   project_type?: "building" | "object" | null;
   available_languages?: unknown;
+  available_currencies?: unknown;
   has_masterplan?: boolean | null;
   user_id?: string | null;
 };
@@ -142,6 +145,14 @@ const parseAvailableLanguages = (value: unknown): Language[] => {
     (v): v is Language => typeof v === "string" && v in LANGUAGE_CONFIG,
   );
   return filtered.length > 0 ? filtered : SUPPORTED_LANGUAGES;
+};
+
+const parseAvailableCurrencies = (value: unknown): CurrencyType[] => {
+  if (!Array.isArray(value)) return ALL_CURRENCIES;
+  const filtered = value.filter(
+    (v): v is CurrencyType => typeof v === "string" && isValidCurrency(v),
+  );
+  return filtered.length > 0 ? filtered : ALL_CURRENCIES;
 };
 
 interface ProjectPdfPresentationSectionProps {
@@ -745,6 +756,9 @@ const ProjectEditor = ({
             | "object"
             | null) || "building",
         available_languages: parseAvailableLanguages(row.available_languages),
+        available_currencies: parseAvailableCurrencies(
+          row.available_currencies,
+        ),
         has_masterplan: Boolean(row.has_masterplan),
       });
     },
@@ -1034,6 +1048,7 @@ const ProjectEditor = ({
         theme_color: project.theme_color,
         project_type: project.project_type || "building",
         available_languages: project.available_languages,
+        available_currencies: project.available_currencies,
         has_masterplan: project.has_masterplan,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }), // Добавляем user_id только при создании
@@ -1514,6 +1529,81 @@ const ProjectEditor = ({
                                         {LANGUAGE_CONFIG[code].flag}
                                       </span>
                                       {LANGUAGE_CONFIG[code].name}
+                                    </Label>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>
+                              {t("projectEditor.availableCurrencies")}
+                            </Label>
+                            <p className="text-xs text-gray-500">
+                              {t("projectEditor.availableCurrenciesDesc")}
+                            </p>
+                            <div className="grid grid-cols-2 gap-3">
+                              {ALL_CURRENCIES.map((code) => {
+                                const checked =
+                                  project.available_currencies.includes(code);
+                                const id = `available-currency-${code}`;
+                                return (
+                                  <div
+                                    key={code}
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <Checkbox
+                                      id={id}
+                                      checked={checked}
+                                      onCheckedChange={(next) => {
+                                        const shouldEnable = next === true;
+                                        if (
+                                          !shouldEnable &&
+                                          project.available_currencies.length <=
+                                            1
+                                        ) {
+                                          toast.error(
+                                            t(
+                                              "projectEditor.atLeastOneCurrency",
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        setProject((prev) => {
+                                          const current =
+                                            prev.available_currencies;
+                                          if (shouldEnable) {
+                                            if (current.includes(code))
+                                              return prev;
+                                            return {
+                                              ...prev,
+                                              available_currencies: [
+                                                ...current,
+                                                code,
+                                              ],
+                                            };
+                                          }
+
+                                          if (!current.includes(code))
+                                            return prev;
+                                          if (current.length <= 1) return prev;
+                                          return {
+                                            ...prev,
+                                            available_currencies:
+                                              current.filter((c) => c !== code),
+                                          };
+                                        });
+                                      }}
+                                    />
+                                    <Label
+                                      htmlFor={id}
+                                      className="cursor-pointer select-none"
+                                    >
+                                      <span className="mr-1 font-mono">
+                                        {CURRENCIES[code].symbol}
+                                      </span>
+                                      {t(CURRENCIES[code].translationKey)}
                                     </Label>
                                   </div>
                                 );

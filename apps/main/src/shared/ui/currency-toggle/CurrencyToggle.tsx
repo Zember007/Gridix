@@ -19,6 +19,8 @@ export interface CurrencyToggleProps {
   selectedCurrency: string;
   onChange: (currency: CurrencyType) => void;
   projectCurrency?: string | null;
+  /** Explicit list of currencies to show. Overrides the default derivation from projectCurrency. */
+  availableCurrencies?: CurrencyType[] | null;
   themeColor?: string;
   className?: string;
   /** Кнопки с переносом строк или компактный выпадающий список */
@@ -27,7 +29,12 @@ export interface CurrencyToggleProps {
 
 function getCurrenciesToShow(
   projectCurrency: string | null | undefined,
+  availableCurrencies?: CurrencyType[] | null,
 ): CurrencyType[] {
+  if (availableCurrencies && availableCurrencies.length > 0) {
+    return availableCurrencies;
+  }
+
   type Currency = CurrencyType;
   const preferredOrder: Array<Exclude<Currency, "RUB">> = [
     "USD",
@@ -53,11 +60,15 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
   selectedCurrency,
   onChange,
   projectCurrency,
+  availableCurrencies,
   themeColor = "#000000",
   className,
   variant = "buttons",
 }) => {
-  const currenciesToShow = getCurrenciesToShow(projectCurrency);
+  const currenciesToShow = getCurrenciesToShow(
+    projectCurrency,
+    availableCurrencies,
+  );
 
   if (variant === "buttons") {
     return (

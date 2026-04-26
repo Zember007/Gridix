@@ -1,4 +1,8 @@
-import { DEFAULT_CURRENCY, type CurrencyType } from "@gridix/utils/lib";
+import {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  type CurrencyType,
+} from "@gridix/utils/lib";
 import { Language, SUPPORTED_LANGUAGES } from "@gridix/utils/lib";
 
 export interface ProjectEditorProject {
@@ -20,8 +24,11 @@ export interface ProjectEditorProject {
   theme_color: string;
   project_type?: "building" | "object" | null;
   available_languages: Language[];
+  available_currencies: CurrencyType[];
   has_masterplan: boolean;
 }
+
+export const ALL_CURRENCIES = Object.keys(CURRENCIES) as CurrencyType[];
 
 export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
   id: "",
@@ -42,5 +49,6 @@ export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
   theme_color: "#000000",
   project_type: "building",
   available_languages: SUPPORTED_LANGUAGES,
+  available_currencies: ALL_CURRENCIES,
   has_masterplan: false,
 };

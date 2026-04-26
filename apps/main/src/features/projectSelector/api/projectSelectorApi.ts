@@ -74,6 +74,8 @@ export interface SelectorInitialResult {
   project: Tables<"projects">;
   apartments: Array<Record<string, unknown>>;
   layoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  /** First `apartment_photos` image per apartment (`order_index`), from selector initial load. */
+  firstApartmentPhotoById: Record<string, string | null>;
   fieldSettings: Tables<"project_field_settings">[];
   customFields: Tables<"project_custom_fields">[];
   customDomain: string | null;
@@ -189,6 +191,8 @@ export async function loadSelectorSubProject(
     project: result.project,
     apartments: result.apartments ?? [],
     layoutPhotosByRooms: result.layoutPhotosByRooms ?? {},
+    firstApartmentPhotoById:
+      (result.firstApartmentPhotoById as Record<string, string | null>) ?? {},
     fieldSettings: result.fieldSettings ?? [],
     customFields: result.customFields ?? [],
     customDomain: result.customDomain ?? null,
@@ -216,6 +220,8 @@ export async function loadSelectorInitial(
     project: result.project,
     apartments: result.apartments ?? [],
     layoutPhotosByRooms: result.layoutPhotosByRooms ?? {},
+    firstApartmentPhotoById:
+      (result.firstApartmentPhotoById as Record<string, string | null>) ?? {},
     fieldSettings: result.fieldSettings ?? [],
     customFields: result.customFields ?? [],
     customDomain: result.customDomain ?? null,

@@ -103,6 +103,7 @@ interface ProjectApartmentSelectorLoadedProps {
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
   apartmentsLoaded: boolean;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  firstApartmentPhotoById: Record<string, string | null>;
   rawFieldSettings: Array<Record<string, unknown>>;
   rawCustomFields: Array<Record<string, unknown>>;
   customDomain: string | null;
@@ -127,6 +128,7 @@ function ProjectApartmentSelectorLoaded({
   setApartments,
   apartmentsLoaded,
   preloadedLayoutPhotosByRooms,
+  firstApartmentPhotoById,
   rawFieldSettings,
   rawCustomFields,
   customDomain,
@@ -582,6 +584,7 @@ function ProjectApartmentSelectorLoaded({
                         preloadedLayoutPhotosByRooms={
                           preloadedLayoutPhotosByRooms
                         }
+                        firstApartmentPhotoById={firstApartmentPhotoById}
                         getVisibleFields={getVisibleFields}
                         getCustomFieldValue={getCustomFieldValue}
                         formatFieldValue={formatFieldValue}
@@ -648,6 +651,7 @@ function ProjectApartmentSelectorLoaded({
                           projectId={project.id}
                           projectCurrency={project?.currency}
                           selectedCurrency={filters.selectedCurrency}
+                          firstApartmentPhotoById={firstApartmentPhotoById}
                         />
                       </Suspense>
                     </div>
@@ -781,6 +785,7 @@ const ProjectApartmentSelectorWithSubProject = ({
     setApartments,
     apartmentsLoaded,
     preloadedLayoutPhotosByRooms,
+    firstApartmentPhotoById,
     fieldSettings: rawFieldSettings,
     customFields: rawCustomFields,
     customDomain,
@@ -811,6 +816,7 @@ const ProjectApartmentSelectorWithSubProject = ({
           setApartments={setApartments}
           apartmentsLoaded={apartmentsLoaded}
           preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+          firstApartmentPhotoById={firstApartmentPhotoById}
           rawFieldSettings={rawFieldSettings}
           rawCustomFields={rawCustomFields}
           customDomain={customDomain}
@@ -840,6 +846,7 @@ const ProjectApartmentSelectorDefault = ({
     setApartments,
     apartmentsLoaded,
     preloadedLayoutPhotosByRooms,
+    firstApartmentPhotoById,
     fieldSettings: rawFieldSettings,
     customFields: rawCustomFields,
     customDomain,
@@ -866,6 +873,7 @@ const ProjectApartmentSelectorDefault = ({
           setApartments={setApartments}
           apartmentsLoaded={apartmentsLoaded}
           preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+          firstApartmentPhotoById={firstApartmentPhotoById}
           rawFieldSettings={rawFieldSettings}
           rawCustomFields={rawCustomFields}
           customDomain={customDomain}

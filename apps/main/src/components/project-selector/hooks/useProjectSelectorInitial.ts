@@ -24,6 +24,7 @@ interface UseProjectSelectorInitialResult {
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
   apartmentsLoaded: boolean;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  firstApartmentPhotoById: Record<string, string | null>;
   fieldSettings: Array<Record<string, unknown>>;
   customFields: Array<Record<string, unknown>>;
   customDomain: string | null;
@@ -91,6 +92,7 @@ export const useProjectSelectorInitial = (
     apartmentsLoaded: !query.isLoading,
     preloadedLayoutPhotosByRooms:
       (query.data?.layoutPhotosByRooms as Record<string, LayoutPhoto[]>) ?? {},
+    firstApartmentPhotoById: query.data?.firstApartmentPhotoById ?? {},
     fieldSettings,
     customFields,
     customDomain: query.data?.customDomain ?? null,
