@@ -1126,31 +1126,44 @@ const FloorPlanEditor = ({
     setApartmentPhotos([]);
   };
 
-  const getStatusColor = (status: string) => {
-    if (polygonSettings?.colors) {
+  const getStatusColor = useCallback(
+    (status: string) => {
+      if (polygonSettings?.colors) {
+        switch (status) {
+          case "available":
+            return polygonSettings.colors.available;
+          case "sold":
+            return polygonSettings.colors.sold;
+          case "reserved":
+            return polygonSettings.colors.reserved;
+          default:
+            return polygonSettings.colors.available;
+        }
+      }
+
       switch (status) {
         case "available":
-          return polygonSettings.colors.available;
+          return "#22c55e";
         case "sold":
-          return polygonSettings.colors.sold;
+          return "#ef4444";
         case "reserved":
-          return polygonSettings.colors.reserved;
+          return "#f59e0b";
         default:
-          return polygonSettings.colors.available;
+          return "#22c55e";
       }
-    }
+    },
+    [polygonSettings],
+  );
 
-    switch (status) {
-      case "available":
-        return "#22c55e";
-      case "sold":
-        return "#ef4444";
-      case "reserved":
-        return "#f59e0b";
-      default:
-        return "#22c55e";
-    }
-  };
+  useEffect(() => {
+    if (!isCreatingNew) return;
+    setCurrentShape((prev) => {
+      if (!prev) return prev;
+      const next = getStatusColor(apartmentData.status);
+      if (prev.color === next) return prev;
+      return { ...prev, color: next };
+    });
+  }, [isCreatingNew, apartmentData.status, getStatusColor]);
 
   const openSyncDialog = (sourceApartment: Apartment) => {
     const globalSourceApartment: GlobalApartment = {
@@ -1846,6 +1859,7 @@ const FloorPlanEditor = ({
                       onCurrentShapeUpdate={handleCurrentShapeUpdate}
                       onClickAnnotationId={handlePolygonAnnotationClick}
                       drawingEnabled={canStartDrawingFromImage}
+                      newPolygonColor={getStatusColor(apartmentData.status)}
                     />
                   ) : (
                     <div className="overflow-hidden rounded-xl border-2 border-dashed border-muted">
