@@ -274,7 +274,7 @@ export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(
                     />
                     <span
                       className={cn(
-                        "mt-2 font-medium tracking-[0.14em] uppercase",
+                        "mt-2 text-center font-medium tracking-[0.14em] uppercase",
                         isCompact ? "text-[11px]" : "text-xs",
                       )}
                     >

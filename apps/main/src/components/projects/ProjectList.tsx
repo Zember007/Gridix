@@ -1351,7 +1351,7 @@ const ProjectList = ({
     }, [zipping, project.media, projectFilenamePrefix, t]);
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
@@ -1813,7 +1813,7 @@ const ProjectList = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Project Drawer */}
       {selectedProject && !isCrmMode && (
         <SharedProjectDrawer
@@ -1907,7 +1907,7 @@ const ProjectList = ({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 p-6">
           {/* Header with Create New Project Button */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
