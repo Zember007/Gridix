@@ -1887,10 +1887,19 @@ const FloorPlanEditor = ({
         open={floorDuplicateDialogOpen}
         onOpenChange={setFloorDuplicateDialogOpen}
         projectId={project?.id || projectId}
+        subProjectId={subProjectId}
         sourceFloorNumber={floorNumber}
         allFloorNumbers={allFloors}
         sourceImageUrl={imageUrl}
         sourceApartments={apartments}
+        onComplete={() => {
+          if (editorData) {
+            void editorData.refresh();
+          } else {
+            loadFloorPlan();
+            loadApartments();
+          }
+        }}
       />
     </TooltipProvider>
   );

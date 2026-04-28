@@ -1253,13 +1253,20 @@ const ProjectApartmentsManager = ({
           open={floorDuplicateDialogOpen}
           onOpenChange={setFloorDuplicateDialogOpen}
           projectId={projectId}
+          subProjectId={subProjectId}
           sourceFloorNumber={floorDuplicateSourceFloor}
           allFloorNumbers={getUniqueFloors()}
           sourceImageUrl=""
           sourceApartments={apartments.filter(
             (a) => a.floor_number === floorDuplicateSourceFloor,
           )}
-          onComplete={loadApartments}
+          onComplete={() => {
+            if (editorData) {
+              void editorData.refresh();
+            } else {
+              loadApartments();
+            }
+          }}
         />
       )}
 

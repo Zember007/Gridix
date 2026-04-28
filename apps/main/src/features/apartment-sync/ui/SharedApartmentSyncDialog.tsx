@@ -29,6 +29,7 @@ import {
   buildFloorDuplicationPreview,
   type FloorDuplicationCopyOption,
   type FloorDuplicationLoadedData,
+  type FloorDuplicationMatch,
   type FloorDuplicationMatchingRule,
   type FloorDuplicationPreview,
   type FloorDuplicationSourceApartment,
@@ -101,6 +102,7 @@ interface PhotoDuplicateModeProps extends BaseDialogProps {
 interface FloorDuplicateModeProps extends BaseDialogProps {
   mode: "floor-duplicate";
   projectId: string;
+  subProjectId?: string;
   sourceFloorNumber: number;
   allFloorNumbers: number[];
   sourceImageUrl: string;
@@ -804,6 +806,7 @@ const FloorDuplicationModeDialog = ({
   open,
   onOpenChange,
   projectId,
+  subProjectId,
   sourceFloorNumber,
   allFloorNumbers,
   sourceImageUrl,
@@ -867,6 +870,7 @@ const FloorDuplicationModeDialog = ({
     void loadFloorDuplicationData({
       projectId,
       targetFloorNumbers,
+      subProjectId,
     })
       .then((data) => {
         setLoadedData(data);
@@ -878,7 +882,14 @@ const FloorDuplicationModeDialog = ({
       .finally(() => {
         setIsLoadingPreview(false);
       });
-  }, [defaultCopyOptions, open, projectId, t, targetFloorNumbers]);
+  }, [
+    defaultCopyOptions,
+    open,
+    projectId,
+    subProjectId,
+    t,
+    targetFloorNumbers,
+  ]);
 
   const preview: FloorDuplicationPreview | null = useMemo(() => {
     if (!loadedData) {
@@ -903,6 +914,98 @@ const FloorDuplicationModeDialog = ({
     sourceImageUrl,
     targetFloorNumbers,
   ]);
+
+  const buildMatchKey = (floorNumber: number, match: FloorDuplicationMatch) =>
+    `${floorNumber}::${match.sourceApartmentId}::${match.targetApartmentId}`;
+
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    if (!preview) {
+      setSelectedMatchIds(new Set());
+      return;
+    }
+    const allKeys = new Set<string>();
+    preview.floors.forEach((floor) => {
+      floor.polygonMatches.forEach((match) => {
+        allKeys.add(buildMatchKey(floor.floorNumber, match));
+      });
+    });
+    setSelectedMatchIds(allKeys);
+  }, [preview]);
+
+  const effectivePreview: FloorDuplicationPreview | null = useMemo(() => {
+    if (!preview) return null;
+
+    const floors = preview.floors.map((floor) => {
+      const filteredMatches = floor.polygonMatches.filter((match) =>
+        selectedMatchIds.has(buildMatchKey(floor.floorNumber, match)),
+      );
+      return { ...floor, polygonMatches: filteredMatches };
+    });
+
+    let floorPlanOperations = 0;
+    let polygonOperations = 0;
+    let skippedMatches = 0;
+    let ambiguousMatches = 0;
+
+    floors.forEach((floor) => {
+      if (
+        floor.floorPlanAction === "create" ||
+        floor.floorPlanAction === "update"
+      ) {
+        floorPlanOperations += 1;
+      }
+      polygonOperations += floor.polygonMatches.length;
+      skippedMatches += floor.skippedApartments.length;
+      ambiguousMatches += floor.skippedApartments.filter(
+        (a) => a.reason === "ambiguous",
+      ).length;
+    });
+
+    return {
+      floors,
+      summary: {
+        targetFloorCount: floors.length,
+        floorPlanOperations,
+        polygonOperations,
+        skippedMatches,
+        ambiguousMatches,
+        totalOperations: floorPlanOperations + polygonOperations,
+      },
+    };
+  }, [preview, selectedMatchIds]);
+
+  const toggleMatch = (key: string) => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const toggleAllMatchesOnFloor = (
+    floorNumber: number,
+    matches: FloorDuplicationMatch[],
+  ) => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      const keys = matches.map((m) => buildMatchKey(floorNumber, m));
+      const allSelected = keys.every((k) => next.has(k));
+      if (allSelected) {
+        keys.forEach((k) => next.delete(k));
+      } else {
+        keys.forEach((k) => next.add(k));
+      }
+      return next;
+    });
+  };
 
   const handleOpenStateChange = (nextOpen: boolean) => {
     if (!nextOpen && isApplying) {
@@ -978,8 +1081,8 @@ const FloorDuplicationModeDialog = ({
   };
 
   const canApply =
-    !!preview &&
-    preview.summary.totalOperations > 0 &&
+    !!effectivePreview &&
+    effectivePreview.summary.totalOperations > 0 &&
     selectedCopyOptions.length > 0 &&
     (!selectedCopyOptions.includes("apartment_polygons") ||
       selectedMatchingRules.length > 0) &&
@@ -987,7 +1090,7 @@ const FloorDuplicationModeDialog = ({
     !isLoadingPreview;
 
   const handleApply = async () => {
-    if (!preview) {
+    if (!effectivePreview) {
       return;
     }
 
@@ -995,7 +1098,7 @@ const FloorDuplicationModeDialog = ({
     setApplyResult(null);
     setApplyProgress({
       completed: 0,
-      total: preview.summary.totalOperations,
+      total: effectivePreview.summary.totalOperations,
       currentFloor: null,
       currentOperation: null,
     });
@@ -1003,11 +1106,12 @@ const FloorDuplicationModeDialog = ({
     try {
       const result = await applyFloorDuplicationPreview({
         projectId,
-        preview,
+        preview: effectivePreview,
         sourceImageUrl,
         sourceApartments,
         selectedCopyOptions,
         onProgress: setApplyProgress,
+        subProjectId,
       });
 
       onComplete?.(result);
@@ -1210,12 +1314,13 @@ const FloorDuplicationModeDialog = ({
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge className="bg-sky-100 text-sky-800">
                       {t("apartmentsManager.syncDialog.summaryFloorPlans", {
-                        count: preview.summary.floorPlanOperations,
+                        count:
+                          effectivePreview?.summary.floorPlanOperations ?? 0,
                       })}
                     </Badge>
                     <Badge className="bg-emerald-100 text-emerald-800">
                       {t("apartmentsManager.syncDialog.summaryPolygons", {
-                        count: preview.summary.polygonOperations,
+                        count: effectivePreview?.summary.polygonOperations ?? 0,
                       })}
                     </Badge>
                     <Badge className="bg-amber-100 text-amber-900">
@@ -1230,7 +1335,7 @@ const FloorDuplicationModeDialog = ({
                     </Badge>
                     <Badge className="bg-slate-100 text-slate-800">
                       {t("apartmentsManager.syncDialog.readyOperations", {
-                        count: preview.summary.totalOperations,
+                        count: effectivePreview?.summary.totalOperations ?? 0,
                       })}
                     </Badge>
                   </div>
@@ -1254,89 +1359,131 @@ const FloorDuplicationModeDialog = ({
                 </div>
 
                 <div className="space-y-3">
-                  {preview.floors.map((floor) => (
-                    <div
-                      key={floor.floorNumber}
-                      className="rounded-xl border p-3.5"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="text-base font-semibold leading-tight">
-                            {t("apartmentsManager.floor", {
-                              floor: floor.floorNumber,
-                            })}
-                          </div>
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            {getFloorPlanActionLabel(floor.floorPlanAction)}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge className="bg-emerald-100 text-emerald-800">
-                            {t("apartmentsManager.syncDialog.summaryPolygons", {
-                              count: floor.polygonMatches.length,
-                            })}
-                          </Badge>
-                          <Badge className="bg-amber-100 text-amber-900">
-                            {t("apartmentsManager.syncDialog.summarySkipped", {
-                              count: floor.skippedApartments.length,
-                            })}
-                          </Badge>
-                        </div>
-                      </div>
+                  {preview.floors.map((floor) => {
+                    const selectedOnFloor = floor.polygonMatches.filter((m) =>
+                      selectedMatchIds.has(buildMatchKey(floor.floorNumber, m)),
+                    ).length;
 
-                      {floor.polygonMatches.length > 0 ? (
-                        <div className="mt-3 space-y-2">
-                          {floor.polygonMatches.slice(0, 4).map((match) => (
-                            <div
-                              key={`${floor.floorNumber}-${match.targetApartmentId}`}
-                              className="rounded-lg border border-border/70 bg-background p-3 text-sm"
-                            >
-                              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                {t("apartmentsManager.syncDialog.matchMethod")}
-                              </div>
-                              <div className="mt-1 text-sm font-semibold leading-snug text-foreground">
-                                {getMatchingRuleLabel(match.strategy)}
-                              </div>
-                              <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                                {getMatchingRuleFields(match.strategy)}
-                              </div>
-                              <div className="mt-2 border-t border-border/60 pt-2 font-medium tabular-nums">
-                                {match.sourceApartmentNumber} →{" "}
-                                {match.targetApartmentNumber}
-                              </div>
-                            </div>
-                          ))}
-                          {floor.polygonMatches.length > 4 ? (
-                            <div className="text-xs text-muted-foreground">
-                              {t("apartmentsManager.syncDialog.moreMatches", {
-                                count: floor.polygonMatches.length - 4,
+                    return (
+                      <div
+                        key={floor.floorNumber}
+                        className="rounded-xl border p-3.5"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div className="text-base font-semibold leading-tight">
+                              {t("apartmentsManager.floor", {
+                                floor: floor.floorNumber,
                               })}
                             </div>
-                          ) : null}
+                            <div className="mt-1 text-sm text-muted-foreground">
+                              {getFloorPlanActionLabel(floor.floorPlanAction)}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge className="bg-emerald-100 text-emerald-800">
+                              {t(
+                                "apartmentsManager.syncDialog.summaryPolygons",
+                                { count: floor.polygonMatches.length },
+                              )}
+                            </Badge>
+                            <Badge className="bg-amber-100 text-amber-900">
+                              {t(
+                                "apartmentsManager.syncDialog.summarySkipped",
+                                { count: floor.skippedApartments.length },
+                              )}
+                            </Badge>
+                          </div>
                         </div>
-                      ) : null}
 
-                      {floor.skippedApartments.length > 0 ? (
-                        <div className="mt-3 space-y-2">
-                          {floor.skippedApartments
-                            .slice(0, 4)
-                            .map((apartment) => (
-                              <div
-                                key={`${floor.floorNumber}-${apartment.sourceApartmentId}`}
-                                className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"
+                        {floor.polygonMatches.length > 0 ? (
+                          <div className="mt-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">
+                                {selectedOnFloor}/{floor.polygonMatches.length}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() =>
+                                  toggleAllMatchesOnFloor(
+                                    floor.floorNumber,
+                                    floor.polygonMatches,
+                                  )
+                                }
                               >
-                                <div className="font-medium">
-                                  {apartment.sourceApartmentNumber}
+                                {selectedOnFloor === floor.polygonMatches.length
+                                  ? t(
+                                      "apartmentsManager.syncDialog.deselectAll",
+                                    )
+                                  : t("apartmentsManager.syncDialog.selectAll")}
+                              </Button>
+                            </div>
+                            <div className="max-h-60 space-y-2 overflow-y-auto">
+                              {floor.polygonMatches.map((match) => {
+                                const matchKey = buildMatchKey(
+                                  floor.floorNumber,
+                                  match,
+                                );
+                                return (
+                                  <label
+                                    key={`${floor.floorNumber}-${match.targetApartmentId}`}
+                                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 bg-background p-3 text-sm transition-colors hover:bg-muted/40"
+                                  >
+                                    <Checkbox
+                                      checked={selectedMatchIds.has(matchKey)}
+                                      onCheckedChange={() =>
+                                        toggleMatch(matchKey)
+                                      }
+                                      className="mt-0.5"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {t(
+                                          "apartmentsManager.syncDialog.matchMethod",
+                                        )}
+                                      </div>
+                                      <div className="mt-1 text-sm font-semibold leading-snug text-foreground">
+                                        {getMatchingRuleLabel(match.strategy)}
+                                      </div>
+                                      <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                                        {getMatchingRuleFields(match.strategy)}
+                                      </div>
+                                      <div className="mt-2 border-t border-border/60 pt-2 font-medium tabular-nums">
+                                        {match.sourceApartmentNumber} →{" "}
+                                        {match.targetApartmentNumber}
+                                      </div>
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {floor.skippedApartments.length > 0 ? (
+                          <div className="mt-3 space-y-2">
+                            {floor.skippedApartments
+                              .slice(0, 4)
+                              .map((apartment) => (
+                                <div
+                                  key={`${floor.floorNumber}-${apartment.sourceApartmentId}`}
+                                  className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"
+                                >
+                                  <div className="font-medium">
+                                    {apartment.sourceApartmentNumber}
+                                  </div>
+                                  <div className="text-xs text-amber-800">
+                                    {getSkippedReasonLabel(apartment.reason)}
+                                  </div>
                                 </div>
-                                <div className="text-xs text-amber-800">
-                                  {getSkippedReasonLabel(apartment.reason)}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
+                              ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1379,7 +1526,7 @@ const FloorDuplicationModeDialog = ({
               {isApplying
                 ? t("apartmentsManager.syncDialog.floorDuplicating")
                 : t("apartmentsManager.syncDialog.applyButton", {
-                    count: preview?.summary.totalOperations ?? 0,
+                    count: effectivePreview?.summary.totalOperations ?? 0,
                   })}
             </Button>
             <Button

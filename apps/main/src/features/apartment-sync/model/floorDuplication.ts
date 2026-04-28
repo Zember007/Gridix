@@ -10,6 +10,7 @@ import type {
 interface LoadFloorDuplicationDataParams {
   projectId: string;
   targetFloorNumbers: number[];
+  subProjectId?: string;
 }
 
 interface ApplyFloorDuplicationPreviewParams {
@@ -19,6 +20,7 @@ interface ApplyFloorDuplicationPreviewParams {
   sourceApartments: FloorDuplicationSourceApartment[];
   selectedCopyOptions: FloorDuplicationCopyOption[];
   onProgress?: (payload: FloorDuplicationProgressPayload) => void;
+  subProjectId?: string;
 }
 
 export interface FloorDuplicationProgressPayload {
@@ -46,6 +48,7 @@ interface FloorDuplicationTaskResult {
 export const loadFloorDuplicationData = async ({
   projectId,
   targetFloorNumbers,
+  subProjectId,
 }: LoadFloorDuplicationDataParams): Promise<FloorDuplicationLoadedData> => {
   if (targetFloorNumbers.length === 0) {
     return {
@@ -54,18 +57,28 @@ export const loadFloorDuplicationData = async ({
     };
   }
 
+  let apartmentsQuery = supabase
+    .from("apartments")
+    .select("id, floor_number, apartment_number, rooms, area, type")
+    .eq("project_id", projectId)
+    .in("floor_number", targetFloorNumbers)
+    .order("apartment_number");
+  if (subProjectId) {
+    apartmentsQuery = apartmentsQuery.eq("sub_project_id", subProjectId);
+  }
+
+  let floorPlansQuery = supabase
+    .from("floor_plans")
+    .select("id, floor_number, image_url")
+    .eq("project_id", projectId)
+    .in("floor_number", targetFloorNumbers);
+  if (subProjectId) {
+    floorPlansQuery = floorPlansQuery.eq("sub_project_id", subProjectId);
+  }
+
   const [apartmentsResult, floorPlansResult] = await Promise.all([
-    supabase
-      .from("apartments")
-      .select("id, floor_number, apartment_number, rooms, area, type")
-      .eq("project_id", projectId)
-      .in("floor_number", targetFloorNumbers)
-      .order("apartment_number"),
-    supabase
-      .from("floor_plans")
-      .select("id, floor_number, image_url")
-      .eq("project_id", projectId)
-      .in("floor_number", targetFloorNumbers),
+    apartmentsQuery,
+    floorPlansQuery,
   ]);
 
   if (apartmentsResult.error) {
@@ -130,6 +143,7 @@ export const applyFloorDuplicationPreview = async ({
   sourceApartments,
   selectedCopyOptions,
   onProgress,
+  subProjectId,
 }: ApplyFloorDuplicationPreviewParams): Promise<FloorDuplicationApplyResult> => {
   const shouldCopyFloorImage =
     selectedCopyOptions.includes("floor_image") && Boolean(sourceImageUrl);
@@ -183,17 +197,22 @@ export const applyFloorDuplicationPreview = async ({
                 project_id: projectId,
                 floor_number: floorPreview.floorNumber,
                 image_url: sourceImageUrl,
+                ...(subProjectId && { sub_project_id: subProjectId }),
               });
 
               if (error) {
                 throw error;
               }
             } else {
-              const { error } = await supabase
+              let updateQuery = supabase
                 .from("floor_plans")
                 .update({ image_url: sourceImageUrl })
                 .eq("project_id", projectId)
                 .eq("floor_number", floorPreview.floorNumber);
+              if (subProjectId) {
+                updateQuery = updateQuery.eq("sub_project_id", subProjectId);
+              }
+              const { error } = await updateQuery;
 
               if (error) {
                 throw error;
