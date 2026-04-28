@@ -353,7 +353,7 @@ export const ProjectHeader = ({
       <div
         ref={containerRef}
         className={cn(
-          "container relative mx-auto flex flex-col px-4 py-2 md:px-6 md:py-3",
+          "container relative mx-auto flex flex-col px-4 py-3 md:px-6",
           isMobile && stackNavBelow && "gap-2",
         )}
       >

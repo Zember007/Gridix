@@ -87,7 +87,7 @@ export function InteractiveProjectsMapImpl({
 
   return (
     <div
-      className={["relative h-[80vh] grow", className]
+      className={["relative h-[calc(100vh-60px)] grow", className]
         .filter(Boolean)
         .join(" ")}
     >

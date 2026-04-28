@@ -70,7 +70,6 @@ const InteractiveProjectsMap = ({
       selectedProjectId={selectedProjectId}
       onProjectSelect={onProjectSelect}
       onOpenProject={handleViewProject as any}
-      className="relative h-[80vh] grow"
     />
   );
 };
