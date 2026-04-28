@@ -5,6 +5,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  StatusBadge,
   useIsBelowLg,
 } from "@gridix/ui";
 import { ArrowLeft, SlidersHorizontal } from "lucide-react";
@@ -90,7 +91,7 @@ export const ProjectHeader = ({
   backAriaLabel,
   headerTitle,
 }: ProjectHeaderProps) => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const isBelowLg = useIsBelowLg();
   const [stackNavBelow, setStackNavBelow] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -301,6 +302,22 @@ export const ProjectHeader = ({
     visibleFilterFields: filters.visibleFilterFields,
     hasAnyVisibleFilter: filters.hasAnyVisibleFilter,
   };
+
+  const activeFilterCount = [
+    filters.visibleFilterFields.rooms && filters.selectedRooms !== "all",
+    filters.visibleFilterFields.floor && filters.selectedFloor !== "all",
+    filters.visibleFilterFields.type && filters.selectedType !== "all",
+    filters.visibleFilterFields.status && filters.showOnlyAvailable,
+    filters.visibleFilterFields.number && filters.searchQuery.trim() !== "",
+    filters.visibleFilterFields.price &&
+      (filters.priceRange[0] > filters.minPrice ||
+        filters.priceRange[1] < filters.maxPrice),
+    filters.visibleFilterFields.area &&
+      (filters.areaRange[0] > filters.minArea ||
+        filters.areaRange[1] < filters.maxArea),
+  ].filter(Boolean).length;
+
+  const showFilterSummary = activeFilterCount > 0;
 
   const viewModeDesktop = showDesktopViewModeSelect ? (
     <ViewModeSelect
@@ -548,6 +565,26 @@ export const ProjectHeader = ({
             </div>
           </div>
         )}
+
+        {showFilterSummary ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2">
+            <StatusBadge tone="accent">
+              {t("project.found")}: {filters.filteredApartments.length}
+            </StatusBadge>
+            <StatusBadge tone="neutral">
+              {activeFilterCount} {t("project.filters")}
+            </StatusBadge>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-gray-600"
+              onClick={filters.resetFilters}
+            >
+              {t("project.resetFilters")}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

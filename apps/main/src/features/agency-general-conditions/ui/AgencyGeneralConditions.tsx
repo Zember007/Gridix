@@ -772,7 +772,7 @@ export const AgencyGeneralConditions: React.FC = () => {
       </div>
 
       <div className="px-4 md:px-0">
-        <div className="no-scrollbar flex gap-6 overflow-x-auto border-b border-slate-200 bg-white">
+        <div className="no-scrollbar flex gap-6 overflow-x-auto rounded-lg border-b border-slate-200 bg-white px-4">
           <button
             onClick={() => setActiveTab("rules")}
             className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-3 text-sm font-bold transition-colors ${activeTab === "rules" ? "border-[var(--admin-primary)] text-[var(--admin-primary)]" : "border-transparent text-slate-500 hover:text-slate-800"}`}
