@@ -149,6 +149,10 @@ const validateAndMergeSettings = (
   return merged;
 };
 
+/** One bordered group: rows separated by divide-y (anti-card per skill). */
+const POLYGON_TOGGLE_GROUP_CLASS =
+  "divide-y divide-border overflow-hidden rounded-lg border border-border/70 bg-muted/20";
+
 const PolygonCustomizationSettings = ({
   projectId,
   type,
@@ -300,225 +304,241 @@ const PolygonCustomizationSettings = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">
-          {type === "genplan"
-            ? t("polygonSettings.genplanTitle")
-            : type === "floor"
-              ? t("polygonSettings.floorTitle")
-              : t("polygonSettings.buildingTitle")}
-        </CardTitle>
+      <CardHeader className="pb-3">
+        <div className="mx-auto w-full max-w-xl">
+          <CardTitle className="text-lg">
+            {type === "genplan"
+              ? t("polygonSettings.genplanTitle")
+              : type === "floor"
+                ? t("polygonSettings.floorTitle")
+                : t("polygonSettings.buildingTitle")}
+          </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Цвета - для здания один цвет, для этажа - по статусам */}
-        <div className="space-y-4">
-          <h4 className="font-medium">{t("polygonSettings.colors")}</h4>
-          {type !== "floor" ? (
-            <div className="space-y-2">
-              <Label>{t("polygonSettings.buildingColor")}</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={settings.colors.building || "#3b82f6"}
-                  onChange={(e) =>
-                    updateSettings("colors.building", e.target.value)
-                  }
-                  className="h-8 w-8 cursor-pointer rounded border"
-                />
-                <span className="text-sm text-gray-600">
-                  {settings.colors.building || "#3b82f6"}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-4">
+      <CardContent>
+        <div className="mx-auto w-full max-w-xl space-y-5">
+          {/* Цвета - для здания один цвет, для этажа - по статусам */}
+          <div className="space-y-3">
+            <h4 className="font-medium">{t("polygonSettings.colors")}</h4>
+            {type !== "floor" ? (
               <div className="space-y-2">
-                <Label>{t("project.available")}</Label>
+                <Label>{t("polygonSettings.buildingColor")}</Label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={settings.colors.available}
+                    value={settings.colors.building || "#3b82f6"}
                     onChange={(e) =>
-                      updateSettings("colors.available", e.target.value)
+                      updateSettings("colors.building", e.target.value)
                     }
                     className="h-8 w-8 cursor-pointer rounded border"
                   />
-                  <span className="text-sm text-gray-600">
-                    {settings.colors.available}
+                  <span className="font-mono text-sm text-muted-foreground">
+                    {settings.colors.building || "#3b82f6"}
                   </span>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>{t("project.sold")}</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={settings.colors.sold}
-                    onChange={(e) =>
-                      updateSettings("colors.sold", e.target.value)
-                    }
-                    className="h-8 w-8 cursor-pointer rounded border"
-                  />
-                  <span className="text-sm text-gray-600">
-                    {settings.colors.sold}
-                  </span>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>{t("project.available")}</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={settings.colors.available}
+                      onChange={(e) =>
+                        updateSettings("colors.available", e.target.value)
+                      }
+                      className="h-8 w-8 cursor-pointer rounded border"
+                    />
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {settings.colors.available}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("project.sold")}</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={settings.colors.sold}
+                      onChange={(e) =>
+                        updateSettings("colors.sold", e.target.value)
+                      }
+                      className="h-8 w-8 cursor-pointer rounded border"
+                    />
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {settings.colors.sold}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("project.reserved")}</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={settings.colors.reserved}
+                      onChange={(e) =>
+                        updateSettings("colors.reserved", e.target.value)
+                      }
+                      className="h-8 w-8 cursor-pointer rounded border"
+                    />
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {settings.colors.reserved}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>{t("project.reserved")}</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={settings.colors.reserved}
-                    onChange={(e) =>
-                      updateSettings("colors.reserved", e.target.value)
-                    }
-                    className="h-8 w-8 cursor-pointer rounded border"
-                  />
-                  <span className="text-sm text-gray-600">
-                    {settings.colors.reserved}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <Separator />
-
-        {/* Эффекты при наведении */}
-        <div className="space-y-4">
-          <h4 className="font-medium">{t("polygonSettings.hoverEffects")}</h4>
-          <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.colorChange")}</Label>
-              <Switch
-                checked={settings.hoverEffects.colorChange}
-                onCheckedChange={(checked) =>
-                  updateSettings("hoverEffects.colorChange", checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.opacityChange")}</Label>
-              <Switch
-                checked={settings.hoverEffects.opacityChange}
-                onCheckedChange={(checked) =>
-                  updateSettings("hoverEffects.opacityChange", checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.glow")}</Label>
-              <Switch
-                checked={settings.hoverEffects.glow}
-                onCheckedChange={(checked) =>
-                  updateSettings("hoverEffects.glow", checked)
-                }
-              />
-            </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Отображение информации */}
-        <div className="space-y-4">
-          <h4 className="font-medium">{t("polygonSettings.display")}</h4>
-          <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.showNumbers")}</Label>
-              <Switch
-                checked={settings.display.showNumbers}
-                onCheckedChange={(checked) =>
-                  updateSettings("display.showNumbers", checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label>{t("polygonSettings.showTooltip")}</Label>
-              <Switch
-                checked={settings.display.showTooltip}
-                onCheckedChange={(checked) =>
-                  updateSettings("display.showTooltip", checked)
-                }
-              />
-            </div>
-            {type !== "building" && (
-              <>
-                <div className="flex items-center justify-between">
-                  <Label>{t("polygonSettings.showArea")}</Label>
-                  <Switch
-                    checked={settings.display.showArea}
-                    onCheckedChange={(checked) =>
-                      updateSettings("display.showArea", checked)
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>{t("polygonSettings.showPrice")}</Label>
-                  <Switch
-                    checked={settings.display.showPrice}
-                    onCheckedChange={(checked) =>
-                      updateSettings("display.showPrice", checked)
-                    }
-                  />
-                </div>
-              </>
             )}
           </div>
-        </div>
 
-        <Separator />
+          <Separator />
 
-        {/* Настройки прозрачности */}
-        <div className="space-y-4">
-          <h4 className="font-medium">{t("polygonSettings.opacity")}</h4>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>
-                {t("polygonSettings.normalOpacity")}:{" "}
-                {Math.round(settings.opacity.normal * 100)}%
-              </Label>
-              <Slider
-                value={[settings.opacity.normal]}
-                onValueChange={([value]) =>
-                  updateSettings(
-                    "opacity.normal",
-                    value ?? settings.opacity.normal,
-                  )
-                }
-                max={1}
-                min={0}
-                step={0.1}
-                className="w-full"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                {t("polygonSettings.hoverOpacity")}:{" "}
-                {Math.round(settings.opacity.hover * 100)}%
-              </Label>
-              <Slider
-                value={[settings.opacity.hover]}
-                onValueChange={([value]) =>
-                  updateSettings(
-                    "opacity.hover",
-                    value ?? settings.opacity.hover,
-                  )
-                }
-                max={1}
-                min={0}
-                step={0.1}
-                className="w-full"
-              />
+          {/* Эффекты при наведении */}
+          <div className="space-y-3">
+            <h4 className="font-medium">{t("polygonSettings.hoverEffects")}</h4>
+            <div className={POLYGON_TOGGLE_GROUP_CLASS}>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <Label>{t("polygonSettings.colorChange")}</Label>
+                <Switch
+                  checked={settings.hoverEffects.colorChange}
+                  onCheckedChange={(checked) =>
+                    updateSettings("hoverEffects.colorChange", checked)
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <Label>{t("polygonSettings.opacityChange")}</Label>
+                <Switch
+                  checked={settings.hoverEffects.opacityChange}
+                  onCheckedChange={(checked) =>
+                    updateSettings("hoverEffects.opacityChange", checked)
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <Label>{t("polygonSettings.glow")}</Label>
+                <Switch
+                  checked={settings.hoverEffects.glow}
+                  onCheckedChange={(checked) =>
+                    updateSettings("hoverEffects.glow", checked)
+                  }
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <Button onClick={saveSettings} disabled={loading} className="w-full">
-          {loading ? t("polygonSettings.saving") : t("polygonSettings.save")}
-        </Button>
+          <Separator />
+
+          {/* Отображение информации */}
+          <div className="space-y-3">
+            <h4 className="font-medium">{t("polygonSettings.display")}</h4>
+            <div className={POLYGON_TOGGLE_GROUP_CLASS}>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <Label>{t("polygonSettings.showNumbers")}</Label>
+                <Switch
+                  checked={settings.display.showNumbers}
+                  onCheckedChange={(checked) =>
+                    updateSettings("display.showNumbers", checked)
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <Label>{t("polygonSettings.showTooltip")}</Label>
+                <Switch
+                  checked={settings.display.showTooltip}
+                  onCheckedChange={(checked) =>
+                    updateSettings("display.showTooltip", checked)
+                  }
+                />
+              </div>
+              {type !== "building" && (
+                <>
+                  <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                    <Label>{t("polygonSettings.showArea")}</Label>
+                    <Switch
+                      checked={settings.display.showArea}
+                      onCheckedChange={(checked) =>
+                        updateSettings("display.showArea", checked)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                    <Label>{t("polygonSettings.showPrice")}</Label>
+                    <Switch
+                      checked={settings.display.showPrice}
+                      onCheckedChange={(checked) =>
+                        updateSettings("display.showPrice", checked)
+                      }
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Настройки прозрачности */}
+          <div className="space-y-3">
+            <h4 className="font-medium">{t("polygonSettings.opacity")}</h4>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <Label>{t("polygonSettings.normalOpacity")}</Label>
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    {Math.round(settings.opacity.normal * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  value={[settings.opacity.normal]}
+                  onValueChange={([value]) =>
+                    updateSettings(
+                      "opacity.normal",
+                      value ?? settings.opacity.normal,
+                    )
+                  }
+                  max={1}
+                  min={0}
+                  step={0.1}
+                  className="w-full max-w-[min(100%,280px)]"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <Label>{t("polygonSettings.hoverOpacity")}</Label>
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    {Math.round(settings.opacity.hover * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  value={[settings.opacity.hover]}
+                  onValueChange={([value]) =>
+                    updateSettings(
+                      "opacity.hover",
+                      value ?? settings.opacity.hover,
+                    )
+                  }
+                  max={1}
+                  min={0}
+                  step={0.1}
+                  className="w-full max-w-[min(100%,280px)]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <Button
+              onClick={saveSettings}
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
+              {loading
+                ? t("polygonSettings.saving")
+                : t("polygonSettings.save")}
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
