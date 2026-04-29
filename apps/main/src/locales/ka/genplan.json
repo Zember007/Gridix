@@ -97,6 +97,14 @@
       "description": "დაამატეთ ხელით ან იმპორტი ბინების მონაცემების ფაილიდან ან ბმულიდან (Excel, CSV, Google Sheets)."
     },
     "creatingBuilding": "კორპუსი იქმნება…",
-    "importingApartments": "ბინები იმპორტირდება…"
+    "importingApartments": "ბინები იმპორტირდება…",
+    "cloneTitle": "კორპუსის კოპირება",
+    "cloneModeEmpty": "ნულიდან",
+    "cloneModeFromExisting": "არსებულის კოპირება",
+    "cloneSourceLabel": "წყარო კორპუსი",
+    "cloneSourcePlaceholder": "აირჩიეთ კორპუსი კოპირებისთვის",
+    "cloneSuccess": "კორპუსი წარმატებით დაკოპირდა",
+    "cloneError": "კორპუსის კოპირების შეცდომა",
+    "cloning": "კოპირდება…"
   }
 }

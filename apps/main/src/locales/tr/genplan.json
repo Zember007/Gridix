@@ -97,6 +97,14 @@
       "description": "Manuel ekleyin veya daire verilerini dosya veya bağlantıdan içe aktarın (Excel, CSV, Google Sheets)."
     },
     "creatingBuilding": "Bina oluşturuluyor…",
-    "importingApartments": "Daireler içe aktarılıyor…"
+    "importingApartments": "Daireler içe aktarılıyor…",
+    "cloneTitle": "Binayı kopyala",
+    "cloneModeEmpty": "Sıfırdan",
+    "cloneModeFromExisting": "Mevcut binayı kopyala",
+    "cloneSourceLabel": "Kaynak bina",
+    "cloneSourcePlaceholder": "Kopyalanacak binayı seçin",
+    "cloneSuccess": "Bina başarıyla kopyalandı",
+    "cloneError": "Bina kopyalanırken hata",
+    "cloning": "Kopyalanıyor…"
   }
 }

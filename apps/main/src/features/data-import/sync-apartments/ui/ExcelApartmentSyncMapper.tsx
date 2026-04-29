@@ -192,22 +192,28 @@ const ExcelApartmentSyncMapper = ({
 
   useEffect(() => {
     const loadCustomFields = async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("project_custom_fields")
         .select("*")
         .eq("project_id", projectId)
         .order("sort_order");
-      if (subProjectId) q = q.eq("sub_project_id", subProjectId);
-      const { data } = await q;
+
+      if (error) {
+        console.error(
+          "ExcelApartmentSyncMapper: failed to load custom fields",
+          error,
+        );
+        return;
+      }
 
       if (data) {
-        setCustomFields(data as unknown as CustomField[]);
+        const fields = data as unknown as CustomField[];
+        setCustomFields(fields);
         setColumnMapping((prev) => {
           const newMapping = { ...prev };
-          data.forEach((field: Record<string, unknown>) => {
-            const name = field.field_name as string;
-            if (!newMapping[name]) {
-              newMapping[name] = "";
+          fields.forEach((field) => {
+            if (!newMapping[field.field_name]) {
+              newMapping[field.field_name] = "";
             }
           });
           return newMapping;
@@ -215,7 +221,7 @@ const ExcelApartmentSyncMapper = ({
       }
     };
     loadCustomFields();
-  }, [projectId, subProjectId]);
+  }, [projectId]);
 
   const effectiveType = projectType ?? "building";
 
