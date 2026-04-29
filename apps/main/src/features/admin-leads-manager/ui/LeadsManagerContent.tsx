@@ -1,8 +1,8 @@
 import { Search, X } from "lucide-react";
+import { Skeleton, ViewTransition } from "@gridix/ui";
 import { LeadsKanban, LeadsList } from "@/entities/lead";
 import { FunnelSetup } from "@/features/admin-funnel-setup";
 import { EmptyState } from "@/shared/ui/EmptyState";
-import Spinner from "@/shared/ui/Spinner";
 
 type FunnelName = { name: string };
 
@@ -73,106 +73,149 @@ export const LeadsManagerContent = ({
   handleStatusChange,
   readOnly = false,
 }: LeadsManagerContentProps) => {
+  const viewKey = isLoading
+    ? "loading"
+    : isFunnelSetupMode
+      ? "funnel-setup"
+      : viewMode;
+
   return (
     <main className="flex-1 overflow-y-auto bg-[var(--admin-background-secondary)]">
-      {isLoading ? (
-        <div className="flex h-full items-center justify-center">
-          <Spinner size="md" />
-        </div>
-      ) : isFunnelSetupMode ? (
-        <FunnelSetup
-          stages={funnelStages}
-          triggers={funnelTriggers}
-          users={users}
-          onUpdateStage={onUpdateStage}
-          onAddStage={onAddStage}
-          onDeleteStage={onDeleteStage}
-          onReorderStage={onReorderStage}
-          onAddTrigger={onAddTrigger}
-          onUpdateTrigger={onUpdateTrigger}
-          onDeleteTrigger={onDeleteTrigger}
-          onReorderTrigger={onReorderTrigger}
-        />
-      ) : (
-        <div className="h-full px-3 py-3 sm:px-6 sm:py-4 lg:py-6">
-          {missingApartmentStatusFunnels.length > 0 &&
-            !isFunnelTriggersWarningDismissed && (
-              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex min-w-0 flex-1 justify-between gap-3 max-sm:flex-col">
-                    <div>
-                      <p className="text-sm font-extrabold text-amber-900">
-                        {t("leads.warnings.funnelTriggersTitle")}
-                      </p>
-                      <p className="mt-2 text-xs text-amber-800 sm:truncate">
-                        <span className="font-bold">
-                          {t("leads.warnings.missingFunnels")}:
-                        </span>{" "}
-                        {missingApartmentStatusFunnels
-                          .map((funnel) => funnel.name)
-                          .join(", ")}
-                      </p>
-                    </div>
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => setIsFunnelSetupMode(true)}
-                        className="inline-flex h-full w-fit whitespace-nowrap rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-700"
-                      >
-                        {t("leads.warnings.funnelTriggersCta")}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 items-start gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsFunnelTriggersWarningDismissed(true);
-                      }}
-                      className="rounded-lg p-2 text-amber-800/70 transition-colors hover:bg-amber-100 hover:text-amber-900"
-                      aria-label={t("common.hide") as string}
-                      title={t("common.hide") as string}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
+      <ViewTransition viewKey={viewKey} className="min-h-full">
+        {isLoading ? (
+          <div className="h-full px-3 py-3 sm:px-6 sm:py-4 lg:py-6">
+            <div className="mb-4 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-44" />
+                  <Skeleton className="h-3 w-64 max-w-full" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-24" />
+                  <Skeleton className="h-9 w-28" />
                 </div>
               </div>
-            )}
+            </div>
+            <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-sm">
+              <div className="grid grid-cols-[40px_1.4fr_1fr_1fr_120px] gap-3 border-b border-[var(--admin-border)] px-4 py-3 max-lg:grid-cols-[40px_1fr_120px]">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24 max-lg:hidden" />
+                <Skeleton className="h-4 w-24 max-lg:hidden" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              {Array.from({ length: 7 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[40px_1.4fr_1fr_1fr_120px] gap-3 border-b border-[var(--admin-border)] px-4 py-4 last:border-b-0 max-lg:grid-cols-[40px_1fr_120px]"
+                >
+                  <Skeleton className="h-4 w-4" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  <Skeleton className="h-4 w-24 max-lg:hidden" />
+                  <Skeleton className="h-4 w-28 max-lg:hidden" />
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : isFunnelSetupMode ? (
+          <FunnelSetup
+            stages={funnelStages}
+            triggers={funnelTriggers}
+            users={users}
+            onUpdateStage={onUpdateStage}
+            onAddStage={onAddStage}
+            onDeleteStage={onDeleteStage}
+            onReorderStage={onReorderStage}
+            onAddTrigger={onAddTrigger}
+            onUpdateTrigger={onUpdateTrigger}
+            onDeleteTrigger={onDeleteTrigger}
+            onReorderTrigger={onReorderTrigger}
+          />
+        ) : (
+          <div className="h-full px-3 py-3 sm:px-6 sm:py-4 lg:py-6">
+            {missingApartmentStatusFunnels.length > 0 &&
+              !isFunnelTriggersWarningDismissed && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 flex-1 justify-between gap-3 max-sm:flex-col">
+                      <div>
+                        <p className="text-sm font-extrabold text-amber-900">
+                          {t("leads.warnings.funnelTriggersTitle")}
+                        </p>
+                        <p className="mt-2 text-xs text-amber-800 sm:truncate">
+                          <span className="font-bold">
+                            {t("leads.warnings.missingFunnels")}:
+                          </span>{" "}
+                          {missingApartmentStatusFunnels
+                            .map((funnel) => funnel.name)
+                            .join(", ")}
+                        </p>
+                      </div>
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={() => setIsFunnelSetupMode(true)}
+                          className="inline-flex h-full w-fit whitespace-nowrap rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-700"
+                        >
+                          {t("leads.warnings.funnelTriggersCta")}
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-start gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFunnelTriggersWarningDismissed(true);
+                        }}
+                        className="rounded-lg p-2 text-amber-800/70 transition-colors hover:bg-amber-100 hover:text-amber-900"
+                        aria-label={t("common.hide") as string}
+                        title={t("common.hide") as string}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {filteredAndSortedLeads.length === 0 ? (
-            <EmptyState
-              icon={Search}
-              title={t("leads.emptyState.notFound")}
-              description={t("leads.emptyState.tryChangingFilters")}
-              action={{
-                label: t("leads.emptyState.resetFilters"),
-                onClick: resetFilters,
-              }}
-            />
-          ) : viewMode === "list" ? (
-            <LeadsList
-              leads={filteredAndSortedLeads}
-              funnelStages={funnelStages}
-              onSelect={setSelectedLead}
-              selectedIds={selectedIds}
-              onToggleSelection={toggleSelection}
-              onToggleAll={toggleAllSelection}
-            />
-          ) : (
-            <LeadsKanban
-              leads={filteredAndSortedLeads}
-              funnelStages={funnelStages}
-              users={users}
-              cardConfig={cardConfig}
-              onSelect={setSelectedLead}
-              onCreate={handleCreateLead}
-              onStatusChange={handleStatusChange}
-              readOnly={readOnly}
-            />
-          )}
-        </div>
-      )}
+            {filteredAndSortedLeads.length === 0 ? (
+              <EmptyState
+                icon={Search}
+                title={t("leads.emptyState.notFound")}
+                description={t("leads.emptyState.tryChangingFilters")}
+                action={{
+                  label: t("leads.emptyState.resetFilters"),
+                  onClick: resetFilters,
+                }}
+              />
+            ) : viewMode === "list" ? (
+              <LeadsList
+                leads={filteredAndSortedLeads}
+                funnelStages={funnelStages}
+                onSelect={setSelectedLead}
+                selectedIds={selectedIds}
+                onToggleSelection={toggleSelection}
+                onToggleAll={toggleAllSelection}
+              />
+            ) : (
+              <LeadsKanban
+                leads={filteredAndSortedLeads}
+                funnelStages={funnelStages}
+                users={users}
+                cardConfig={cardConfig}
+                onSelect={setSelectedLead}
+                onCreate={handleCreateLead}
+                onStatusChange={handleStatusChange}
+                readOnly={readOnly}
+              />
+            )}
+          </div>
+        )}
+      </ViewTransition>
     </main>
   );
 };

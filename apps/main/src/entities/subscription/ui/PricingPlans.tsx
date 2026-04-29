@@ -157,7 +157,7 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
               <Button
                 className={`mt-auto w-full ${
                   isPro
-                    ? "bg-blue-600 text-white hover:bg-blue-500"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}
                 onClick={() => {

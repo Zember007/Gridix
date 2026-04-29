@@ -16,9 +16,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  ConfirmDialog,
+  DataState,
   FileDropzone,
+  PageHeader,
+  Skeleton,
   type SharedProject,
   SharedProjectDrawer,
+  StatusBadge,
   UploadProgressCard,
 } from "@gridix/ui";
 import {
@@ -112,6 +117,11 @@ const ProjectList = ({
   );
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [shouldRenderLeadsStats, setShouldRenderLeadsStats] = useState(false);
+  const [projectPendingDeletion, setProjectPendingDeletion] =
+    useState<Project | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
+    null,
+  );
 
   const isCrmMode = mode === "crm";
   const adminAccess = useAdminAccess();
@@ -168,13 +178,14 @@ const ProjectList = ({
       return;
     }
 
-    if (!confirm(t("projectList.deleteConfirm", { name: projectName }))) {
-      return;
-    }
-
-    const success = await deleteProjectCRUD(projectId);
-    if (success) {
-      refresh(); // Обновляем список проектов
+    setDeletingProjectId(projectId);
+    try {
+      const success = await deleteProjectCRUD(projectId);
+      if (success) {
+        refresh(); // Обновляем список проектов
+      }
+    } finally {
+      setDeletingProjectId(null);
     }
   };
 
@@ -1806,14 +1817,49 @@ const ProjectList = ({
 
   if (loading) {
     return (
-      <div className="grid h-full w-full place-items-center">
-        <Spinner />
+      <div className="space-y-4 p-4 sm:p-6">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-5 w-full max-w-xl" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-72 rounded-lg" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-5">
+      <ConfirmDialog
+        open={projectPendingDeletion !== null}
+        onOpenChange={(open) => {
+          if (!open && deletingProjectId === null) {
+            setProjectPendingDeletion(null);
+          }
+        }}
+        tone="destructive"
+        title={
+          projectPendingDeletion
+            ? t("projectList.deleteConfirm", {
+                name: projectPendingDeletion.name,
+              })
+            : t("projectList.deleteConfirm", { name: "" })
+        }
+        description={t("projectList.deleteProject")}
+        confirmLabel={t("projectList.deleteProject")}
+        cancelLabel={t("common.cancel")}
+        loading={deletingProjectId !== null}
+        onConfirm={async () => {
+          if (!projectPendingDeletion) return;
+          await deleteProject(
+            projectPendingDeletion.id,
+            projectPendingDeletion.name,
+          );
+          setProjectPendingDeletion(null);
+        }}
+      />
+
       {/* Project Drawer */}
       {selectedProject && !isCrmMode && (
         <SharedProjectDrawer
@@ -1869,86 +1915,53 @@ const ProjectList = ({
 
       {/* Projects Grid */}
       {projects.length === 0 ? (
-        <Card className="border-2 border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Building2 className="mb-4 h-16 w-16" />
-            <h3 className="mb-2 text-xl font-semibold">
-              {t("projectList.noProjects")}
-            </h3>
-            <p className="mb-6 max-w-md text-center">
-              {t("projectList.createFirstDescription")}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {!isCrmMode && onCreateNew && (
-                <Button
-                  onClick={onCreateNew}
-                  size="lg"
-                  className="create_project_usertour"
-                  style={{
-                    backgroundColor: ADMIN_THEME.primary,
-                    color: ADMIN_THEME.textOnPrimary,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      ADMIN_THEME.primaryHover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                  }}
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  {t("projectList.createFirst")}
-                </Button>
-              )}
-              {!adminAccess?.isDemoWorkspace && (
-                <JoinDemoButton variant="inline" />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <DataState
+          icon={Building2}
+          title={t("projectList.noProjects")}
+          description={t("projectList.createFirstDescription")}
+          action={
+            !isCrmMode && onCreateNew
+              ? {
+                  label: t("projectList.createFirst"),
+                  onClick: onCreateNew,
+                  variant: "default",
+                }
+              : undefined
+          }
+          className="create_project_usertour min-h-[320px] items-center text-center"
+        >
+          {!adminAccess?.isDemoWorkspace && <JoinDemoButton variant="inline" />}
+        </DataState>
       ) : (
-        <div className="space-y-6 p-6">
+        <div className="space-y-5">
           {/* Header with Create New Project Button */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2
-                style={{ color: ADMIN_THEME.textPrimary }}
-                className="text-xl font-semibold"
-              >
-                {t("projectList.projects")}
-              </h2>
-              <p style={{ color: ADMIN_THEME.textSecondary }}>
-                {t("projectList.manageDescription")}
-              </p>
-            </div>
-            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
-              {!adminAccess?.isDemoWorkspace && (
-                <JoinDemoButton variant="inline" />
-              )}
-              {!isCrmMode && onCreateNew && (
-                <Button
-                  onClick={onCreateNew}
-                  className="create_project_usertour w-full md:w-auto"
-                  style={{
-                    backgroundColor: ADMIN_THEME.primary,
-                    color: ADMIN_THEME.textOnPrimary,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      ADMIN_THEME.primaryHover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                  }}
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  {t("projectList.createNew")}
-                </Button>
-              )}
-            </div>
-          </div>
+          <PageHeader
+            title={t("projectList.projects")}
+            description={t("projectList.manageDescription")}
+            metadata={
+              <StatusBadge tone="neutral">
+                {projects.length} {t("projectList.projects")}
+              </StatusBadge>
+            }
+            actions={
+              <>
+                {!adminAccess?.isDemoWorkspace && (
+                  <JoinDemoButton variant="inline" />
+                )}
+                {!isCrmMode && onCreateNew && (
+                  <Button
+                    onClick={onCreateNew}
+                    className="create_project_usertour w-full bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] hover:bg-[var(--admin-primary-hover)] md:w-auto"
+                  >
+                    <Plus className="mr-2 h-5 w-5" />
+                    {t("projectList.createNew")}
+                  </Button>
+                )}
+              </>
+            }
+          />
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => {
               const crmBlocked =
                 isCrmMode &&
@@ -1957,7 +1970,7 @@ const ProjectList = ({
               return (
                 <Card
                   key={project.id}
-                  className={`project_card_usertour group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${crmBlocked ? "opacity-75" : ""}`}
+                  className={`project_card_usertour group overflow-hidden transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:border-ring/25 hover:shadow-md ${crmBlocked ? "opacity-75" : ""}`}
                 >
                   <CardHeader className="px-4 pb-4 pt-4 md:px-6 md:pb-4 md:pt-6">
                     <div className="flex items-start justify-between">
@@ -2041,19 +2054,7 @@ const ProjectList = ({
                           <Button
                             size="sm"
                             onClick={() => handleOpenDrawer(project)}
-                            className="flex-1"
-                            style={{
-                              backgroundColor: ADMIN_THEME.primary,
-                              color: ADMIN_THEME.textOnPrimary,
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                ADMIN_THEME.primaryHover;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                ADMIN_THEME.primary;
-                            }}
+                            className="flex-1 bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] hover:bg-[var(--admin-primary-hover)]"
                           >
                             <Info className="mr-2 h-4 w-4" />
                             {t("projectList.details")}
@@ -2064,29 +2065,13 @@ const ProjectList = ({
                           <Button
                             size="sm"
                             onClick={() => viewProject(project)}
-                            className="flex-1"
                             disabled={crmBlocked}
                             title={
                               crmBlocked
                                 ? t("bitrix.proGuard.title")
                                 : undefined
                             }
-                            style={{
-                              backgroundColor: ADMIN_THEME.primary,
-                              color: ADMIN_THEME.textOnPrimary,
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!crmBlocked) {
-                                e.currentTarget.style.backgroundColor =
-                                  ADMIN_THEME.primaryHover;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!crmBlocked) {
-                                e.currentTarget.style.backgroundColor =
-                                  ADMIN_THEME.primary;
-                              }
-                            }}
+                            className="flex-1 bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] hover:bg-[var(--admin-primary-hover)]"
                           >
                             <Eye className="mr-2 h-4 w-4" />
                             {t("managerAccounts.openLink")}
@@ -2099,18 +2084,6 @@ const ProjectList = ({
                             variant="outline"
                             onClick={() => onEditProject(project.id, false)}
                             className="edit_project_usertour"
-                            style={{
-                              borderColor: ADMIN_THEME.primary,
-                              color: ADMIN_THEME.primary,
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                ADMIN_THEME.backgroundHover;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                "transparent";
-                            }}
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
@@ -2120,10 +2093,9 @@ const ProjectList = ({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() =>
-                              deleteProject(project.id, project.name)
-                            }
-                            className="text-red-600 hover:bg-red-50"
+                            onClick={() => setProjectPendingDeletion(project)}
+                            className="text-destructive hover:bg-destructive/10"
+                            disabled={deletingProjectId === project.id}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

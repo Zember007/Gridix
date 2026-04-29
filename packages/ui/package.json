@@ -16,7 +16,6 @@
     "@gridix/utils": "workspace:*",
     "fflate": "^0.8.2",
     "@ncdai/react-wheel-picker": "^1.0.17",
-    "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

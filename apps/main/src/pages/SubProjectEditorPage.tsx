@@ -16,8 +16,7 @@ import {
   SelectValue,
   Switch,
 } from "@gridix/ui";
-import { ArrowLeft, FloppyDisk, Plus } from "@phosphor-icons/react";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
@@ -215,7 +214,7 @@ export default function SubProjectEditorPage() {
                     {saving ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <FloppyDisk className="h-4 w-4" />
+                      <Save className="h-4 w-4" />
                     )}
                     <span className="ml-2 hidden sm:inline">
                       {saving
@@ -430,7 +429,7 @@ export default function SubProjectEditorPage() {
                     variant="outline"
                     onClick={() => setImportModalOpen(true)}
                   >
-                    <Plus size={14} className="mr-1.5" />
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
                     {t("genplan.subProjects.addApartments")}
                   </Button>
                 </div>

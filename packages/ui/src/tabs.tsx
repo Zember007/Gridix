@@ -23,7 +23,7 @@ const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       // base container
-      "bg-muted text-muted-foreground flex items-center justify-start rounded-md p-1",
+      "bg-muted/70 text-muted-foreground border-border/60 flex items-center justify-start rounded-lg border p-1",
       // wrapping behavior
       wrap ? "flex-wrap gap-2" : "flex-nowrap gap-1 overflow-x-auto",
       // allow wrapped lines to actually wrap text if needed
@@ -43,12 +43,12 @@ const TabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       // trigger styles
-      "inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium",
+      "inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium",
       "ring-offset-background transition-all",
       "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
       "disabled:pointer-events-none disabled:opacity-50",
       // active state
-      "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+      "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_2px_hsl(var(--foreground)/0.06)]",
       // keep trigger content in one line (icon + text)
       "whitespace-nowrap",
       className,
@@ -67,6 +67,7 @@ const TabsContent = React.forwardRef<
     className={cn(
       "ring-offset-background mt-2",
       "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+      "motion-safe:data-[state=active]:animate-in motion-safe:data-[state=active]:fade-in-0 motion-safe:data-[state=active]:slide-in-from-bottom-1 motion-safe:data-[state=active]:duration-150",
       className,
     )}
     {...props}

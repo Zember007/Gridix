@@ -1,12 +1,5 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@gridix/ui";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { CHART_COLORS } from "../model/types";
+import { AnalyticsChartCard, AnalyticsTooltip } from "./AnalyticsChartCard";
 
 interface ApartmentStatsCardProps {
   stats: {
@@ -21,6 +14,7 @@ interface ApartmentStatsCardProps {
     sold: string;
     reserved: string;
   };
+  emptyLabel?: string;
 }
 
 export function ApartmentStatsCard({
@@ -28,65 +22,81 @@ export function ApartmentStatsCard({
   title,
   description,
   labels,
+  emptyLabel,
 }: ApartmentStatsCardProps) {
   const chartData = [
-    { name: labels.available, value: stats.available },
-    { name: labels.sold, value: stats.sold },
-    { name: labels.reserved, value: stats.reserved },
+    {
+      name: labels.available,
+      value: stats.available,
+      color: "var(--admin-success)",
+    },
+    { name: labels.sold, value: stats.sold, color: "var(--admin-error)" },
+    {
+      name: labels.reserved,
+      value: stats.reserved,
+      color: "var(--admin-warning)",
+    },
   ].filter((item) => item.value > 0);
+  const total = stats.available + stats.sold + stats.reserved;
 
   return (
-    <Card>
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-        <div className="mb-6 grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {stats.available}
-            </p>
-            <p className="text-sm text-muted-foreground">{labels.available}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-red-600">{stats.sold}</p>
-            <p className="text-sm text-muted-foreground">{labels.sold}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-yellow-600">
-              {stats.reserved}
-            </p>
-            <p className="text-sm text-muted-foreground">{labels.reserved}</p>
-          </div>
-        </div>
-        {chartData.length > 0 && (
-          <ResponsiveContainer width="100%" height={300}>
+    <AnalyticsChartCard
+      title={title}
+      description={description}
+      isEmpty={chartData.length === 0}
+      emptyLabel={emptyLabel}
+    >
+      <div className="grid min-h-[300px] items-center gap-5 md:grid-cols-[minmax(0,1fr)_minmax(220px,0.8fr)]">
+        <div className="relative h-[260px] min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-                outerRadius={80}
-                fill="#8884d8"
+                innerRadius={62}
+                outerRadius={92}
+                paddingAngle={3}
                 dataKey="value"
+                isAnimationActive
               >
-                {chartData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                  />
+                {chartData.map((item) => (
+                  <Cell key={item.name} fill={item.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<AnalyticsTooltip />} cursor={false} />
             </PieChart>
           </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xs font-medium text-muted-foreground">
+              {title}
+            </span>
+            <span className="text-2xl font-semibold tabular-nums text-foreground">
+              {total}
+            </span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {chartData.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2.5"
+            >
+              <span className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="truncate">{item.name}</span>
+              </span>
+              <span className="font-semibold tabular-nums text-foreground">
+                {item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AnalyticsChartCard>
   );
 }

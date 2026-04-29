@@ -4,26 +4,25 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@gridix/ui";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconMap } from "@tabler/icons-react";
 import {
-  Book,
+  BarChart3,
   Briefcase,
-  Buildings as Building2,
+  Building2,
   Camera,
-  ChartBar as BarChart3,
   Code,
-  FileText as DocumentAdd,
-  FolderSimple as Folder,
-  Gear as SettingsIcon,
+  CreditCard,
+  FileText,
+  Folder,
   Globe,
   Handshake,
-  HouseSimple,
-  MapTrifold as MapIcon,
-  Package as Integration,
-  Stack as Layers3,
+  Home,
+  Layers,
+  Package,
+  Settings,
   UserCheck,
-  UserCircle as UserIcon,
-  CreditCard,
-} from "@phosphor-icons/react";
+  UserCircle,
+} from "lucide-react";
 import { SimplifiedSidebar } from "@gridix/ui";
 import { UnreadBadge } from "@/shared/ui/UnreadBadge";
 import { ExitDemoButton } from "@/features/demo-cabinet";
@@ -53,21 +52,21 @@ const getAdminNavItems = (
   const items = [
     {
       id: "projects",
-      icon: <Building2 size={20} />,
+      icon: <Building2 className="h-5 w-5" />,
       label: t("admin.projects"),
     },
     ...(!amoWidget
       ? [
           {
             id: "crm",
-            icon: <Briefcase size={20} />,
+            icon: <Briefcase className="h-5 w-5" />,
             badge:
               crmUnreadCount > 0 ? <UnreadBadge variant="dot" /> : undefined,
             label: t("admin.crm"),
             children: [
               {
                 id: "leads",
-                icon: <UserCheck size={18} />,
+                icon: <UserCheck className="h-[18px] w-[18px]" />,
                 label: t("admin.leads"),
                 badge:
                   crmUnreadCount > 0 ? (
@@ -76,12 +75,12 @@ const getAdminNavItems = (
               },
               {
                 id: "contacts",
-                icon: <UserIcon size={18} />,
+                icon: <UserCircle className="h-[18px] w-[18px]" />,
                 label: t("admin.contacts"),
               },
               {
                 id: "agent_network",
-                icon: <Handshake size={18} />,
+                icon: <Handshake className="h-[18px] w-[18px]" />,
                 label: t("admin.agent_network"),
               },
             ],
@@ -89,30 +88,34 @@ const getAdminNavItems = (
         ]
       : []),
 
-    { id: "widgets", icon: <Code size={20} />, label: t("admin.widgets") },
+    {
+      id: "widgets",
+      icon: <Code className="h-5 w-5" />,
+      label: t("admin.widgets"),
+    },
     {
       id: "integrations",
-      icon: <Integration size={20} />,
+      icon: <Package className="h-5 w-5" />,
       label: t("admin.integrations"),
     },
     {
       id: "analytics",
-      icon: <BarChart3 size={20} />,
+      icon: <BarChart3 className="h-5 w-5" />,
       label: t("admin.analytics.title"),
     },
     {
       id: "settings",
-      icon: <SettingsIcon size={20} />,
+      icon: <Settings className="h-5 w-5" />,
       label: t("admin.settings"),
     },
     {
       id: "partners",
-      icon: <Handshake size={20} />,
+      icon: <Handshake className="h-5 w-5" />,
       label: t("admin.partners"),
     },
     {
       id: "subscription",
-      icon: <CreditCard size={20} />,
+      icon: <CreditCard className="h-5 w-5" />,
       label: t("admin.billing"),
     },
   ];
@@ -141,12 +144,12 @@ const getProjectEditorNavItems = (
   const items = [
     {
       id: "general",
-      icon: <Building2 size={20} />,
+      icon: <Building2 className="h-5 w-5" />,
       label: t("projectEditor.general"),
     },
     {
       id: "apartments",
-      icon: <Layers3 size={20} />,
+      icon: <Layers className="h-5 w-5" />,
       label:
         projectType === "object"
           ? t("projectEditor.objects")
@@ -154,27 +157,27 @@ const getProjectEditorNavItems = (
     },
     {
       id: "floorplan",
-      icon: <Folder size={20} />,
+      icon: <Folder className="h-5 w-5" />,
       label: t("projectEditor.floorplan"),
     },
     {
       id: "photos",
-      icon: <Camera size={20} />,
+      icon: <Camera className="h-5 w-5" />,
       label: t("projectEditor.photosTab"),
     },
     {
       id: "fields",
-      icon: <DocumentAdd size={20} />,
+      icon: <FileText className="h-5 w-5" />,
       label: t("projectEditor.fieldsTab"),
     },
     {
       id: "genplan",
-      icon: <MapIcon size={20} />,
+      icon: <IconMap size={20} />,
       label: t("projectEditor.genplan"),
     },
     {
       id: "domains",
-      icon: <Globe size={20} />,
+      icon: <Globe className="h-5 w-5" />,
       label: t("projectEditor.domains"),
     },
   ];
@@ -205,17 +208,17 @@ const getSubProjectEditorNavItems = (
   const items = [
     {
       id: "general",
-      icon: <Building2 size={20} />,
+      icon: <Building2 className="h-5 w-5" />,
       label: t("projectEditor.general"),
     },
     {
       id: "facade",
-      icon: <HouseSimple size={20} />,
+      icon: <Home className="h-5 w-5" />,
       label: t("projectEditor.buildingImage"),
     },
     {
       id: "apartments",
-      icon: <Layers3 size={20} />,
+      icon: <Layers className="h-5 w-5" />,
       label:
         subProjectType === "object"
           ? t("projectEditor.objects")
@@ -223,17 +226,17 @@ const getSubProjectEditorNavItems = (
     },
     {
       id: "floorplan",
-      icon: <Folder size={20} />,
+      icon: <Folder className="h-5 w-5" />,
       label: t("projectEditor.floorplan"),
     },
     {
       id: "photos",
-      icon: <Camera size={20} />,
+      icon: <Camera className="h-5 w-5" />,
       label: t("projectEditor.photosTab"),
     },
     {
       id: "fields",
-      icon: <DocumentAdd size={20} />,
+      icon: <FileText className="h-5 w-5" />,
       label: t("projectEditor.fieldsTab"),
     },
   ];

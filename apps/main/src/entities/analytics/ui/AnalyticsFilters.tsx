@@ -41,16 +41,16 @@ export function AnalyticsFilters({
   withCard = true,
 }: AnalyticsFiltersProps) {
   const filtersContent = (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <div>
-        <label className="mb-2 block text-sm font-medium">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="min-w-0 space-y-2">
+        <label className="block text-xs font-semibold text-muted-foreground">
           {t("admin.analytics.period")}
         </label>
         <Select
           value={dateRange}
           onValueChange={(value: DateRange) => onDateRangeChange(value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="focus:ring-[var(--admin-primary)]/20 min-w-0 bg-background transition-[border-color,box-shadow] duration-200">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -69,8 +69,8 @@ export function AnalyticsFilters({
           </SelectContent>
         </Select>
       </div>
-      <div>
-        <label className="mb-2 block text-sm font-medium">
+      <div className="min-w-0 space-y-2">
+        <label className="block text-xs font-semibold text-muted-foreground">
           {t("admin.analytics.dateFrom")}
         </label>
         <div className="relative">
@@ -78,15 +78,15 @@ export function AnalyticsFilters({
             type="date"
             value={dateFrom}
             onChange={(e) => onDateFromChange(e.target.value)}
-            className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
+            className="focus-visible:ring-[var(--admin-primary)]/20 bg-background pr-10 transition-[border-color,box-shadow] duration-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
           />
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <Calendar className="h-4 w-4 text-black" />
+            <Calendar className="h-4 w-4" />
           </span>
         </div>
       </div>
-      <div>
-        <label className="mb-2 block text-sm font-medium">
+      <div className="min-w-0 space-y-2">
+        <label className="block text-xs font-semibold text-muted-foreground">
           {t("admin.analytics.dateTo")}
         </label>
         <div className="relative">
@@ -94,19 +94,19 @@ export function AnalyticsFilters({
             type="date"
             value={dateTo}
             onChange={(e) => onDateToChange(e.target.value)}
-            className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
+            className="focus-visible:ring-[var(--admin-primary)]/20 bg-background pr-10 transition-[border-color,box-shadow] duration-200 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
           />
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <Calendar className="h-4 w-4 text-black" />
+            <Calendar className="h-4 w-4" />
           </span>
         </div>
       </div>
-      <div>
-        <label className="mb-2 block text-sm font-medium">
+      <div className="min-w-0 space-y-2">
+        <label className="block text-xs font-semibold text-muted-foreground">
           {t("admin.analytics.project")}
         </label>
         <Select value={selectedProject} onValueChange={onProjectChange}>
-          <SelectTrigger>
+          <SelectTrigger className="focus:ring-[var(--admin-primary)]/20 min-w-0 bg-background transition-[border-color,box-shadow] duration-200">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

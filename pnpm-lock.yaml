@@ -59,12 +59,12 @@ importers:
       '@gridix/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@supabase/supabase-js':
         specifier: ^2.50.0
         version: 2.93.2
+      '@tabler/icons-react':
+        specifier: ^3.35.0
+        version: 3.36.1(react@18.3.1)
       '@tanstack/react-query':
         specifier: ^5.56.2
         version: 5.90.20(react@18.3.1)
@@ -223,9 +223,6 @@ importers:
       '@paper-design/shaders-react':
         specifier: ^0.0.62
         version: 0.0.62(@types/react@18.3.27)(react@18.3.1)
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@sentry/react':
         specifier: ^10.35.0
         version: 10.37.0(react@18.3.1)
@@ -467,12 +464,12 @@ importers:
       '@gridix/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@supabase/supabase-js':
         specifier: ^2.50.0
         version: 2.93.2
+      '@tabler/icons-react':
+        specifier: ^3.35.0
+        version: 3.36.1(react@18.3.1)
       '@tanstack/react-query':
         specifier: ^5.56.2
         version: 5.90.20(react@18.3.1)
@@ -655,6 +652,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      recharts:
+        specifier: ^2.12.7
+        version: 2.15.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sonner:
         specifier: ^1.5.0
         version: 1.7.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -692,9 +692,6 @@ importers:
       '@ncdai/react-wheel-picker':
         specifier: ^1.0.17
         version: 1.1.0(react@18.3.1)
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1730,13 +1727,6 @@ packages:
 
   '@pdf-lib/upng@1.0.1':
     resolution: {integrity: sha512-dQK2FUMQtowVP00mtIksrlZhdFXQZPC+taih1q4CvPZ5vqdxR/LKBaFg0oAfzd1GlHZXXSPdQfzQnt+ViGvEIQ==}
-
-  '@phosphor-icons/react@2.1.10':
-    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: '>= 16.8'
-      react-dom: '>= 16.8'
 
   '@pixi/accessibility@7.4.3':
     resolution: {integrity: sha512-tCr0yeWpMe0yucFvEPidy5a7gVJGpTjqGrDpSEBYT/kbScfUwcoX49RrckCCCiXDlyO4WRh9lVVuHXTvqRLIMg==}
@@ -2936,8 +2926,8 @@ packages:
     peerDependencies:
       react: '>= 16'
 
-  '@tabler/icons@3.36.1':
-    resolution: {integrity: sha512-f4Jg3Fof/Vru5ioix/UO4GX+sdDsF9wQo47FbtvG+utIYYVQ/QVAC0QYgcBbAjQGfbdOh2CCf0BgiFOF9Ixtjw==}
+  '@tabler/icons@3.41.1':
+    resolution: {integrity: sha512-OaRnVbRmH2nHtFeg+RmMJ/7m2oBIF9XCJAUD5gQnMrpK9f05ydj8MZrAf3NZQqOXyxGN1UBL0D5IKLLEUfr74Q==}
 
   '@tailwindcss/typography@0.5.19':
     resolution: {integrity: sha512-w31dd8HOx3k9vPtcQh5QHP9GwKcgbMp87j58qi6xgiBnFFtKEAgCWnDw4qUT8aHwkCp8bKvb/KGKWWHedP0AAg==}
@@ -6403,11 +6393,6 @@ snapshots:
     dependencies:
       pako: 1.0.11
 
-  '@phosphor-icons/react@2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
   '@pixi/accessibility@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/events@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))':
     dependencies:
       '@pixi/core': 7.4.3
@@ -7557,10 +7542,10 @@ snapshots:
 
   '@tabler/icons-react@3.36.1(react@18.3.1)':
     dependencies:
-      '@tabler/icons': 3.36.1
+      '@tabler/icons': 3.41.1
       react: 18.3.1
 
-  '@tabler/icons@3.36.1': {}
+  '@tabler/icons@3.41.1': {}
 
   '@tailwindcss/typography@0.5.19(tailwindcss@3.4.19(yaml@2.8.2))':
     dependencies:

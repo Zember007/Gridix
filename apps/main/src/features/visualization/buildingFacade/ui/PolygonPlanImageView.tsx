@@ -35,7 +35,6 @@ import {
   computePopupPositionForPolygon as computePopupPositionForPolygonUtil,
   getPolygonBoundsPct,
 } from "@/features/visualization/buildingFacade/lib/popupPosition";
-// import { HandTap } from "@phosphor-icons/react";
 import InteractionHint from "@/components/visualization/InteractionHint";
 
 const MobileFloorInfoBar = ({

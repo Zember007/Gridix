@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye } from "@phosphor-icons/react";
+import { Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -89,7 +89,7 @@ export const JoinDemoButton = ({
             e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
-          <Eye size={16} className="flex-shrink-0" />
+          <Eye className="h-4 w-4 flex-shrink-0" />
           {label}
         </button>
         {error && (
@@ -110,7 +110,7 @@ export const JoinDemoButton = ({
           disabled={loading}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
         >
-          <Eye size={18} className="flex-shrink-0" />
+          <Eye className="h-[18px] w-[18px] flex-shrink-0" />
           {label}
         </button>
         {error && (
@@ -150,7 +150,7 @@ export const JoinDemoButton = ({
           e.currentTarget.style.borderColor = "transparent";
         }}
       >
-        <Eye size={20} className="flex-shrink-0" />
+        <Eye className="h-5 w-5 flex-shrink-0" />
         <span
           className={`font-medium ${
             isCollapsed

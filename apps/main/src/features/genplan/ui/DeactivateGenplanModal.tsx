@@ -11,7 +11,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@gridix/ui";
-import { Warning } from "@phosphor-icons/react";
+import { AlertTriangle } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { deactivateGenplan } from "../api/genplanApi";
 import type { SubProject } from "../model/types";
@@ -82,7 +82,7 @@ export function DeactivateGenplanModal({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
-              <Warning size={20} className="text-yellow-600" />
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
               <DialogTitle>{t("genplan.deactivate.title")}</DialogTitle>

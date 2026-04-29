@@ -102,8 +102,8 @@ export const AgencyPartnersHeader: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className="sticky top-[72px] z-10 mt-6 border-b border-slate-200 bg-white">
-        <div className="no-scrollbar flex gap-6 overflow-x-auto">
+      <div className="z-10 mt-6 rounded-lg border-b border-slate-200 bg-white">
+        <div className="no-scrollbar flex gap-6 overflow-x-auto px-4">
           <button
             onClick={() => {
               setActiveTab("list");

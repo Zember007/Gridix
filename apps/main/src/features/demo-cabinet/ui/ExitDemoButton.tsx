@@ -1,4 +1,4 @@
-import { ArrowLeft } from "@phosphor-icons/react";
+import { ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { ADMIN_THEME } from "@gridix/utils/lib";
@@ -48,7 +48,7 @@ export const ExitDemoButton = ({
           e.currentTarget.style.borderColor = "transparent";
         }}
       >
-        <ArrowLeft size={20} className="flex-shrink-0" />
+        <ArrowLeft className="h-5 w-5 flex-shrink-0" />
         <span
           className={`font-medium ${
             isCollapsed

@@ -17,14 +17,14 @@ import {
 import { Progress } from "@gridix/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
 import {
-  PencilSimple,
-  FileXls,
-  Upload,
-  Link,
   ArrowLeft,
-  Buildings,
-} from "@phosphor-icons/react";
-import { Download } from "lucide-react";
+  Building2,
+  Download,
+  FileSpreadsheet,
+  Link,
+  Pencil,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@gridix/utils/react";
 
@@ -261,7 +261,7 @@ export function SubProjectImportModal({
                 size="sm"
                 onClick={() => setShowUrlImporter(false)}
               >
-                <ArrowLeft size={16} className="mr-1" />
+                <ArrowLeft className="mr-1 h-4 w-4" />
                 {t("admin.back")}
               </Button>
             </div>
@@ -282,7 +282,7 @@ export function SubProjectImportModal({
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Buildings size={20} className="text-primary" />
+            <Building2 className="h-5 w-5 text-primary" />
             {t("genplan.subProjects.addApartments")}
           </DialogTitle>
           <DialogDescription>
@@ -298,7 +298,7 @@ export function SubProjectImportModal({
           >
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <PencilSimple size={18} className="text-primary" />
+                <Pencil className="h-4 w-4 text-primary" />
                 {t("admin.project.create.manual.title")}
               </CardTitle>
               <CardDescription>
@@ -316,7 +316,7 @@ export function SubProjectImportModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <FileXls size={18} className="text-primary" />
+                <FileSpreadsheet className="h-4 w-4 text-primary" />
                 {t("admin.project.create.import.title")}
               </CardTitle>
               <CardDescription>
@@ -330,11 +330,11 @@ export function SubProjectImportModal({
               >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="file" className="flex items-center gap-2">
-                    <Upload size={14} />
+                    <Upload className="h-3.5 w-3.5" />
                     {t("admin.project.create.import.uploadTab")}
                   </TabsTrigger>
                   <TabsTrigger value="url" className="flex items-center gap-2">
-                    <Link size={14} />
+                    <Link className="h-3.5 w-3.5" />
                     {t("admin.project.create.import.urlTab")}
                   </TabsTrigger>
                 </TabsList>
@@ -347,7 +347,7 @@ export function SubProjectImportModal({
                       disabled={isProcessing}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <Upload size={14} className="mr-1.5" />
+                      <Upload className="mr-1.5 h-3.5 w-3.5" />
                       {isProcessing
                         ? t("admin.project.create.import.processing")
                         : t("admin.project.create.import.uploadButton")}
@@ -387,7 +387,7 @@ export function SubProjectImportModal({
                     className="w-full"
                     onClick={() => setShowUrlImporter(true)}
                   >
-                    <Link size={14} className="mr-1.5" />
+                    <Link className="mr-1.5 h-3.5 w-3.5" />
                     {t("admin.project.create.import.byLink")}
                   </Button>
                   <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950/30">

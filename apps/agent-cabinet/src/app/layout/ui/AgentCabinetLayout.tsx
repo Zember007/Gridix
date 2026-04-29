@@ -5,7 +5,8 @@ import { useAuth } from "@/shared/lib/auth";
 import { useLanguage } from "@/shared/lib/language";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { supabase } from "@gridix/utils/api";
-import { Eye, SpinnerGap } from "@phosphor-icons/react";
+import { IconLoader2 } from "@tabler/icons-react";
+import { Eye } from "lucide-react";
 import { getAgentSidebarNavItems } from "../lib/nav-items";
 import type { AgentCabinetPage } from "../model/page-routing";
 
@@ -75,9 +76,9 @@ function DemoCabinetButton({ isCollapsed }: { isCollapsed: boolean }) {
         }}
       >
         {loading ? (
-          <SpinnerGap size={20} className="flex-shrink-0 animate-spin" />
+          <IconLoader2 size={20} className="flex-shrink-0 animate-spin" />
         ) : (
-          <Eye size={20} className="flex-shrink-0" />
+          <Eye className="h-5 w-5 flex-shrink-0" />
         )}
         <span
           className={`font-medium ${
