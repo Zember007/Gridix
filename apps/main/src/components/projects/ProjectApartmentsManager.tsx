@@ -37,7 +37,6 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Warning } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import ApartmentCustomFields from "@/entities/apartment/ui/ApartmentCustomFields";
@@ -1296,7 +1295,7 @@ const ProjectApartmentsManager = ({
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-                <Warning size={20} className="text-red-600" />
+                <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
                 <DialogTitle>

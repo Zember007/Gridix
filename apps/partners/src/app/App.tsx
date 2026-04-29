@@ -16,7 +16,8 @@ import {
   usePartnersCabinetPageRouting,
 } from "@/components/layout/PartnersCabinetLayout";
 import { PartnerProgram } from "@gridix/partner-program";
-import { Eye, SpinnerGap } from "@phosphor-icons/react";
+import { IconLoader2 } from "@tabler/icons-react";
+import { Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@gridix/utils/api";
 
@@ -64,9 +65,9 @@ function OpenMainAppButton() {
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
       >
         {loading ? (
-          <SpinnerGap size={18} className="flex-shrink-0 animate-spin" />
+          <IconLoader2 size={18} className="flex-shrink-0 animate-spin" />
         ) : (
-          <Eye size={18} className="flex-shrink-0" />
+          <Eye className="h-[18px] w-[18px] flex-shrink-0" />
         )}
         {label}
       </button>

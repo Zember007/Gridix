@@ -3,15 +3,18 @@ import { useLanguage, useWorkspace } from "@gridix/utils/react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
 import { supabase } from "@gridix/utils/api";
+import { IconLoader2 } from "@tabler/icons-react";
 import {
-  Book,
-  CaretDown as ChevronDownIcon,
-  CaretUp as ChevronUp,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
   Globe,
-  SignOut as LogOut,
-  SpinnerGap,
-  UserCircle as UserIcon,
-} from "@phosphor-icons/react";
+  LogOut,
+  Menu,
+  MessageCircleQuestionMark,
+  Sparkles,
+  UserCircle,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +28,6 @@ import {
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { SidebarButton } from "./sidebar-button";
 import { Button } from "./button";
-import { Menu, MessageCircleQuestionMark, Sparkles } from "lucide-react";
 import { Sheet, SheetContent } from "./sheet";
 import { createPortal } from "react-dom";
 
@@ -127,7 +129,7 @@ const ProfileFooterMenu = ({
             className="flex h-7 w-7 items-center justify-center rounded-full"
             style={{ backgroundColor: ADMIN_THEME.primaryActive }}
           >
-            <UserIcon
+            <UserCircle
               className="h-3.5 w-3.5"
               style={{ color: ADMIN_THEME.textOnPrimary }}
             />
@@ -231,7 +233,7 @@ const ProfileFooterMenu = ({
             >
               <Globe className="h-4 w-4" />
               <span className="flex-1">{t("common.language")}</span>
-              <ChevronDownIcon
+              <ChevronDown
                 className={`h-4 w-4 transition-transform duration-200 ${isLanguageOpen ? "rotate-180" : ""}`}
               />
             </DropdownMenuItem>
@@ -281,7 +283,7 @@ const ProfileFooterMenu = ({
               window.open(docsUrl, "_blank", "noopener,noreferrer");
             }}
           >
-            <Book className="h-4 w-4" />
+            <BookOpen className="h-4 w-4" />
             <span>{t("admin.documentation")}</span>
           </DropdownMenuItem>
         ) : null}
@@ -322,7 +324,7 @@ const ProfileFooterMenu = ({
           }}
         >
           {isSigningOut ? (
-            <SpinnerGap className="h-4 w-4 animate-spin" />
+            <IconLoader2 className="h-4 w-4 animate-spin" />
           ) : (
             <LogOut className="h-4 w-4" />
           )}
@@ -592,7 +594,7 @@ export function SimplifiedSidebar({
               title={isCollapsed ? t("common.more") : t("common.hide")}
               type="button"
             >
-              <ChevronDownIcon
+              <ChevronDown
                 className={`h-4 w-4 transition-transform duration-300 ${
                   isCollapsed ? "rotate-90" : "-rotate-90"
                 }`}

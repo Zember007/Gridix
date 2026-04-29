@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@gridix/ui";
-import { MapTrifold } from "@phosphor-icons/react";
+import { IconMap } from "@tabler/icons-react";
 import { useLanguage } from "@gridix/utils/react";
 import { activateGenplan } from "../api/genplanApi";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ export function ActivateGenplanModal({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <MapTrifold size={20} className="text-primary" />
+              <IconMap size={20} className="text-primary" />
             </div>
             <div>
               <DialogTitle>{t("genplan.activate.title")}</DialogTitle>

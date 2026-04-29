@@ -1,9 +1,4 @@
-import {
-  Buildings as Building2,
-  Building,
-  Handshake,
-  UserCheck,
-} from "@phosphor-icons/react";
+import { Building, Building2, Handshake, UserCheck } from "lucide-react";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { useWorkspace } from "@gridix/utils/react";
 import {

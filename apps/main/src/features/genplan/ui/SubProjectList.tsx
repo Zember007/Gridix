@@ -1,5 +1,5 @@
 import { Button } from "@gridix/ui";
-import { Plus } from "@phosphor-icons/react";
+import { Plus } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { SubProjectCard } from "./SubProjectCard";
 import type { SubProject } from "../model/types";
@@ -35,7 +35,7 @@ export function SubProjectList({
           disabled={maxReached}
           className="h-8 gap-1.5 text-xs"
         >
-          <Plus size={13} />
+          <Plus className="h-[13px] w-[13px]" />
           {t("genplan.subProjects.add")}
         </Button>
       </div>
