@@ -8,7 +8,7 @@ import {
   useRef,
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useIsMobile } from "@gridix/ui";
+import { Skeleton, useIsMobile, ViewTransition } from "@gridix/ui";
 import { formatMoney } from "@gridix/utils/lib";
 import type { Tables } from "@gridix/types/database";
 import type { Project } from "@/entities/project/queries/useProjects";
@@ -113,8 +113,51 @@ interface ProjectApartmentSelectorLoadedProps {
 }
 
 const loaderBlock = (themeColor: string) => (
-  <div className="absolute inset-0 grid h-full w-full place-items-center">
-    <Spinner size="md" color={themeColor} />
+  <div className="absolute inset-0 h-full w-full bg-white/80 p-4 backdrop-blur-sm md:p-6">
+    <div className="mx-auto flex h-full max-w-7xl flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-3 w-56 max-w-full" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-20" />
+          <Skeleton className="h-9 w-20" />
+          <Skeleton className="h-9 w-20 max-sm:hidden" />
+        </div>
+      </div>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="hidden space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:block">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-2/3" />
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-slate-200 p-3"
+              >
+                <Skeleton className="mb-3 aspect-[4/3] w-full" />
+                <Skeleton className="mb-2 h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <span
+        aria-hidden="true"
+        className="h-1 rounded-full"
+        style={{ backgroundColor: themeColor }}
+      />
+    </div>
   </div>
 );
 
@@ -567,7 +610,10 @@ function ProjectApartmentSelectorLoaded({
           <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
             <ProjectErrorBoundary>
               {showContent ? (
-                <>
+                <ViewTransition
+                  viewKey={`${viewMode}-${modeContext}`}
+                  className="h-full min-w-0"
+                >
                   {viewMode === "list" ? (
                     <Suspense fallback={loaderFallback}>
                       <ListView
@@ -722,7 +768,7 @@ function ProjectApartmentSelectorLoaded({
                       )}
                     </div>
                   )}
-                </>
+                </ViewTransition>
               ) : (
                 loaderFallback
               )}

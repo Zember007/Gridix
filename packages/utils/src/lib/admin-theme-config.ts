@@ -50,45 +50,45 @@ export interface AdminThemeConfig {
  * Черная цветовая схема для админ панели
  */
 export const blackAdminTheme: AdminThemeConfig = {
-  // Основные цвета - черные оттенки
-  primary: "#000000",
-  primaryHover: "#1a1a1a",
-  primaryActive: "#333333",
+  // Основные цвета - restrained product accent
+  primary: "#334155",
+  primaryHover: "#1f2937",
+  primaryActive: "#111827",
 
   // Фоновые цвета
-  background: "#ffffff",
-  backgroundSecondary: "#f8f9fa",
-  backgroundHover: "#f1f3f4",
+  background: "#fbfaf8",
+  backgroundSecondary: "#f4f3f0",
+  backgroundHover: "#eceae6",
 
   // Цвета текста
-  textPrimary: "#000000",
-  textSecondary: "#374151",
-  textMuted: "#6b7280",
-  textOnPrimary: "#ffffff",
+  textPrimary: "#171717",
+  textSecondary: "#3f3f46",
+  textMuted: "#71717a",
+  textOnPrimary: "#fafafa",
 
   // Цвета границ
-  border: "#e5e7eb",
-  borderLight: "#f3f4f6",
+  border: "#dedbd3",
+  borderLight: "#ebe8e1",
 
   // Состояния
-  success: "#10b981",
-  warning: "#f59e0b",
-  error: "#ef4444",
-  info: "#3b82f6",
+  success: "#0f9f6e",
+  warning: "#c77700",
+  error: "#dc2626",
+  info: "#2563eb",
 
   // Специальные цвета для админ панели
-  sidebarBackground: "#000000",
-  sidebarBorder: "#1f2937",
-  sidebarActiveBackground: "#1f2937",
-  sidebarActiveBorder: "#374151",
-  sidebarActiveText: "#ffffff",
-  sidebarText: "#d1d5db",
-  sidebarTextHover: "#ffffff",
+  sidebarBackground: "#181714",
+  sidebarBorder: "#2d2a25",
+  sidebarActiveBackground: "#2b2924",
+  sidebarActiveBorder: "#4b463d",
+  sidebarActiveText: "#faf8f2",
+  sidebarText: "#d8d3c7",
+  sidebarTextHover: "#faf8f2",
 
   // Карточки и контейнеры
-  cardBackground: "#ffffff",
-  cardBorder: "#e5e7eb",
-  cardShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+  cardBackground: "#fffefa",
+  cardBorder: "#dedbd3",
+  cardShadow: "0 1px 2px 0 rgba(23, 23, 23, 0.05)",
 };
 
 /**
@@ -101,15 +101,15 @@ export const blueAdminTheme: AdminThemeConfig = {
   primaryActive: "#1e40af",
 
   // Фоновые цвета
-  background: "#ffffff",
-  backgroundSecondary: "#f8f9fa",
-  backgroundHover: "#f1f3f4",
+  background: "#fbfaf8",
+  backgroundSecondary: "#f4f3f0",
+  backgroundHover: "#eceae6",
 
   // Цвета текста
   textPrimary: "#111827",
   textSecondary: "#374151",
   textMuted: "#6b7280",
-  textOnPrimary: "#ffffff",
+  textOnPrimary: "#fafafa",
 
   // Цвета границ
   border: "#e5e7eb",
@@ -122,18 +122,18 @@ export const blueAdminTheme: AdminThemeConfig = {
   info: "#3b82f6",
 
   // Специальные цвета для админ панели
-  sidebarBackground: "#ffffff",
-  sidebarBorder: "#e5e7eb",
-  sidebarActiveBackground: "#eff6ff",
-  sidebarActiveBorder: "#bfdbfe",
+  sidebarBackground: "#fbfaf8",
+  sidebarBorder: "#dedbd3",
+  sidebarActiveBackground: "#e9f1ff",
+  sidebarActiveBorder: "#bdd3f5",
   sidebarActiveText: "#1d4ed8",
   sidebarText: "#374151",
   sidebarTextHover: "#111827",
 
   // Карточки и контейнеры
-  cardBackground: "#ffffff",
-  cardBorder: "#e5e7eb",
-  cardShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+  cardBackground: "#fffefa",
+  cardBorder: "#dedbd3",
+  cardShadow: "0 1px 2px 0 rgba(23, 23, 23, 0.05)",
 };
 
 /**

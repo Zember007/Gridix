@@ -219,7 +219,7 @@ export const ProjectSubscriptionsList: React.FC<
                       <div
                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold uppercase ${
                           isActive
-                            ? "bg-blue-600 text-white"
+                            ? "bg-primary text-primary-foreground"
                             : "bg-slate-100 text-slate-500"
                         }`}
                       >

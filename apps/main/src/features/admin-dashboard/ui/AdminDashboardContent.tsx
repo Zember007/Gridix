@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
+import { Skeleton, ViewTransition } from "@gridix/ui";
 import { cn } from "@gridix/utils/lib";
 import ProjectList from "@/components/projects/ProjectList";
-import { LoadingProgress } from "@/shared/ui/LoadingProgress";
 import type { UserRole } from "@/hooks/useUserRole";
 import { useAdminAccess } from "@/entities/admin-access";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
@@ -79,10 +79,25 @@ export const AdminDashboardContent = ({
     Boolean(developerId);
 
   const tabFallback = (
-    <div className="flex min-h-[320px] items-center justify-center">
-      <LoadingProgress />
+    <div className="space-y-4 p-4 sm:p-6">
+      <Skeleton className="h-8 w-56" />
+      <Skeleton className="h-4 w-full max-w-xl" />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Skeleton className="h-40" />
+        <Skeleton className="h-40" />
+        <Skeleton className="h-40" />
+      </div>
     </div>
   );
+
+  const transitionKey =
+    activeTab === "settings" && !showAdminSettings
+      ? "settings-blocked"
+      : activeTab;
+
+  const contentClassName = showAdminSettings
+    ? "flex min-h-0 flex-1 flex-col [&>*]:min-h-0 [&>*]:flex-1"
+    : "min-h-0 h-full";
 
   return (
     <div
@@ -97,22 +112,16 @@ export const AdminDashboardContent = ({
           "px-3 py-3 sm:px-6 sm:py-4 lg:py-6",
       )}
     >
-      {activeTab === "projects" && (
-        <div className="projects_list_usertour h-full space-y-6">
-          <ProjectList
-            onCreateNew={onCreateNew}
-            onEditProject={onEditProject}
-          />
-        </div>
-      )}
+      <ViewTransition viewKey={transitionKey} className={contentClassName}>
+        {activeTab === "projects" && (
+          <div className="projects_list_usertour h-full space-y-6">
+            <ProjectList
+              onCreateNew={onCreateNew}
+              onEditProject={onEditProject}
+            />
+          </div>
+        )}
 
-      <div
-        className={
-          showAdminSettings
-            ? "flex min-h-0 flex-1 flex-col [&>*]:min-h-0 [&>*]:flex-1"
-            : "contents"
-        }
-      >
         <Suspense fallback={tabFallback}>
           {activeTab === "leads" && (
             <LeadsManager showProjectColumn={!isManager} />
@@ -182,7 +191,7 @@ export const AdminDashboardContent = ({
             </div>
           )}
         </Suspense>
-      </div>
+      </ViewTransition>
     </div>
   );
 };
