@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -58,7 +58,11 @@ import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/Ap
 
 import ProjectDomainSettings from "@/features/admin-project-domain-settings";
 import { lazy, Suspense } from "react";
-import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
+import {
+  useAdminShellFullBleed,
+  useRegisterAdminShellSidebar,
+} from "@/app/layouts/admin-shell-context";
+import { useProjectEditorShellSidebar } from "@/features/projectEditor/hooks/useProjectEditorShellSidebar";
 const GenplanEditorTab = lazy(
   () => import("@/features/genplan/ui/GenplanEditorTab"),
 );
@@ -87,6 +91,7 @@ import type { AdminBootstrapProject } from "@/entities/admin-access";
 import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshAdminBootstrapCache";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
+import { runWithViewTransition } from "@/shared/lib/runWithViewTransition";
 
 interface ProjectEditorProps {
   projectId: string;
@@ -100,6 +105,7 @@ interface ProjectEditorProps {
 
 type EditorProjectSource = {
   id?: string;
+  slug?: string | null;
   name?: string | null;
   description?: string | null;
   address?: string | null;
@@ -616,9 +622,6 @@ const ProjectEditor = ({
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
 
-  // Mobile menu state
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
   const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
     useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
   /** Floors count for the building tab is stored on the default `sub_projects` row, not on `projects`. */
@@ -626,6 +629,71 @@ const ProjectEditor = ({
   /** Building vs villas/townhouses — driven by form state; persisted on save to `projects` + default `sub_projects`. */
   const editorScopeKind: "building" | "object" =
     project.project_type === "object" ? "object" : "building";
+
+  const mapEditorTabToSidebarSection = useCallback((tab: string) => {
+    switch (tab) {
+      case "basic":
+      case "building":
+        return "general";
+      case "apartments":
+        return "apartments";
+      case "floors":
+        return "floorplan";
+      case "photos":
+        return "photos";
+      case "fields":
+        return "fields";
+      case "genplan":
+        return "genplan";
+      case "domains":
+        return "domains";
+      default:
+        return "general";
+    }
+  }, []);
+
+  const handleSidebarSectionChangeCb = useCallback((section: string) => {
+    switch (section) {
+      case "general":
+        setActiveTab("basic");
+        break;
+      case "apartments":
+        setActiveTab("apartments");
+        break;
+      case "floorplan":
+        setActiveTab("floors");
+        break;
+      case "photos":
+        setActiveTab("photos");
+        break;
+      case "fields":
+        setActiveTab("fields");
+        break;
+      case "genplan":
+        setActiveTab("genplan");
+        break;
+      case "domains":
+        setActiveTab("domains");
+        break;
+      default:
+        setActiveTab("basic");
+    }
+  }, []);
+
+  const handleSignOutFromEditor = useCallback(async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  }, [isSigningOut, navigate, signOut]);
 
   useEffect(() => {
     floorsSyncedFromSubProjectRef.current = null;
@@ -939,7 +1007,7 @@ const ProjectEditor = ({
           properties: { project_id: data.id },
           onceKey: "gridix_project_created",
         });
-        navigate(`/admin/project/${data.id}`);
+        runWithViewTransition(() => navigate(`/admin/project/${data.id}`));
       } else {
         const canEdit =
           user &&
@@ -1011,12 +1079,63 @@ const ProjectEditor = ({
     setProject((prev) => ({ ...prev, building_image_url: url }));
   }, []);
 
-  const [isCollapsed, setIsCollapsed] = useState(true);
-
   const isEditorDataLoading =
     !isNew &&
     !isRestrictedProject &&
     (editorDataContext?.loading ?? projectLoading);
+
+  const sidebarActiveSectionKey = useMemo(
+    () => mapEditorTabToSidebarSection(activeTab ?? "basic"),
+    [activeTab, mapEditorTabToSidebarSection],
+  );
+
+  const sidebarSuspended = Boolean(accessError);
+
+  const { shellSidebarHasMasterplan, shellSidebarProjectType } = useMemo(() => {
+    const sourceIdOrSlugMatches =
+      projectSource?.id === projectId || projectSource?.slug === projectId;
+    const aligned =
+      !isNew && projectId && sourceIdOrSlugMatches ? projectSource : null;
+    if (!aligned) {
+      return {
+        shellSidebarHasMasterplan: project.has_masterplan,
+        shellSidebarProjectType: editorScopeKind,
+      };
+    }
+    const src = aligned as EditorProjectSource;
+    const hasMp =
+      src.has_masterplan !== undefined && src.has_masterplan !== null
+        ? Boolean(src.has_masterplan)
+        : project.has_masterplan;
+    const pType: "building" | "object" =
+      src.project_type === "object" ? "object" : "building";
+    return {
+      shellSidebarHasMasterplan: hasMp,
+      shellSidebarProjectType: pType,
+    };
+  }, [
+    editorScopeKind,
+    isNew,
+    project.has_masterplan,
+    projectId,
+    projectSource,
+  ]);
+
+  const editorShellSidebarSlot = useProjectEditorShellSidebar({
+    suspended: sidebarSuspended,
+    activeSidebarTab: sidebarActiveSectionKey,
+    onSidebarSectionChange: handleSidebarSectionChangeCb,
+    userEmail: userProfile?.email || user?.email || "Unknown user",
+    projectType: shellSidebarProjectType,
+    hasMasterplan: shellSidebarHasMasterplan,
+    onSignOut: handleSignOutFromEditor,
+    isSigningOut,
+    isNavLoading: isEditorDataLoading,
+  });
+
+  useRegisterAdminShellSidebar(editorShellSidebarSlot);
+
+  useAdminShellFullBleed(Boolean(accessError));
 
   if (accessError) {
     return (
@@ -1039,92 +1158,9 @@ const ProjectEditor = ({
     );
   }
 
-  // Map activeTab to sidebar sections
-  const getSidebarSection = (tab: string) => {
-    switch (tab) {
-      case "basic":
-        return "general";
-      case "building":
-        return "general";
-      case "apartments":
-        return "apartments";
-      case "floors":
-        return "floorplan";
-      case "photos":
-        return "photos";
-      case "fields":
-        return "fields";
-      case "genplan":
-        return "genplan";
-      case "domains":
-        return "domains";
-      default:
-        return "general";
-    }
-  };
-
-  const handleSidebarSectionChange = (section: string) => {
-    switch (section) {
-      case "general":
-        setActiveTab("basic");
-        break;
-      case "apartments":
-        setActiveTab("apartments");
-        break;
-      case "floorplan":
-        setActiveTab("floors");
-        break;
-      case "photos":
-        setActiveTab("photos");
-        break;
-      case "fields":
-        setActiveTab("fields");
-        break;
-      case "genplan":
-        setActiveTab("genplan");
-        break;
-      case "domains":
-        setActiveTab("domains");
-        break;
-      default:
-        setActiveTab("basic");
-    }
-  };
-
-  const handleSignOut = async () => {
-    if (isSigningOut) return;
-
-    setIsSigningOut(true);
-    try {
-      await signOut();
-      navigate("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to sign out. Please try again.");
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-background">
-      <ProjectEditorSidebar
-        onSectionChange={handleSidebarSectionChange}
-        activeTab={getSidebarSection(activeTab ?? "basic")}
-        userEmail={userProfile?.email || user?.email || "Unknown user"}
-        projectType={editorScopeKind}
-        hasMasterplan={project.has_masterplan}
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        onSignOut={handleSignOut}
-        isSigningOut={isSigningOut}
-        isNavLoading={isEditorDataLoading}
-      />
-      <div
-        className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
-      >
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="relative flex min-h-0 flex-1 flex-col bg-background">
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="sticky top-0 z-50 shrink-0 border-b bg-white">
             <div className="px-4 py-3 sm:px-6 sm:py-4 lg:px-6">

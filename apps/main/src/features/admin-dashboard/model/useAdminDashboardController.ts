@@ -11,13 +11,12 @@ import { useLeads } from "@/entities/lead/queries/useLeads";
 import { useAdminDashboardInit } from "./useAdminDashboardInit";
 import { useAdminDashboardTours } from "./useAdminDashboardTours";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
+import { navigateWithViewTransition } from "@/shared/lib/runWithViewTransition";
 
 export const useAdminDashboardController = () => {
   const [activeTab, setActiveTab] = useState("projects");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const { user, userProfile, signOut, loading } = useAuth();
   const location = useLocation();
@@ -66,19 +65,25 @@ export const useAdminDashboardController = () => {
 
   const handleManualCreate = (mainProjectKind?: MainProjectCreationKind) => {
     setShowCreateModal(false);
-    routerNavigate(getPathWithLanguage("/admin/project/new"), {
-      state: {
-        from: location.pathname,
-        ...(mainProjectKind && { mainProjectKind }),
+    navigateWithViewTransition(
+      routerNavigate,
+      getPathWithLanguage("/admin/project/new"),
+      {
+        state: {
+          from: location.pathname,
+          ...(mainProjectKind && { mainProjectKind }),
+        },
       },
-    });
+    );
   };
 
   const handleEditProject = (projectId: string, isNew: boolean) => {
     const path = isNew
       ? getPathWithLanguage("/admin/project/new")
       : getPathWithLanguage(`/admin/project/${projectId}`);
-    routerNavigate(path, { state: { from: location.pathname } });
+    navigateWithViewTransition(routerNavigate, path, {
+      state: { from: location.pathname },
+    });
   };
 
   const handleSignOut = async () => {
@@ -101,10 +106,6 @@ export const useAdminDashboardController = () => {
     setActiveTab,
     showCreateModal,
     isSigningOut,
-    isMobileOpen,
-    setIsMobileOpen,
-    isCollapsed,
-    setIsCollapsed,
     user,
     userProfile,
     loading,

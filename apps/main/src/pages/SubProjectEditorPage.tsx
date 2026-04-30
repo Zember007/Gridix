@@ -20,12 +20,17 @@ import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { navigateWithViewTransition } from "@/shared/lib/runWithViewTransition";
+import {
+  useAdminShellFullBleed,
+  useRegisterAdminShellSidebar,
+} from "@/app/layouts/admin-shell-context";
+import { useSubProjectEditorShellSidebar } from "@/features/projectEditor/hooks/useSubProjectEditorShellSidebar";
 import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsManager";
 import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/ApartmentPhotosManager";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
 import BuildingImageEditor from "@/features/visualization/buildingImageEditor/ui/BuildingImageEditor";
-import { SubProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
@@ -54,9 +59,6 @@ export default function SubProjectEditorPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saving, setSaving] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
   const handlePasteCoords = useCallback(
     (e: ClipboardEvent<HTMLInputElement>) => {
       const text = e.clipboardData.getData("Text");
@@ -141,14 +143,27 @@ export default function SubProjectEditorPage() {
   };
 
   const handleBack = () => {
-    navigate(-1);
+    navigateWithViewTransition(navigate, -1);
   };
 
-  const handleSidebarSectionChange = (section: string) => {
+  const handleSidebarSectionChange = useCallback((section: string) => {
     setActiveTab(section as Tab);
-  };
+  }, []);
 
-  const subProjectType = normalizeSubProjectKind(subProject?.type);
+  const notFound = !loading && (!subProject || !projectId);
+
+  useAdminShellFullBleed(notFound);
+
+  const subProjectShellSlot = useSubProjectEditorShellSidebar({
+    activeTab,
+    onSidebarSectionChange: handleSidebarSectionChange,
+    userEmail: userProfile?.email || user?.email || "",
+    subProjectType: normalizeSubProjectKind(subProject?.type),
+  });
+
+  useRegisterAdminShellSidebar(
+    loading || notFound ? null : subProjectShellSlot,
+  );
 
   if (loading) return <LoadingProgress />;
   if (!subProject || !projectId) {
@@ -161,22 +176,11 @@ export default function SubProjectEditorPage() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen bg-background">
-      <SubProjectEditorSidebar
-        onSectionChange={handleSidebarSectionChange}
-        activeTab={activeTab}
-        userEmail={userProfile?.email || user?.email || ""}
-        subProjectType={subProjectType}
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-      />
+  const subProjectType = normalizeSubProjectKind(subProject.type);
 
-      <div
-        className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
-      >
+  return (
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="relative flex min-h-0 flex-1 flex-col bg-background">
         <div className="flex min-h-0 flex-1 flex-col">
           {/* Sticky header */}
           <div className="sticky top-0 z-10 shrink-0 border-b bg-white">
