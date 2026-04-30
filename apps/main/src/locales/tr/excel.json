@@ -77,18 +77,18 @@
     }
   },
   "sync": {
-    "button": "Excel senkronizasyonu",
+    "button": "Excel ile güncelle",
     "dialog": {
-      "title": "Daireleri Excel ile senkronize et",
-      "description": "Mevcut daire verilerini bir Excel dosyası yükleyerek güncelleyin. Daireler numaraya göre eşleştirilir."
+      "title": "Tablodan daire güncelleme",
+      "description": "Bilgisayarınızdan dosya yükleyin veya bağlantıyla tablo ekleyin."
     },
     "import": {
-      "title": "Verileri içe aktar",
-      "description": "Daire verileri içeren bir dosya yükleyin veya bir e-tablo bağlantısı sağlayın",
-      "matchBy": "Eşleştirme:",
-      "matchByDesc": "Daireler numaraya göre güncellenir. Yeni daire oluşturulmaz.",
-      "allowNew": "Yeni daireleri de içe aktar",
-      "allowNewDesc": "Dosyadaki projede henüz bulunmayan daireler otomatik olarak oluşturulacak."
+      "secondaryLink": "Bağlantı kullan",
+      "formatsNote": "Desteklenen: Excel ‎(.xlsx, .xls)‎, CSV ve Google E-Tablolar.",
+      "tipLabel": "İpucu:",
+      "updateRuleNote": "Satırlar, dosyadaki daire numarasına göre mevcut daireleri günceller. Yeni daire bu adımda eklenmez; sonraki ekranda açılabilir.",
+      "allowNew": "Dosyadan yeni daireleri de ekle",
+      "allowNewDesc": "Dosyadaki projede henüz bulunmayan daireler otomatik oluşturulur."
     },
     "columns": {
       "title": "Excel sütunlarını eşle",
@@ -99,16 +99,16 @@
     },
     "errors": {
       "fillRequired": "Daire numarası sütununu ve en az bir güncellenecek alan seçin",
-      "syncFailed": "Veri senkronizasyonunda hata"
+      "syncFailed": "Güncellemeler uygulanamadı"
     },
     "result": {
-      "success": "Senkronizasyon tamamlandı: {{updated}} daire güncellendi",
-      "withNotFound": "{{total}} daireden {{updated}} güncellendi. Bulunamadı: {{notFound}}",
-      "withCreated": "Senkronizasyon tamamlandı: {{updated}} güncellendi, {{created}} yeni daire eklendi",
-      "withCreatedAndNotFound": "{{updated}} güncellendi, {{created}} oluşturuldu. Bulunamadı: {{notFound}}"
+      "success": "{{updated}} daire güncellendi",
+      "withNotFound": "{{total}} içinden {{updated}} güncellendi. Projede yok: {{notFound}}",
+      "withCreated": "{{updated}} daire güncellendi; {{created}} yeni eklendi",
+      "withCreatedAndNotFound": "{{updated}} güncellendi, {{created}} eklendi. Projede yok: {{notFound}}"
     },
-    "syncing": "Senkronize ediliyor...",
-    "syncButton": "Senkronize et"
+    "syncing": "Uygulanıyor...",
+    "syncButton": "Uygula"
   },
   "url": {
     "autoConvert": "Bağlantı, veri içe aktarımı için otomatik olarak dönüştürülecek",

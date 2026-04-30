@@ -77,17 +77,17 @@
     }
   },
   "sync": {
-    "button": "Excel sync",
+    "button": "Update from Excel",
     "dialog": {
-      "title": "Sync apartments via Excel",
-      "description": "Update existing apartment data by uploading an Excel file. Apartments are matched by number."
+      "title": "Update apartments from a spreadsheet",
+      "description": "Upload a file from your computer. You can also add a table using a link."
     },
     "import": {
-      "title": "Import data",
-      "description": "Upload a file or provide a link to a spreadsheet with apartment data",
-      "matchBy": "Matching:",
-      "matchByDesc": "Apartments are updated by number. No new apartments are created.",
-      "allowNew": "Also import new apartments",
+      "secondaryLink": "Use a link instead",
+      "formatsNote": "Supported: Excel (.xlsx, .xls), CSV, and Google Sheets.",
+      "tipLabel": "Tip:",
+      "updateRuleNote": "Rows update existing apartments using the apartment number. New apartments are not added unless you allow that on the next screen.",
+      "allowNew": "Also add new apartments",
       "allowNewDesc": "Apartments from the file that are not yet in the project will be created automatically."
     },
     "columns": {
@@ -99,16 +99,16 @@
     },
     "errors": {
       "fillRequired": "Select the apartment number column and at least one field to update",
-      "syncFailed": "Error syncing data"
+      "syncFailed": "Could not apply updates"
     },
     "result": {
-      "success": "Sync complete: {{updated}} apartments updated",
-      "withNotFound": "Updated {{updated}} of {{total}}. Not found: {{notFound}}",
-      "withCreated": "Sync complete: {{updated}} updated, {{created}} new apartments added",
-      "withCreatedAndNotFound": "Updated {{updated}}, created {{created}}. Not found: {{notFound}}"
+      "success": "Updated {{updated}} apartments",
+      "withNotFound": "Updated {{updated}} of {{total}}. Missing in project: {{notFound}}",
+      "withCreated": "Updated {{updated}} apartments; added {{created}} new ones",
+      "withCreatedAndNotFound": "Updated {{updated}}, added {{created}}. Missing in project: {{notFound}}"
     },
-    "syncing": "Syncing...",
-    "syncButton": "Sync"
+    "syncing": "Applying...",
+    "syncButton": "Apply updates"
   },
   "url": {
     "autoConvert": "The link will be automatically converted for data import",

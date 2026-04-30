@@ -77,17 +77,17 @@
     }
   },
   "sync": {
-    "button": "סנכרון Excel",
+    "button": "עדכון מ־Excel",
     "dialog": {
-      "title": "סנכרון דירות באמצעות Excel",
-      "description": "עדכן נתוני דירות קיימים על ידי העלאת קובץ Excel. הדירות מותאמות לפי מספר."
+      "title": "עדכון דירות מגיליון",
+      "description": "העלה קובץ מהמחשב או הוסף גיליון בקישור."
     },
     "import": {
-      "title": "ייבוא נתונים",
-      "description": "העלה קובץ או ספק קישור לגיליון עם נתוני דירות",
-      "matchBy": "התאמה:",
-      "matchByDesc": "הדירות מתעדכנות לפי מספר. לא נוצרות דירות חדשות.",
-      "allowNew": "ייבא גם דירות חדשות",
+      "secondaryLink": "להשתמש בקישור במקום",
+      "formatsNote": "נתמך: Excel ‎(.xlsx, .xls)‎, CSV ו־Google Sheets.",
+      "tipLabel": "עצה:",
+      "updateRuleNote": "שורות מעדכנות דירות קיימות לפי מספר הדירה בקובץ. דירות חדשות לא נוספות בשלב זה — אפשר להפעיל בהמשך.",
+      "allowNew": "להוסיף גם דירות חדשות מהקובץ",
       "allowNewDesc": "דירות מהקובץ שעדיין אינן בפרויקט ייווצרו אוטומטית."
     },
     "columns": {
@@ -99,16 +99,16 @@
     },
     "errors": {
       "fillRequired": "בחר את עמודת מספר הדירה ולפחות שדה אחד לעדכון",
-      "syncFailed": "שגיאה בסנכרון נתונים"
+      "syncFailed": "לא ניתן להחיל את העדכונים"
     },
     "result": {
-      "success": "הסנכרון הושלם: {{updated}} דירות עודכנו",
-      "withNotFound": "עודכנו {{updated}} מתוך {{total}}. לא נמצאו: {{notFound}}",
-      "withCreated": "הסנכרון הושלם: עודכנו {{updated}}, נוספו {{created}} דירות חדשות",
-      "withCreatedAndNotFound": "עודכנו {{updated}}, נוצרו {{created}}. לא נמצאו: {{notFound}}"
+      "success": "עודכנו {{updated}} דירות",
+      "withNotFound": "עודכנו {{updated}} מתוך {{total}}. חסרות בפרויקט: {{notFound}}",
+      "withCreated": "עודכנו {{updated}} דירות; נוספו {{created}} חדשות",
+      "withCreatedAndNotFound": "עודכנו {{updated}}, נוספו {{created}}. חסרות בפרויקט: {{notFound}}"
     },
-    "syncing": "מסנכרן...",
-    "syncButton": "סנכרן"
+    "syncing": "מחיל עדכונים...",
+    "syncButton": "החל עדכונים"
   },
   "url": {
     "autoConvert": "הקישור יומר אוטומטית לייבוא ​​נתונים",
