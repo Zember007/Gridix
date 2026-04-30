@@ -1,8 +1,6 @@
 import React from "react";
 import { AlertTriangle, Eye } from "lucide-react";
-import { Badge } from "@gridix/ui";
-import { Button } from "@gridix/ui";
-import { Card, CardContent } from "@gridix/ui";
+import { Badge, Button, Card, CardContent, Skeleton } from "@gridix/ui";
 import { useFailedLeads } from "@/entities/lead/queries/useLeads";
 import { useAllFailedLeadsStats } from "@/hooks/useAllFailedLeadsStats";
 import { t } from "i18next";
@@ -66,14 +64,28 @@ export function LeadsNotification({
 export function LeadsStats({ projectId }: { projectId?: string }) {
   const { getStatsForProject, loading } = useAllFailedLeadsStats();
 
-  if (loading || !projectId) {
-    return null;
+  const rowClassName =
+    "flex min-h-6 items-center space-x-4 text-sm text-muted-foreground";
+
+  if (!projectId) {
+    return <div className={rowClassName} aria-hidden />;
+  }
+
+  if (loading) {
+    return (
+      <div className={rowClassName} aria-busy="true">
+        <div className="flex items-center space-x-1">
+          <Skeleton className="h-4 w-[7.5rem]" />
+          <Skeleton className="h-5 w-9 rounded-md" />
+        </div>
+      </div>
+    );
   }
 
   const counts = getStatsForProject(projectId);
 
   return (
-    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+    <div className={rowClassName}>
       <div className="flex items-center space-x-1">
         <span>{t("admin.analytics.totalLeads")}:</span>
         <Badge variant="outline">{counts.total}</Badge>

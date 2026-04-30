@@ -54,6 +54,22 @@ export async function updateSubProject(
   return data.subProject;
 }
 
+export async function cloneSubProject(
+  projectId: string,
+  payload: {
+    sourceSubProjectId: string;
+    name?: string;
+    type?: "building" | "object";
+  },
+): Promise<SubProject> {
+  const data = await invoke<{ subProject: SubProject }>({
+    action: "clone-sub-project",
+    projectId,
+    ...payload,
+  });
+  return data.subProject;
+}
+
 export async function deleteSubProject(
   projectId: string,
   subProjectId: string,

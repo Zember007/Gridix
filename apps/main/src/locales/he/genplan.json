@@ -97,6 +97,14 @@
       "description": "הוסף ידנית או ייבא נתוני דירות מקובץ או קישור (Excel, CSV, Google Sheets)."
     },
     "creatingBuilding": "יוצר בניין…",
-    "importingApartments": "מייבא דירות…"
+    "importingApartments": "מייבא דירות…",
+    "cloneTitle": "שכפול בניין",
+    "cloneModeEmpty": "מאפס",
+    "cloneModeFromExisting": "העתק מבניין קיים",
+    "cloneSourceLabel": "בניין מקור",
+    "cloneSourcePlaceholder": "בחר בניין להעתקה",
+    "cloneSuccess": "הבניין שוכפל בהצלחה",
+    "cloneError": "שגיאה בשכפול הבניין",
+    "cloning": "משכפל…"
   }
 }

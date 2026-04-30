@@ -1,20 +1,18 @@
 import { ProjectSubscriptionsList } from "@/entities/subscription/ui";
 import { CheckoutModal } from "@/features/subscription-checkout";
-import { Spinner } from "@/shared/ui/Spinner";
 import { useSubscriptionTabController } from "@/features/admin-subscription/model/useSubscriptionTabController";
 import { SubscriptionHeader } from "@/features/admin-subscription/ui/SubscriptionHeader";
 import { SubscriptionPricingSection } from "@/features/admin-subscription/ui/SubscriptionPricingSection";
 import { SubscriptionHistorySection } from "@/features/admin-subscription/ui/SubscriptionHistorySection";
 import { ChangePaymentMethodModal } from "@/features/admin-subscription/ui/ChangePaymentMethodModal";
 import { StripeInvoicesSection } from "@/features/admin-subscription/ui/StripeInvoicesSection";
+import { SubscriptionTabSkeleton } from "@/features/admin-subscription/ui/SubscriptionTabSkeleton";
 
 export default function SubscriptionTab() {
   const {
     t,
     projectSubscriptions,
     loading,
-    plansLoading,
-    error,
     plans,
     orders,
     billingDetails,
@@ -41,11 +39,7 @@ export default function SubscriptionTab() {
   } = useSubscriptionTabController();
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Spinner size="md" />
-      </div>
-    );
+    return <SubscriptionTabSkeleton />;
   }
 
   return (

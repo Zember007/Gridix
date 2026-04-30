@@ -1,10 +1,11 @@
 import { lazy, Suspense } from "react";
-import { Skeleton, ViewTransition } from "@gridix/ui";
+import { ViewTransition } from "@gridix/ui";
 import { cn } from "@gridix/utils/lib";
 import ProjectList from "@/components/projects/ProjectList";
 import type { UserRole } from "@/hooks/useUserRole";
 import { useAdminAccess } from "@/entities/admin-access";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
+import { getAdminSuspenseFallback } from "@/features/admin-dashboard/ui/AdminDashboardTabSkeletons";
 
 const AdminSettingsRoot = lazy(() =>
   import("@/features/admin-settings").then((m) => ({
@@ -78,17 +79,7 @@ export const AdminDashboardContent = ({
     !isDemoViewer &&
     Boolean(developerId);
 
-  const tabFallback = (
-    <div className="space-y-4 p-4 sm:p-6">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="h-4 w-full max-w-xl" />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Skeleton className="h-40" />
-        <Skeleton className="h-40" />
-        <Skeleton className="h-40" />
-      </div>
-    </div>
-  );
+  const suspenseFallback = getAdminSuspenseFallback(activeTab);
 
   const transitionKey =
     activeTab === "settings" && !showAdminSettings
@@ -122,7 +113,7 @@ export const AdminDashboardContent = ({
           </div>
         )}
 
-        <Suspense fallback={tabFallback}>
+        <Suspense fallback={suspenseFallback}>
           {activeTab === "leads" && (
             <LeadsManager showProjectColumn={!isManager} />
           )}
@@ -142,7 +133,7 @@ export const AdminDashboardContent = ({
           {activeTab === "agent_network" && (
             <div className="space-y-6">
               {adminAccess?.loading ? (
-                tabFallback
+                suspenseFallback
               ) : adminAccess?.hasAnyProProject ? (
                 <AgencyPartnersPage />
               ) : (

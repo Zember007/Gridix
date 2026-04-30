@@ -97,6 +97,14 @@
       "description": "Создайте вручную или импортируйте квартиры из файла или по ссылке (Excel, CSV, Google Sheets)."
     },
     "creatingBuilding": "Создание корпуса…",
-    "importingApartments": "Импорт квартир…"
+    "importingApartments": "Импорт квартир…",
+    "cloneTitle": "Копировать корпус",
+    "cloneModeEmpty": "С нуля",
+    "cloneModeFromExisting": "Копия существующего",
+    "cloneSourceLabel": "Корпус-источник",
+    "cloneSourcePlaceholder": "Выберите корпус для копирования",
+    "cloneSuccess": "Корпус успешно скопирован",
+    "cloneError": "Ошибка копирования корпуса",
+    "cloning": "Копирование…"
   }
 }

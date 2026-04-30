@@ -19,12 +19,14 @@ type AdminSettingsBillingTabProps = {
     field: keyof CompanySettings,
     value: string | boolean | null,
   ) => void;
+  onCompanyFieldCommit: () => void;
   t: (key: string, vars?: Record<string, unknown>) => string;
 };
 
 export const AdminSettingsBillingTab = ({
   companySettings,
   onCompanyFieldChange,
+  onCompanyFieldCommit,
   t,
 }: AdminSettingsBillingTabProps) => {
   return (
@@ -40,6 +42,7 @@ export const AdminSettingsBillingTab = ({
             onChange={(e) =>
               onCompanyFieldChange("company_name", e.target.value)
             }
+            onBlur={onCompanyFieldCommit}
             placeholder={t("adminSettings.companyNamePlaceholder")}
           />
         </div>
@@ -52,6 +55,7 @@ export const AdminSettingsBillingTab = ({
             onChange={(e) =>
               onCompanyFieldChange("tax_id", e.target.value || null)
             }
+            onBlur={onCompanyFieldCommit}
             placeholder={t("adminSettings.taxIdPlaceholder")}
           />
         </div>
@@ -65,6 +69,7 @@ export const AdminSettingsBillingTab = ({
           onChange={(e) =>
             onCompanyFieldChange("address", e.target.value || null)
           }
+          onBlur={onCompanyFieldCommit}
           placeholder={t("adminSettings.companyAddressPlaceholder")}
           rows={3}
         />
@@ -79,6 +84,7 @@ export const AdminSettingsBillingTab = ({
             onChange={(e) =>
               onCompanyFieldChange("phone", e.target.value || null)
             }
+            onBlur={onCompanyFieldCommit}
             placeholder={t("adminSettings.phonePlaceholder")}
           />
         </div>
@@ -92,6 +98,7 @@ export const AdminSettingsBillingTab = ({
             onChange={(e) =>
               onCompanyFieldChange("email", e.target.value || null)
             }
+            onBlur={onCompanyFieldCommit}
             placeholder={t("adminSettings.emailPlaceholder")}
           />
         </div>
@@ -106,6 +113,7 @@ export const AdminSettingsBillingTab = ({
             onChange={(e) =>
               onCompanyFieldChange("bank_name", e.target.value || null)
             }
+            onBlur={onCompanyFieldCommit}
             placeholder={t("adminSettings.bankNamePlaceholder")}
           />
         </div>
@@ -118,6 +126,7 @@ export const AdminSettingsBillingTab = ({
             onChange={(e) =>
               onCompanyFieldChange("iban", e.target.value || null)
             }
+            onBlur={onCompanyFieldCommit}
             placeholder={t("adminSettings.ibanPlaceholder")}
           />
         </div>
@@ -128,7 +137,10 @@ export const AdminSettingsBillingTab = ({
           <Label htmlFor="currency">{t("adminSettings.currency")}</Label>
           <Select
             value={companySettings.currency || "GEL"}
-            onValueChange={(value) => onCompanyFieldChange("currency", value)}
+            onValueChange={(value) => {
+              onCompanyFieldChange("currency", value);
+              onCompanyFieldCommit();
+            }}
           >
             <SelectTrigger>
               <SelectValue
@@ -148,9 +160,10 @@ export const AdminSettingsBillingTab = ({
           <Checkbox
             id="vat_payer"
             checked={companySettings.vat_payer || false}
-            onCheckedChange={(checked) =>
-              onCompanyFieldChange("vat_payer", checked as boolean)
-            }
+            onCheckedChange={(checked) => {
+              onCompanyFieldChange("vat_payer", checked as boolean);
+              onCompanyFieldCommit();
+            }}
           />
           <Label htmlFor="vat_payer">{t("adminSettings.vatPayer")}</Label>
         </div>

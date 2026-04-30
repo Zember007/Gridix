@@ -52,7 +52,7 @@ import { useProjectEditorDataContext } from "@/features/projectEditor/context/Pr
 import { useProjectInEditorScope } from "@/features/projectEditor/hooks/useProjectInEditorScope";
 import { ADMIN_THEME, cn, getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { trackOnboardingMilestone } from "@gridix/utils/integrations";
-import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { ProjectApartmentsTabSkeleton } from "@/features/projectEditor/ui/ProjectEditorContentSkeleton";
 import {
   AdminApartmentFilters,
   type ApartmentStatusFilter,
@@ -95,7 +95,6 @@ const ProjectApartmentsManager = ({
   subProjectId,
 }: ProjectApartmentsManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
-  const [filteredApartments, setFilteredApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(
     null,
   );
@@ -106,8 +105,13 @@ const ProjectApartmentsManager = ({
   const [selectedRooms, setSelectedRooms] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] =
     useState<ApartmentStatusFilter>("all");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
-  const [areaRange, setAreaRange] = useState<[number, number]>([0, 0]);
+  /** `undefined` = use full dataset span (no user range); avoids one flash frame where local [0,0] rejects all rows before sync effects run. */
+  const [priceRange, setPriceRange] = useState<[number, number] | undefined>(
+    undefined,
+  );
+  const [areaRange, setAreaRange] = useState<[number, number] | undefined>(
+    undefined,
+  );
   const [customFieldsData, setCustomFieldsData] = useState<
     Record<string, unknown>
   >({});
@@ -204,18 +208,19 @@ const ProjectApartmentsManager = ({
     };
   }, [apartments]);
 
-  useEffect(() => {
-    setPriceRange([minPrice, maxPrice]);
-  }, [minPrice, maxPrice]);
-
-  useEffect(() => {
-    setAreaRange([minArea, maxArea]);
-  }, [minArea, maxArea]);
-
   const currencySymbol = getCurrencySymbolSafe(project?.currency ?? "USD");
 
-  useEffect(() => {
-    const filtered = apartments.filter((apartment) => {
+  const effectivePriceRange = useMemo<[number, number]>(
+    () => priceRange ?? [minPrice, maxPrice],
+    [priceRange, minPrice, maxPrice],
+  );
+  const effectiveAreaRange = useMemo<[number, number]>(
+    () => areaRange ?? [minArea, maxArea],
+    [areaRange, minArea, maxArea],
+  );
+
+  const filteredApartments = useMemo(() => {
+    return apartments.filter((apartment) => {
       const matchesType = apartment.type === currentType;
 
       const matchesFloor =
@@ -228,14 +233,17 @@ const ProjectApartmentsManager = ({
         selectedStatus === "all" || apartment.status === selectedStatus;
 
       const matchesPrice =
-        (priceRange[0] === minPrice && priceRange[1] === maxPrice) ||
+        (effectivePriceRange[0] === minPrice &&
+          effectivePriceRange[1] === maxPrice) ||
         (apartment.price !== null &&
-          apartment.price >= priceRange[0] &&
-          apartment.price <= priceRange[1]);
+          apartment.price >= effectivePriceRange[0] &&
+          apartment.price <= effectivePriceRange[1]);
 
       const matchesArea =
-        (areaRange[0] === minArea && areaRange[1] === maxArea) ||
-        (apartment.area >= areaRange[0] && apartment.area <= areaRange[1]);
+        (effectiveAreaRange[0] === minArea &&
+          effectiveAreaRange[1] === maxArea) ||
+        (apartment.area >= effectiveAreaRange[0] &&
+          apartment.area <= effectiveAreaRange[1]);
 
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
@@ -256,7 +264,6 @@ const ProjectApartmentsManager = ({
         matchesSearch
       );
     });
-    setFilteredApartments(filtered);
   }, [
     apartments,
     searchTerm,
@@ -264,8 +271,8 @@ const ProjectApartmentsManager = ({
     selectedFloor,
     selectedRooms,
     selectedStatus,
-    priceRange,
-    areaRange,
+    effectivePriceRange,
+    effectiveAreaRange,
     minPrice,
     maxPrice,
     minArea,
@@ -531,19 +538,19 @@ const ProjectApartmentsManager = ({
     setSelectedFloor(null);
     setSelectedRooms(null);
     setSelectedStatus("all");
-    setPriceRange([minPrice, maxPrice]);
-    setAreaRange([minArea, maxArea]);
-  }, [minPrice, maxPrice, minArea, maxArea]);
+    setPriceRange(undefined);
+    setAreaRange(undefined);
+  }, []);
 
   const hasActiveFilters =
     searchTerm !== "" ||
     selectedFloor !== null ||
     selectedRooms !== null ||
     selectedStatus !== "all" ||
-    priceRange[0] !== minPrice ||
-    priceRange[1] !== maxPrice ||
-    areaRange[0] !== minArea ||
-    areaRange[1] !== maxArea;
+    (priceRange !== undefined &&
+      (priceRange[0] !== minPrice || priceRange[1] !== maxPrice)) ||
+    (areaRange !== undefined &&
+      (areaRange[0] !== minArea || areaRange[1] !== maxArea));
 
   const handleDeleteFloor = async (floorNumber: number) => {
     const apartmentsOnFloor = apartments.filter(
@@ -889,9 +896,7 @@ const ProjectApartmentsManager = ({
 
   if (loading) {
     return (
-      <div className="flex min-h-32 items-center justify-center p-4">
-        <LoadingProgress />
-      </div>
+      <ProjectApartmentsTabSkeleton projectType={projectType ?? undefined} />
     );
   }
 
@@ -908,11 +913,16 @@ const ProjectApartmentsManager = ({
           <div className="flex w-full flex-col gap-2 sm:w-auto lg:flex-row lg:items-center">
             <Button
               variant="outline"
-              className="w-full"
+              className="h-auto w-full flex-col items-start gap-0.5 py-2"
               onClick={() => setExcelSyncDialogOpen(true)}
             >
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              {t("excel.sync.button")}
+              <span className="flex items-center gap-2 font-medium">
+                <FileSpreadsheet className="h-4 w-4 shrink-0" />
+                {t("excel.sync.button")}
+              </span>
+              <span className="pl-6 text-xs font-normal text-muted-foreground">
+                {t("excel.sync.buttonDesc")}
+              </span>
             </Button>
             {projectType !== "object" && (
               <Button
@@ -947,9 +957,9 @@ const ProjectApartmentsManager = ({
           setSelectedRooms={setSelectedRooms}
           selectedStatus={selectedStatus}
           setSelectedStatus={setSelectedStatus}
-          priceRange={priceRange}
+          priceRange={effectivePriceRange}
           setPriceRange={setPriceRange}
-          areaRange={areaRange}
+          areaRange={effectiveAreaRange}
           setAreaRange={setAreaRange}
           minPrice={minPrice}
           maxPrice={maxPrice}

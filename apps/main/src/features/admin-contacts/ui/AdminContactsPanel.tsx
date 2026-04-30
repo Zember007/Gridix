@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Building2, FileDown, Search, User } from "lucide-react";
-import { Input, Button } from "@gridix/ui";
+import { Input, Button, PageHeader, Skeleton } from "@gridix/ui";
 import { useContactsList } from "../hooks/useContactsList";
 import { exportContactsXLSX } from "../lib/export-contacts-xlsx";
 
@@ -13,26 +13,22 @@ export function AdminContactsPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">
-            {t("admin.contactsPage.title")}
-          </h2>
-          <p className="text-sm text-slate-500">
-            {t("admin.contactsPage.description")}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportExcel}
-          disabled={isLoading || contacts.length === 0}
-          className="shrink-0 gap-2"
-        >
-          <FileDown size={16} />
-          {t("admin.contactsPage.exportBtn")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("admin.contactsPage.title")}
+        description={t("admin.contactsPage.description")}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={isLoading || contacts.length === 0}
+            className="shrink-0 gap-2"
+          >
+            <FileDown size={16} />
+            {t("admin.contactsPage.exportBtn")}
+          </Button>
+        }
+      />
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-100 px-3 py-3 sm:px-6 sm:py-4 md:flex-row md:items-center">
@@ -94,16 +90,35 @@ export function AdminContactsPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {isLoading && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-10 text-center text-slate-400"
+              {isLoading &&
+                Array.from({ length: 7 }).map((_, i) => (
+                  <tr
+                    key={`skeleton-${i}`}
+                    className="border-b border-slate-50"
                   >
-                    {t("admin.contactsPage.loading")}
-                  </td>
-                </tr>
-              )}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+                        <div className="min-w-0 space-y-2">
+                          <Skeleton className="h-4 w-[min(200px,40vw)]" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-5 w-16" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-28" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-36" />
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Skeleton className="ml-auto h-4 w-32" />
+                    </td>
+                  </tr>
+                ))}
 
               {!isLoading && contacts.length === 0 && (
                 <tr>

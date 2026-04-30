@@ -18,6 +18,7 @@ import {
 import { useAmoCRMConnection } from "@/features/admin-integrations/model/useAmoCRMConnection";
 import { AmoCRMDisconnectDialog } from "@/features/admin-integrations/ui/AmoCRMDisconnectDialog";
 import { AmoCRMProjectsDialog } from "@/features/admin-integrations/ui/AmoCRMProjectsDialog";
+import { CrmConnectionCardSkeleton } from "@/features/admin-integrations/ui/CrmConnectionCardSkeleton";
 
 interface AmoCRMConnectionProps {
   blockedReason?: "subscription" | "pro" | null;
@@ -43,9 +44,7 @@ export const AmoCRMConnection = ({
   } = useAmoCRMConnection();
 
   if (loading) {
-    return (
-      <div className="flex h-full animate-pulse items-center justify-center rounded-xl bg-muted/50" />
-    );
+    return <CrmConnectionCardSkeleton barClass="bg-[#4c8bf7]" />;
   }
 
   return (

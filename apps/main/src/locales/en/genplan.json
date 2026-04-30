@@ -97,6 +97,14 @@
       "description": "Add manually or import apartment data from a file or link (Excel, CSV, Google Sheets)."
     },
     "creatingBuilding": "Creating building…",
-    "importingApartments": "Importing apartments…"
+    "importingApartments": "Importing apartments…",
+    "cloneTitle": "Clone building",
+    "cloneModeEmpty": "From scratch",
+    "cloneModeFromExisting": "Copy existing",
+    "cloneSourceLabel": "Source building",
+    "cloneSourcePlaceholder": "Select building to copy",
+    "cloneSuccess": "Building cloned successfully",
+    "cloneError": "Error cloning building",
+    "cloning": "Cloning…"
   }
 }

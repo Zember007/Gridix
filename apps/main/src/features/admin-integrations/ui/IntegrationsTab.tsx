@@ -4,6 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  PageHeader,
 } from "@gridix/ui";
 import { Package } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -25,14 +26,10 @@ export const IntegrationsTab = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="mb-2 text-2xl font-bold tracking-tight">
-          {t("admin.integrations")}
-        </h2>
-        <p className="text-muted-foreground">
-          {t("admin.integrationsDescription")}
-        </p>
-      </div>
+      <PageHeader
+        title={t("admin.integrations")}
+        description={t("admin.integrationsDescription")}
+      />
 
       {blockedReason && (
         <AdminAccessNotice

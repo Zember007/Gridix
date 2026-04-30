@@ -269,6 +269,7 @@ export default function GenplanEditorTab({
         onClose={() => setShowManualSubProjectModal(false)}
         projectId={projectId}
         onCreated={handleSubProjectCreated}
+        subProjects={subProjects}
       />
       <ActivateGenplanModal
         open={showActivateModal}

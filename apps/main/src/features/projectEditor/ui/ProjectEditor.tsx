@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -58,7 +58,11 @@ import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/Ap
 
 import ProjectDomainSettings from "@/features/admin-project-domain-settings";
 import { lazy, Suspense } from "react";
-import { ProjectEditorSidebar } from "@/shared/ui/sidebar-component";
+import {
+  useAdminShellFullBleed,
+  useRegisterAdminShellSidebar,
+} from "@/app/layouts/admin-shell-context";
+import { useProjectEditorShellSidebar } from "@/features/projectEditor/hooks/useProjectEditorShellSidebar";
 const GenplanEditorTab = lazy(
   () => import("@/features/genplan/ui/GenplanEditorTab"),
 );
@@ -66,6 +70,10 @@ import { useLocation, useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import {
+  ProjectApartmentsTabSkeleton,
+  ProjectEditorContentSkeleton,
+} from "@/features/projectEditor/ui/ProjectEditorContentSkeleton";
 import { useDefaultSubProjectBuildingScope } from "@/features/projectEditor/hooks/useDefaultSubProjectBuildingScope";
 import {
   trackOnboardingMilestone,
@@ -83,6 +91,28 @@ import type { AdminBootstrapProject } from "@/entities/admin-access";
 import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshAdminBootstrapCache";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
+import { runWithViewTransition } from "@/shared/lib/runWithViewTransition";
+
+const projectPersistSignature = (p: ProjectEditorProject) =>
+  JSON.stringify({
+    name: p.name.trim(),
+    description: p.description || null,
+    address: p.address || null,
+    floors: p.floors,
+    has_parking: p.has_parking,
+    has_commercial: p.has_commercial,
+    latitude: p.latitude,
+    longitude: p.longitude,
+    currency: p.currency,
+    installment_enabled: p.installment_enabled,
+    min_down_payment_percent: p.min_down_payment_percent,
+    max_installment_months: p.max_installment_months,
+    pdf_presentation_url: p.pdf_presentation_url,
+    theme_color: p.theme_color,
+    project_type: p.project_type || "building",
+    available_languages: p.available_languages,
+    has_masterplan: p.has_masterplan,
+  });
 
 interface ProjectEditorProps {
   projectId: string;
@@ -96,6 +126,7 @@ interface ProjectEditorProps {
 
 type EditorProjectSource = {
   id?: string;
+  slug?: string | null;
   name?: string | null;
   description?: string | null;
   address?: string | null;
@@ -611,9 +642,9 @@ const ProjectEditor = ({
   const editorDataContext = useProjectEditorDataContext();
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
-
-  // Mobile menu state
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const projectRef = useRef(project);
+  const lastCommittedProjectSigRef = useRef<string | null>(null);
+  const projectPersistInFlight = useRef(false);
 
   const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
     useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
@@ -623,9 +654,83 @@ const ProjectEditor = ({
   const editorScopeKind: "building" | "object" =
     project.project_type === "object" ? "object" : "building";
 
+  const mapEditorTabToSidebarSection = useCallback((tab: string) => {
+    switch (tab) {
+      case "basic":
+      case "building":
+        return "general";
+      case "apartments":
+        return "apartments";
+      case "floors":
+        return "floorplan";
+      case "photos":
+        return "photos";
+      case "fields":
+        return "fields";
+      case "genplan":
+        return "genplan";
+      case "domains":
+        return "domains";
+      default:
+        return "general";
+    }
+  }, []);
+
+  const handleSidebarSectionChangeCb = useCallback((section: string) => {
+    switch (section) {
+      case "general":
+        setActiveTab("basic");
+        break;
+      case "apartments":
+        setActiveTab("apartments");
+        break;
+      case "floorplan":
+        setActiveTab("floors");
+        break;
+      case "photos":
+        setActiveTab("photos");
+        break;
+      case "fields":
+        setActiveTab("fields");
+        break;
+      case "genplan":
+        setActiveTab("genplan");
+        break;
+      case "domains":
+        setActiveTab("domains");
+        break;
+      default:
+        setActiveTab("basic");
+    }
+  }, []);
+
+  const handleSignOutFromEditor = useCallback(async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  }, [isSigningOut, navigate, signOut]);
+
   useEffect(() => {
     floorsSyncedFromSubProjectRef.current = null;
   }, [projectId]);
+
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
+
+  useEffect(() => {
+    if (isNew || !project.id) return;
+    lastCommittedProjectSigRef.current = projectPersistSignature(project);
+  }, [isNew, projectId, project.id]);
 
   useEffect(() => {
     if (
@@ -674,7 +779,7 @@ const ProjectEditor = ({
   useEffect(() => {
     const page = searchParams.get("page");
     if (page) {
-      // Валидируем, что page является допустимой вкладкой
+      const normalized = page === "general" ? "basic" : page;
       const validTabs = [
         "basic",
         "building",
@@ -685,8 +790,8 @@ const ProjectEditor = ({
         "genplan",
         "domains",
       ];
-      if (validTabs.includes(page)) {
-        setActiveTab(page);
+      if (validTabs.includes(normalized)) {
+        setActiveTab(normalized);
       }
     }
   }, [searchParams]);
@@ -867,6 +972,125 @@ const ProjectEditor = ({
     user?.id,
   ]);
 
+  const persistProjectIfDirty = useCallback(
+    async (options?: { force?: boolean; showSuccessToast?: boolean }) => {
+      if (
+        isNew ||
+        readOnly ||
+        isRestrictedProject ||
+        projectPersistInFlight.current
+      ) {
+        return false;
+      }
+      const current = projectRef.current;
+      if (!current.id || !user) return false;
+      if (!current.name.trim()) {
+        if (options?.showSuccessToast) {
+          toast.error(t("projectEditor.projectNameRequired"));
+        }
+        return false;
+      }
+
+      const nextSig = projectPersistSignature(current);
+      if (!options?.force && nextSig === lastCommittedProjectSigRef.current) {
+        return true;
+      }
+
+      const canEdit =
+        user &&
+        (cachedProject?.user_id === user.id ||
+          (isManagerMode &&
+            activeWorkspaceId &&
+            cachedProject?.user_id === activeWorkspaceId) ||
+          (isManager &&
+            cachedProject?.user_id &&
+            developerIds.includes(cachedProject.user_id)));
+
+      if (!canEdit) {
+        toast.error(t("projectEditor.errorSaving"));
+        return false;
+      }
+
+      projectPersistInFlight.current = true;
+      try {
+        const saveData = {
+          name: current.name.trim(),
+          description: current.description || null,
+          address: current.address || null,
+          has_parking: current.has_parking,
+          has_commercial: current.has_commercial,
+          latitude: current.latitude,
+          longitude: current.longitude,
+          currency: current.currency,
+          installment_enabled: current.installment_enabled,
+          min_down_payment_percent: current.min_down_payment_percent,
+          max_installment_months: current.max_installment_months,
+          pdf_presentation_url: current.pdf_presentation_url,
+          theme_color: current.theme_color,
+          project_type: current.project_type || "building",
+          available_languages: current.available_languages,
+          has_masterplan: current.has_masterplan,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+          .from("projects")
+          .update(saveData)
+          .eq("id", current.id);
+
+        if (error) throw error;
+
+        if (!current.has_masterplan) {
+          const { error: subErr } = await supabase
+            .from("sub_projects")
+            .update({
+              name: current.name.trim(),
+              type: current.project_type === "object" ? "object" : "building",
+              floors: current.floors,
+              has_parking: current.has_parking,
+              has_commercial: current.has_commercial,
+              address: current.address || null,
+              latitude: current.latitude,
+              longitude: current.longitude,
+            })
+            .eq("project_id", current.id)
+            .eq("is_default", true);
+          if (subErr) throw subErr;
+        }
+
+        lastCommittedProjectSigRef.current = nextSig;
+        if (options?.showSuccessToast) {
+          toast.success(t("projectEditor.projectSaved"));
+        }
+        return true;
+      } catch (error) {
+        console.error("Error saving project:", error);
+        toast.error(t("projectEditor.errorSaving"));
+        return false;
+      } finally {
+        projectPersistInFlight.current = false;
+      }
+    },
+    [
+      isNew,
+      readOnly,
+      isRestrictedProject,
+      user,
+      cachedProject?.user_id,
+      isManagerMode,
+      activeWorkspaceId,
+      isManager,
+      developerIds,
+      t,
+    ],
+  );
+
+  const scheduleProjectAutoSave = useCallback(() => {
+    window.setTimeout(() => {
+      void persistProjectIfDirty();
+    }, 0);
+  }, [persistProjectIfDirty]);
+
   const handleSave = async () => {
     if (!project.name.trim()) {
       toast.error(t("projectEditor.projectNameRequired"));
@@ -935,47 +1159,9 @@ const ProjectEditor = ({
           properties: { project_id: data.id },
           onceKey: "gridix_project_created",
         });
-        navigate(`/admin/project/${data.id}`);
+        runWithViewTransition(() => navigate(`/admin/project/${data.id}`));
       } else {
-        const canEdit =
-          user &&
-          (cachedProject?.user_id === user.id ||
-            (isManagerMode &&
-              activeWorkspaceId &&
-              cachedProject?.user_id === activeWorkspaceId) ||
-            (isManager &&
-              cachedProject?.user_id &&
-              developerIds.includes(cachedProject.user_id)));
-
-        if (!canEdit) {
-          throw new Error("У вас нет прав на редактирование этого проекта");
-        }
-
-        const { error } = await supabase
-          .from("projects")
-          .update(saveData)
-          .eq("id", project.id);
-
-        if (error) throw error;
-
-        if (!project.has_masterplan) {
-          await supabase
-            .from("sub_projects")
-            .update({
-              name: project.name.trim(),
-              type: project.project_type === "object" ? "object" : "building",
-              floors: project.floors,
-              has_parking: project.has_parking,
-              has_commercial: project.has_commercial,
-              address: project.address || null,
-              latitude: project.latitude,
-              longitude: project.longitude,
-            })
-            .eq("project_id", project.id)
-            .eq("is_default", true);
-        }
-
-        toast.success(t("projectEditor.projectSaved"));
+        await persistProjectIfDirty({ force: true, showSuccessToast: true });
       }
     } catch (error) {
       console.error("Error saving project:", error);
@@ -997,22 +1183,80 @@ const ProjectEditor = ({
         longitude: parseFloat(parsedLon ?? "0"),
       }));
       e.preventDefault(); // предотвращаем вставку в одно поле
+      scheduleProjectAutoSave();
     }
   };
-  const handlePdfUrlChange = useCallback((pdfUrl: string | null) => {
-    setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
-  }, []);
+  const handlePdfUrlChange = useCallback(
+    (pdfUrl: string | null) => {
+      setProject((prev) => ({ ...prev, pdf_presentation_url: pdfUrl }));
+      window.setTimeout(() => {
+        void persistProjectIfDirty();
+      }, 0);
+    },
+    [persistProjectIfDirty],
+  );
 
   const handleBuildingImageUrlChange = useCallback((url: string | null) => {
     setProject((prev) => ({ ...prev, building_image_url: url }));
   }, []);
 
-  const [isCollapsed, setIsCollapsed] = useState(true);
-
   const isEditorDataLoading =
     !isNew &&
     !isRestrictedProject &&
     (editorDataContext?.loading ?? projectLoading);
+
+  const sidebarActiveSectionKey = useMemo(
+    () => mapEditorTabToSidebarSection(activeTab ?? "basic"),
+    [activeTab, mapEditorTabToSidebarSection],
+  );
+
+  const sidebarSuspended = Boolean(accessError);
+
+  const { shellSidebarHasMasterplan, shellSidebarProjectType } = useMemo(() => {
+    const sourceIdOrSlugMatches =
+      projectSource?.id === projectId || projectSource?.slug === projectId;
+    const aligned =
+      !isNew && projectId && sourceIdOrSlugMatches ? projectSource : null;
+    if (!aligned) {
+      return {
+        shellSidebarHasMasterplan: project.has_masterplan,
+        shellSidebarProjectType: editorScopeKind,
+      };
+    }
+    const src = aligned as EditorProjectSource;
+    const hasMp =
+      src.has_masterplan !== undefined && src.has_masterplan !== null
+        ? Boolean(src.has_masterplan)
+        : project.has_masterplan;
+    const pType: "building" | "object" =
+      src.project_type === "object" ? "object" : "building";
+    return {
+      shellSidebarHasMasterplan: hasMp,
+      shellSidebarProjectType: pType,
+    };
+  }, [
+    editorScopeKind,
+    isNew,
+    project.has_masterplan,
+    projectId,
+    projectSource,
+  ]);
+
+  const editorShellSidebarSlot = useProjectEditorShellSidebar({
+    suspended: sidebarSuspended,
+    activeSidebarTab: sidebarActiveSectionKey,
+    onSidebarSectionChange: handleSidebarSectionChangeCb,
+    userEmail: userProfile?.email || user?.email || "Unknown user",
+    projectType: shellSidebarProjectType,
+    hasMasterplan: shellSidebarHasMasterplan,
+    onSignOut: handleSignOutFromEditor,
+    isSigningOut,
+    isNavLoading: isEditorDataLoading,
+  });
+
+  useRegisterAdminShellSidebar(editorShellSidebarSlot);
+
+  useAdminShellFullBleed(Boolean(accessError));
 
   if (accessError) {
     return (
@@ -1035,92 +1279,9 @@ const ProjectEditor = ({
     );
   }
 
-  // Map activeTab to sidebar sections
-  const getSidebarSection = (tab: string) => {
-    switch (tab) {
-      case "basic":
-        return "general";
-      case "building":
-        return "general";
-      case "apartments":
-        return "apartments";
-      case "floors":
-        return "floorplan";
-      case "photos":
-        return "photos";
-      case "fields":
-        return "fields";
-      case "genplan":
-        return "genplan";
-      case "domains":
-        return "domains";
-      default:
-        return "general";
-    }
-  };
-
-  const handleSidebarSectionChange = (section: string) => {
-    switch (section) {
-      case "general":
-        setActiveTab("basic");
-        break;
-      case "apartments":
-        setActiveTab("apartments");
-        break;
-      case "floorplan":
-        setActiveTab("floors");
-        break;
-      case "photos":
-        setActiveTab("photos");
-        break;
-      case "fields":
-        setActiveTab("fields");
-        break;
-      case "genplan":
-        setActiveTab("genplan");
-        break;
-      case "domains":
-        setActiveTab("domains");
-        break;
-      default:
-        setActiveTab("basic");
-    }
-  };
-
-  const handleSignOut = async () => {
-    if (isSigningOut) return;
-
-    setIsSigningOut(true);
-    try {
-      await signOut();
-      navigate("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to sign out. Please try again.");
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-background">
-      <ProjectEditorSidebar
-        onSectionChange={handleSidebarSectionChange}
-        activeTab={getSidebarSection(activeTab ?? "basic")}
-        userEmail={userProfile?.email || user?.email || "Unknown user"}
-        projectType={editorScopeKind}
-        hasMasterplan={project.has_masterplan}
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        onSignOut={handleSignOut}
-        isSigningOut={isSigningOut}
-        isNavLoading={isEditorDataLoading}
-      />
-      <div
-        className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
-      >
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="relative flex min-h-0 flex-1 flex-col bg-background">
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="sticky top-0 z-50 shrink-0 border-b bg-white">
             <div className="px-4 py-3 sm:px-6 sm:py-4 lg:px-6">
@@ -1196,8 +1357,12 @@ const ProjectEditor = ({
           </div>
 
           {isEditorDataLoading ? (
-            <div className="flex min-h-full items-center justify-center">
-              <LoadingProgress />
+            <div className="project_editor_content_usertour flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
+              <ProjectEditorContentSkeleton
+                activeTab={activeTab}
+                hasMasterplan={project.has_masterplan}
+                editorScopeKind={editorScopeKind}
+              />
             </div>
           ) : isRestrictedProject ? (
             <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
@@ -1298,6 +1463,7 @@ const ProjectEditor = ({
                                   name: e.target.value,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t("projectEditor.projectName")}
                             />
                           </div>
@@ -1314,6 +1480,7 @@ const ProjectEditor = ({
                                   description: e.target.value,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t("projectEditor.description")}
                               rows={3}
                             />
@@ -1331,6 +1498,7 @@ const ProjectEditor = ({
                                   address: e.target.value,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t("projectEditor.address")}
                             />
                           </div>
@@ -1394,6 +1562,7 @@ const ProjectEditor = ({
                                             ),
                                           };
                                         });
+                                        scheduleProjectAutoSave();
                                       }}
                                     />
                                     <Label
@@ -1494,15 +1663,16 @@ const ProjectEditor = ({
                                   </Label>
                                   <Select
                                     value={editorScopeKind}
-                                    onValueChange={(v) =>
+                                    onValueChange={(v) => {
                                       setProject((prev) => ({
                                         ...prev,
                                         project_type:
                                           v === "object"
                                             ? "object"
                                             : "building",
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                   >
                                     <SelectTrigger id="project-type">
                                       <SelectValue />
@@ -1536,6 +1706,7 @@ const ProjectEditor = ({
                                           floors: parseInt(e.target.value) || 1,
                                         }))
                                       }
+                                      onBlur={scheduleProjectAutoSave}
                                     />
                                   </div>
                                 )}
@@ -1546,12 +1717,13 @@ const ProjectEditor = ({
                                   <Switch
                                     id="has-parking"
                                     checked={project.has_parking}
-                                    onCheckedChange={(checked) =>
+                                    onCheckedChange={(checked) => {
                                       setProject((prev) => ({
                                         ...prev,
                                         has_parking: checked,
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                   />
                                   <Label htmlFor="has-parking">
                                     {t("projectEditor.hasParking")}
@@ -1562,12 +1734,13 @@ const ProjectEditor = ({
                                   <Switch
                                     id="has-commercial"
                                     checked={project.has_commercial}
-                                    onCheckedChange={(checked) =>
+                                    onCheckedChange={(checked) => {
                                       setProject((prev) => ({
                                         ...prev,
                                         has_commercial: checked,
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                   />
                                   <Label htmlFor="has-commercial">
                                     {t("projectEditor.hasCommercial")}
@@ -1594,6 +1767,7 @@ const ProjectEditor = ({
                                     : null,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t(
                                 "projectEditor.latitudePlaceholder",
                               )}
@@ -1620,6 +1794,7 @@ const ProjectEditor = ({
                                     : null,
                                 }))
                               }
+                              onBlur={scheduleProjectAutoSave}
                               placeholder={t(
                                 "projectEditor.longitudePlaceholder",
                               )}
@@ -1634,12 +1809,13 @@ const ProjectEditor = ({
                             </Label>
                             <Select
                               value={project.currency}
-                              onValueChange={(value: CurrencyType) =>
+                              onValueChange={(value: CurrencyType) => {
                                 setProject((prev) => ({
                                   ...prev,
                                   currency: value,
-                                }))
-                              }
+                                }));
+                                scheduleProjectAutoSave();
+                              }}
                             >
                               <SelectTrigger>
                                 <SelectValue
@@ -1670,12 +1846,14 @@ const ProjectEditor = ({
                                   id="theme-color"
                                   type="color"
                                   value={project.theme_color}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
                                     setProject((prev) => ({
                                       ...prev,
                                       theme_color: e.target.value,
-                                    }))
-                                  }
+                                    }));
+                                    scheduleProjectAutoSave();
+                                  }}
+                                  onBlur={scheduleProjectAutoSave}
                                   className="h-10 w-20 cursor-pointer rounded border p-1"
                                 />
                                 <Input
@@ -1687,6 +1865,7 @@ const ProjectEditor = ({
                                       theme_color: e.target.value,
                                     }))
                                   }
+                                  onBlur={scheduleProjectAutoSave}
                                   placeholder="#000000"
                                   className="flex-1"
                                 />
@@ -1707,12 +1886,13 @@ const ProjectEditor = ({
                                     type="button"
                                     className="h-8 w-8 rounded-full border-2 border-gray-300 transition-colors hover:border-gray-400"
                                     style={{ backgroundColor: color }}
-                                    onClick={() =>
+                                    onClick={() => {
                                       setProject((prev) => ({
                                         ...prev,
                                         theme_color: color,
-                                      }))
-                                    }
+                                      }));
+                                      scheduleProjectAutoSave();
+                                    }}
                                     title={color}
                                   />
                                 ))}
@@ -1749,12 +1929,13 @@ const ProjectEditor = ({
                               <Switch
                                 id="installment-enabled"
                                 checked={project.installment_enabled}
-                                onCheckedChange={(checked) =>
+                                onCheckedChange={(checked) => {
                                   setProject((prev) => ({
                                     ...prev,
                                     installment_enabled: checked,
-                                  }))
-                                }
+                                  }));
+                                  scheduleProjectAutoSave();
+                                }}
                               />
                               <Label htmlFor="installment-enabled">
                                 {t("projectEditor.enableInstallment")}
@@ -1785,6 +1966,7 @@ const ProjectEditor = ({
                                         ),
                                       }))
                                     }
+                                    onBlur={scheduleProjectAutoSave}
                                     placeholder="20"
                                   />
                                   <p className="mt-1 text-xs text-gray-500">
@@ -1814,6 +1996,7 @@ const ProjectEditor = ({
                                         ),
                                       }))
                                     }
+                                    onBlur={scheduleProjectAutoSave}
                                     placeholder="24"
                                   />
                                   <p className="mt-1 text-xs text-gray-500">
@@ -1911,8 +2094,10 @@ const ProjectEditor = ({
               {activeTab === "apartments" &&
                 !project.has_masterplan &&
                 (!defaultBuildingScopeReady ? (
-                  <div className="flex min-h-[200px] items-center justify-center">
-                    <LoadingProgress />
+                  <div className="space-y-4">
+                    <ProjectApartmentsTabSkeleton
+                      projectType={editorScopeKind}
+                    />
                   </div>
                 ) : !defaultBuildingScope ? (
                   <p className="text-sm text-destructive">

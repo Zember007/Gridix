@@ -74,6 +74,7 @@ export const AdminSettingsRoot = ({
     handleExportBackup,
     handleResetSettings,
     handleSave,
+    scheduleCompanyAutoSave,
   } = useAdminSettingsController({
     userProfile,
     loading,
@@ -254,6 +255,7 @@ export const AdminSettingsRoot = ({
                 }
                 companySettings={companySettings}
                 onCompanyFieldChange={handleCompanyInputChange}
+                onCompanyFieldCommit={scheduleCompanyAutoSave}
                 systemDomain={getSystemDomain()}
                 logoInputRef={logoInputRef}
                 uploadingLogo={uploadingLogo}
@@ -276,6 +278,7 @@ export const AdminSettingsRoot = ({
               <AdminSettingsBillingTab
                 companySettings={companySettings}
                 onCompanyFieldChange={handleCompanyInputChange}
+                onCompanyFieldCommit={scheduleCompanyAutoSave}
                 t={t}
               />
             </CardContent>

@@ -5,10 +5,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Skeleton,
 } from "@gridix/ui";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Spinner } from "@/shared/ui/Spinner";
 import {
   type ManagerAccount,
   fetchManagerAccounts,
@@ -87,8 +87,37 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="md" />
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-6 w-52" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+          <Skeleton className="h-9 w-44 shrink-0" />
+        </div>
+        <Card>
+          <CardHeader className="p-4 sm:p-6">
+            <Skeleton className="mb-2 h-5 w-48" />
+            <Skeleton className="h-4 w-full max-w-lg" />
+          </CardHeader>
+          <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-slate-100 p-4"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                  <div className="min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-52 max-w-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-9 w-28" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     );
   }

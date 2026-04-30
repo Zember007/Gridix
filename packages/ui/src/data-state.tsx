@@ -46,6 +46,26 @@ export function DataState({
     );
   }
 
+  const actionNode =
+    action &&
+    (action.href ? (
+      <Button asChild variant={action.variant ?? "outline"} size="sm">
+        <a className="w-full justify-center" href={action.href}>
+          {action.label}
+        </a>
+      </Button>
+    ) : (
+      <Button
+        variant={action.variant ?? "outline"}
+        size="sm"
+        onClick={action.onClick}
+      >
+        {action.label}
+      </Button>
+    ));
+
+  const actionPlusChildrenGrouped = Boolean(action && children);
+
   const content = (
     <>
       {Icon ? (
@@ -61,22 +81,17 @@ export function DataState({
           </p>
         ) : null}
       </div>
-      {action ? (
-        action.href ? (
-          <Button asChild variant={action.variant ?? "outline"} size="sm">
-            <a href={action.href}>{action.label}</a>
-          </Button>
-        ) : (
-          <Button
-            variant={action.variant ?? "outline"}
-            size="sm"
-            onClick={action.onClick}
-          >
-            {action.label}
-          </Button>
-        )
-      ) : null}
-      {children}
+      {actionPlusChildrenGrouped ? (
+        <div className="mx-auto grid w-max max-w-full grid-cols-1 justify-items-stretch gap-3 self-center md:w-full md:max-w-xl md:grid-cols-2 [&_a]:w-full [&_a]:justify-center [&_button]:w-full [&_button]:min-w-0 [&>div]:min-w-0">
+          {actionNode}
+          {children}
+        </div>
+      ) : (
+        <>
+          {actionNode}
+          {children}
+        </>
+      )}
     </>
   );
 

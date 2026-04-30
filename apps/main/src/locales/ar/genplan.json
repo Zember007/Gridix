@@ -97,6 +97,14 @@
       "description": "أضف يدويًا أو استورد بيانات الشقق من ملف أو رابط (Excel أو CSV أو Google Sheets)."
     },
     "creatingBuilding": "جارٍ إنشاء المبنى…",
-    "importingApartments": "جارٍ استيراد الشقق…"
+    "importingApartments": "جارٍ استيراد الشقق…",
+    "cloneTitle": "نسخ المبنى",
+    "cloneModeEmpty": "من الصفر",
+    "cloneModeFromExisting": "نسخ من مبنى موجود",
+    "cloneSourceLabel": "المبنى المصدر",
+    "cloneSourcePlaceholder": "اختر المبنى المراد نسخه",
+    "cloneSuccess": "تم نسخ المبنى بنجاح",
+    "cloneError": "خطأ في نسخ المبنى",
+    "cloning": "جارٍ النسخ…"
   }
 }

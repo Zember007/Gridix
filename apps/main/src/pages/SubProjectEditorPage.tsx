@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, type ClipboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Button,
@@ -16,17 +22,21 @@ import {
   SelectValue,
   Switch,
 } from "@gridix/ui";
-import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import { navigateWithViewTransition } from "@/shared/lib/runWithViewTransition";
+import {
+  useAdminShellFullBleed,
+  useRegisterAdminShellSidebar,
+} from "@/app/layouts/admin-shell-context";
+import { useSubProjectEditorShellSidebar } from "@/features/projectEditor/hooks/useSubProjectEditorShellSidebar";
 import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsManager";
 import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/ApartmentPhotosManager";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
-import { SubProjectImportModal } from "@/features/genplan/ui/SubProjectImportModal";
 import BuildingImageEditor from "@/features/visualization/buildingImageEditor/ui/BuildingImageEditor";
-import { SubProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
@@ -41,6 +51,18 @@ type Tab =
   | "photos"
   | "fields";
 
+const subProjectPersistSignature = (sp: SubProject) =>
+  JSON.stringify({
+    name: sp.name,
+    type: sp.type,
+    floors: sp.floors,
+    has_parking: sp.has_parking,
+    has_commercial: sp.has_commercial,
+    address: sp.address?.trim() || null,
+    latitude: sp.latitude,
+    longitude: sp.longitude,
+  });
+
 export default function SubProjectEditorPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -54,11 +76,8 @@ export default function SubProjectEditorPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("general");
-  const [importModalOpen, setImportModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
+  
   const handlePasteCoords = useCallback(
     (e: ClipboardEvent<HTMLInputElement>) => {
       const text = e.clipboardData.getData("Text");
@@ -115,42 +134,119 @@ export default function SubProjectEditorPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    subProjectRef.current = subProject;
+  }, [subProject]);
+
+  useEffect(() => {
+    if (!subProject?.id) return;
+    lastCommittedSubProjectSig.current = subProjectPersistSignature(subProject);
+  }, [subProject?.id]);
+
+  const persistSubProjectIfDirty = useCallback(
+    async (options?: { force?: boolean; showSuccessToast?: boolean }) => {
+      if (subProjectPersistInFlight.current) return false;
+      const sp = subProjectRef.current;
+      if (!sp?.id) return false;
+
+      const nextSig = subProjectPersistSignature(sp);
+      if (!options?.force && nextSig === lastCommittedSubProjectSig.current) {
+        return true;
+      }
+
+      subProjectPersistInFlight.current = true;
+      try {
+        const { error } = await supabase
+          .from("sub_projects")
+          .update({
+            name: sp.name,
+            type: sp.type,
+            floors: sp.floors,
+            has_parking: sp.has_parking,
+            has_commercial: sp.has_commercial,
+            address: sp.address?.trim() || null,
+            latitude: sp.latitude,
+            longitude: sp.longitude,
+          })
+          .eq("id", sp.id);
+        if (error) throw error;
+        lastCommittedSubProjectSig.current = nextSig;
+        if (options?.showSuccessToast) {
+          toast.success(t("projectEditor.projectSaved"));
+        }
+        return true;
+      } catch (err) {
+        console.error("Error saving sub-project:", err);
+        toast.error(t("projectEditor.saveError"));
+        return false;
+      } finally {
+        subProjectPersistInFlight.current = false;
+      }
+    },
+    [t],
+  );
+
+  const scheduleSubProjectAutoSave = useCallback(() => {
+    window.setTimeout(() => {
+      void persistSubProjectIfDirty();
+    }, 0);
+  }, [persistSubProjectIfDirty]);
+
+  const handlePasteCoords = useCallback(
+    (e: ClipboardEvent<HTMLInputElement>) => {
+      const text = e.clipboardData.getData("Text");
+      const parts = text.split(",").map((part) => part.trim());
+
+      if (parts.length === 2) {
+        const [parsedLat, parsedLon] = parts;
+        setSubProject((prev) =>
+          prev
+            ? {
+                ...prev,
+                latitude: parseFloat(parsedLat ?? "0"),
+                longitude: parseFloat(parsedLon ?? "0"),
+              }
+            : prev,
+        );
+        e.preventDefault();
+        scheduleSubProjectAutoSave();
+      }
+    },
+    [scheduleSubProjectAutoSave],
+  );
+
   const handleSave = async () => {
     if (!subProject) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("sub_projects")
-        .update({
-          name: subProject.name,
-          type: subProject.type,
-          floors: subProject.floors,
-          has_parking: subProject.has_parking,
-          has_commercial: subProject.has_commercial,
-          address: subProject.address?.trim() || null,
-          latitude: subProject.latitude,
-          longitude: subProject.longitude,
-        })
-        .eq("id", subProject.id);
-      if (error) throw error;
-      toast.success(t("projectEditor.projectSaved"));
-    } catch (err) {
-      console.error("Error saving sub-project:", err);
-      toast.error(t("projectEditor.saveError"));
+      await persistSubProjectIfDirty({ force: true, showSuccessToast: true });
     } finally {
       setSaving(false);
     }
   };
 
   const handleBack = () => {
-    navigate(-1);
+    navigateWithViewTransition(navigate, -1);
   };
 
-  const handleSidebarSectionChange = (section: string) => {
+  const handleSidebarSectionChange = useCallback((section: string) => {
     setActiveTab(section as Tab);
-  };
+  }, []);
 
-  const subProjectType = normalizeSubProjectKind(subProject?.type);
+  const notFound = !loading && (!subProject || !projectId);
+
+  useAdminShellFullBleed(notFound);
+
+  const subProjectShellSlot = useSubProjectEditorShellSidebar({
+    activeTab,
+    onSidebarSectionChange: handleSidebarSectionChange,
+    userEmail: userProfile?.email || user?.email || "",
+    subProjectType: normalizeSubProjectKind(subProject?.type),
+  });
+
+  useRegisterAdminShellSidebar(
+    loading || notFound ? null : subProjectShellSlot,
+  );
 
   if (loading) return <LoadingProgress />;
   if (!subProject || !projectId) {
@@ -163,22 +259,11 @@ export default function SubProjectEditorPage() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen bg-background">
-      <SubProjectEditorSidebar
-        onSectionChange={handleSidebarSectionChange}
-        activeTab={activeTab}
-        userEmail={userProfile?.email || user?.email || ""}
-        subProjectType={subProjectType}
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-      />
+  const subProjectType = normalizeSubProjectKind(subProject.type);
 
-      <div
-        className={`relative flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-24 md:max-w-[calc(100vw-6rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
-      >
+  return (
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="relative flex min-h-0 flex-1 flex-col bg-background">
         <div className="flex min-h-0 flex-1 flex-col">
           {/* Sticky header */}
           <div className="sticky top-0 z-10 shrink-0 border-b bg-white">
@@ -249,6 +334,7 @@ export default function SubProjectEditorPage() {
                             prev ? { ...prev, name: e.target.value } : prev,
                           )
                         }
+                        onBlur={scheduleSubProjectAutoSave}
                       />
                     </div>
 
@@ -264,6 +350,7 @@ export default function SubProjectEditorPage() {
                             prev ? { ...prev, address: e.target.value } : prev,
                           )
                         }
+                        onBlur={scheduleSubProjectAutoSave}
                         placeholder={t("projectEditor.address")}
                       />
                     </div>
@@ -291,6 +378,7 @@ export default function SubProjectEditorPage() {
                                 : prev,
                             )
                           }
+                          onBlur={scheduleSubProjectAutoSave}
                           placeholder={t("projectEditor.latitudePlaceholder")}
                         />
                         <p className="mt-1 text-xs text-gray-500">
@@ -319,6 +407,7 @@ export default function SubProjectEditorPage() {
                                 : prev,
                             )
                           }
+                          onBlur={scheduleSubProjectAutoSave}
                           placeholder={t("projectEditor.longitudePlaceholder")}
                         />
                         <p className="mt-1 text-xs text-gray-500">
@@ -333,11 +422,12 @@ export default function SubProjectEditorPage() {
                         <Label>{t("projectEditor.projectType")}</Label>
                         <Select
                           value={subProject.type || "building"}
-                          onValueChange={(v: string) =>
+                          onValueChange={(v: string) => {
                             setSubProject((prev) =>
                               prev ? { ...prev, type: v } : prev,
-                            )
-                          }
+                            );
+                            scheduleSubProjectAutoSave();
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -371,6 +461,7 @@ export default function SubProjectEditorPage() {
                                   : prev,
                               )
                             }
+                            onBlur={scheduleSubProjectAutoSave}
                           />
                         </div>
                       )}
@@ -381,22 +472,24 @@ export default function SubProjectEditorPage() {
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={subProject.has_parking ?? false}
-                          onCheckedChange={(v) =>
+                          onCheckedChange={(v) => {
                             setSubProject((prev) =>
                               prev ? { ...prev, has_parking: v } : prev,
-                            )
-                          }
+                            );
+                            scheduleSubProjectAutoSave();
+                          }}
                         />
                         <Label>{t("projectEditor.hasParking")}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={subProject.has_commercial ?? false}
-                          onCheckedChange={(v) =>
+                          onCheckedChange={(v) => {
                             setSubProject((prev) =>
                               prev ? { ...prev, has_commercial: v } : prev,
-                            )
-                          }
+                            );
+                            scheduleSubProjectAutoSave();
+                          }}
                         />
                         <Label>{t("projectEditor.hasCommercial")}</Label>
                       </div>
@@ -422,23 +515,11 @@ export default function SubProjectEditorPage() {
             )}
 
             {activeTab === "apartments" && (
-              <>
-                <div className="mb-4 flex justify-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setImportModalOpen(true)}
-                  >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    {t("genplan.subProjects.addApartments")}
-                  </Button>
-                </div>
-                <ProjectApartmentsManager
-                  projectId={projectId}
-                  subProjectId={subProject.id}
-                  projectType={subProjectType}
-                />
-              </>
+              <ProjectApartmentsManager
+                projectId={projectId}
+                subProjectId={subProject.id}
+                projectType={subProjectType}
+              />
             )}
 
             {activeTab === "floorplan" && subProjectType !== "object" && (
@@ -464,14 +545,6 @@ export default function SubProjectEditorPage() {
           </div>
         </div>
       </div>
-
-      <SubProjectImportModal
-        open={importModalOpen}
-        onClose={() => setImportModalOpen(false)}
-        onManualFill={() => setImportModalOpen(false)}
-        projectId={projectId}
-        subProjectId={subProject.id}
-      />
     </div>
   );
 }
