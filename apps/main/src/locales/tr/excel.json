@@ -78,6 +78,7 @@
   },
   "sync": {
     "button": "Excel senkronizasyonu",
+    "buttonDesc": "Mevcut daireleri güncelleyin veya yenilerini içe aktarın",
     "dialog": {
       "title": "Daireleri Excel ile senkronize et",
       "description": "Mevcut daire verilerini bir Excel dosyası yükleyerek güncelleyin. Daireler numaraya göre eşleştirilir."

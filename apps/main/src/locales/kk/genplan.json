@@ -97,6 +97,14 @@
       "description": "Қолмен қосыңыз немесе пәтер деректерін файлдан немесе сілтемеден импорттаңыз (Excel, CSV, Google Sheets)."
     },
     "creatingBuilding": "Ғимарат жасалуда…",
-    "importingApartments": "Пәтерлерді импорттау…"
+    "importingApartments": "Пәтерлерді импорттау…",
+    "cloneTitle": "Клондық құрылыс",
+    "cloneModeEmpty": "Басынан бастап",
+    "cloneModeFromExisting": "Барын көшіріңіз",
+    "cloneSourceLabel": "Бастапқы құрылыс",
+    "cloneSourcePlaceholder": "Көшіру үшін ғимаратты таңдаңыз",
+    "cloneSuccess": "Ғимарат сәтті клондалды",
+    "cloneError": "Ғимаратты клондау қатесі",
+    "cloning": "Клондау…"
   }
 }

@@ -78,6 +78,7 @@
   },
   "sync": {
     "button": "Excel sync",
+    "buttonDesc": "Sync existing or import new apartments",
     "dialog": {
       "title": "Sync apartments via Excel",
       "description": "Update existing apartment data by uploading an Excel file. Apartments are matched by number."

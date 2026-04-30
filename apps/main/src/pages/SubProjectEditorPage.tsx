@@ -16,7 +16,7 @@ import {
   SelectValue,
   Switch,
 } from "@gridix/ui";
-import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
@@ -24,7 +24,6 @@ import ProjectApartmentsManager from "@/components/projects/ProjectApartmentsMan
 import ApartmentPhotosManager from "@/features/apartment-photos-management/ui/ApartmentPhotosManager";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import AllFieldsManager from "@/features/projectEditor/ui/AllFieldsManager";
-import { SubProjectImportModal } from "@/features/genplan/ui/SubProjectImportModal";
 import BuildingImageEditor from "@/features/visualization/buildingImageEditor/ui/BuildingImageEditor";
 import { SubProjectEditorSidebar } from "@/shared/ui/sidebar-component";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,7 +53,6 @@ export default function SubProjectEditorPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("general");
-  const [importModalOpen, setImportModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -422,23 +420,11 @@ export default function SubProjectEditorPage() {
             )}
 
             {activeTab === "apartments" && (
-              <>
-                <div className="mb-4 flex justify-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setImportModalOpen(true)}
-                  >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    {t("genplan.subProjects.addApartments")}
-                  </Button>
-                </div>
-                <ProjectApartmentsManager
-                  projectId={projectId}
-                  subProjectId={subProject.id}
-                  projectType={subProjectType}
-                />
-              </>
+              <ProjectApartmentsManager
+                projectId={projectId}
+                subProjectId={subProject.id}
+                projectType={subProjectType}
+              />
             )}
 
             {activeTab === "floorplan" && subProjectType !== "object" && (
@@ -464,14 +450,6 @@ export default function SubProjectEditorPage() {
           </div>
         </div>
       </div>
-
-      <SubProjectImportModal
-        open={importModalOpen}
-        onClose={() => setImportModalOpen(false)}
-        onManualFill={() => setImportModalOpen(false)}
-        projectId={projectId}
-        subProjectId={subProject.id}
-      />
     </div>
   );
 }

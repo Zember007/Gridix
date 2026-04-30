@@ -619,6 +619,18 @@ const ExcelApartmentSyncMapper = ({
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+        <div className="space-y-0.5">
+          <Label className="text-sm font-medium">
+            {t("excel.sync.import.allowNew")}
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            {t("excel.sync.import.allowNewDesc")}
+          </p>
+        </div>
+        <Switch checked={importNew} onCheckedChange={setImportNew} />
+      </div>
+
       <ColumnsMappingSection
         t={t}
         excelColumns={excelColumns}
@@ -1044,18 +1056,6 @@ const ExcelApartmentSyncMapper = ({
         allFields={allFields}
         columnMapping={columnMapping}
       />
-
-      <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-        <div className="space-y-0.5">
-          <Label className="text-sm font-medium">
-            {t("excel.sync.import.allowNew")}
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            {t("excel.sync.import.allowNewDesc")}
-          </p>
-        </div>
-        <Switch checked={importNew} onCheckedChange={setImportNew} />
-      </div>
 
       <ActionsBar
         t={t}

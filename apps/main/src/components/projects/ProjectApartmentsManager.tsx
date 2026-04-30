@@ -908,11 +908,16 @@ const ProjectApartmentsManager = ({
           <div className="flex w-full flex-col gap-2 sm:w-auto lg:flex-row lg:items-center">
             <Button
               variant="outline"
-              className="w-full"
+              className="h-auto w-full flex-col items-start gap-0.5 py-2"
               onClick={() => setExcelSyncDialogOpen(true)}
             >
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              {t("excel.sync.button")}
+              <span className="flex items-center gap-2 font-medium">
+                <FileSpreadsheet className="h-4 w-4 shrink-0" />
+                {t("excel.sync.button")}
+              </span>
+              <span className="pl-6 text-xs font-normal text-muted-foreground">
+                {t("excel.sync.buttonDesc")}
+              </span>
             </Button>
             {projectType !== "object" && (
               <Button
