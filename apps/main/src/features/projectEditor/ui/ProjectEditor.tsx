@@ -66,6 +66,10 @@ import { useLocation, useSearchParams } from "react-router-dom";
 import ProjectFloorsManager from "@/components/projects/ProjectFloorsManager";
 import { ProjectPriceManager } from "@/components/projects/ProjectPriceManager";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import {
+  ProjectApartmentsTabSkeleton,
+  ProjectEditorContentSkeleton,
+} from "@/features/projectEditor/ui/ProjectEditorContentSkeleton";
 import { useDefaultSubProjectBuildingScope } from "@/features/projectEditor/hooks/useDefaultSubProjectBuildingScope";
 import {
   trackOnboardingMilestone,
@@ -1196,8 +1200,12 @@ const ProjectEditor = ({
           </div>
 
           {isEditorDataLoading ? (
-            <div className="flex min-h-full items-center justify-center">
-              <LoadingProgress />
+            <div className="project_editor_content_usertour flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
+              <ProjectEditorContentSkeleton
+                activeTab={activeTab}
+                hasMasterplan={project.has_masterplan}
+                editorScopeKind={editorScopeKind}
+              />
             </div>
           ) : isRestrictedProject ? (
             <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-6 lg:py-6">
@@ -1911,8 +1919,10 @@ const ProjectEditor = ({
               {activeTab === "apartments" &&
                 !project.has_masterplan &&
                 (!defaultBuildingScopeReady ? (
-                  <div className="flex min-h-[200px] items-center justify-center">
-                    <LoadingProgress />
+                  <div className="space-y-4">
+                    <ProjectApartmentsTabSkeleton
+                      projectType={editorScopeKind}
+                    />
                   </div>
                 ) : !defaultBuildingScope ? (
                   <p className="text-sm text-destructive">
