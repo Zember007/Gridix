@@ -67,6 +67,11 @@ export interface PolygonAnnotatorProps {
   showLabels?: boolean;
   labelsById?: Record<string, string | number | null | undefined>;
   className?: string;
+  /**
+   * Color for the first click when starting a new polygon in controlled mode.
+   * If omitted, falls back to the first existing shape’s color, then default blue.
+   */
+  newPolygonColor?: string;
 }
 
 export interface PolygonAnnotatorRef {
@@ -75,6 +80,87 @@ export interface PolygonAnnotatorRef {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function parseHexColor(
+  input: string,
+): { r: number; g: number; b: number } | null {
+  const s = input.trim();
+  const m = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  const cap = m?.[1];
+  if (!cap) return null;
+  let hex = cap;
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+  return { r, g, b };
+}
+
+function rgbToHsl(r: number, g: number, b: number) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      default:
+        h = ((r - g) / d + 4) / 6;
+    }
+  }
+  return { h, s, l };
+}
+
+function hslToRgb(h: number, s: number, l: number) {
+  if (s === 0) {
+    const v = Math.round(l * 255);
+    return { r: v, g: v, b: v };
+  }
+  const hue2rgb = (p: number, q: number, t: number) => {
+    let tt = t;
+    if (tt < 0) tt += 1;
+    if (tt > 1) tt -= 1;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  return {
+    r: Math.round(clamp(hue2rgb(p, q, h + 1 / 3), 0, 1) * 255),
+    g: Math.round(clamp(hue2rgb(p, q, h), 0, 1) * 255),
+    b: Math.round(clamp(hue2rgb(p, q, h - 1 / 3), 0, 1) * 255),
+  };
+}
+
+/** Slightly brighter / more vivid same-hue hover (replaces a fixed blue highlight). */
+function hoverAccentColor(cssColor: string): string {
+  const rgb = parseHexColor(cssColor);
+  if (!rgb) return cssColor;
+  const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
+  const nextS = Math.min(1, s + 0.1);
+  const nextL = Math.min(0.92, l + 0.07);
+  const out = hslToRgb(h, nextS, nextL);
+  return `#${out.r.toString(16).padStart(2, "0")}${out.g.toString(16).padStart(2, "0")}${out.b.toString(16).padStart(2, "0")}`;
 }
 
 /**
@@ -210,6 +296,7 @@ const ControlledPolygonAnnotator = forwardRef<
       onHoverAnnotationId,
       getStyleById,
       className,
+      newPolygonColor,
     },
     ref,
   ) => {
@@ -530,7 +617,7 @@ const ControlledPolygonAnnotator = forwardRef<
 
         if (isDrawingEnabled && !currentShape) {
           const d = 2;
-          const seedColor = shapes[0]?.color || "#3b82f6";
+          const seedColor = newPolygonColor ?? shapes[0]?.color ?? "#3b82f6";
           const seedShape: Shape = {
             id: `draft-${Date.now()}`,
             type: "polygon",
@@ -594,6 +681,8 @@ const ControlledPolygonAnnotator = forwardRef<
         onClickAnnotationId,
         onCurrentShapeUpdate,
         toPercentPoint,
+        newPolygonColor,
+        shapes,
       ],
     );
 
@@ -863,13 +952,15 @@ const ControlledPolygonAnnotator = forwardRef<
                     : isPolygonHoverHighlight
                       ? Math.max(baseStrokeWidth, 3.5)
                       : baseStrokeWidth;
+                  const hoverFill = hoverAccentColor(baseFill);
+                  const hoverStroke = hoverAccentColor(baseStroke);
                   // CSS scale(viewportScale) on parent blows up SVG stroke; counter-scale for ~constant screen width.
                   const polygonStrokeWidth = logicalStrokeWidth / viewportScale;
                   return (
                     <polygon
                       key={shape.id}
                       points={pointsAttr}
-                      fill={isPolygonHoverHighlight ? "#3b82f6" : baseFill}
+                      fill={isPolygonHoverHighlight ? hoverFill : baseFill}
                       fillOpacity={
                         isDraggableHover
                           ? Math.max(baseFillOpacity, 0.45)
@@ -877,7 +968,9 @@ const ControlledPolygonAnnotator = forwardRef<
                             ? Math.max(baseFillOpacity, 0.5)
                             : baseFillOpacity
                       }
-                      stroke={isPolygonHoverHighlight ? "#3b82f6" : baseStroke}
+                      stroke={
+                        isPolygonHoverHighlight ? hoverStroke : baseStroke
+                      }
                       strokeWidth={polygonStrokeWidth}
                       strokeOpacity={1}
                       style={{
@@ -890,7 +983,7 @@ const ControlledPolygonAnnotator = forwardRef<
                                 ? "pointer"
                                 : "default",
                         transition:
-                          "fill-opacity 120ms ease, stroke-width 120ms ease",
+                          "fill 120ms ease, stroke 120ms ease, fill-opacity 120ms ease, stroke-width 120ms ease",
                       }}
                       onPointerDown={(event) => {
                         if (
@@ -1788,13 +1881,19 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         }
 
         if (isHovered) {
-          const hoverFill = hoverColorChange ? "#3b82f6" : baseFill;
-          const hoverStroke = hoverColorChange ? "#3b82f6" : baseStroke;
+          const hoverFill = hoverColorChange
+            ? hoverAccentColor(baseFill)
+            : baseFill;
+          const hoverStroke = hoverColorChange
+            ? hoverAccentColor(baseStroke)
+            : baseStroke;
           let fillOpacity = baseFillOpacity;
           if (hoverOpacityChange) {
             fillOpacity = Math.max(
               baseFillOpacity,
-              hoverColorChange ? 0.5 : baseFillOpacity + 0.2,
+              hoverColorChange
+                ? Math.max(0.5, baseFillOpacity + 0.1)
+                : baseFillOpacity + 0.2,
             );
           }
           return {

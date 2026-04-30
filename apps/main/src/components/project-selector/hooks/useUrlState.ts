@@ -3,8 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import type { ViewMode } from "../types";
 
 /** URL parameter names */
-const PARAM_VIEW = "view";
+export const PARAM_VIEW = "view";
 const PARAM_FLOOR = "floor";
+export const PARAM_FAVORITES = "favorites";
 
 const VALID_VIEW_MODES: ViewMode[] = [
   "facade",
@@ -31,6 +32,16 @@ export function parseFloor(params: URLSearchParams): number | null {
   if (raw === null || raw === "") return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
+}
+
+/** Comma-separated apartment numbers from share links (FavoritesTab). */
+export function parseFavoritesParam(params: URLSearchParams): string[] {
+  const raw = params.get(PARAM_FAVORITES);
+  if (raw == null || raw === "") return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 // ── Hook ──

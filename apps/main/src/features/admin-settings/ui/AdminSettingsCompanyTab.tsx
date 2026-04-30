@@ -25,6 +25,7 @@ export type AdminSettingsCompanyTabProps = {
     field: keyof CompanySettingsRow,
     value: string | boolean | null,
   ) => void;
+  onCompanyFieldCommit: () => void;
 
   systemDomain: string;
 
@@ -93,6 +94,7 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
           id="brand_name"
           value={props.settingsCompanyName}
           onChange={(e) => props.onBrandNameChange(e.target.value)}
+          onBlur={props.onCompanyFieldCommit}
           placeholder={props.t("adminSettings.brandNamePlaceholder")}
         />
       </div>
@@ -106,6 +108,7 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
             onChange={(e) =>
               props.onCompanyFieldChange("website", e.target.value || null)
             }
+            onBlur={props.onCompanyFieldCommit}
             placeholder={props.t("adminSettings.websitePlaceholder")}
           />
         </div>
@@ -113,9 +116,10 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
           <Label htmlFor="industry">{props.t("adminSettings.industry")}</Label>
           <Select
             value={props.companySettings.industry || ""}
-            onValueChange={(value) =>
-              props.onCompanyFieldChange("industry", value || null)
-            }
+            onValueChange={(value) => {
+              props.onCompanyFieldChange("industry", value || null);
+              props.onCompanyFieldCommit();
+            }}
           >
             <SelectTrigger id="industry">
               <SelectValue
@@ -150,6 +154,7 @@ export function AdminSettingsCompanyTab(props: AdminSettingsCompanyTabProps) {
           onChange={(e) =>
             props.onCompanyFieldChange("description", e.target.value || null)
           }
+          onBlur={props.onCompanyFieldCommit}
           placeholder={props.t("adminSettings.companyDescriptionPlaceholder")}
           rows={4}
         />

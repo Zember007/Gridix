@@ -33,8 +33,9 @@ export function GlobalAccountProfileSection({
   const {
     profileData,
     preferredLocale,
-    setPreferredLocale,
+    selectPreferredLocale,
     handleProfileFieldChange,
+    maybeSaveProfileAfterFieldEdit,
     t,
   } = api;
 
@@ -58,6 +59,9 @@ export function GlobalAccountProfileSection({
               onChange={(e) =>
                 handleProfileFieldChange("full_name", e.target.value)
               }
+              onBlur={() => {
+                void maybeSaveProfileAfterFieldEdit();
+              }}
               placeholder={t("adminSettings.fullNamePlaceholder")}
             />
           </div>
@@ -69,6 +73,9 @@ export function GlobalAccountProfileSection({
               onChange={(e) =>
                 handleProfileFieldChange("phone", e.target.value)
               }
+              onBlur={() => {
+                void maybeSaveProfileAfterFieldEdit();
+              }}
               placeholder={t("adminSettings.phonePlaceholder")}
             />
           </div>
@@ -81,7 +88,7 @@ export function GlobalAccountProfileSection({
             </Label>
             <Select
               value={preferredLocale}
-              onValueChange={(v) => setPreferredLocale(v as SupportedLocale)}
+              onValueChange={(v) => selectPreferredLocale(v as SupportedLocale)}
             >
               <SelectTrigger id="preferred_locale">
                 <SelectValue placeholder="en" />

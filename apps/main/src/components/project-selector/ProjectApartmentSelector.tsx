@@ -32,7 +32,12 @@ import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
 import { persistAgentAttribution } from "@/shared/lib/agent-attribution";
 import { useSubscriptionStatus } from "./hooks/useSubscriptionStatus";
 import { useFacadeData } from "./hooks/useFacadeData";
-import { useUrlState } from "./hooks/useUrlState";
+import {
+  useUrlState,
+  parseFavoritesParam,
+  PARAM_FAVORITES,
+  PARAM_VIEW,
+} from "./hooks/useUrlState";
 import { useSelectorUIState } from "./hooks/useSelectorUIState";
 import { SubscriptionAlert } from "./SubscriptionAlert";
 import {
@@ -102,6 +107,8 @@ interface ProjectApartmentSelectorLoadedProps {
   apartments: Apartment[];
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
   apartmentsLoaded: boolean;
+  /** Count from API payload; used to wait for `apartments` state sync before favorites URL import. */
+  fetchedApartmentCount: number;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
   firstApartmentPhotoById: Record<string, string | null>;
   rawFieldSettings: Array<Record<string, unknown>>;
@@ -161,6 +168,58 @@ const loaderBlock = (themeColor: string) => (
   </div>
 );
 
+/** Thumbnail for favorites card — same rules as ListView.getApartmentListThumbnailUrl. */
+function getApartmentListThumbnailForFavorite(
+  apartment: Apartment,
+  preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>,
+  firstApartmentPhotoById: Record<string, string | null>,
+): string | null {
+  const layoutKey =
+    apartment.type === "apartment"
+      ? apartment.rooms == 0
+        ? "studio"
+        : apartment.rooms === "free_layout"
+          ? "free_layout"
+          : `${apartment.rooms}-room`
+      : apartment.type;
+  const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+  const bound =
+    photos.find(
+      (p) => p.apartment_ids !== null && p.apartment_ids.includes(apartment.id),
+    ) ?? null;
+  if (bound) return bound.image_url;
+  return firstApartmentPhotoById[apartment.id] ?? null;
+}
+
+function digitsOnlyKey(s: string): string {
+  return s.replace(/\D/g, "");
+}
+
+/** Match share token to apartment_number (exact string, then digits-only fallback). */
+function findApartmentByShareNumber(
+  apartments: Apartment[],
+  token: string,
+  usedIds: Set<string>,
+): Apartment | undefined {
+  const t = String(token).trim();
+  if (!t) return undefined;
+
+  const exact = apartments.find(
+    (a) => !usedIds.has(a.id) && String(a.apartment_number).trim() === t,
+  );
+  if (exact) return exact;
+
+  const wantDigits = digitsOnlyKey(t);
+  if (wantDigits.length === 0) return undefined;
+
+  return apartments.find((a) => {
+    if (usedIds.has(a.id)) return false;
+    const an = String(a.apartment_number).trim();
+    const gotDigits = digitsOnlyKey(an);
+    return gotDigits.length > 0 && gotDigits === wantDigits;
+  });
+}
+
 function ProjectApartmentSelectorLoaded({
   projectId,
   isWidget,
@@ -170,6 +229,7 @@ function ProjectApartmentSelectorLoaded({
   apartments,
   setApartments,
   apartmentsLoaded,
+  fetchedApartmentCount,
   preloadedLayoutPhotosByRooms,
   firstApartmentPhotoById,
   rawFieldSettings,
@@ -181,7 +241,7 @@ function ProjectApartmentSelectorLoaded({
 }: ProjectApartmentSelectorLoadedProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -225,7 +285,10 @@ function ProjectApartmentSelectorLoaded({
     fieldSettings: rawFieldSettings,
     customFields: rawCustomFields,
   });
-  const { favoritesCount } = useFavorites(project?.id || undefined);
+  const { favoritesCount, replaceFavoritesForProject } = useFavorites(
+    project?.id || undefined,
+  );
+  const didHydrateFavoritesFromUrlRef = useRef(false);
   const { user } = useAuth();
 
   // State (viewMode & floor are synced to URL search params)
@@ -566,6 +629,89 @@ function ProjectApartmentSelectorLoaded({
     }
   }, [projectId, searchParams]);
 
+  // Import favorites from ?favorites=1,2,3 (share link) into localStorage — works in incognito.
+  useEffect(() => {
+    if (didHydrateFavoritesFromUrlRef.current) return;
+    if (!apartmentsLoaded) return;
+    const requestedNumbers = parseFavoritesParam(searchParams);
+    if (requestedNumbers.length === 0) return;
+
+    // `apartmentsLoaded` can flip true one frame before `apartments` state is filled
+    // (setState in useLayoutEffect in selector hooks). Do not import against [] then.
+    if (fetchedApartmentCount > 0 && apartments.length === 0) {
+      return;
+    }
+
+    didHydrateFavoritesFromUrlRef.current = true;
+
+    const usedIds = new Set<string>();
+    const batch: {
+      id: string;
+      project_id: string;
+      apartment_number: string;
+      rooms: number;
+      area: number;
+      price?: number;
+      status: string;
+      floor_number: number;
+      image_url?: string | null;
+    }[] = [];
+
+    if (apartments.length > 0) {
+      for (const rawNum of requestedNumbers) {
+        const normalized = String(rawNum).trim();
+        if (!normalized) continue;
+        const apt = findApartmentByShareNumber(apartments, normalized, usedIds);
+        if (!apt) continue;
+        usedIds.add(apt.id);
+        batch.push({
+          id: apt.id,
+          project_id: apt.project_id,
+          apartment_number: apt.apartment_number,
+          rooms: typeof apt.rooms === "number" ? apt.rooms : Number(apt.rooms),
+          area: apt.area,
+          price: typeof apt.price === "number" ? apt.price : 0,
+          status: apt.status,
+          floor_number: apt.floor_number,
+          image_url: getApartmentListThumbnailForFavorite(
+            apt,
+            preloadedLayoutPhotosByRooms,
+            firstApartmentPhotoById,
+          ),
+        });
+      }
+    }
+
+    replaceFavoritesForProject(project.id, batch);
+
+    // One atomic setSearchParams call: drop ?favorites and open favorites when URL had a snapshot.
+    // (Two sequential setSearchParams in the same tick would overwrite each other because react-router's
+    // updater receives the snapshot from the current render's closure.)
+    const hadFavoritesInUrl = requestedNumbers.length > 0;
+    const switchView = hadFavoritesInUrl;
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete(PARAM_FAVORITES);
+        if (switchView) {
+          next.set(PARAM_VIEW, "favorites");
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  }, [
+    apartments,
+    apartmentsLoaded,
+    fetchedApartmentCount,
+    firstApartmentPhotoById,
+    preloadedLayoutPhotosByRooms,
+    project.id,
+    replaceFavoritesForProject,
+    searchParams,
+    setSearchParams,
+  ]);
+
   const loaderFallback = loaderBlock(themeColor);
 
   if (!project) {
@@ -830,6 +976,7 @@ const ProjectApartmentSelectorWithSubProject = ({
     apartments,
     setApartments,
     apartmentsLoaded,
+    fetchedApartmentCount,
     preloadedLayoutPhotosByRooms,
     firstApartmentPhotoById,
     fieldSettings: rawFieldSettings,
@@ -861,6 +1008,7 @@ const ProjectApartmentSelectorWithSubProject = ({
           apartments={apartments}
           setApartments={setApartments}
           apartmentsLoaded={apartmentsLoaded}
+          fetchedApartmentCount={fetchedApartmentCount}
           preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
           firstApartmentPhotoById={firstApartmentPhotoById}
           rawFieldSettings={rawFieldSettings}
@@ -891,6 +1039,7 @@ const ProjectApartmentSelectorDefault = ({
     apartments,
     setApartments,
     apartmentsLoaded,
+    fetchedApartmentCount,
     preloadedLayoutPhotosByRooms,
     firstApartmentPhotoById,
     fieldSettings: rawFieldSettings,
@@ -918,6 +1067,7 @@ const ProjectApartmentSelectorDefault = ({
           apartments={apartments}
           setApartments={setApartments}
           apartmentsLoaded={apartmentsLoaded}
+          fetchedApartmentCount={fetchedApartmentCount}
           preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
           firstApartmentPhotoById={firstApartmentPhotoById}
           rawFieldSettings={rawFieldSettings}

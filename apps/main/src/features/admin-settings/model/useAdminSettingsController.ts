@@ -37,6 +37,7 @@ export const useAdminSettingsController = ({
     handleExportBackup,
     handleResetSettings,
     handleSave,
+    scheduleCompanyAutoSave,
   } = useAdminSettingsActions({
     userProfile,
     t,
@@ -64,5 +65,6 @@ export const useAdminSettingsController = ({
     handleExportBackup,
     handleResetSettings,
     handleSave,
+    scheduleCompanyAutoSave,
   };
 };
