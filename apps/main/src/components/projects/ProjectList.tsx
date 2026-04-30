@@ -64,6 +64,7 @@ import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
 import { DeveloperConstructionTab } from "./DeveloperConstructionTab";
 import { JoinDemoButton } from "@/features/demo-cabinet";
+import { adminThemeClasses } from "@/shared/lib/admin-theme-config";
 import {
   type PendingVideoUpload,
   VideoUploadDialog,
@@ -1795,7 +1796,7 @@ const ProjectList = ({
     return (
       <div className="space-y-5">
         <header className="flex flex-col gap-4 border-b border-border/70 bg-background/95 pb-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Skeleton className="h-8 w-[12rem] sm:w-[16rem]" />
@@ -1807,11 +1808,11 @@ const ProjectList = ({
               </div>
             </div>
             {headerActionSlots > 0 ? (
-              <div className="flex w-full shrink-0 flex-col gap-2 sm:flex-row md:w-auto">
+              <div className="flex w-full shrink-0 flex-col gap-2 sm:flex-row lg:w-auto">
                 {Array.from({ length: headerActionSlots }).map((_, i) => (
                   <Skeleton
                     key={i}
-                    className="h-10 w-full sm:min-w-[10rem] sm:flex-1 md:h-10 md:w-44 md:flex-none"
+                    className="h-10 w-full sm:min-w-[10rem] sm:flex-1 lg:h-10 lg:w-44 lg:flex-none"
                   />
                 ))}
               </div>
@@ -1984,10 +1985,17 @@ const ProjectList = ({
                 )}
                 {!isCrmMode && onCreateNew && (
                   <Button
+                    type="button"
                     onClick={onCreateNew}
-                    className="create_project_usertour w-full bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] hover:bg-[var(--admin-primary-hover)] md:w-auto"
+                    className={cn(
+                      adminThemeClasses.primary,
+                      adminThemeClasses.primaryHover,
+                      adminThemeClasses.primaryActive,
+                      "create_project_usertour shadow-sm",
+                      "w-auto max-[425px]:min-h-10 max-[425px]:w-full",
+                    )}
                   >
-                    <Plus className="mr-2 h-5 w-5" />
+                    <Plus className="size-5 shrink-0" />
                     {t("projectList.createNew")}
                   </Button>
                 )}

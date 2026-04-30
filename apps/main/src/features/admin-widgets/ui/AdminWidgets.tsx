@@ -1,3 +1,4 @@
+import { PageHeader } from "@gridix/ui";
 import { Spinner } from "@/shared/ui/Spinner";
 import { useAdminWidgetConfig } from "@/features/admin-widgets/model/useAdminWidgetConfig";
 import { WidgetSettingsCard } from "@/features/admin-widgets/ui/WidgetSettingsCard";
@@ -57,10 +58,10 @@ const AdminWidgets = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">{t("adminWidgets.title")}</h1>
-        <p className="text-gray-600">{t("adminWidgets.description")}</p>
-      </div>
+      <PageHeader
+        title={t("adminWidgets.title")}
+        description={t("adminWidgets.description")}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <WidgetSettingsCard

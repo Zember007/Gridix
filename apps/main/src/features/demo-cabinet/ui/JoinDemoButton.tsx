@@ -5,12 +5,14 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { supabase } from "@/shared/api/supabase";
 import { Button } from "@gridix/ui";
-import { ADMIN_THEME } from "@gridix/utils/lib";
+import { ADMIN_THEME, cn } from "@gridix/utils/lib";
 
 const WORKSPACE_STORAGE_KEY = "gridix_active_workspace_id:developer";
 
 interface JoinDemoButtonProps {
   isCollapsed?: boolean;
+  /** Extra classes for the `inline` variant `<Button>`. */
+  className?: string;
   /**
    * `sidebar` (default) — renders inside the dark sidebar with a border-bottom divider.
    * `instructions` — full-width button for dark content cards.
@@ -27,6 +29,7 @@ interface JoinDemoButtonProps {
  */
 export const JoinDemoButton = ({
   isCollapsed = false,
+  className,
   variant = "sidebar",
 }: JoinDemoButtonProps) => {
   const { t } = useLanguage();
@@ -72,34 +75,25 @@ export const JoinDemoButton = ({
 
   if (variant === "inline") {
     return (
-      <div>
+      <div className="min-w-0 max-[425px]:w-full">
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="default"
           onClick={handleJoin}
           disabled={loading}
           loading={loading}
-          style={{
-            borderColor: ADMIN_THEME.sidebarBorder,
-            color: ADMIN_THEME.textPrimary,
-            backgroundColor: "transparent",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-          }}
+          className={cn(
+            "w-auto max-[425px]:min-h-10 max-[425px]:w-full",
+            className,
+          )}
         >
-          <Eye />
+          <Eye className="size-4 shrink-0" />
           {label}
         </Button>
-        {error && (
-          <p className="mt-1 text-xs" style={{ color: ADMIN_THEME.error }}>
-            {error}
-          </p>
-        )}
+        {error ? (
+          <p className="mt-1 text-xs text-destructive">{error}</p>
+        ) : null}
       </div>
     );
   }

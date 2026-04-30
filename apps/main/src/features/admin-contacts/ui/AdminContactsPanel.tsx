@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Building2, FileDown, Search, User } from "lucide-react";
-import { Input, Button } from "@gridix/ui";
+import { Input, Button, PageHeader } from "@gridix/ui";
 import { useContactsList } from "../hooks/useContactsList";
 import { exportContactsXLSX } from "../lib/export-contacts-xlsx";
 
@@ -13,26 +13,22 @@ export function AdminContactsPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">
-            {t("admin.contactsPage.title")}
-          </h2>
-          <p className="text-sm text-slate-500">
-            {t("admin.contactsPage.description")}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportExcel}
-          disabled={isLoading || contacts.length === 0}
-          className="shrink-0 gap-2"
-        >
-          <FileDown size={16} />
-          {t("admin.contactsPage.exportBtn")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("admin.contactsPage.title")}
+        description={t("admin.contactsPage.description")}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={isLoading || contacts.length === 0}
+            className="shrink-0 gap-2"
+          >
+            <FileDown size={16} />
+            {t("admin.contactsPage.exportBtn")}
+          </Button>
+        }
+      />
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-100 px-3 py-3 sm:px-6 sm:py-4 md:flex-row md:items-center">
