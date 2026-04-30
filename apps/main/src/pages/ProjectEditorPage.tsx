@@ -4,6 +4,10 @@ import ProjectEditor from "@/components/projects/ProjectEditor";
 import { ProjectEditorDataProvider } from "@/features/projectEditor/context/ProjectEditorDataContext";
 import { useAdminAccess } from "@/entities/admin-access";
 import { LoadingProgress } from "@/shared/ui/LoadingProgress";
+import {
+  navigateWithViewTransition,
+  runWithViewTransition,
+} from "@/shared/lib/runWithViewTransition";
 
 interface ProjectEditorPageProps {
   useId?: boolean;
@@ -74,15 +78,15 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
       fromState !== location.pathname &&
       !isProjectEditorPath(fromState)
     ) {
-      navigate(fromState);
+      navigateWithViewTransition(navigate, fromState);
       return;
     }
     const safeTarget = getSafeBackTarget(location.pathname);
     if (safeTarget && !isProjectEditorPath(safeTarget)) {
-      navigate(safeTarget);
+      navigateWithViewTransition(navigate, safeTarget);
       return;
     }
-    navigateWithLanguage("/admin");
+    runWithViewTransition(() => navigateWithLanguage("/admin"));
   };
 
   return (

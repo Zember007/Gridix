@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdminAccess } from "@/entities/admin-access";
 import {
@@ -13,6 +12,7 @@ import type {
   Project,
   ProjectCRMSettings,
 } from "../model/types";
+import { CrmProjectConfigListSkeleton } from "@/features/admin-integrations/ui/CrmProjectConfigListSkeleton";
 import { AmoCRMProjectRow } from "./AmoCRMProjectRow";
 
 export const AmoCRMProjectList = ({
@@ -95,11 +95,7 @@ export const AmoCRMProjectList = ({
   }, [adminAccess?.proProjects, connection?.id, open, refreshAllSettings]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <CrmProjectConfigListSkeleton />;
   }
 
   if (!projectIds.length) {

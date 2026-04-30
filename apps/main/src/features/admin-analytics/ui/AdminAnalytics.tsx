@@ -8,7 +8,14 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { Button, Card, CardContent, DataState, Skeleton } from "@gridix/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  DataState,
+  PageHeader,
+  Skeleton,
+} from "@gridix/ui";
 import { cn } from "@gridix/utils/lib";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -36,10 +43,10 @@ const KPI_SKELETONS = ["views", "leads", "conversion", "apartments"];
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="space-y-3 border-b border-[var(--admin-border-light)] pb-5">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-full max-w-xl" />
-        <Skeleton className="h-11 w-full" />
+      <PageHeader title={<Skeleton className="h-8 w-48" aria-hidden />} />
+      <div className="space-y-3">
+        <Skeleton className="h-4 max-w-xl" aria-hidden />
+        <Skeleton className="h-11 w-full max-w-xl" aria-hidden />
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {KPI_SKELETONS.map((item) => (
@@ -182,14 +189,10 @@ export const AdminAnalytics = () => {
 
     return (
       <div className="space-y-6">
-        <div className="border-b border-[var(--admin-border-light)] pb-5">
-          <h1 className="text-2xl font-semibold leading-8 text-[var(--admin-text-primary)]">
-            {t("admin.analytics.title")}
-          </h1>
-          <p className="mt-1 max-w-[72ch] text-sm leading-6 text-[var(--admin-text-muted)]">
-            {t("admin.analyticsDescription")}
-          </p>
-        </div>
+        <PageHeader
+          title={t("admin.analytics.title")}
+          description={t("admin.analyticsDescription")}
+        />
         <DataState
           variant="error"
           icon={AlertCircle}
@@ -202,23 +205,19 @@ export const AdminAnalytics = () => {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4 border-b border-[var(--admin-border-light)] pb-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold leading-8 text-[var(--admin-text-primary)]">
-              {t("admin.analytics.title")}
-            </h1>
-            <p className="mt-1 max-w-[72ch] text-sm leading-6 text-[var(--admin-text-muted)]">
-              {t("admin.analyticsDescription")}
-            </p>
-          </div>
+      <PageHeader
+        title={t("admin.analytics.title")}
+        description={t("admin.analyticsDescription")}
+        actions={
           <div className="rounded-lg border border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] px-3 py-2 text-sm text-[var(--admin-text-secondary)]">
             <span className="font-medium text-[var(--admin-text-primary)]">
               {summaryLabel}
             </span>
           </div>
-        </div>
+        }
+      />
 
+      <div className="space-y-4">
         <div className="bg-[var(--admin-background-secondary)]/80 flex flex-col gap-3 rounded-lg border border-[var(--admin-border-light)] p-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-2 px-1">
             <span className="text-sm font-medium text-[var(--admin-text-primary)]">

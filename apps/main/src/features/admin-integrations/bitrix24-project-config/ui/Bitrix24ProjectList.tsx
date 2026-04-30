@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useUserProjects } from "@gridix/utils";
-import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import type { Bitrix24ProjectListProps, Project } from "../model/types";
+import { CrmProjectConfigListSkeleton } from "@/features/admin-integrations/ui/CrmProjectConfigListSkeleton";
 import { Bitrix24ProjectRow } from "./Bitrix24ProjectRow";
 
 export const Bitrix24ProjectList = ({
@@ -45,13 +45,8 @@ export const Bitrix24ProjectList = ({
   }, [open, connection?.id, ownerUserId, refetchProjects]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <CrmProjectConfigListSkeleton />;
   }
-
   if (!projects.length) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">

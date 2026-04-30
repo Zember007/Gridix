@@ -35,7 +35,7 @@ export const PageHeader = React.forwardRef<HTMLElement, PageHeaderProps>(
       )}
       {...props}
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 space-y-1">
           {eyebrow ? (
             <div className="text-muted-foreground text-xs font-medium">
@@ -55,7 +55,15 @@ export const PageHeader = React.forwardRef<HTMLElement, PageHeaderProps>(
           ) : null}
         </div>
         {actions ? (
-          <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>
+          <div
+            className={cn(
+              "flex min-w-0 shrink-0 gap-2",
+              "max-[425px]:w-full max-[425px]:flex-col max-[425px]:items-stretch",
+              "min-[426px]:flex-row min-[426px]:flex-nowrap min-[426px]:items-center",
+            )}
+          >
+            {actions}
+          </div>
         ) : null}
       </div>
       {children}

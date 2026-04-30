@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PartnerScopeProvider } from "./PartnerScopeContext";
 import { usePartner } from "./queries/usePartner";
-import { Button, useToast } from "@gridix/ui";
+import { Button, PageHeader, useToast } from "@gridix/ui";
 import { Wallet } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { PartnerAccountSection } from "./ui/PartnerAccountSection";
@@ -276,109 +276,101 @@ const PartnerProgramInner: React.FC<
     );
   }
 
+  const accountTabButton =
+    navigationMode === "tabs" ? (
+      <button
+        type="button"
+        onClick={() => setActiveTab("account")}
+        className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition-all ${
+          activeTab === "account"
+            ? "border-slate-900 bg-slate-900 text-white"
+            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+        } partners_account_tab_usertour`}
+      >
+        <span
+          className={`rounded-full p-1 ${
+            activeTab === "account"
+              ? "bg-slate-700 text-white"
+              : "bg-green-100 text-green-600"
+          }`}
+        >
+          <Wallet size={14} />
+        </span>
+        <span>{t("partners.account")}</span>
+      </button>
+    ) : null;
+
   return (
     <div className="space-y-6">
-      {/* Header + tabs (only in tabs mode) */}
-      <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-6">
-          <div className="min-w-0">
-            <h1 className="truncate text-lg leading-tight font-bold text-slate-900 md:text-xl">
-              {t("partners.title")}
-            </h1>
-            <p className="text-xs font-medium text-slate-500 md:text-sm">
-              {t("partners.subtitle")}
-            </p>
-          </div>
+      <PageHeader
+        title={t("partners.title")}
+        description={t("partners.subtitle")}
+        {...(navigationMode === "tabs" ? { actions: accountTabButton } : {})}
+      />
 
-          {navigationMode === "tabs" && (
-            <div className="hidden items-center border-l border-slate-200 pl-6 xl:flex">
-              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-sm">
-                <TabButton
-                  label={t("partners.overview")}
-                  isActive={activeTab === "overview"}
-                  onClick={() => setActiveTab("overview")}
-                  className="partners_overview_tab_usertour"
-                />
-                <TabButton
-                  label={t("partners.referrals")}
-                  isActive={activeTab === "referrals"}
-                  onClick={() => setActiveTab("referrals")}
-                  className="partners_referrals_tab_usertour"
-                />
-                <TabButton
-                  label={t("partners.clients")}
-                  isActive={activeTab === "clients"}
-                  onClick={() => setActiveTab("clients")}
-                  className="partners_clients_tab_usertour"
-                />
-                <TabButton
-                  label={t("partners.instructions")}
-                  isActive={activeTab === "instructions"}
-                  onClick={() => setActiveTab("instructions")}
-                  className="partners_instructions_tab_usertour"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {navigationMode === "tabs" && (
-          <button
-            onClick={() => setActiveTab("account")}
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition-all ${
-              activeTab === "account"
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-            } partners_account_tab_usertour`}
-          >
-            <span
-              className={`rounded-full p-1 ${
-                activeTab === "account"
-                  ? "bg-slate-700 text-white"
-                  : "bg-green-100 text-green-600"
-              }`}
-            >
-              <Wallet size={14} />
-            </span>
-            <span>{t("partners.account")}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Mobile tabs (only in tabs mode) */}
       {navigationMode === "tabs" && (
-        <div className="xl:hidden">
-          <div className="flex overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-1">
-            <TabButton
-              label={t("partners.overview")}
-              isActive={activeTab === "overview"}
-              onClick={() => setActiveTab("overview")}
-              className="partners_overview_tab_usertour"
-            />
-            <TabButton
-              label={t("partners.referrals")}
-              isActive={activeTab === "referrals"}
-              onClick={() => setActiveTab("referrals")}
-              className="partners_referrals_tab_usertour"
-            />
-            <TabButton
-              label={t("partners.clients")}
-              isActive={activeTab === "clients"}
-              onClick={() => setActiveTab("clients")}
-              className="partners_clients_tab_usertour"
-            />
-            <TabButton
-              label={t("partners.instructions")}
-              isActive={activeTab === "instructions"}
-              onClick={() => setActiveTab("instructions")}
-              className="partners_instructions_tab_usertour"
-            />
+        <div className="space-y-3">
+          <div className="hidden xl:flex">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-sm">
+              <TabButton
+                label={t("partners.overview")}
+                isActive={activeTab === "overview"}
+                onClick={() => setActiveTab("overview")}
+                className="partners_overview_tab_usertour"
+              />
+              <TabButton
+                label={t("partners.referrals")}
+                isActive={activeTab === "referrals"}
+                onClick={() => setActiveTab("referrals")}
+                className="partners_referrals_tab_usertour"
+              />
+              <TabButton
+                label={t("partners.clients")}
+                isActive={activeTab === "clients"}
+                onClick={() => setActiveTab("clients")}
+                className="partners_clients_tab_usertour"
+              />
+              <TabButton
+                label={t("partners.instructions")}
+                isActive={activeTab === "instructions"}
+                onClick={() => setActiveTab("instructions")}
+                className="partners_instructions_tab_usertour"
+              />
+            </div>
+          </div>
+          <div className="xl:hidden">
+            <div className="flex overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-1">
+              <TabButton
+                label={t("partners.overview")}
+                isActive={activeTab === "overview"}
+                onClick={() => setActiveTab("overview")}
+                className="partners_overview_tab_usertour"
+              />
+              <TabButton
+                label={t("partners.referrals")}
+                isActive={activeTab === "referrals"}
+                onClick={() => setActiveTab("referrals")}
+                className="partners_referrals_tab_usertour"
+              />
+              <TabButton
+                label={t("partners.clients")}
+                isActive={activeTab === "clients"}
+                onClick={() => setActiveTab("clients")}
+                className="partners_clients_tab_usertour"
+              />
+              <TabButton
+                label={t("partners.instructions")}
+                isActive={activeTab === "instructions"}
+                onClick={() => setActiveTab("instructions")}
+                className="partners_instructions_tab_usertour"
+              />
+            </div>
           </div>
         </div>
       )}
 
       {/* Content sections */}
-      <div className={navigationMode === "tabs" ? "mt-4" : ""}>
+      <div>
         {activeTab === "account" && (
           <div className="space-y-6">
             <PartnerAccountSection readOnly={readOnly} />
