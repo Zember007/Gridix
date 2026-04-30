@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { supabase } from "@/shared/api/supabase";
+import { Button } from "@gridix/ui";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 
 const WORKSPACE_STORAGE_KEY = "gridix_active_workspace_id:developer";
@@ -72,11 +73,13 @@ export const JoinDemoButton = ({
   if (variant === "inline") {
     return (
       <div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={handleJoin}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+          loading={loading}
           style={{
             borderColor: ADMIN_THEME.sidebarBorder,
             color: ADMIN_THEME.textPrimary,
@@ -89,9 +92,9 @@ export const JoinDemoButton = ({
             e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
-          <Eye className="h-4 w-4 flex-shrink-0" />
+          <Eye />
           {label}
-        </button>
+        </Button>
         {error && (
           <p className="mt-1 text-xs" style={{ color: ADMIN_THEME.error }}>
             {error}
