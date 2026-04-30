@@ -1,11 +1,12 @@
 import { lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth";
+import { AdminShellLayout } from "@/app/layouts/AdminShellLayout";
+import ProjectEditorPage from "@/pages/ProjectEditorPage";
+import SubProjectEditorPage from "@/pages/SubProjectEditorPage";
 
-// Lazy load admin pages
+// Lazy load admin pages (editors eager so shell sidebar slot registers without Suspense gap)
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
-const ProjectEditorPage = lazy(() => import("@/pages/ProjectEditorPage"));
-const SubProjectEditorPage = lazy(() => import("@/pages/SubProjectEditorPage"));
 
 const AdminAnalyticsPage = lazy(() => import("@/pages/AdminAnalyticsPage"));
 const AmoCrmLeadLinkPage = lazy(() => import("@/pages/AmoCrmLeadLinkPage"));
@@ -13,15 +14,21 @@ const AmoCrmLeadLinkPage = lazy(() => import("@/pages/AmoCrmLeadLinkPage"));
 export function AdminRoutes() {
   return (
     <Routes>
-      {/* Admin main page */}
+      {/* Admin dashboard + editors: single shell sidebar */}
       <Route
-        index
         element={
           <ProtectedRoute>
-            <AdminPage />
+            <AdminShellLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<AdminPage />} />
+        <Route path="project/:projectSlug" element={<ProjectEditorPage />} />
+        <Route
+          path="project/:projectSlug/sub/:subProjectSlug"
+          element={<SubProjectEditorPage />}
+        />
+      </Route>
 
       {/* Admin analytics page without sidebar */}
       <Route
@@ -29,26 +36,6 @@ export function AdminRoutes() {
         element={
           <ProtectedRoute>
             <AdminAnalyticsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Project editor */}
-      <Route
-        path="project/:projectSlug"
-        element={
-          <ProtectedRoute>
-            <ProjectEditorPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Sub-project editor */}
-      <Route
-        path="project/:projectSlug/sub/:subProjectSlug"
-        element={
-          <ProtectedRoute>
-            <SubProjectEditorPage />
           </ProtectedRoute>
         }
       />

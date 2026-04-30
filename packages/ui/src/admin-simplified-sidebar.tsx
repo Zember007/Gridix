@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useLanguage, useWorkspace } from "@gridix/utils/react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
@@ -351,6 +352,16 @@ export interface SimplifiedSidebarNavItem {
 }
 const SUPPORT_PORTAL_ID = "gridix-support-portal-root";
 
+/** Stable signature when primary nav structure (ids + child ids) changes — drives list cross-fade. */
+function getPrimaryNavSignature(items: SimplifiedSidebarNavItem[]) {
+  return items
+    .map((item) => {
+      const childPart = item.children?.map((c) => c.id).join(",") ?? "";
+      return `${item.id}:${childPart}`;
+    })
+    .join("|");
+}
+
 const SupportFloatingButton = memo(function SupportFloatingButton() {
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
@@ -460,6 +471,7 @@ export function SimplifiedSidebar({
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
+  const reduceMotion = useReducedMotion();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const languageRef = useRef(language);
@@ -479,6 +491,11 @@ export function SimplifiedSidebar({
     () => navItems.filter((item) => item.id !== "settings"),
     [navItems],
   );
+  const primaryNavSignature = useMemo(
+    () => getPrimaryNavSignature(primaryNavItems),
+    [primaryNavItems],
+  );
+  const navAnimationKey = `${primaryNavSignature}:${isNavLoading ? "loading" : "ready"}`;
 
   useEffect(() => {
     languageRef.current = language;
@@ -617,47 +634,80 @@ export function SimplifiedSidebar({
 
       {/* Navigation */}
       <div
-        className={`no-scrollbar flex-1 overflow-y-auto px-2 py-2${isNavLoading ? "pointer-events-none opacity-0" : ""}`}
+        className={`no-scrollbar flex-1 overflow-y-auto px-2 py-2 transition-opacity duration-200 motion-reduce:transition-none ${isNavLoading ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
-        <nav className="space-y-1">
-          {primaryNavItems.map((item) => {
-            const hasChildren = item.children && item.children.length > 0;
-            const isExpanded = expandedItems.includes(item.id);
-            const isChildActive =
-              hasChildren &&
-              item.children?.some((child) => child.id === activeSection);
+        <AnimatePresence initial mode="wait">
+          <motion.nav
+            key={navAnimationKey}
+            className="space-y-1 overflow-hidden"
+            initial={
+              reduceMotion
+                ? { opacity: 0 }
+                : { opacity: 0, transform: "translateY(-12px)" }
+            }
+            animate={{
+              opacity: 1,
+              ...(reduceMotion ? {} : { transform: "translateY(0px)" }),
+            }}
+            exit={
+              reduceMotion
+                ? { opacity: 0 }
+                : { opacity: 0, transform: "translateY(-18px)" }
+            }
+            transition={
+              reduceMotion
+                ? { duration: 0.12 }
+                : {
+                    opacity: {
+                      duration: 0.2,
+                      ease: [0.23, 1, 0.32, 1],
+                    },
+                    transform: {
+                      duration: 0.22,
+                      ease: [0.23, 1, 0.32, 1],
+                    },
+                  }
+            }
+          >
+            {primaryNavItems.map((item) => {
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedItems.includes(item.id);
+              const isChildActive =
+                hasChildren &&
+                item.children?.some((child) => child.id === activeSection);
 
-            return (
-              <SidebarButton
-                key={item.id}
-                id={item.id}
-                icon={item.icon}
-                badge={item.badge}
-                label={item.label}
-                isActive={
-                  hasChildren
-                    ? Boolean(isChildActive || activeSection === item.id)
-                    : activeSection === item.id
-                }
-                isCollapsed={isCollapsed}
-                onClick={
-                  hasChildren
-                    ? () => toggleExpand(item.id)
-                    : () => handleSectionChange(item.id)
-                }
-                {...(hasChildren
-                  ? {
-                      items: item.children!,
-                      activeItemId: activeSection,
-                      onItemClick: (id: string) => handleSectionChange(id),
-                      isExpanded,
-                      onToggleExpand: () => toggleExpand(item.id),
-                    }
-                  : {})}
-              />
-            );
-          })}
-        </nav>
+              return (
+                <SidebarButton
+                  key={item.id}
+                  id={item.id}
+                  icon={item.icon}
+                  badge={item.badge}
+                  label={item.label}
+                  isActive={
+                    hasChildren
+                      ? Boolean(isChildActive || activeSection === item.id)
+                      : activeSection === item.id
+                  }
+                  isCollapsed={isCollapsed}
+                  onClick={
+                    hasChildren
+                      ? () => toggleExpand(item.id)
+                      : () => handleSectionChange(item.id)
+                  }
+                  {...(hasChildren
+                    ? {
+                        items: item.children!,
+                        activeItemId: activeSection,
+                        onItemClick: (id: string) => handleSectionChange(id),
+                        isExpanded,
+                        onToggleExpand: () => toggleExpand(item.id),
+                      }
+                    : {})}
+                />
+              );
+            })}
+          </motion.nav>
+        </AnimatePresence>
       </div>
 
       {/* Pinned Settings (always visible) */}
@@ -745,12 +795,14 @@ export function SimplifiedSidebar({
   return (
     <>
       <aside
-        className={`sidebar_usertour fixed top-0 flex h-screen flex-col overflow-hidden transition-all duration-300 ${
+        className={`sidebar_usertour fixed inset-y-0 start-0 z-40 flex h-svh max-h-[100dvh] min-h-0 flex-col overflow-hidden transition-[width] duration-300 motion-reduce:transition-none ${
           isCollapsed ? "w-24" : "w-64"
         }`}
         style={{
           backgroundColor: ADMIN_THEME.sidebarBackground,
           borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}`,
+          // Snapshot pairing for SPA View Trans transitions (dashboard <-> editors)
+          viewTransitionName: "gridix-admin-sidebar",
         }}
       >
         {sidebarContent}

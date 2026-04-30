@@ -1,5 +1,6 @@
 import React from "react";
 import { DollarSign, Handshake, TrendingUp, Users } from "lucide-react";
+import { Skeleton } from "@gridix/ui";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
@@ -9,10 +10,33 @@ type Props = {
     totalSalesVolume: number;
     totalPendingCommission: number;
   };
+  loading?: boolean;
 };
 
-export const AgencyPartnersStatsCards: React.FC<Props> = ({ stats }) => {
+export const AgencyPartnersStatsCards: React.FC<Props> = ({
+  stats,
+  loading = false,
+}) => {
   const { t } = useLanguage();
+
+  if (loading) {
+    return (
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+          >
+            <Skeleton className="h-14 w-14 shrink-0 rounded-lg" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-7 w-12" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

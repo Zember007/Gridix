@@ -38,6 +38,14 @@
   scrollbar-width: none;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(gridix-admin-sidebar),
+  ::view-transition-old(gridix-admin-sidebar),
+  ::view-transition-new(gridix-admin-sidebar) {
+    animation-duration: 1ms !important;
+  }
+}
+
 /* Quill Editor Overrides */
 .ql-toolbar {
   border-top: none !important;

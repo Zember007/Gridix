@@ -32,6 +32,8 @@ export interface BuildingPolygonWorkspaceProps {
   polygonAnnotatorProps: Omit<PolygonAnnotatorProps, "ref">;
   hoverPopup: ReactNode;
   guidedOverlay: ReactNode;
+  /** Renders beside the canvas title row (typically a settings trigger). */
+  canvasCornerActions?: ReactNode;
 }
 
 export function BuildingPolygonWorkspace({
@@ -50,6 +52,7 @@ export function BuildingPolygonWorkspace({
   polygonAnnotatorProps,
   hoverPopup,
   guidedOverlay,
+  canvasCornerActions,
 }: BuildingPolygonWorkspaceProps) {
   return (
     <Card>
@@ -72,9 +75,14 @@ export function BuildingPolygonWorkspace({
           onMouseMove={updateMousePos}
           onMouseLeave={clearHoveredAnnotation}
         >
-          <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-sm font-medium">{canvasTitle}</h4>
-            {showEditingToolbar && editingToolbar}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h4 className="min-w-0 flex-1 text-sm font-medium">
+              {canvasTitle}
+            </h4>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {canvasCornerActions}
+              {showEditingToolbar ? editingToolbar : null}
+            </div>
           </div>
 
           <PolygonAnnotator

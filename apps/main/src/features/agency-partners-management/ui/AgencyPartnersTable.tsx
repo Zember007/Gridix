@@ -5,6 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Skeleton,
 } from "@gridix/ui";
 import type { AgencyPartner, PartnerFilter } from "@/entities/agency-partner";
 import { PartnerStatusBadge } from "@/entities/agency-partner";
@@ -26,6 +27,7 @@ type Props = {
   ) => Promise<void>;
   isManagerMode: boolean;
   readOnly?: boolean;
+  loading?: boolean;
 };
 
 export const AgencyPartnersTable: React.FC<Props> = ({
@@ -39,8 +41,68 @@ export const AgencyPartnersTable: React.FC<Props> = ({
   updatePartnerStatus,
   isManagerMode,
   readOnly = false,
+  loading = false,
 }) => {
   const { t } = useLanguage();
+
+  if (loading) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-6 py-4">{t("partners.table.agent")}</th>
+                <th className="px-6 py-4">{t("partners.table.status")}</th>
+                <th className="px-6 py-4 text-center">
+                  {t("partners.table.rate")}
+                </th>
+                <th className="px-6 py-4 text-right">
+                  {t("partners.table.leads")}
+                </th>
+                <th className="px-6 py-4 text-right">
+                  {t("partners.table.balance")}
+                </th>
+                {!readOnly && <th className="w-12 px-6 py-4" />}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+                      <div className="min-w-0 space-y-2">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-3 w-48 max-w-full" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <Skeleton className="mx-auto h-7 w-12" />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Skeleton className="ml-auto h-4 w-8" />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Skeleton className="ml-auto h-4 w-16" />
+                  </td>
+                  {!readOnly && (
+                    <td className="px-6 py-4 text-center">
+                      <Skeleton className="mx-auto h-8 w-8 rounded-lg" />
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
 
   if (partners.length === 0) {
     return (

@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@gridix/ui";
 import { Switch } from "@gridix/ui";
+import { Skeleton } from "@gridix/ui";
 import { Settings, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -142,9 +143,7 @@ export const Bitrix24ProjectRow = ({
           </span>
           <div className="flex items-center gap-2">
             {loadingData ? (
-              <span className="animate-pulse text-[10px] text-muted-foreground">
-                Checking...
-              </span>
+              <Skeleton className="h-3 w-24 rounded-md" aria-hidden />
             ) : isConnected ? (
               <span className="text-[10px] font-medium text-green-600">
                 Active
@@ -187,8 +186,12 @@ export const Bitrix24ProjectRow = ({
             </DialogHeader>
 
             {loadingData ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid gap-4 py-4 text-left">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <Skeleton className="h-3 w-[min(100%,280px)]" />
               </div>
             ) : (
               <div className="grid gap-4 py-4 text-left">

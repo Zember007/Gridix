@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bitrix24ProjectList } from "@/features/admin-integrations/bitrix24-project-config";
+import { CrmConnectionCardSkeleton } from "@/features/admin-integrations/ui/CrmConnectionCardSkeleton";
 import { Button, Input } from "@gridix/ui";
 import {
   Card,
@@ -182,9 +183,7 @@ export const Bitrix24Connection = () => {
   } = useBitrix24Connection();
 
   if (loading) {
-    return (
-      <div className="flex h-full animate-pulse items-center justify-center rounded-xl bg-muted/50" />
-    );
+    return <CrmConnectionCardSkeleton barClass="bg-[#2fc6f6]" />;
   }
 
   return (
