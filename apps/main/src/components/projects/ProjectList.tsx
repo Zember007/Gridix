@@ -48,7 +48,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
+import { ADMIN_THEME, cn, getAdminThemeVariables } from "@gridix/utils/lib";
 import {
   Project,
   useWorkspaceProjects,
@@ -116,7 +116,6 @@ const ProjectList = ({
     null,
   );
   const [drawerLoading, setDrawerLoading] = useState(false);
-  const [shouldRenderLeadsStats, setShouldRenderLeadsStats] = useState(false);
   const [projectPendingDeletion, setProjectPendingDeletion] =
     useState<Project | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
@@ -132,37 +131,6 @@ const ProjectList = ({
     Object.entries(themeVariables).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
-  }, []);
-
-  // Defer leads stats to idle time so expensive leads query
-  // does not block first meaningful render of project cards.
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let idleId: number | undefined;
-
-    const enableLeadsStats = () => setShouldRenderLeadsStats(true);
-
-    if (
-      typeof window !== "undefined" &&
-      typeof window.requestIdleCallback === "function"
-    ) {
-      idleId = window.requestIdleCallback(enableLeadsStats, { timeout: 1500 });
-    } else {
-      timeoutId = setTimeout(enableLeadsStats, 600);
-    }
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (
-        idleId !== undefined &&
-        typeof window !== "undefined" &&
-        typeof window.cancelIdleCallback === "function"
-      ) {
-        window.cancelIdleCallback(idleId);
-      }
-    };
   }, []);
 
   // Удаляем старую функцию loadProjects, так как теперь используется хук
@@ -1816,13 +1784,79 @@ const ProjectList = ({
   };
 
   if (loading) {
+    const headerActionSlots = isCrmMode
+      ? 0
+      : adminAccess?.isDemoWorkspace
+        ? 1
+        : 2;
+
+    const cardActionSlots = isCrmMode ? 1 : isManagerMode ? 2 : 3;
+
     return (
-      <div className="space-y-4 p-4 sm:p-6">
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-5 w-full max-w-xl" />
+      <div className="space-y-5">
+        <header className="flex flex-col gap-4 border-b border-border/70 bg-background/95 pb-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Skeleton className="h-8 w-[12rem] sm:w-[16rem]" />
+                <Skeleton className="h-6 w-24 shrink-0 rounded-full" />
+              </div>
+              <div className="max-w-[72ch] space-y-1.5">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
+              </div>
+            </div>
+            {headerActionSlots > 0 ? (
+              <div className="flex w-full shrink-0 flex-col gap-2 sm:flex-row md:w-auto">
+                {Array.from({ length: headerActionSlots }).map((_, i) => (
+                  <Skeleton
+                    key={i}
+                    className="h-10 w-full sm:min-w-[10rem] sm:flex-1 md:h-10 md:w-44 md:flex-none"
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </header>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} className="h-72 rounded-lg" />
+            <Card key={index} className="overflow-hidden">
+              <CardHeader className="px-4 pb-4 pt-4 md:px-6 md:pb-4 md:pt-6">
+                <Skeleton className="h-7 w-[85%]" />
+                <Skeleton className="mt-2 h-4 w-full" />
+                <Skeleton className="mt-1 h-4 w-2/3" />
+              </CardHeader>
+              <CardContent className="space-y-4 px-4 pb-4 pt-0 md:px-6 md:pb-6">
+                <Skeleton className="aspect-video w-full rounded-lg" />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <Skeleton className="h-6 w-28 rounded-md" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <div className="flex min-h-6 items-center gap-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-5 w-9 rounded-md" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  {cardActionSlots >= 1 ? (
+                    <Skeleton
+                      className={cn(
+                        "h-9 shrink-0 rounded-md",
+                        cardActionSlots === 1 ? "w-full" : "flex-1",
+                      )}
+                    />
+                  ) : null}
+                  {cardActionSlots >= 2 ? (
+                    <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                  ) : null}
+                  {cardActionSlots >= 3 ? (
+                    <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -2042,11 +2076,7 @@ const ProjectList = ({
                           </div>
                         )}
 
-                        {shouldRenderLeadsStats ? (
-                          <LeadsStats projectId={project.id} />
-                        ) : (
-                          <div className="h-5" />
-                        )}
+                        <LeadsStats projectId={project.id} />
                       </div>
 
                       <div className="flex items-center gap-2 pt-2">
