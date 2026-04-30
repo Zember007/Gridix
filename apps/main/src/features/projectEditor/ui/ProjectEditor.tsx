@@ -1967,7 +1967,7 @@ const ProjectEditor = ({
                 bootstrapProject?.access_status === "active" ? (
                   <Suspense fallback={null}>
                     <GenplanEditorTab
-                      projectId={project.id}
+                      projectId={!isNew ? project.id || projectId : project.id}
                       onMasterplanToggled={(active) =>
                         setProject((prev) => ({
                           ...prev,

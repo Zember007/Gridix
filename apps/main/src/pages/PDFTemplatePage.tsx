@@ -8,6 +8,7 @@ import {
 import { Language } from "@gridix/utils/lib";
 import { Loader } from "@gridix/ui";
 import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { Apartment } from "@/entities/apartment/model/types";
 import { Badge } from "@gridix/ui";
 import type { Tables } from "@gridix/types/database";
@@ -30,6 +31,38 @@ interface PdfFieldSetting {
   is_custom: boolean;
   sort_order: number;
   field_label_translations?: Partial<Record<Language, string>>;
+}
+
+type PdfAspectMode = "wide" | "square" | "portrait" | "tall";
+
+interface PdfPageMetrics {
+  aspectRatio: number;
+  mode: PdfAspectMode;
+}
+
+function readPositiveSearchNumber(params: URLSearchParams, key: string) {
+  const raw = params.get(key);
+  if (!raw) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function getPdfPageMetrics(): PdfPageMetrics {
+  if (typeof window === "undefined") {
+    return { aspectRatio: 210 / 297, mode: "portrait" };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const widthPt = readPositiveSearchNumber(params, "pdfWidthPt");
+  const heightPt = readPositiveSearchNumber(params, "pdfHeightPt");
+  const explicitAspect = readPositiveSearchNumber(params, "pdfAspectRatio");
+  const aspectRatio =
+    explicitAspect ?? (widthPt && heightPt ? widthPt / heightPt : 210 / 297);
+
+  if (aspectRatio >= 1.18) return { aspectRatio, mode: "wide" };
+  if (aspectRatio >= 0.88) return { aspectRatio, mode: "square" };
+  if (aspectRatio <= 0.62) return { aspectRatio, mode: "tall" };
+  return { aspectRatio, mode: "portrait" };
 }
 
 const PDFTemplatePage = ({
@@ -335,12 +368,76 @@ const PDFTemplatePage = ({
       pdfCurrency,
     );
 
+  const pdfMetrics = getPdfPageMetrics();
+  const isWidePdf = pdfMetrics.mode === "wide";
+  const isSquarePdf = pdfMetrics.mode === "square";
+  const isTallPdf = pdfMetrics.mode === "tall";
+  const pdfStyle = {
+    "--pdf-page-padding": isWidePdf
+      ? "3.6vw 4.4vw"
+      : isSquarePdf
+        ? "5vw"
+        : isTallPdf
+          ? "5.2vw 4.4vw"
+          : "4.6vw",
+    "--pdf-gap": isWidePdf
+      ? "clamp(10px, 1.6vh, 18px)"
+      : "clamp(12px, 1.8vh, 22px)",
+    "--pdf-column-gap": isWidePdf
+      ? "clamp(18px, 3vw, 42px)"
+      : "clamp(14px, 2.4vw, 28px)",
+    "--pdf-photo-height": isWidePdf
+      ? "clamp(120px, 23vh, 245px)"
+      : isSquarePdf
+        ? "clamp(120px, 20vh, 210px)"
+        : "clamp(120px, 18vh, 250px)",
+    "--pdf-plan-height": isWidePdf
+      ? "clamp(160px, 34vh, 360px)"
+      : isTallPdf
+        ? "clamp(150px, 24vh, 320px)"
+        : "clamp(150px, 28vh, 330px)",
+  } as CSSProperties;
+  const shellClassName = [
+    "mx-auto flex min-h-screen w-full flex-col gap-[var(--pdf-gap)] p-[var(--pdf-page-padding)]",
+    isWidePdf ? "max-w-none" : "max-w-[min(100%,920px)]",
+  ].join(" ");
+  const headerClassName = [
+    "flex gap-[var(--pdf-column-gap)]",
+    isTallPdf ? "flex-col items-start" : "items-center justify-between",
+  ].join(" ");
+  const heroClassName = [
+    "rounded-[32px] bg-gray-50 px-8 py-4",
+    isWidePdf ? "px-10" : "",
+  ].join(" ");
+  const heroInnerClassName = [
+    "flex gap-[var(--pdf-column-gap)]",
+    isTallPdf
+      ? "flex-col items-start"
+      : "flex-wrap items-center justify-between",
+  ].join(" ");
+  const fieldsGridClassName = [
+    "grid gap-x-[var(--pdf-column-gap)] gap-y-1",
+    isWidePdf ? "grid-cols-3" : "grid-cols-2",
+  ].join(" ");
+  const hasPhotos = photos.length > 0;
+  const hasFloorPlan = Boolean(floorPlan);
+  const mediaGridClassName = [
+    "grid gap-[var(--pdf-column-gap)]",
+    isWidePdf && hasPhotos && hasFloorPlan
+      ? "grid-cols-[1.15fr_0.85fr]"
+      : "grid-cols-1",
+  ].join(" ");
+  const photosGridClassName = [
+    "grid gap-4",
+    isTallPdf ? "grid-cols-1" : "grid-cols-3",
+  ].join(" ");
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#fbfaf8] text-gray-900" style={pdfStyle}>
       {/* PDF Template Content */}
-      <div className="mx-auto flex max-w-4xl flex-col gap-3 p-8">
+      <div className={shellClassName}>
         {/* Header Section */}
-        <div className="flex items-center justify-between">
+        <div className={headerClassName}>
           <div className="flex items-center gap-3">
             {companyLogoUrl && (
               <img
@@ -353,7 +450,7 @@ const PDFTemplatePage = ({
               {companyName || "Company"}
             </span>
           </div>
-          <div className="flex items-center gap-8 text-right">
+          <div className="flex items-center gap-6 text-right">
             <h2 className="text-xl font-semibold text-gray-900">
               {project.name}
             </h2>
@@ -368,9 +465,9 @@ const PDFTemplatePage = ({
         </div>
 
         {/* Main Apartment Info Card */}
-        <div className="rounded-[40px] bg-gray-50 p-2 px-8">
-          <div className="flex items-center justify-between gap-8">
-            <div className="flex-1">
+        <div className={heroClassName}>
+          <div className={heroInnerClassName}>
+            <div className="min-w-[220px] flex-1">
               <h2 className="mb-2 text-xl font-semibold text-gray-900">
                 {apartment.rooms == 0
                   ? t("apartment.studio")
@@ -387,7 +484,7 @@ const PDFTemplatePage = ({
                   ` • ${apartment.floor_number} ${t("apartment.floor")}`}
               </p>
             </div>
-            <div className="text-center">
+            <div className={isTallPdf ? "text-left" : "text-center"}>
               <div className="mb-2 text-xl font-semibold text-gray-900">
                 {apartment.price && priceVisible
                   ? formatConvertedPdfPrice(apartment.price)
@@ -434,7 +531,7 @@ const PDFTemplatePage = ({
                 ? "Object details"
                 : t("apartment.details")}
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className={fieldsGridClassName}>
               {getVisibleFields().map((field) => {
                 let value: unknown = null;
                 if (field.is_custom) {
@@ -501,38 +598,41 @@ const PDFTemplatePage = ({
           </>
         )}
 
-        {/* Photos Section */}
-        {photos.length > 0 && (
-          <>
-            <h3 className="text-xl font-semibold text-gray-900">
-              {t("pdf.photos")}
-            </h3>
-            <div className="grid grid-cols-3 gap-6">
-              {photos.map((photo) => (
-                <div key={photo.id} className="relative">
-                  <img
-                    src={photo.image_url}
-                    alt={t("pdf.apartmentPhoto")}
-                    className="max-h-[250px] rounded-lg border border-gray-200 object-cover"
-                  />
+        {/* Media Section */}
+        {(hasPhotos || hasFloorPlan) && (
+          <div className={mediaGridClassName}>
+            {hasPhotos && (
+              <section className="min-w-0">
+                <h3 className="mb-3 text-xl font-semibold text-gray-900">
+                  {t("pdf.photos")}
+                </h3>
+                <div className={photosGridClassName}>
+                  {photos.map((photo) => (
+                    <div key={photo.id} className="relative min-w-0">
+                      <img
+                        src={photo.image_url}
+                        alt={t("pdf.apartmentPhoto")}
+                        className="h-[var(--pdf-photo-height)] w-full rounded-lg border border-gray-200 object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </>
-        )}
+              </section>
+            )}
 
-        {/* Floor Plan Section */}
-        {floorPlan && (
-          <>
-            <h3 className="text-xl font-semibold text-gray-900">
-              {t("pdf.floorPlan")}
-            </h3>
-            <img
-              src={floorPlan.image_url}
-              alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
-              className="mx-auto h-full max-h-[300px] w-auto"
-            />
-          </>
+            {floorPlan && (
+              <section className="min-w-0">
+                <h3 className="mb-3 text-xl font-semibold text-gray-900">
+                  {t("pdf.floorPlan")}
+                </h3>
+                <img
+                  src={floorPlan.image_url}
+                  alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
+                  className="mx-auto h-[var(--pdf-plan-height)] max-w-full rounded-lg object-contain"
+                />
+              </section>
+            )}
+          </div>
         )}
       </div>
     </div>

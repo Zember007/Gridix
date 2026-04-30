@@ -64,15 +64,20 @@ export default function GenplanEditorTab({
 
   const load = useCallback(
     async (showLoader = true) => {
+      const id = projectId.trim();
+      if (!id) {
+        if (showLoader) setLoading(false);
+        return;
+      }
       if (showLoader) setLoading(true);
       try {
         const [sps, mpData, projectRes] = await Promise.all([
-          listSubProjects(projectId),
-          loadMasterplanEditor(projectId),
+          listSubProjects(id),
+          loadMasterplanEditor(id),
           supabase
             .from("projects")
             .select("has_masterplan")
-            .eq("id", projectId)
+            .eq("id", id)
             .maybeSingle(),
         ]);
         setSubProjects(sps);

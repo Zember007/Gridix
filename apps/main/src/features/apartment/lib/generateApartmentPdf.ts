@@ -1,6 +1,6 @@
 import type { Apartment } from "@/entities/apartment/model/types";
 import type { Project } from "@/entities/project/queries/useProjects";
-import { generateApartmentPDF } from "@gridix/utils/lib";
+import { supabase } from "@/shared/api/supabase";
 
 interface GenerateApartmentPdfParams {
   apartment: Apartment;
@@ -10,28 +10,51 @@ interface GenerateApartmentPdfParams {
   subProjectSlug?: string | null;
 }
 
+const FUNCTION_NAME = "project-selector";
+
+function downloadPdfBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function getFileNameFromResponse(response?: Response): string | null {
+  const contentDisposition = response?.headers.get("Content-Disposition");
+  const match = contentDisposition?.match(/filename="([^"]+)"/);
+  return match?.[1] ?? null;
+}
+
 export async function generateApartmentPdf({
   apartment,
   project,
   language,
   subProjectSlug,
 }: GenerateApartmentPdfParams): Promise<void> {
-  const projectSlug = project.slug || `id/${project.id}`;
-  const apartmentNumber = encodeURIComponent(
-    String(apartment.apartment_number ?? ""),
+  const { data, error, response } = await supabase.functions.invoke<Blob>(
+    FUNCTION_NAME,
+    {
+      body: {
+        action: "generate-apartment-pdf",
+        apartment,
+        project,
+        language,
+        ...(subProjectSlug ? { subProjectSlug } : {}),
+      },
+    },
   );
-  const serverDomain = import.meta.env.VITE_SERVER_DOMAIN;
-  const apiUrl = import.meta.env.VITE_API_URL || "";
-  const subSeg =
-    subProjectSlug != null && subProjectSlug !== ""
-      ? `p/${encodeURIComponent(subProjectSlug)}/`
-      : "";
-  const pdfUrl = `https://${serverDomain}/${language}/project/${projectSlug}/${subSeg}apartment/${apartmentNumber}/pdf`;
 
-  await generateApartmentPDF({
-    apartment,
-    pdfUrl,
-    pdf_main: project.pdf_presentation_url || undefined,
-    apiUrl,
-  });
+  if (error) throw error;
+  if (!(data instanceof Blob)) {
+    throw new Error("PDF generation returned an invalid response");
+  }
+
+  const fileName =
+    getFileNameFromResponse(response) ??
+    `apartment_${apartment.apartment_number ?? "apartment"}_details.pdf`;
+  downloadPdfBlob(data, fileName);
 }
