@@ -599,6 +599,12 @@ const ApartmentDetailsPage = ({
     }
   };
 
+  /** Price block when status is not available — matches badge colors */
+  const getUnavailableListingAccentColor = (status: string) => {
+    const { sold, reserved } = getProjectColors();
+    return status === "reserved" ? reserved : sold;
+  };
+
   const getFieldLabel = (field: {
     field_label: string;
     field_label_translations?: Partial<Record<Language, string>>;
@@ -880,8 +886,13 @@ const ApartmentDetailsPage = ({
                     : t("common.priceOnRequest")}
                 </div>
               ) : (
-                <div className="text-shadow mb-1 font-poppins text-3xl font-bold leading-[1] text-[red]">
-                  {t("apartment.sold")}
+                <div
+                  className="text-shadow mb-1 font-poppins text-3xl font-bold leading-[1]"
+                  style={{
+                    color: getUnavailableListingAccentColor(apartment.status),
+                  }}
+                >
+                  {getStatusLabel(apartment.status)}
                 </div>
               )}
             </div>
@@ -1203,8 +1214,15 @@ const ApartmentDetailsPage = ({
                             )}
                           </>
                         ) : (
-                          <div className="text-shadow mb-1 font-poppins text-4xl font-bold leading-[1] text-[red]">
-                            {t("apartment.sold")}
+                          <div
+                            className="text-shadow mb-1 font-poppins text-4xl font-bold leading-[1]"
+                            style={{
+                              color: getUnavailableListingAccentColor(
+                                apartment.status,
+                              ),
+                            }}
+                          >
+                            {getStatusLabel(apartment.status)}
                           </div>
                         )}
                       </div>
