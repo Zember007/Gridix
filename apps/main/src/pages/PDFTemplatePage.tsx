@@ -372,268 +372,318 @@ const PDFTemplatePage = ({
   const isWidePdf = pdfMetrics.mode === "wide";
   const isSquarePdf = pdfMetrics.mode === "square";
   const isTallPdf = pdfMetrics.mode === "tall";
+  const hasPhotos = photos.length > 0;
+  const hasFloorPlan = Boolean(floorPlan);
+  const hasMedia = hasPhotos || hasFloorPlan;
+  const useWideSplit = isWidePdf && hasMedia;
+  const visibleFields = getVisibleFields();
   const pdfStyle = {
     "--pdf-page-padding": isWidePdf
-      ? "3.6vw 4.4vw"
+      ? "clamp(18px, 3.2vw, 38px) clamp(24px, 4vw, 52px)"
       : isSquarePdf
-        ? "5vw"
+        ? "clamp(24px, 4.4vw, 46px)"
         : isTallPdf
-          ? "5.2vw 4.4vw"
-          : "4.6vw",
+          ? "clamp(20px, 4.4vw, 42px) clamp(18px, 4vw, 34px)"
+          : "clamp(28px, 4.6vw, 54px)",
     "--pdf-gap": isWidePdf
-      ? "clamp(10px, 1.6vh, 18px)"
-      : "clamp(12px, 1.8vh, 22px)",
-    "--pdf-column-gap": isWidePdf
-      ? "clamp(18px, 3vw, 42px)"
-      : "clamp(14px, 2.4vw, 28px)",
-    "--pdf-photo-height": isWidePdf
-      ? "clamp(120px, 23vh, 245px)"
+      ? "clamp(8px, 1.4vh, 16px)"
       : isSquarePdf
-        ? "clamp(120px, 20vh, 210px)"
-        : "clamp(120px, 18vh, 250px)",
+        ? "clamp(10px, 1.5vh, 18px)"
+        : "clamp(12px, 1.7vh, 22px)",
+    "--pdf-column-gap": isWidePdf
+      ? "clamp(20px, 3vw, 46px)"
+      : "clamp(14px, 2.4vw, 28px)",
+    "--pdf-card-padding-x": isWidePdf
+      ? "clamp(20px, 2.6vw, 36px)"
+      : "clamp(20px, 4vw, 32px)",
+    "--pdf-card-padding-y": isWidePdf
+      ? "clamp(14px, 2vh, 22px)"
+      : "clamp(14px, 2.2vh, 22px)",
+    "--pdf-title-size": isWidePdf
+      ? "clamp(18px, 2.1vw, 24px)"
+      : "clamp(19px, 2.6vw, 25px)",
+    "--pdf-heading-size": isWidePdf
+      ? "clamp(15px, 1.8vw, 20px)"
+      : "clamp(17px, 2.3vw, 22px)",
+    "--pdf-body-size": isWidePdf ? "clamp(12px, 1.35vw, 15px)" : "14px",
+    "--pdf-image-gap": isWidePdf
+      ? "clamp(8px, 1.2vw, 14px)"
+      : "clamp(10px, 1.8vw, 16px)",
+    "--pdf-photo-height": isWidePdf
+      ? "clamp(92px, 18vh, 178px)"
+      : isSquarePdf
+        ? "clamp(96px, 17vh, 170px)"
+        : isTallPdf
+          ? "clamp(68px, 8.6vh, 118px)"
+          : "clamp(110px, 16vh, 190px)",
     "--pdf-plan-height": isWidePdf
-      ? "clamp(160px, 34vh, 360px)"
-      : isTallPdf
-        ? "clamp(150px, 24vh, 320px)"
-        : "clamp(150px, 28vh, 330px)",
+      ? "clamp(190px, 44vh, 380px)"
+      : isSquarePdf
+        ? "clamp(170px, 25vh, 260px)"
+        : isTallPdf
+          ? "clamp(120px, 18vh, 240px)"
+          : "clamp(180px, 26vh, 320px)",
   } as CSSProperties;
   const shellClassName = [
-    "mx-auto flex min-h-screen w-full flex-col gap-[var(--pdf-gap)] p-[var(--pdf-page-padding)]",
-    isWidePdf ? "max-w-none" : "max-w-[min(100%,920px)]",
+    "mx-auto flex h-screen w-full flex-col gap-[var(--pdf-gap)] overflow-hidden p-[var(--pdf-page-padding)]",
+    useWideSplit ? "max-w-none" : "max-w-[min(100%,920px)]",
   ].join(" ");
+  const pageContentClassName = [
+    "min-h-0 flex-1",
+    useWideSplit
+      ? "grid grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] items-stretch gap-[var(--pdf-column-gap)]"
+      : "flex flex-col gap-[var(--pdf-gap)]",
+  ].join(" ");
+  const infoColumnClassName =
+    "flex min-h-0 min-w-0 flex-col gap-[var(--pdf-gap)]";
   const headerClassName = [
-    "flex gap-[var(--pdf-column-gap)]",
-    isTallPdf ? "flex-col items-start" : "items-center justify-between",
+    "flex shrink-0 gap-[var(--pdf-column-gap)]",
+    useWideSplit || isTallPdf
+      ? "flex-col items-start"
+      : "items-center justify-between",
+  ].join(" ");
+  const headerProjectClassName = [
+    "flex min-w-0 items-center gap-4",
+    useWideSplit || isTallPdf ? "text-left" : "text-right",
   ].join(" ");
   const heroClassName = [
-    "rounded-[32px] bg-gray-50 px-8 py-4",
-    isWidePdf ? "px-10" : "",
+    "shrink-0 rounded-[24px] bg-gray-50 px-[var(--pdf-card-padding-x)] py-[var(--pdf-card-padding-y)]",
   ].join(" ");
   const heroInnerClassName = [
     "flex gap-[var(--pdf-column-gap)]",
-    isTallPdf
+    useWideSplit || isTallPdf
       ? "flex-col items-start"
       : "flex-wrap items-center justify-between",
   ].join(" ");
   const fieldsGridClassName = [
-    "grid gap-x-[var(--pdf-column-gap)] gap-y-1",
-    isWidePdf ? "grid-cols-3" : "grid-cols-2",
+    "grid min-h-0 gap-x-[var(--pdf-column-gap)] gap-y-1",
+    useWideSplit || isTallPdf ? "grid-cols-1" : "grid-cols-2",
   ].join(" ");
-  const hasPhotos = photos.length > 0;
-  const hasFloorPlan = Boolean(floorPlan);
   const mediaGridClassName = [
-    "grid gap-[var(--pdf-column-gap)]",
-    isWidePdf && hasPhotos && hasFloorPlan
-      ? "grid-cols-[1.15fr_0.85fr]"
-      : "grid-cols-1",
+    "grid min-h-0 min-w-0 gap-[var(--pdf-gap)]",
+    useWideSplit
+      ? "content-center"
+      : isSquarePdf && hasPhotos && hasFloorPlan
+        ? "grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] items-start"
+        : "grid-cols-1",
   ].join(" ");
   const photosGridClassName = [
-    "grid gap-4",
+    "grid gap-[var(--pdf-image-gap)]",
     isTallPdf ? "grid-cols-1" : "grid-cols-3",
   ].join(" ");
+  const mediaSectionTitleClassName =
+    "mb-2 text-[var(--pdf-heading-size)] font-semibold text-gray-900";
+  const sectionTitleClassName =
+    "shrink-0 text-[var(--pdf-heading-size)] font-semibold text-gray-900";
+
+  const headerSection = (
+    <div className={headerClassName}>
+      <div className="flex min-w-0 items-center gap-3">
+        {companyLogoUrl && (
+          <img
+            src={companyLogoUrl}
+            alt="Company logo"
+            className="h-10 w-10 shrink-0 rounded-md object-contain"
+          />
+        )}
+        <span className="truncate text-xl font-semibold text-gray-900">
+          {companyName || "Company"}
+        </span>
+      </div>
+      <div className={headerProjectClassName}>
+        <h2 className="min-w-0 text-xl font-semibold text-gray-900">
+          {project.name}
+        </h2>
+        <div className="flex aspect-square w-14 shrink-0 items-center justify-center bg-white">
+          <img
+            src={qrCodeUrl}
+            alt="Telegram QR Code"
+            className="h-full w-full object-contain"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const summarySection = (
+    <div className={heroClassName}>
+      <div className={heroInnerClassName}>
+        <div className="min-w-0 flex-1">
+          <h2 className="mb-2 font-semibold text-[var(--pdf-title-size)] text-gray-900">
+            {apartment.rooms == 0
+              ? t("apartment.studio")
+              : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}{" "}
+            {apartment.area} {t("apartment.sqm")}
+          </h2>
+          <p className="text-[var(--pdf-body-size)] text-gray-600">
+            {apartment.type === "apartment"
+              ? subProjectEntityKind === "object"
+                ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
+                : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
+              : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
+            {floorVisible &&
+              ` • ${apartment.floor_number} ${t("apartment.floor")}`}
+          </p>
+        </div>
+        <div
+          className={useWideSplit || isTallPdf ? "text-left" : "text-center"}
+        >
+          <div className="mb-2 font-semibold text-[var(--pdf-heading-size)] text-gray-900">
+            {apartment.price && priceVisible
+              ? formatConvertedPdfPrice(apartment.price)
+              : t("common.priceOnRequest")}
+          </div>
+          {showMonthlyInstallmentEstimate &&
+            apartment.price != null &&
+            installmentMonths != null && (
+              <div className="mb-3 text-[var(--pdf-body-size)] text-gray-600">
+                {t("project.from")}{" "}
+                {formatConvertedPdfPrice(
+                  Math.round(apartment.price / installmentMonths),
+                )}{" "}
+                / {t("installment.perMonth")}
+              </div>
+            )}
+        </div>
+        {showInstallmentTermsBlock && (
+          <div className="flex flex-col items-start">
+            <Badge className="mb-1 rounded-[10px] bg-green-500 px-[16px] text-sm font-medium text-white hover:bg-green-600">
+              {t("installment.low")}
+            </Badge>
+            {installmentMonths != null && installmentMonths > 0 && (
+              <div className="text-sm text-gray-600">
+                {t("installment.period")} {installmentMonths}{" "}
+                {t("installment.months")}
+              </div>
+            )}
+            {downPaymentPercent != null && (
+              <div className="text-sm text-gray-600">
+                {t("installment.downPaymentFrom")} {downPaymentPercent}%
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const detailsSection = visibleFields.length > 0 && (
+    <section className="flex min-h-0 flex-col gap-2">
+      <h3 className={sectionTitleClassName}>
+        {subProjectEntityKind === "object"
+          ? "Object details"
+          : t("apartment.details")}
+      </h3>
+      <div className={fieldsGridClassName}>
+        {visibleFields.map((field) => {
+          let value: unknown = null;
+          if (field.is_custom) {
+            value = getCustomFieldValue(apartment, field.field_name);
+          } else {
+            switch (field.field_name) {
+              case "rooms":
+                if (typeof apartment.rooms === "number") {
+                  value = apartment.rooms;
+                }
+                break;
+              case "area":
+                value = apartment.area;
+                break;
+              case "price":
+                value = apartment.price;
+                break;
+              case "status":
+                value = apartment.status;
+                break;
+              case "floor":
+                value = apartment.floor_number;
+                break;
+              case "number":
+                value = apartment.apartment_number;
+                break;
+              default:
+                value = null;
+            }
+          }
+
+          if (value === null) return null;
+
+          return (
+            <div
+              key={field.id}
+              className="flex min-w-0 items-center justify-between gap-3 border-b border-gray-100 py-1"
+            >
+              <span className="min-w-0 truncate text-sm text-gray-600">
+                {field.is_custom
+                  ? getFieldLabel(field)
+                  : t(`project.${field.field_name}`)}
+              </span>
+              <span className="min-w-0 truncate text-right text-sm font-medium text-gray-900">
+                {field.field_name === "price"
+                  ? formatPriceWithCurrencySpaces(
+                      convertPrice(
+                        value as number,
+                        project?.currency || null,
+                        pdfCurrency,
+                      ),
+                      pdfCurrency,
+                    )
+                  : formatFieldValue(value, field.field_type, field.field_name)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+
+  const mediaSection = hasMedia && (
+    <div className={mediaGridClassName}>
+      {hasPhotos && (
+        <section className="min-w-0">
+          <h3 className={mediaSectionTitleClassName}>{t("pdf.photos")}</h3>
+          <div className={photosGridClassName}>
+            {photos.map((photo) => (
+              <div key={photo.id} className="relative min-w-0">
+                <img
+                  src={photo.image_url}
+                  alt={t("pdf.apartmentPhoto")}
+                  className="h-[var(--pdf-photo-height)] w-full rounded-lg border border-gray-200 object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {floorPlan && (
+        <section className="min-w-0">
+          <h3 className={mediaSectionTitleClassName}>{t("pdf.floorPlan")}</h3>
+          <img
+            src={floorPlan.image_url}
+            alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
+            className="mx-auto h-[var(--pdf-plan-height)] max-w-full rounded-lg object-contain"
+          />
+        </section>
+      )}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#fbfaf8] text-gray-900" style={pdfStyle}>
+    <div
+      className="h-screen overflow-hidden bg-[#fbfaf8] text-gray-900"
+      style={pdfStyle}
+    >
       {/* PDF Template Content */}
       <div className={shellClassName}>
-        {/* Header Section */}
-        <div className={headerClassName}>
-          <div className="flex items-center gap-3">
-            {companyLogoUrl && (
-              <img
-                src={companyLogoUrl}
-                alt="Company logo"
-                className="h-10 w-10 rounded-md object-contain"
-              />
-            )}
-            <span className="text-xl font-semibold text-gray-900">
-              {companyName || "Company"}
-            </span>
+        <div className={pageContentClassName}>
+          <div className={infoColumnClassName}>
+            {headerSection}
+            {summarySection}
+            {detailsSection}
           </div>
-          <div className="flex items-center gap-6 text-right">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {project.name}
-            </h2>
-            <div className="flex aspect-square w-14 items-center justify-center bg-white">
-              <img
-                src={qrCodeUrl}
-                alt="Telegram QR Code"
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </div>
+          {mediaSection}
         </div>
-
-        {/* Main Apartment Info Card */}
-        <div className={heroClassName}>
-          <div className={heroInnerClassName}>
-            <div className="min-w-[220px] flex-1">
-              <h2 className="mb-2 text-xl font-semibold text-gray-900">
-                {apartment.rooms == 0
-                  ? t("apartment.studio")
-                  : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t("apartment.rooms") : ""}`}{" "}
-                {apartment.area} {t("apartment.sqm")}
-              </h2>
-              <p className="text-gray-600">
-                {apartment.type === "apartment"
-                  ? subProjectEntityKind === "object"
-                    ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
-                    : `${t("apartment.apartment")} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`
-                  : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ""}`}
-                {floorVisible &&
-                  ` • ${apartment.floor_number} ${t("apartment.floor")}`}
-              </p>
-            </div>
-            <div className={isTallPdf ? "text-left" : "text-center"}>
-              <div className="mb-2 text-xl font-semibold text-gray-900">
-                {apartment.price && priceVisible
-                  ? formatConvertedPdfPrice(apartment.price)
-                  : t("common.priceOnRequest")}
-              </div>
-              {showMonthlyInstallmentEstimate &&
-                apartment.price != null &&
-                installmentMonths != null && (
-                  <div className="mb-3 text-lg text-gray-600">
-                    {t("project.from")}{" "}
-                    {formatConvertedPdfPrice(
-                      Math.round(apartment.price / installmentMonths),
-                    )}{" "}
-                    / {t("installment.perMonth")}
-                  </div>
-                )}
-            </div>
-            {showInstallmentTermsBlock && (
-              <div className="flex flex-col items-start">
-                <Badge className="mb-1 rounded-[10px] bg-green-500 px-[16px] text-sm font-medium text-white hover:bg-green-600">
-                  {t("installment.low")}
-                </Badge>
-                {installmentMonths != null && installmentMonths > 0 && (
-                  <div className="text-sm text-gray-600">
-                    {t("installment.period")} {installmentMonths}{" "}
-                    {t("installment.months")}
-                  </div>
-                )}
-                {downPaymentPercent != null && (
-                  <div className="text-sm text-gray-600">
-                    {t("installment.downPaymentFrom")} {downPaymentPercent}%
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Additional Information */}
-        {getVisibleFields().length > 0 && (
-          <>
-            <h3 className="text-xl font-semibold text-gray-900">
-              {subProjectEntityKind === "object"
-                ? "Object details"
-                : t("apartment.details")}
-            </h3>
-            <div className={fieldsGridClassName}>
-              {getVisibleFields().map((field) => {
-                let value: unknown = null;
-                if (field.is_custom) {
-                  value = getCustomFieldValue(apartment, field.field_name);
-                } else {
-                  switch (field.field_name) {
-                    case "rooms":
-                      if (typeof apartment.rooms === "number") {
-                        value = apartment.rooms;
-                      }
-                      break;
-                    case "area":
-                      value = apartment.area;
-                      break;
-                    case "price":
-                      value = apartment.price;
-                      break;
-                    case "status":
-                      value = apartment.status;
-                      break;
-                    case "floor":
-                      value = apartment.floor_number;
-                      break;
-                    case "number":
-                      value = apartment.apartment_number;
-                      break;
-                    default:
-                      value = null;
-                  }
-                }
-
-                if (value === null) return null;
-
-                return (
-                  <div
-                    key={field.id}
-                    className="flex items-center justify-between border-b border-gray-100 py-1"
-                  >
-                    <span className="text-sm text-gray-600">
-                      {field.is_custom
-                        ? getFieldLabel(field)
-                        : t(`project.${field.field_name}`)}
-                    </span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {field.field_name === "price"
-                        ? formatPriceWithCurrencySpaces(
-                            convertPrice(
-                              value as number,
-                              project?.currency || null,
-                              pdfCurrency,
-                            ),
-                            pdfCurrency,
-                          )
-                        : formatFieldValue(
-                            value,
-                            field.field_type,
-                            field.field_name,
-                          )}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {/* Media Section */}
-        {(hasPhotos || hasFloorPlan) && (
-          <div className={mediaGridClassName}>
-            {hasPhotos && (
-              <section className="min-w-0">
-                <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                  {t("pdf.photos")}
-                </h3>
-                <div className={photosGridClassName}>
-                  {photos.map((photo) => (
-                    <div key={photo.id} className="relative min-w-0">
-                      <img
-                        src={photo.image_url}
-                        alt={t("pdf.apartmentPhoto")}
-                        className="h-[var(--pdf-photo-height)] w-full rounded-lg border border-gray-200 object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {floorPlan && (
-              <section className="min-w-0">
-                <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                  {t("pdf.floorPlan")}
-                </h3>
-                <img
-                  src={floorPlan.image_url}
-                  alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
-                  className="mx-auto h-[var(--pdf-plan-height)] max-w-full rounded-lg object-contain"
-                />
-              </section>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
