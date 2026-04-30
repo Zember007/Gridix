@@ -2,24 +2,26 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import {
   Button,
-  CalendarIcon,
   Card,
   CardContent,
-  DollarSignIcon,
-  EyeIcon,
-  GridIcon,
+  LanguageToggle,
   Loader,
-  MapPinIcon,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SlidersHorizontalIcon,
-  XIcon,
 } from "@gridix/ui";
 import { useLanguage } from "@gridix/utils/react";
-import { LanguageToggle } from "@gridix/ui";
+import {
+  Calendar,
+  DollarSign,
+  Eye,
+  Grid,
+  MapPin,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { formatPriceWithCurrency } from "@gridix/utils/lib";
 import { useProjectsWithPrices } from "@/entities/project/queries/useProjectsWithPrices";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
@@ -167,7 +169,7 @@ const EmbedProjectsPage = ({
                   }
                   onClick={() => setViewMode("grid")}
                 >
-                  <GridIcon className="mr-1 h-4 w-4" />
+                  <Grid className="mr-1 h-4 w-4" />
                   {compactMode ? "" : t("embed.listView")}
                 </Button>
                 <Button
@@ -182,7 +184,7 @@ const EmbedProjectsPage = ({
                   }
                   onClick={() => setViewMode("map")}
                 >
-                  <MapPinIcon className="mr-1 h-4 w-4" />
+                  <MapPin className="mr-1 h-4 w-4" />
                   {compactMode ? "" : t("embed.onMap")}
                 </Button>
               </div>
@@ -199,7 +201,7 @@ const EmbedProjectsPage = ({
                       onClick={() => setShowFiltersPanel(!showFiltersPanel)}
                       className="text-gray-600"
                     >
-                      <SlidersHorizontalIcon className="mr-2 h-4 w-4" />
+                      <SlidersHorizontal className="mr-2 h-4 w-4" />
                       {t("embed.filters")}
                     </Button>
                     <span className="text-sm text-gray-600">
@@ -217,7 +219,7 @@ const EmbedProjectsPage = ({
                   >
                     {/* Parameters filter */}
                     <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-2 py-1 text-sm">
-                      <SlidersHorizontalIcon className="h-3 w-3 text-gray-600" />
+                      <SlidersHorizontal className="h-3 w-3 text-gray-600" />
                       <Select defaultValue="all">
                         <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-xs shadow-none">
                           <SelectValue placeholder={t("project.parameters")} />
@@ -244,7 +246,7 @@ const EmbedProjectsPage = ({
 
                     {/* Price filter */}
                     <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-2 py-1 text-sm">
-                      <DollarSignIcon className="h-3 w-3 text-gray-600" />
+                      <DollarSign className="h-3 w-3 text-gray-600" />
                       <Select defaultValue="all">
                         <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-xs shadow-none">
                           <SelectValue placeholder={t("gallery.cost")} />
@@ -270,7 +272,7 @@ const EmbedProjectsPage = ({
                       <>
                         {/* Delivery date filter */}
                         <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-2 py-1 text-sm">
-                          <CalendarIcon className="h-3 w-3 text-gray-600" />
+                          <Calendar className="h-3 w-3 text-gray-600" />
                           <Select defaultValue="all">
                             <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-xs shadow-none">
                               <SelectValue
@@ -314,7 +316,7 @@ const EmbedProjectsPage = ({
                         onClick={() => setShowFiltersPanel(false)}
                         className="ml-auto text-gray-400"
                       >
-                        <XIcon className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -422,7 +424,7 @@ const EmbedProjectsPage = ({
 
                         {project.address && (
                           <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-                            <MapPinIcon className="h-4 w-4" />
+                            <MapPin className="h-4 w-4" />
                             <span
                               className={compactMode ? "text-xs" : "text-sm"}
                             >
@@ -437,7 +439,7 @@ const EmbedProjectsPage = ({
                             compactMode ? "py-2 text-sm" : "py-3"
                           } rounded-lg font-medium`}
                         >
-                          <EyeIcon className="mr-2 h-4 w-4" />
+                          <Eye className="mr-2 h-4 w-4" />
                           {t("embed.viewApartments")}
                         </Button>
                       </div>

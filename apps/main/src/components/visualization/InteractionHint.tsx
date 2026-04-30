@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HandTap } from "@phosphor-icons/react";
+import { IconHandClick } from "@tabler/icons-react";
 import { useIsMobile } from "@gridix/ui";
 
 interface InteractionHintProps {
@@ -71,7 +71,7 @@ export const InteractionHint = ({
             }}
             className="rounded-full border border-white/50 bg-white/70 p-5 shadow-2xl"
           >
-            <HandTap size={size} color={color} weight="duotone" />
+            <IconHandClick size={size} color={color} />
           </motion.div>
         </motion.div>
       )}

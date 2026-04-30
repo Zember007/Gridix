@@ -1,27 +1,19 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   AlertCircle,
+  ChevronDown,
   Eye,
   Home,
   SlidersHorizontal,
   TrendingUp,
   Users,
 } from "lucide-react";
-import {
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@gridix/ui";
+import { Button, Card, CardContent, DataState, Skeleton } from "@gridix/ui";
+import { cn } from "@gridix/utils/lib";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspaceProjects } from "@/entities/workspace/queries/useWorkspaceProjects";
-import Spinner from "@/shared/ui/Spinner";
 import { KpiCard } from "@/shared/ui/KpiCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdminAccess } from "@/entities/admin-access";
@@ -39,17 +31,42 @@ import {
   ProjectsDetailTable,
 } from "@/entities/analytics";
 
-function getScrollParent(startEl: HTMLElement | null): HTMLElement | null {
-  let el = startEl?.parentElement ?? null;
-  while (el) {
-    const { overflowY, overflow } = getComputedStyle(el);
-    const oy = overflowY || overflow;
-    if (/(auto|scroll|overlay)/.test(oy)) {
-      return el;
-    }
-    el = el.parentElement;
-  }
-  return null;
+const KPI_SKELETONS = ["views", "leads", "conversion", "apartments"];
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3 border-b border-[var(--admin-border-light)] pb-5">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-full max-w-xl" />
+        <Skeleton className="h-11 w-full" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {KPI_SKELETONS.map((item) => (
+          <Card key={item}>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex min-h-24 items-start justify-between gap-4">
+                <div className="min-w-0 flex-1 space-y-3">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+                <Skeleton className="h-10 w-10 rounded-lg" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Skeleton className="h-[380px] rounded-lg" />
+        <Skeleton className="h-[380px] rounded-lg" />
+      </div>
+      <Skeleton className="h-[430px] rounded-lg" />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Skeleton className="h-[380px] rounded-lg" />
+        <Skeleton className="h-[380px] rounded-lg" />
+      </div>
+    </div>
+  );
 }
 
 export const AdminAnalytics = () => {
@@ -66,8 +83,6 @@ export const AdminAnalytics = () => {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [isFiltersCompact, setIsFiltersCompact] = useState(false);
-  const analyticsRootRef = useRef<HTMLDivElement>(null);
 
   const [draftDateRange, setDraftDateRange] = useState<DateRange>("all");
   const [draftSelectedProject, setDraftSelectedProject] =
@@ -96,6 +111,8 @@ export const AdminAnalytics = () => {
   });
 
   const analyticsData = analyticsDataRaw ?? EMPTY_ANALYTICS;
+  const filterProjects =
+    activeProjects.length > 0 ? activeProjects : workspaceProjects;
 
   const syncDraftFromApplied = () => {
     setDraftDateRange(dateRange);
@@ -119,37 +136,42 @@ export const AdminAnalytics = () => {
     setDraftSelectedProject("all");
   };
 
-  useLayoutEffect(() => {
-    if (!(adminAccess?.canViewAnalytics ?? false)) return;
-    if (isLoading || queryError) return;
+  const handleResetAppliedFilters = () => {
+    setDateRange("all");
+    setDateFrom("");
+    setDateTo("");
+    setSelectedProject("all");
+    setDraftDateRange("all");
+    setDraftDateFrom("");
+    setDraftDateTo("");
+    setDraftSelectedProject("all");
+  };
 
-    const scrollEl = getScrollParent(analyticsRootRef.current);
-    const target: HTMLElement | Window = scrollEl ?? window;
-
-    const getScrollTop = () =>
-      target === window
-        ? window.scrollY || document.documentElement.scrollTop
-        : (target as HTMLElement).scrollTop;
-
-    const handleScroll = () => {
-      setIsFiltersCompact(getScrollTop() > 80);
-    };
-
-    handleScroll();
-    target.addEventListener("scroll", handleScroll, { passive: true });
-    return () => target.removeEventListener("scroll", handleScroll);
-  }, [adminAccess?.canViewAnalytics, isLoading, queryError]);
+  const periodLabel =
+    dateRange === "7"
+      ? t("admin.analytics.periods.7days")
+      : dateRange === "30"
+        ? t("admin.analytics.periods.30days")
+        : dateRange === "90"
+          ? t("admin.analytics.periods.90days")
+          : t("admin.analytics.periods.all");
+  const selectedProjectLabel =
+    selectedProject === "all"
+      ? t("admin.analytics.allProjects")
+      : (filterProjects.find((project) => project.id === selectedProject)
+          ?.name ?? t("admin.analytics.allProjects"));
+  const dateLabel =
+    dateFrom || dateTo ? `${dateFrom || "..."} -> ${dateTo || "..."}` : null;
+  const summaryLabel = [periodLabel, selectedProjectLabel, dateLabel]
+    .filter(Boolean)
+    .join(" / ");
 
   if (!(adminAccess?.canViewAnalytics ?? false)) {
     return <AdminAccessNotice variant="subscription" />;
   }
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center py-12">
-        <Spinner size="md" />
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   if (queryError) {
@@ -160,112 +182,139 @@ export const AdminAnalytics = () => {
 
     return (
       <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center text-red-600">
-              <AlertCircle className="mr-2 h-5 w-5" />
-              {msg}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="border-b border-[var(--admin-border-light)] pb-5">
+          <h1 className="text-2xl font-semibold leading-8 text-[var(--admin-text-primary)]">
+            {t("admin.analytics.title")}
+          </h1>
+          <p className="mt-1 max-w-[72ch] text-sm leading-6 text-[var(--admin-text-muted)]">
+            {t("admin.analyticsDescription")}
+          </p>
+        </div>
+        <DataState
+          variant="error"
+          icon={AlertCircle}
+          title={msg}
+          description={t("admin.analytics.loading")}
+        />
       </div>
     );
   }
 
   return (
-    <div ref={analyticsRootRef} className="space-y-6">
-      <div className="flex min-h-[2.75rem] justify-end">
-        {!isFiltersCompact ? (
-          <Button
-            variant="outline"
-            className="relative rounded-full px-4"
-            onClick={() => {
-              syncDraftFromApplied();
-              setFiltersOpen(true);
-            }}
-            aria-label={t("admin.analytics.filters")}
-          >
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            {t("admin.analytics.filters")}
-            {appliedFiltersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--admin-primary)] px-1 text-[10px] font-semibold text-[var(--admin-text-on-primary)]">
-                {appliedFiltersCount}
-              </span>
-            )}
-          </Button>
-        ) : (
-          <div className="h-11 shrink-0" aria-hidden />
-        )}
-      </div>
-      {isFiltersCompact && (
-        <div className="pointer-events-none fixed right-3 top-3 z-40 sm:right-6">
-          <Button
-            variant="outline"
-            className="pointer-events-auto relative h-11 w-11 rounded-full p-0 shadow-sm"
-            onClick={() => {
-              syncDraftFromApplied();
-              setFiltersOpen(true);
-            }}
-            aria-label={t("admin.analytics.filters")}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            {appliedFiltersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--admin-primary)] px-1 text-[10px] font-semibold text-[var(--admin-text-on-primary)]">
-                {appliedFiltersCount}
-              </span>
-            )}
-          </Button>
+    <div className="space-y-6">
+      <div className="space-y-4 border-b border-[var(--admin-border-light)] pb-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold leading-8 text-[var(--admin-text-primary)]">
+              {t("admin.analytics.title")}
+            </h1>
+            <p className="mt-1 max-w-[72ch] text-sm leading-6 text-[var(--admin-text-muted)]">
+              {t("admin.analyticsDescription")}
+            </p>
+          </div>
+          <div className="rounded-lg border border-[var(--admin-border-light)] bg-[var(--admin-background-secondary)] px-3 py-2 text-sm text-[var(--admin-text-secondary)]">
+            <span className="font-medium text-[var(--admin-text-primary)]">
+              {summaryLabel}
+            </span>
+          </div>
         </div>
-      )}
-      <Dialog
-        open={filtersOpen}
-        onOpenChange={(open) => {
-          if (open) {
-            syncDraftFromApplied();
-          }
-          setFiltersOpen(open);
-        }}
-      >
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>{t("admin.analytics.filters")}</DialogTitle>
-          </DialogHeader>
-          <AnalyticsFilters
-            dateRange={draftDateRange}
-            onDateRangeChange={setDraftDateRange}
-            dateFrom={draftDateFrom}
-            onDateFromChange={setDraftDateFrom}
-            dateTo={draftDateTo}
-            onDateToChange={setDraftDateTo}
-            selectedProject={draftSelectedProject}
-            onProjectChange={setDraftSelectedProject}
-            projects={
-              activeProjects.length > 0 ? activeProjects : workspaceProjects
-            }
-            t={t}
-            withCard={false}
-          />
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-lg border-slate-200"
-              onClick={handleResetDraftFilters}
-            >
-              {t("admin.analytics.resetFilters")}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleApplyFilters}
-              className="rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-all hover:bg-[var(--admin-primary-hover)] active:scale-95 active:bg-[var(--admin-primary-active)]"
-            >
-              {t("admin.analytics.applyFilters")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-[var(--admin-background-secondary)]/80 flex flex-col gap-3 rounded-lg border border-[var(--admin-border-light)] p-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 px-1">
+            <span className="text-sm font-medium text-[var(--admin-text-primary)]">
+              {t("admin.analytics.filters")}
+            </span>
+            {appliedFiltersCount > 0 && (
+              <span className="bg-[var(--admin-primary)]/10 rounded-md px-2 py-1 text-xs font-semibold text-[var(--admin-primary)]">
+                {appliedFiltersCount}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {appliedFiltersCount > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]"
+                onClick={handleResetAppliedFilters}
+              >
+                {t("admin.analytics.resetFilters")}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="hover:border-[var(--admin-primary)]/30 relative bg-[var(--admin-card-background)] transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98]"
+              onClick={() => {
+                if (!filtersOpen) {
+                  syncDraftFromApplied();
+                }
+                setFiltersOpen((open) => !open);
+              }}
+              aria-label={t("admin.analytics.filters")}
+              aria-expanded={filtersOpen}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              {t("admin.analytics.filters")}
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  filtersOpen && "rotate-180",
+                )}
+              />
+            </Button>
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows,opacity] duration-200 ease-out",
+            filtersOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0",
+          )}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <Card className="border-[var(--admin-border-light)] bg-[var(--admin-card-background)] shadow-none">
+              <CardContent className="space-y-4 p-4">
+                <AnalyticsFilters
+                  dateRange={draftDateRange}
+                  onDateRangeChange={setDraftDateRange}
+                  dateFrom={draftDateFrom}
+                  onDateFromChange={setDraftDateFrom}
+                  dateTo={draftDateTo}
+                  onDateToChange={setDraftDateTo}
+                  selectedProject={draftSelectedProject}
+                  onProjectChange={setDraftSelectedProject}
+                  projects={filterProjects}
+                  t={t}
+                  withCard={false}
+                />
+                <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--admin-border-light)] pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[var(--admin-border)]"
+                    onClick={handleResetDraftFilters}
+                  >
+                    {t("admin.analytics.resetFilters")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleApplyFilters}
+                    className="bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] shadow-sm transition-[background-color,transform] duration-200 hover:bg-[var(--admin-primary-hover)] active:scale-[0.98] active:bg-[var(--admin-primary-active)]"
+                  >
+                    {t("admin.analytics.applyFilters")}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           value={analyticsData.totalViews}
           title={t("admin.analytics.totalViews")}
@@ -293,11 +342,13 @@ export const AdminAnalytics = () => {
           data={analyticsData.projectViews}
           title={t("admin.analytics.projectViews")}
           description={t("admin.analytics.projectViewsDescription")}
+          emptyLabel={t("admin.analytics.noData")}
         />
         <LeadsChart
           data={analyticsData.leads}
           title={t("admin.analytics.leads")}
           description={t("admin.analytics.leadsDescription")}
+          emptyLabel={t("admin.analytics.noData")}
         />
       </div>
 
@@ -307,6 +358,7 @@ export const AdminAnalytics = () => {
         description={t("admin.analytics.topProjectsDescription")}
         viewsLabel={t("admin.analytics.views")}
         leadsLabel={t("admin.analytics.leads")}
+        emptyLabel={t("admin.analytics.noData")}
       />
 
       <TopApartmentsSection
@@ -316,6 +368,7 @@ export const AdminAnalytics = () => {
         apartmentLabel={t("admin.analytics.apartment")}
         projectLabel={t("admin.analytics.project")}
         viewsLabel={t("admin.analytics.views")}
+        emptyLabel={t("admin.analytics.noData")}
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -328,6 +381,7 @@ export const AdminAnalytics = () => {
             sold: t("admin.analytics.apartments.sold"),
             reserved: t("admin.analytics.apartments.reserved"),
           }}
+          emptyLabel={t("admin.analytics.noData")}
         />
         <ProjectsDetailTable
           data={analyticsData.topProjects}

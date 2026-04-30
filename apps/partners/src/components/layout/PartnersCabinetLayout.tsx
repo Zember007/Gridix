@@ -3,14 +3,8 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SimplifiedSidebar, type SimplifiedSidebarNavItem } from "@gridix/ui";
-import {
-  ChartBar,
-  UserCircle as UserIcon,
-  Users,
-  BookOpen,
-  Eye,
-  SpinnerGap,
-} from "@phosphor-icons/react";
+import { IconLoader2 } from "@tabler/icons-react";
+import { BarChart3, BookOpen, Eye, UserCircle, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@gridix/ui";
@@ -84,9 +78,9 @@ function DemoCabinetButton({ isCollapsed }: { isCollapsed: boolean }) {
         }}
       >
         {loading ? (
-          <SpinnerGap size={20} className="flex-shrink-0 animate-spin" />
+          <IconLoader2 size={20} className="flex-shrink-0 animate-spin" />
         ) : (
-          <Eye size={20} className="flex-shrink-0" />
+          <Eye className="h-5 w-5 flex-shrink-0" />
         )}
         <span
           className={`font-medium ${
@@ -150,27 +144,27 @@ export function PartnersCabinetLayout({
     () => [
       {
         id: "overview",
-        icon: <Eye size={20} />,
+        icon: <Eye className="h-5 w-5" />,
         label: t("partners.overview"),
       },
       {
         id: "referrals",
-        icon: <Users size={20} />,
+        icon: <Users className="h-5 w-5" />,
         label: t("partners.referrals"),
       },
       {
         id: "clients",
-        icon: <ChartBar size={20} />,
+        icon: <BarChart3 className="h-5 w-5" />,
         label: t("partners.clients"),
       },
       {
         id: "instructions",
-        icon: <BookOpen size={20} />,
+        icon: <BookOpen className="h-5 w-5" />,
         label: t("partners.instructions"),
       },
       {
         id: "account",
-        icon: <UserIcon size={20} />,
+        icon: <UserCircle className="h-5 w-5" />,
         label: t("partners.account"),
       },
     ],

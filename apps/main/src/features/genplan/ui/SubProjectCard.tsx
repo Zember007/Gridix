@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Badge, Button } from "@gridix/ui";
-import { Buildings, DotsThree, ArrowRight, Trash } from "@phosphor-icons/react";
+import { ArrowRight, Building2, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,7 +55,7 @@ export function SubProjectCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="bg-primary/8 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-            <Buildings size={18} className="text-primary" />
+            <Building2 className="h-[18px] w-[18px] text-primary" />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium leading-tight">
@@ -81,7 +81,7 @@ export function SubProjectCard({
                 className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100"
                 disabled={deleting}
               >
-                <DotsThree size={16} />
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -90,7 +90,7 @@ export function SubProjectCard({
                 onClick={handleDelete}
                 disabled={deleting}
               >
-                <Trash size={14} className="mr-2" />
+                <Trash2 className="mr-2 h-3.5 w-3.5" />
                 {t("genplan.infraZones.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -106,7 +106,7 @@ export function SubProjectCard({
         onClick={handleNavigate}
       >
         <span>{t("genplan.subProjects.goTo")}</span>
-        <ArrowRight size={13} />
+        <ArrowRight className="h-[13px] w-[13px]" />
       </Button>
     </div>
   );

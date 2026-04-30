@@ -1,13 +1,5 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@gridix/ui";
-import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -15,37 +7,68 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { AnalyticsChartCard, AnalyticsTooltip } from "./AnalyticsChartCard";
 
 interface LeadsChartProps {
   data: Array<{ date: string; leads: number }>;
   title: string;
   description: string;
+  emptyLabel?: string;
 }
 
-export function LeadsChart({ data, title, description }: LeadsChartProps) {
+export function LeadsChart({
+  data,
+  title,
+  description,
+  emptyLabel,
+}: LeadsChartProps) {
   return (
-    <Card>
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
+    <AnalyticsChartCard
+      title={title}
+      description={description}
+      isEmpty={data.length === 0}
+      emptyLabel={emptyLabel}
+    >
+      <div className="h-[280px] min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={data}
+            margin={{ top: 8, right: 12, bottom: 0, left: -18 }}
+          >
+            <CartesianGrid
+              stroke="var(--admin-border-light)"
+              strokeDasharray="4 6"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tickMargin={12}
+              minTickGap={24}
+              tick={{ fill: "var(--admin-text-muted)", fontSize: 12 }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tickMargin={10}
+              width={48}
+              tick={{ fill: "var(--admin-text-muted)", fontSize: 12 }}
+            />
+            <Tooltip content={<AnalyticsTooltip />} cursor={false} />
             <Line
               type="monotone"
               dataKey="leads"
-              stroke="#00C49F"
-              strokeWidth={2}
+              name={title}
+              stroke="var(--admin-success)"
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5, strokeWidth: 2 }}
+              isAnimationActive
             />
           </LineChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </AnalyticsChartCard>
   );
 }

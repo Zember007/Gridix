@@ -1,10 +1,11 @@
-import { Button } from "@gridix/ui";
+import { Button, Skeleton } from "@gridix/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  PageHeader,
 } from "@gridix/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
 import {
@@ -34,7 +35,6 @@ import { ADMIN_THEME } from "@gridix/utils/lib";
 import { type User as SupabaseUser } from "@supabase/supabase-js";
 
 import type { ManagerRole } from "@/hooks/useUserRole";
-import { Spinner } from "@/shared/ui/Spinner";
 import { useAdminSettingsController } from "../model";
 import { AdminSettingsBillingTab } from "./AdminSettingsBillingTab";
 import { AdminSettingsCompanyTab } from "./AdminSettingsCompanyTab";
@@ -83,8 +83,30 @@ export const AdminSettingsRoot = ({
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="md" style={{ borderColor: ADMIN_THEME.primary }} />
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+          <Skeleton className="h-9 w-28" />
+        </div>
+        <div className="flex gap-2 overflow-hidden">
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-28 max-sm:hidden" />
+          <Skeleton className="h-9 w-28 max-md:hidden" />
+        </div>
+        <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-sm sm:p-6">
+          <Skeleton className="mb-2 h-5 w-40" />
+          <Skeleton className="mb-6 h-4 w-64 max-w-full" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -95,40 +117,24 @@ export const AdminSettingsRoot = ({
       onValueChange={(v) => setTab(v as never)}
       className="flex min-h-0 flex-1 flex-col"
     >
-      <div className="shrink-0 space-y-4 border-b bg-background pb-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{t("adminSettings.title")}</h1>
-            <p className="text-muted-foreground">
-              {t("adminSettings.description")}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <LanguageToggle />
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                backgroundColor: ADMIN_THEME.primary,
-                color: ADMIN_THEME.textOnPrimary,
-              }}
-              onMouseEnter={(e) => {
-                if (!saving) {
-                  e.currentTarget.style.backgroundColor =
-                    ADMIN_THEME.primaryHover;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!saving) {
-                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                }
-              }}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? t("adminSettings.saving") : t("adminSettings.save")}
-            </Button>
-          </div>
-        </div>
+      <div className="shrink-0 space-y-4 bg-background">
+        <PageHeader
+          title={t("adminSettings.title")}
+          description={t("adminSettings.description")}
+          actions={
+            <>
+              <LanguageToggle />
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] hover:bg-[var(--admin-primary-hover)]"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? t("adminSettings.saving") : t("adminSettings.save")}
+              </Button>
+            </>
+          }
+        />
 
         <TabsList>
           <div className="w-full sm:hidden">
