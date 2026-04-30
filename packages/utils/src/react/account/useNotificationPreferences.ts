@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../../api/supabase";
 import { useLanguage } from "../language/LanguageContext";
 
@@ -45,6 +45,11 @@ export function useNotificationPreferences({
     });
 
   const [loading, setLoading] = useState(false);
+  const notificationPreferencesRef = useRef(notificationPreferences);
+
+  useEffect(() => {
+    notificationPreferencesRef.current = notificationPreferences;
+  }, [notificationPreferences]);
 
   useEffect(() => {
     if (!userId) return;
@@ -94,17 +99,63 @@ export function useNotificationPreferences({
     void load();
   }, [userId]);
 
+  const saveNotificationPreferences = useCallback(
+    async (nextOverride?: NotificationPreferencesForm) => {
+      if (!userId) return;
+
+      const notif = nextOverride ?? notificationPreferencesRef.current;
+      const notifData = {
+        ...notif,
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: result, error } = await supabase
+        .from("user_notification_preferences")
+        .upsert(notifData, { onConflict: "user_id" })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Supabase notification preferences error:", error);
+        throw error;
+      }
+
+      if (result) {
+        setNotificationPreferences({
+          user_id: userId,
+          channel_email: result.channel_email,
+          channel_push: result.channel_push,
+          channel_telegram: result.channel_telegram,
+          telegram_username: result.telegram_username,
+          telegram_verified: result.telegram_verified,
+          telegram_last_checked_at: result.telegram_last_checked_at,
+          telegram_last_error: result.telegram_last_error,
+          notify_new_lead: result.notify_new_lead,
+          notify_task_due: result.notify_task_due,
+          notify_payment_received: result.notify_payment_received,
+          notify_system_update: result.notify_system_update,
+        });
+      }
+    },
+    [userId],
+  );
+
   const handlePreferenceChange = useCallback(
     (
       field: keyof Omit<NotificationPreferencesForm, "user_id">,
       value: boolean | string | null,
     ) => {
-      setNotificationPreferences((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
+      setNotificationPreferences((prev) => {
+        const next: NotificationPreferencesForm = {
+          ...prev,
+          [field]: value,
+        };
+        void saveNotificationPreferences(next);
+        return next;
+      });
     },
-    [],
+    [saveNotificationPreferences],
   );
 
   const handleTelegramUsernameChange = useCallback((value: string) => {
@@ -159,49 +210,16 @@ export function useNotificationPreferences({
         telegram_last_error: e instanceof Error ? e.message : "unknown",
       }));
       return { ok: false, error: true };
+    } finally {
+      window.setTimeout(() => {
+        void saveNotificationPreferences();
+      }, 0);
     }
   }, [
     notificationPreferences.channel_telegram,
     notificationPreferences.telegram_username,
+    saveNotificationPreferences,
   ]);
-
-  const saveNotificationPreferences = useCallback(async () => {
-    if (!userId) return;
-
-    const notifData = {
-      ...notificationPreferences,
-      user_id: userId,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data: result, error } = await supabase
-      .from("user_notification_preferences")
-      .upsert(notifData, { onConflict: "user_id" })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Supabase notification preferences error:", error);
-      throw error;
-    }
-
-    if (result) {
-      setNotificationPreferences({
-        user_id: userId,
-        channel_email: result.channel_email,
-        channel_push: result.channel_push,
-        channel_telegram: result.channel_telegram,
-        telegram_username: result.telegram_username,
-        telegram_verified: result.telegram_verified,
-        telegram_last_checked_at: result.telegram_last_checked_at,
-        telegram_last_error: result.telegram_last_error,
-        notify_new_lead: result.notify_new_lead,
-        notify_task_due: result.notify_task_due,
-        notify_payment_received: result.notify_payment_received,
-        notify_system_update: result.notify_system_update,
-      });
-    }
-  }, [userId, notificationPreferences]);
 
   return {
     notificationPreferences,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface FavoriteApartment {
   id: string;
@@ -125,12 +125,36 @@ export const useFavorites = (projectId?: string) => {
     saveFavoritesToStorage([]);
   };
 
+  /**
+   * Подборка по проекту из ссылки ?favorites=: снять все избранные с project_id,
+   * затем записать items (порядок в URL → addedAt с шагом).
+   * items пустой = только очистка по проекту.
+   */
+  const replaceFavoritesForProject = useCallback(
+    (targetProjectId: string, items: Omit<FavoriteApartment, "addedAt">[]) => {
+      setFavorites((prev) => {
+        const rest = prev.filter((f) => f.project_id !== targetProjectId);
+        const now = Date.now();
+        const withAdded = items.map((item, i) => ({
+          ...item,
+          project_id: targetProjectId,
+          addedAt: now + i,
+        }));
+        const next = [...rest, ...withAdded];
+        saveFavoritesToStorage(next);
+        return next;
+      });
+    },
+    [],
+  );
+
   return {
     favorites: getFavorites(),
     favoritesForProject: projectId
       ? getFavoritesForProject(projectId)
       : undefined,
     addToFavorites,
+    replaceFavoritesForProject,
     removeFromFavorites,
     toggleFavorite,
     isFavorite,

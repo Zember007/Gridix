@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { parseViewMode, parseFloor } from "../hooks/useUrlState";
+import {
+  parseViewMode,
+  parseFloor,
+  parseFavoritesParam,
+} from "../hooks/useUrlState";
 
 describe("parseViewMode", () => {
   it("returns facade by default when no param", () => {
@@ -41,5 +45,33 @@ describe("parseFloor", () => {
   it("returns null for non-numeric floor", () => {
     expect(parseFloor(new URLSearchParams("floor=abc"))).toBeNull();
     expect(parseFloor(new URLSearchParams("floor="))).toBeNull();
+  });
+});
+
+describe("parseFavoritesParam", () => {
+  it("returns empty when no param or empty", () => {
+    expect(parseFavoritesParam(new URLSearchParams(""))).toEqual([]);
+    expect(parseFavoritesParam(new URLSearchParams("favorites="))).toEqual([]);
+  });
+
+  it("splits and trims apartment numbers", () => {
+    expect(parseFavoritesParam(new URLSearchParams("favorites=1,2,3"))).toEqual(
+      ["1", "2", "3"],
+    );
+    expect(
+      parseFavoritesParam(new URLSearchParams("favorites= 12 , 15 ,3 ")),
+    ).toEqual(["12", "15", "3"]);
+  });
+
+  it("ignores empty segments", () => {
+    expect(parseFavoritesParam(new URLSearchParams("favorites=1,,2,"))).toEqual(
+      ["1", "2"],
+    );
+  });
+
+  it("decodes percent-encoding from URLSearchParams", () => {
+    const params = new URLSearchParams();
+    params.set("favorites", "101, 102");
+    expect(parseFavoritesParam(params)).toEqual(["101", "102"]);
   });
 });
