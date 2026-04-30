@@ -1,10 +1,14 @@
-import { Button, FileDropzone } from "@gridix/ui";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  FileDropzone,
+  Sheet,
+  SheetContent,
+  SheetTrigger,
 } from "@gridix/ui";
 import {
   Select,
@@ -32,6 +36,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
+  Settings,
 } from "lucide-react";
 import PolygonCustomizationSettings, {
   type PolygonSettings,
@@ -861,6 +866,32 @@ function GenplanEditorPanel({
                   </div>
                 ) : null
               }
+              canvasCornerActions={
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 shadow-sm transition-transform active:scale-[0.98]"
+                      aria-label={t("polygonSettings.genplanTitle")}
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="right"
+                    className="w-[min(100%,28rem)] gap-0 overflow-y-auto p-0 sm:max-w-md"
+                  >
+                    <div className="overflow-y-auto p-4 pb-8 pt-12 sm:p-6 sm:pb-10 sm:pt-14">
+                      <PolygonCustomizationSettings
+                        projectId={projectId}
+                        type="genplan"
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              }
             />
           )}
         </>
@@ -998,9 +1029,6 @@ function GenplanEditorPanel({
           ))}
         </CardContent>
       </Card>
-
-      {/* Polygon display settings (one set per project, all masterplans) */}
-      <PolygonCustomizationSettings projectId={projectId} type="genplan" />
     </div>
   );
 }
@@ -1017,6 +1045,7 @@ const BuildingModePanel = ({
 }: Omit<BuildingImageEditorProps, "genplan" | "subProjectType"> & {
   subProjectType?: "building" | "object";
 }) => {
+  const { t } = useLanguage();
   const { loader, facade, floor, selectFacade } = useBuildingEditorData({
     projectId,
     subProjectId,
@@ -1887,36 +1916,57 @@ const BuildingModePanel = ({
               </div>
             ) : null
           }
+          canvasCornerActions={
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 shadow-sm transition-transform active:scale-[0.98]"
+                  aria-label={t("polygonSettings.buildingTitle")}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-[min(100%,28rem)] gap-0 overflow-y-auto p-0 sm:max-w-md"
+              >
+                <div className="overflow-y-auto p-4 pb-8 pt-12 sm:p-6 sm:pb-10 sm:pt-14">
+                  <PolygonCustomizationSettings
+                    projectId={loader.project?.id || projectId}
+                    subProjectId={subProjectId}
+                    type="building"
+                    initialSettings={facadePolygonInitialSettings}
+                    onSettingsChange={(settings) => {
+                      loader.setFacadeDisplaySettings({
+                        colors: {
+                          building: settings.colors.building || "#3b82f6",
+                        },
+                        opacity: {
+                          normal: settings.opacity.normal,
+                          hover: settings.opacity.hover,
+                        },
+                        hoverEffects: {
+                          scale: settings.hoverEffects.scale,
+                          colorChange: settings.hoverEffects.colorChange,
+                          opacityChange: settings.hoverEffects.opacityChange,
+                          glow: settings.hoverEffects.glow,
+                        },
+                        display: {
+                          showNumbers: settings.display.showNumbers,
+                          showTooltip: settings.display.showTooltip,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          }
         />
       )}
-
-      <PolygonCustomizationSettings
-        projectId={loader.project?.id || projectId}
-        subProjectId={subProjectId}
-        type="building"
-        initialSettings={facadePolygonInitialSettings}
-        onSettingsChange={(settings) => {
-          loader.setFacadeDisplaySettings({
-            colors: {
-              building: settings.colors.building || "#3b82f6",
-            },
-            opacity: {
-              normal: settings.opacity.normal,
-              hover: settings.opacity.hover,
-            },
-            hoverEffects: {
-              scale: settings.hoverEffects.scale,
-              colorChange: settings.hoverEffects.colorChange,
-              opacityChange: settings.hoverEffects.opacityChange,
-              glow: settings.hoverEffects.glow,
-            },
-            display: {
-              showNumbers: settings.display.showNumbers,
-              showTooltip: settings.display.showTooltip,
-            },
-          });
-        }}
-      />
     </div>
   );
 };

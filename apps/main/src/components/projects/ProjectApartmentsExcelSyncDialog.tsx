@@ -1,13 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@gridix/ui";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@gridix/ui";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -15,13 +8,12 @@ import {
   DialogTitle,
 } from "@gridix/ui";
 import { Progress } from "@gridix/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
 import {
   Upload,
   FileSpreadsheet,
-  Link,
+  Link as LinkIcon,
   ArrowLeft,
-  Download,
+  Lightbulb,
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -60,7 +52,6 @@ const ProjectApartmentsExcelSyncDialog = ({
   const [showColumnMapper, setShowColumnMapper] = useState(false);
   const [showUrlImporter, setShowUrlImporter] = useState(false);
   const [excelColumns, setExcelColumns] = useState<string[]>([]);
-  const [importMethod, setImportMethod] = useState<"file" | "url">("file");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (
@@ -203,7 +194,6 @@ const ProjectApartmentsExcelSyncDialog = ({
     setExcelColumns([]);
     setProgress(0);
     setIsProcessing(false);
-    setImportMethod("file");
     onClose();
   };
 
@@ -268,111 +258,88 @@ const ProjectApartmentsExcelSyncDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCloseModal}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-6 w-6 text-real-estate-600" />
+      <DialogContent className="max-w-2xl gap-8 p-8">
+        <DialogHeader className="space-y-3 text-left">
+          <DialogTitle className="flex items-center gap-3 text-xl font-semibold leading-tight tracking-tight">
+            <FileSpreadsheet
+              className="h-8 w-8 shrink-0 text-[var(--admin-primary)]"
+              aria-hidden
+            />
             {t("excel.sync.dialog.title")}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-base leading-relaxed">
             {t("excel.sync.dialog.description")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileSpreadsheet className="h-5 w-5 text-real-estate-600" />
-                {t("excel.sync.import.title")}
-              </CardTitle>
-              <CardDescription>
-                {t("excel.sync.import.description")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Tabs
-                value={importMethod}
-                onValueChange={(value) =>
-                  setImportMethod(value as "file" | "url")
-                }
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="file" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    {t("admin.project.create.import.uploadTab") ||
-                      "Загрузить файл"}
-                  </TabsTrigger>
-                  <TabsTrigger value="url" className="flex items-center gap-2">
-                    <Link className="h-4 w-4" />
-                    {t("admin.project.create.import.urlTab") || "По ссылке"}
-                  </TabsTrigger>
-                </TabsList>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className={`h-12 w-full shrink-0 ${admin.primary} ${admin.primaryHover}`}
+            >
+              <Upload className="mr-2 h-4 w-4" aria-hidden />
+              {isProcessing
+                ? t("admin.project.create.import.processing") || "Обработка..."
+                : t("admin.project.create.import.uploadButton") ||
+                  "Загрузить Excel файл"}
+            </Button>
 
-                <TabsContent value="file" className="space-y-4">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing}
-                    className={`w-full ${admin.primary} ${admin.primaryHover}`}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {isProcessing
-                      ? t("admin.project.create.import.processing") ||
-                        "Обработка..."
-                      : t("admin.project.create.import.uploadButton") ||
-                        "Загрузить Excel файл"}
-                  </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
 
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-
-                  {isProcessing && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>
-                          {t("admin.project.create.import.processing") ||
-                            "Обработка файла..."}
-                        </span>
-                        <span>{progress}%</span>
-                      </div>
-                      <Progress value={progress} className="w-full" />
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="url" className="space-y-4">
-                  <Button
-                    onClick={() => setShowUrlImporter(true)}
-                    className={`w-full ${admin.primary} ${admin.primaryHover}`}
-                  >
-                    <Link className="mr-2 h-4 w-4" />
-                    {t("admin.project.create.import.byLink") ||
-                      "Импорт по ссылке"}
-                  </Button>
-                </TabsContent>
-              </Tabs>
-
-              <div className="rounded-md bg-real-estate-50 p-3 text-sm text-real-estate-600">
-                <p>
-                  <strong>
-                    {t("admin.project.create.supportedFormats") ||
-                      "Поддерживаемые форматы:"}
-                  </strong>{" "}
-                  Excel (.xlsx, .xls), CSV{" "}
-                  {t("admin.project.create.googleSheets") || "и Google Sheets"}
-                </p>
-                <p>
-                  <strong>{t("excel.sync.import.matchBy")}</strong>{" "}
-                  {t("excel.sync.import.matchByDesc")}
-                </p>
+            {isProcessing && (
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>
+                    {t("admin.project.create.import.processing") ||
+                      "Обработка файла..."}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} className="w-full" />
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 w-full shrink-0"
+              disabled={isProcessing}
+              onClick={() => setShowUrlImporter(true)}
+            >
+              <LinkIcon className="mr-2 h-4 w-4" aria-hidden />
+              {t("excel.sync.import.secondaryLink")}
+            </Button>
+          </div>
+
+          <div className="space-y-4 border-t border-border/60 pt-8 text-sm">
+            <p className="leading-relaxed text-muted-foreground">
+              {t("excel.sync.import.formatsNote")}
+            </p>
+            <aside
+              className="flex gap-3 rounded-lg border border-border/80 bg-muted/35 p-4 text-foreground/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              role="note"
+            >
+              <Lightbulb
+                className="mt-0.5 h-5 w-5 shrink-0 text-real-estate-600"
+                aria-hidden
+              />
+              <p className="min-w-0 flex-1 leading-relaxed">
+                <span className="sr-only">
+                  {t("excel.sync.import.tipLabel")}{" "}
+                </span>
+                {t("excel.sync.import.updateRuleNote")}
+              </p>
+            </aside>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
