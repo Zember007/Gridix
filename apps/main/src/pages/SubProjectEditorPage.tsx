@@ -77,28 +77,11 @@ export default function SubProjectEditorPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saving, setSaving] = useState(false);
-  
-  const handlePasteCoords = useCallback(
-    (e: ClipboardEvent<HTMLInputElement>) => {
-      const text = e.clipboardData.getData("Text");
-      const parts = text.split(",").map((part) => part.trim());
 
-      if (parts.length === 2) {
-        const [parsedLat, parsedLon] = parts;
-        setSubProject((prev) =>
-          prev
-            ? {
-                ...prev,
-                latitude: parseFloat(parsedLat ?? "0"),
-                longitude: parseFloat(parsedLon ?? "0"),
-              }
-            : prev,
-        );
-        e.preventDefault();
-      }
-    },
-    [],
-  );
+  const subProjectRef = useRef<SubProject | null>(null);
+  const lastCommittedSubProjectSig = useRef<string>("");
+  const subProjectPersistInFlight = useRef(false);
+  const lastLoadedSubProjectIdRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (!projectSlug || !subProjectSlug) return;
@@ -139,9 +122,14 @@ export default function SubProjectEditorPage() {
   }, [subProject]);
 
   useEffect(() => {
-    if (!subProject?.id) return;
+    if (!subProject?.id) {
+      lastLoadedSubProjectIdRef.current = null;
+      return;
+    }
+    if (lastLoadedSubProjectIdRef.current === subProject.id) return;
+    lastLoadedSubProjectIdRef.current = subProject.id;
     lastCommittedSubProjectSig.current = subProjectPersistSignature(subProject);
-  }, [subProject?.id]);
+  }, [subProject]);
 
   const persistSubProjectIfDirty = useCallback(
     async (options?: { force?: boolean; showSuccessToast?: boolean }) => {
