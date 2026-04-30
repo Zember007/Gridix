@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   loadSelectorInitial,
@@ -21,6 +21,8 @@ type Project = Tables<"projects">;
 interface UseProjectSelectorInitialResult {
   project: Project | null;
   apartments: Apartment[];
+  /** Count from the last API payload (for favorites URL hydration; may differ from `apartments` for one frame). */
+  fetchedApartmentCount: number;
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
   apartmentsLoaded: boolean;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
@@ -68,7 +70,9 @@ export const useProjectSelectorInitial = (
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
 
-  useEffect(() => {
+  // useLayoutEffect so `apartments` is populated in the same commit as `!query.isLoading`
+  // (favorites ?favorites= URL hydration must not run against [] while data exists).
+  useLayoutEffect(() => {
     if (rawApartments.length > 0) {
       setApartments(rawApartments);
     }
@@ -88,6 +92,7 @@ export const useProjectSelectorInitial = (
   return {
     project: (query.data?.project as Project) ?? null,
     apartments,
+    fetchedApartmentCount: rawApartments.length,
     setApartments,
     apartmentsLoaded: !query.isLoading,
     preloadedLayoutPhotosByRooms:

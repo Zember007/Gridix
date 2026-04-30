@@ -389,12 +389,12 @@ export const ProjectSidePanel = ({
               onClick={() => onOpenFloorPlan(Number(state.floorNumber))}
               className="relative mb-4 flex w-full items-center justify-center overflow-hidden rounded-lg"
             >
-              <FloorPlanView
+              {/* <FloorPlanView
                 floorNumber={state.floorNumber}
                 projectId={project.id}
                 subProjectId={subProject?.id}
                 selectedCurrency={selectedCurrency}
-              />
+              /> */}
             </div>
           </div>
 

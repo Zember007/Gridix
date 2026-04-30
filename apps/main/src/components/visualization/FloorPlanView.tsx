@@ -44,8 +44,9 @@ type FloorSettings = {
   };
 };
 
+/** Align with `FloorPlanEditor` / `polygon_settings_floor` editor defaults. */
 const DEFAULT_FLOOR_COLORS = {
-  available: "#3b82f6",
+  available: "#22c55e",
   reserved: "#f59e0b",
   sold: "#ef4444",
 } as const;
@@ -164,7 +165,16 @@ const FloorPlanView = ({
             return colors.available;
         }
       }
-      return "#6b7280";
+      switch (apartment.status) {
+        case "available":
+          return DEFAULT_FLOOR_COLORS.available;
+        case "reserved":
+          return DEFAULT_FLOOR_COLORS.reserved;
+        case "sold":
+          return DEFAULT_FLOOR_COLORS.sold;
+        default:
+          return DEFAULT_FLOOR_COLORS.available;
+      }
     },
     [floorSettings],
   );
@@ -198,7 +208,9 @@ const FloorPlanView = ({
   const getStyleById = useCallback(
     (id: string) => {
       const apt = apartmentById.get(id);
-      const baseColor = apt ? getApartmentColor(apt) : "#6b7280";
+      const baseColor = apt
+        ? getApartmentColor(apt)
+        : DEFAULT_FLOOR_COLORS.available;
       return {
         fill: baseColor,
         fillOpacity: floorSettings?.opacity?.normal ?? 0.3,
@@ -332,7 +344,8 @@ const FloorPlanView = ({
                 className="h-4 w-4 rounded opacity-60"
                 style={{
                   backgroundColor:
-                    floorSettings?.colors?.available ?? "#3b82f6",
+                    floorSettings?.colors?.available ??
+                    DEFAULT_FLOOR_COLORS.available,
                 }}
               ></div>
               <span>{t("project.available")}</span>
