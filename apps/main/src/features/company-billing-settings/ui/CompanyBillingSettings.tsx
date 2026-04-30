@@ -9,6 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Skeleton,
 } from "@gridix/ui";
 import { Switch } from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
@@ -78,9 +79,24 @@ export function CompanyBillingSettings() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <Spinner size="md" />
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-6 w-6 rounded-md" />
+            <Skeleton className="h-6 w-56" />
+          </div>
+          <Skeleton className="mt-2 h-4 w-full max-w-xl" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end pt-2">
+            <Skeleton className="h-10 w-48" />
           </div>
         </CardContent>
       </Card>

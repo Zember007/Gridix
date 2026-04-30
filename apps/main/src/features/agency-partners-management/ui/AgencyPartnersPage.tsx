@@ -135,7 +135,7 @@ export const AgencyPartnersPage: React.FC = () => {
         <div className="py-6">
           {activeTab === "list" && (
             <>
-              <AgencyPartnersStatsCards stats={stats} />
+              <AgencyPartnersStatsCards stats={stats} loading={loading} />
               <AgencyPartnersTable
                 partners={partners}
                 filters={filters}
@@ -147,6 +147,7 @@ export const AgencyPartnersPage: React.FC = () => {
                 updatePartnerStatus={updatePartnerStatus}
                 isManagerMode={isManagerMode}
                 readOnly={readOnly}
+                loading={loading}
               />
             </>
           )}

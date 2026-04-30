@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Building2, FileDown, Search, User } from "lucide-react";
-import { Input, Button, PageHeader } from "@gridix/ui";
+import { Input, Button, PageHeader, Skeleton } from "@gridix/ui";
 import { useContactsList } from "../hooks/useContactsList";
 import { exportContactsXLSX } from "../lib/export-contacts-xlsx";
 
@@ -90,16 +90,35 @@ export function AdminContactsPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {isLoading && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-10 text-center text-slate-400"
+              {isLoading &&
+                Array.from({ length: 7 }).map((_, i) => (
+                  <tr
+                    key={`skeleton-${i}`}
+                    className="border-b border-slate-50"
                   >
-                    {t("admin.contactsPage.loading")}
-                  </td>
-                </tr>
-              )}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+                        <div className="min-w-0 space-y-2">
+                          <Skeleton className="h-4 w-[min(200px,40vw)]" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-5 w-16" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-28" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-36" />
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Skeleton className="ml-auto h-4 w-32" />
+                    </td>
+                  </tr>
+                ))}
 
               {!isLoading && contacts.length === 0 && (
                 <tr>

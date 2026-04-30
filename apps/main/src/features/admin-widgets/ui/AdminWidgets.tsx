@@ -1,6 +1,6 @@
 import { PageHeader } from "@gridix/ui";
-import { Spinner } from "@/shared/ui/Spinner";
 import { useAdminWidgetConfig } from "@/features/admin-widgets/model/useAdminWidgetConfig";
+import { AdminWidgetsSkeleton } from "@/features/admin-widgets/ui/AdminWidgetsSkeleton";
 import { WidgetSettingsCard } from "@/features/admin-widgets/ui/WidgetSettingsCard";
 import { WidgetEmbedCodeCard } from "@/features/admin-widgets/ui/WidgetEmbedCodeCard";
 import { WidgetLinksCard } from "@/features/admin-widgets/ui/WidgetLinksCard";
@@ -45,11 +45,7 @@ const AdminWidgets = () => {
   } = useAdminWidgetConfig();
 
   if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Spinner size="md" style={{ borderColor: ADMIN_THEME.primary }} />
-      </div>
-    );
+    return <AdminWidgetsSkeleton />;
   }
 
   if (!hasAnyActiveProject) {

@@ -1,4 +1,4 @@
-import { Spinner } from "@/shared/ui/Spinner";
+import { Skeleton } from "@gridix/ui";
 
 import { NotificationChannelCard } from "./notifications/NotificationChannelCard";
 import { NotificationEventCard } from "./notifications/NotificationEventCard";
@@ -31,8 +31,36 @@ export function AdminSettingsNotificationsTab(
 ) {
   if (props.loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Spinner size="md" />
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-56" />
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-100 bg-card p-4"
+            >
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-full max-w-md" />
+              </div>
+              <Skeleton className="h-6 w-11 shrink-0 rounded-full" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-48" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-slate-100 p-4">
+                <Skeleton className="mb-2 h-4 w-40" />
+                <Skeleton className="h-3 w-full max-w-xs" />
+                <div className="mt-4 flex justify-end">
+                  <Skeleton className="h-6 w-11 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

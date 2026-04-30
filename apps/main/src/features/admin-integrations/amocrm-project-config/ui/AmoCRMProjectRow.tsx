@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@gridix/ui";
 import { Switch } from "@gridix/ui";
+import { Skeleton } from "@gridix/ui";
 import { Settings, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -169,8 +170,15 @@ export const AmoCRMProjectRow = ({
             </DialogHeader>
 
             {!amoData ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid gap-4 py-4 text-left">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
               </div>
             ) : (
               <div className="grid gap-4 py-4 text-left">
