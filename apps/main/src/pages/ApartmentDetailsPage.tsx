@@ -1442,9 +1442,7 @@ const ApartmentDetailsPage = ({
                   ) : (
                     <FileDown className="h-5 w-5" />
                   )}
-                  <span className="hidden xs:block">
-                    {t("apartment.downloadPDF")}
-                  </span>
+                  <span className="hidden xs:block">PDF</span>
                 </Button>
               </div>
             </div>
