@@ -1009,13 +1009,46 @@ const PolygonPlanImageView = ({
     handleFloorHover(floorNumber);
   };
 
+  const selectedFloorRef = useRef<number | null>(selectedFloor);
+
+  useEffect(() => {
+    selectedFloorRef.current = selectedFloor;
+  }, [selectedFloor]);
+
   const activateFloor = useCallback(
     (floorNumber: number) => {
       // Keep visual state single-sourced: one active floor at a time.
+      selectedFloorRef.current = floorNumber;
       setHoveredFloor(floorNumber);
       handleFloorHover(floorNumber);
     },
     [handleFloorHover],
+  );
+
+  const handleAdjacentFloorActivation = useCallback(
+    (direction: "prev" | "next") => {
+      if (floorsWithPolygon.length === 0) return;
+
+      const currentIndex = floorsWithPolygon.findIndex(
+        (floor) => floor.floor_number === selectedFloorRef.current,
+      );
+
+      const targetIndex =
+        direction === "prev"
+          ? currentIndex <= 0
+            ? floorsWithPolygon.length - 1
+            : currentIndex - 1
+          : currentIndex < 0 || currentIndex >= floorsWithPolygon.length - 1
+            ? 0
+            : currentIndex + 1;
+
+      const targetFloor = floorsWithPolygon[targetIndex];
+      if (!targetFloor) return;
+
+      isCarouselInteractingRef.current = false;
+      activateFloor(targetFloor.floor_number);
+    },
+    [activateFloor, floorsWithPolygon],
   );
 
   // Автоматическое позиционирование мобильного переключателя этажей так,
@@ -1172,6 +1205,10 @@ const PolygonPlanImageView = ({
     );
     if (index < 0) return;
 
+    const hasScrollRange =
+      carouselApi.canScrollPrev() || carouselApi.canScrollNext();
+    if (!hasScrollRange) return;
+
     const currentIndex = carouselApi.selectedScrollSnap();
     const currentFloor = floorsWithPolygon[currentIndex]?.floor_number;
 
@@ -1189,11 +1226,16 @@ const PolygonPlanImageView = ({
     if (!carouselApi) return;
 
     const syncSelectedFloorWithCarousel = () => {
+      const hasScrollRange =
+        carouselApi.canScrollPrev() || carouselApi.canScrollNext();
+      if (!hasScrollRange && selectedFloorRef.current != null) return;
+
       const currentIndex = carouselApi.selectedScrollSnap();
       const currentFloor = floorsWithPolygon[currentIndex];
       if (!currentFloor) return;
 
       const floorNumber = currentFloor.floor_number;
+      selectedFloorRef.current = floorNumber;
       setSelectedFloor((prev) => (prev === floorNumber ? prev : floorNumber));
       setHoveredFloor((prev) => (prev === floorNumber ? prev : floorNumber));
     };
@@ -1571,10 +1613,14 @@ const PolygonPlanImageView = ({
                         </CarouselContent>
                       </div>
 
-                      {floorsWithPolygon.length > 3 && (
+                      {floorsWithPolygon.length > 1 && (
                         <>
                           <CarouselPrevious
                             className="-left-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                            disableWhenUnavailable={false}
+                            onUnavailableClick={() =>
+                              handleAdjacentFloorActivation("prev")
+                            }
                             style={{ touchAction: "manipulation" }}
                             onPointerDown={blockArrowDragStart}
                             onTouchStart={blockArrowDragStart}
@@ -1582,6 +1628,10 @@ const PolygonPlanImageView = ({
                           />
                           <CarouselNext
                             className="-right-12 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                            disableWhenUnavailable={false}
+                            onUnavailableClick={() =>
+                              handleAdjacentFloorActivation("next")
+                            }
                             style={{ touchAction: "manipulation" }}
                             onPointerDown={blockArrowDragStart}
                             onTouchStart={blockArrowDragStart}

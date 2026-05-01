@@ -61,6 +61,11 @@ export const FloorSelector = ({
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const isCarouselInteractingRef = useRef(false);
   const swipeGuardRef = useRef({ x: 0, y: 0, moved: false });
+  const selectedFloorForPlanRef = useRef<number | null>(selectedFloorForPlan);
+
+  useEffect(() => {
+    selectedFloorForPlanRef.current = selectedFloorForPlan;
+  }, [selectedFloorForPlan]);
 
   const blockArrowDragStart = useCallback(
     (
@@ -105,9 +110,14 @@ export const FloorSelector = ({
 
       // A plain tap should not stay blocked by carousel drag state.
       isCarouselInteractingRef.current = false;
+      selectedFloorForPlanRef.current = floor;
       setSelectedFloorForPlan(floor);
 
       if (!carouselApi) return;
+      const hasScrollRange =
+        carouselApi.canScrollPrev() || carouselApi.canScrollNext();
+      if (!hasScrollRange) return;
+
       const index = floors.findIndex((f) => f === floor);
       if (index >= 0) {
         carouselApi.scrollTo(index, false);
@@ -116,12 +126,43 @@ export const FloorSelector = ({
     [carouselApi, floors, setSelectedFloorForPlan],
   );
 
+  const handleAdjacentFloorSelection = useCallback(
+    (direction: "prev" | "next") => {
+      if (floors.length === 0) return;
+
+      const currentIndex = floors.findIndex(
+        (floor) => floor === selectedFloorForPlanRef.current,
+      );
+
+      const targetIndex =
+        direction === "prev"
+          ? currentIndex <= 0
+            ? floors.length - 1
+            : currentIndex - 1
+          : currentIndex < 0 || currentIndex >= floors.length - 1
+            ? 0
+            : currentIndex + 1;
+
+      const targetFloor = floors[targetIndex];
+      if (targetFloor == null) return;
+
+      isCarouselInteractingRef.current = false;
+      selectedFloorForPlanRef.current = targetFloor;
+      setSelectedFloorForPlan(targetFloor);
+    },
+    [floors, setSelectedFloorForPlan],
+  );
+
   useEffect(() => {
     if (!carouselApi) return;
     if (selectedFloorForPlan == null) return;
 
     const index = floors.findIndex((f) => f === selectedFloorForPlan);
     if (index < 0) return;
+
+    const hasScrollRange =
+      carouselApi.canScrollPrev() || carouselApi.canScrollNext();
+    if (!hasScrollRange) return;
 
     const currentIndex = carouselApi.selectedScrollSnap();
     const currentFloor = floors[currentIndex];
@@ -138,9 +179,14 @@ export const FloorSelector = ({
     if (!carouselApi) return;
 
     const syncSelectedFloorWithCarousel = () => {
+      const hasScrollRange =
+        carouselApi.canScrollPrev() || carouselApi.canScrollNext();
+      if (!hasScrollRange && selectedFloorForPlanRef.current != null) return;
+
       const currentIndex = carouselApi.selectedScrollSnap();
       const currentFloor = floors[currentIndex];
       if (currentFloor == null) return;
+      selectedFloorForPlanRef.current = currentFloor;
       setSelectedFloorForPlan(currentFloor);
     };
 
@@ -234,12 +280,16 @@ export const FloorSelector = ({
               </div>
 
               {/* Navigation buttons */}
-              {floors.length > 3 && (
+              {floors.length > 1 && (
                 <>
                   {isMobile ? (
                     <>
                       <CarouselPrevious
                         className="-left-10 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                        disableWhenUnavailable={false}
+                        onUnavailableClick={() =>
+                          handleAdjacentFloorSelection("prev")
+                        }
                         style={{ touchAction: "manipulation" }}
                         onPointerDown={blockArrowDragStart}
                         onTouchStart={blockArrowDragStart}
@@ -247,6 +297,10 @@ export const FloorSelector = ({
                       />
                       <CarouselNext
                         className="-right-10 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                        disableWhenUnavailable={false}
+                        onUnavailableClick={() =>
+                          handleAdjacentFloorSelection("next")
+                        }
                         style={{ touchAction: "manipulation" }}
                         onPointerDown={blockArrowDragStart}
                         onTouchStart={blockArrowDragStart}
@@ -257,6 +311,10 @@ export const FloorSelector = ({
                     <>
                       <CarouselPrevious
                         className="-top-10 left-1/2 h-8 w-8 -translate-x-1/2 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                        disableWhenUnavailable={false}
+                        onUnavailableClick={() =>
+                          handleAdjacentFloorSelection("prev")
+                        }
                         style={{ touchAction: "manipulation" }}
                         onPointerDown={blockArrowDragStart}
                         onTouchStart={blockArrowDragStart}
@@ -264,6 +322,10 @@ export const FloorSelector = ({
                       />
                       <CarouselNext
                         className="-bottom-10 left-1/2 h-8 w-8 -translate-x-1/2 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100"
+                        disableWhenUnavailable={false}
+                        onUnavailableClick={() =>
+                          handleAdjacentFloorSelection("next")
+                        }
                         style={{ touchAction: "manipulation" }}
                         onPointerDown={blockArrowDragStart}
                         onTouchStart={blockArrowDragStart}
