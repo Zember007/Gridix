@@ -419,28 +419,20 @@ const PDFTemplatePage = ({
     (field) => !SUMMARY_FIELD_NAMES.has(field.field_name),
   );
   const detailFieldCount = detailFields.length;
+  const detailsAreUltraDense =
+    detailFieldCount >= 25 && (isWidePdf || isSquarePdf);
   const detailsAreCompact = detailFieldCount > 8 && detailFieldCount <= 16;
-  const detailsAreDense = detailFieldCount > 16;
-  const fieldHeavyThreshold = isWidePdf
-    ? 8
-    : isSquarePdf
-      ? 12
-      : isTallPdf
-        ? 8
-        : 14;
-  const fieldHeavyMode = detailFieldCount > fieldHeavyThreshold;
-  const fieldOverflowMode = detailFieldCount > 16;
-  const displayPhotos = fieldHeavyMode
-    ? photos.slice(0, isWidePdf ? 2 : 1)
-    : photos;
-  const shouldRenderMedia = !fieldHeavyMode;
+  const detailsAreDense = detailFieldCount > 16 && !detailsAreUltraDense;
+  const mediaFieldLimit = isWidePdf ? 12 : isSquarePdf ? 10 : isTallPdf ? 6 : 8;
+  const shouldRenderMedia = detailFieldCount <= mediaFieldLimit;
+  const fieldHeavyMode = !shouldRenderMedia && detailFieldCount > 0;
+  const displayPhotos = shouldRenderMedia ? photos : [];
   const hasPhotos = shouldRenderMedia && displayPhotos.length > 0;
   const hasFloorPlan = shouldRenderMedia && Boolean(floorPlan);
   const hasMedia = hasPhotos || hasFloorPlan;
-  const useWideSplit = isWidePdf && hasMedia;
   const pdfStyle = {
     "--pdf-page-padding": isWidePdf
-      ? "clamp(18px, 3.2vw, 38px) clamp(24px, 4vw, 52px)"
+      ? "clamp(18px, 2.8vw, 34px) clamp(24px, 3.6vw, 46px)"
       : isSquarePdf
         ? "clamp(24px, 4.4vw, 46px)"
         : isTallPdf
@@ -474,117 +466,104 @@ const PDFTemplatePage = ({
     "--pdf-image-gap": isWidePdf
       ? "clamp(8px, 1.2vw, 14px)"
       : "clamp(10px, 1.8vw, 16px)",
-    "--pdf-field-row-py": detailsAreDense
+    "--pdf-field-row-py": detailsAreUltraDense
       ? "0px"
-      : detailsAreCompact
-        ? "1px"
-        : "4px",
-    "--pdf-field-gap-y": detailsAreDense
+      : detailsAreDense
+        ? "0px"
+        : detailsAreCompact
+          ? "1px"
+          : "4px",
+    "--pdf-field-gap-y": detailsAreUltraDense
       ? "0px"
-      : detailsAreCompact
-        ? "2px"
-        : "4px",
-    "--pdf-field-font-size": detailsAreDense
-      ? "clamp(9px, 0.95vw, 11px)"
-      : detailsAreCompact
-        ? "clamp(11px, 1.1vw, 13px)"
-        : "14px",
-    "--pdf-photo-height": fieldHeavyMode
-      ? isWidePdf
-        ? "clamp(72px, 13vh, 128px)"
-        : isSquarePdf
-          ? "clamp(72px, 11vh, 112px)"
-          : isTallPdf
-            ? "clamp(52px, 6vh, 82px)"
-            : "clamp(72px, 9vh, 108px)"
-      : isWidePdf
-        ? "clamp(92px, 18vh, 178px)"
-        : isSquarePdf
-          ? "clamp(96px, 17vh, 170px)"
-          : isTallPdf
-            ? "clamp(68px, 8.6vh, 118px)"
-            : "clamp(110px, 16vh, 190px)",
-    "--pdf-plan-height": fieldHeavyMode
-      ? isWidePdf
-        ? "clamp(150px, 32vh, 280px)"
-        : isSquarePdf
-          ? "clamp(120px, 17vh, 190px)"
-          : isTallPdf
-            ? "clamp(92px, 12vh, 160px)"
-            : "clamp(120px, 18vh, 220px)"
-      : isWidePdf
-        ? "clamp(190px, 44vh, 380px)"
-        : isSquarePdf
-          ? "clamp(170px, 25vh, 260px)"
-          : isTallPdf
-            ? "clamp(120px, 18vh, 240px)"
-            : "clamp(180px, 26vh, 320px)",
+      : detailsAreDense
+        ? "0px"
+        : detailsAreCompact
+          ? "2px"
+          : "4px",
+    "--pdf-field-font-size": detailsAreUltraDense
+      ? "clamp(8px, 0.82vw, 10px)"
+      : detailsAreDense
+        ? "clamp(9px, 0.95vw, 11px)"
+        : detailsAreCompact
+          ? "clamp(11px, 1.1vw, 13px)"
+          : "14px",
+    "--pdf-photo-height": isWidePdf
+      ? "clamp(104px, 18vh, 190px)"
+      : isSquarePdf
+        ? "clamp(96px, 15vh, 160px)"
+        : isTallPdf
+          ? "clamp(68px, 8.6vh, 118px)"
+          : "clamp(92px, 12vh, 150px)",
+    "--pdf-plan-height": isWidePdf
+      ? "clamp(210px, 38vh, 420px)"
+      : isSquarePdf
+        ? "clamp(150px, 22vh, 230px)"
+        : isTallPdf
+          ? "clamp(110px, 16vh, 210px)"
+          : "clamp(150px, 22vh, 270px)",
+    "--pdf-qr-size": isWidePdf
+      ? "clamp(44px, 4.4vw, 64px)"
+      : "clamp(42px, 7vw, 58px)",
   } as CSSProperties;
   const shellClassName = [
-    "mx-auto flex h-screen w-full flex-col gap-[var(--pdf-gap)] overflow-hidden p-[var(--pdf-page-padding)]",
-    useWideSplit ? "max-w-none" : "max-w-[min(100%,920px)]",
+    "mx-auto grid h-screen w-full grid-rows-[auto_minmax(0,1fr)] gap-[var(--pdf-gap)] overflow-hidden p-[var(--pdf-page-padding)]",
+    isWidePdf ? "max-w-none" : "max-w-[min(100%,920px)]",
   ].join(" ");
   const pageContentClassName = [
-    "min-h-0 flex-1",
-    useWideSplit
-      ? "grid grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] items-stretch gap-[var(--pdf-column-gap)]"
-      : "flex flex-col gap-[var(--pdf-gap)]",
+    "grid min-h-0 gap-[var(--pdf-gap)]",
+    hasMedia ? "grid-rows-[auto_minmax(0,1fr)]" : "grid-rows-[minmax(0,1fr)]",
   ].join(" ");
   const infoColumnClassName =
     "flex min-h-0 min-w-0 flex-col gap-[var(--pdf-gap)] overflow-hidden";
   const headerClassName = [
-    "flex shrink-0 gap-[var(--pdf-column-gap)]",
-    useWideSplit || isTallPdf
-      ? "flex-col items-start"
-      : "items-center justify-between",
+    "grid min-h-0 shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] items-center gap-[var(--pdf-column-gap)]",
   ].join(" ");
-  const headerProjectClassName = [
-    "flex min-w-0 items-center gap-4",
-    useWideSplit || isTallPdf ? "text-left" : "text-right",
-  ].join(" ");
+  const headerProjectClassName = "min-w-0 text-center";
   const heroClassName = [
     "shrink-0 rounded-[24px] bg-gray-50 px-[var(--pdf-card-padding-x)] py-[var(--pdf-card-padding-y)]",
   ].join(" ");
   const heroInnerClassName = [
     "flex gap-[var(--pdf-column-gap)]",
-    useWideSplit || isTallPdf
+    isTallPdf
       ? "flex-col items-start"
       : "flex-wrap items-center justify-between",
   ].join(" ");
   const fieldsGridClassName = [
     "grid min-h-0 gap-x-[var(--pdf-column-gap)] gap-y-[var(--pdf-field-gap-y)]",
-    fieldOverflowMode
-      ? isTallPdf
-        ? "grid-cols-2"
-        : "grid-cols-3"
-      : isTallPdf
-        ? "grid-cols-1"
-        : isWidePdf
-          ? detailFieldCount > 8
+    isWidePdf
+      ? detailFieldCount >= 25
+        ? "grid-cols-4"
+        : detailFieldCount > 12
+          ? "grid-cols-3"
+          : "grid-cols-2"
+      : isSquarePdf
+        ? detailFieldCount > 10
+          ? "grid-cols-3"
+          : "grid-cols-2"
+        : isTallPdf
+          ? detailFieldCount > 10
             ? "grid-cols-2"
             : "grid-cols-1"
-          : isSquarePdf
-            ? detailFieldCount > 12
-              ? "grid-cols-3"
-              : "grid-cols-2"
-            : detailFieldCount > 14
-              ? "grid-cols-3"
-              : "grid-cols-2",
+          : detailFieldCount > 14
+            ? "grid-cols-3"
+            : "grid-cols-2",
   ].join(" ");
   const mediaGridClassName = [
-    "grid min-h-0 min-w-0 gap-[var(--pdf-gap)]",
-    useWideSplit
-      ? "content-center"
+    "grid min-h-0 min-w-0 gap-[var(--pdf-gap)] overflow-hidden",
+    isWidePdf
+      ? hasPhotos && hasFloorPlan
+        ? "grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] items-stretch"
+        : "grid-cols-1"
       : isSquarePdf && hasPhotos && hasFloorPlan
-        ? "grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] items-start"
+        ? "grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)] items-stretch"
         : "grid-cols-1",
   ].join(" ");
   const photosGridClassName = [
-    "grid gap-[var(--pdf-image-gap)]",
-    isTallPdf ? "grid-cols-1" : "grid-cols-3",
+    "grid min-h-0 flex-1 auto-rows-fr gap-[var(--pdf-image-gap)]",
+    isWidePdf ? "grid-cols-1" : isTallPdf ? "grid-cols-1" : "grid-cols-3",
   ].join(" ");
   const mediaSectionTitleClassName =
-    "mb-2 text-[var(--pdf-heading-size)] font-semibold text-gray-900";
+    "mb-2 shrink-0 text-[var(--pdf-heading-size)] font-semibold text-gray-900";
   const sectionTitleClassName =
     "shrink-0 text-[var(--pdf-heading-size)] font-semibold text-gray-900";
 
@@ -603,16 +582,16 @@ const PDFTemplatePage = ({
         </span>
       </div>
       <div className={headerProjectClassName}>
-        <h2 className="min-w-0 text-xl font-semibold text-gray-900">
+        <h2 className="truncate text-xl font-semibold text-gray-900">
           {project.name}
         </h2>
-        <div className="flex aspect-square w-14 shrink-0 items-center justify-center bg-white">
-          <img
-            src={qrCodeUrl}
-            alt="Telegram QR Code"
-            className="h-full w-full object-contain"
-          />
-        </div>
+      </div>
+      <div className="flex aspect-square w-[var(--pdf-qr-size)] shrink-0 items-center justify-center bg-white">
+        <img
+          src={qrCodeUrl}
+          alt="Telegram QR Code"
+          className="h-full w-full object-contain"
+        />
       </div>
     </div>
   );
@@ -637,9 +616,7 @@ const PDFTemplatePage = ({
               ` • ${apartment.floor_number} ${t("apartment.floor")}`}
           </p>
         </div>
-        <div
-          className={useWideSplit || isTallPdf ? "text-left" : "text-center"}
-        >
+        <div className={isTallPdf ? "text-left" : "text-center"}>
           <div className="mb-2 font-semibold text-[var(--pdf-heading-size)] text-gray-900">
             {apartment.price && priceVisible
               ? formatConvertedPdfPrice(apartment.price)
@@ -724,15 +701,15 @@ const PDFTemplatePage = ({
   const mediaSection = hasMedia && (
     <div className={mediaGridClassName}>
       {hasPhotos && (
-        <section className="min-w-0">
+        <section className="flex min-h-0 min-w-0 flex-col">
           <h3 className={mediaSectionTitleClassName}>{t("pdf.photos")}</h3>
           <div className={photosGridClassName}>
             {displayPhotos.map((photo) => (
-              <div key={photo.id} className="relative min-w-0">
+              <div key={photo.id} className="relative min-h-0 min-w-0">
                 <img
                   src={photo.image_url}
                   alt={t("pdf.apartmentPhoto")}
-                  className="h-[var(--pdf-photo-height)] w-full rounded-lg border border-gray-200 object-cover"
+                  className="h-full min-h-0 w-full rounded-lg border border-gray-200 object-cover"
                 />
               </div>
             ))}
@@ -741,12 +718,12 @@ const PDFTemplatePage = ({
       )}
 
       {floorPlan && (
-        <section className="min-w-0">
+        <section className="flex min-h-0 min-w-0 flex-col">
           <h3 className={mediaSectionTitleClassName}>{t("pdf.floorPlan")}</h3>
           <img
             src={floorPlan.image_url}
             alt={`${t("pdf.floorPlan")} ${floorPlan.floor_number}`}
-            className="mx-auto h-[var(--pdf-plan-height)] max-w-full rounded-lg object-contain"
+            className="mx-auto min-h-0 max-w-full flex-1 rounded-lg object-contain"
           />
         </section>
       )}
@@ -760,9 +737,9 @@ const PDFTemplatePage = ({
     >
       {/* PDF Template Content */}
       <div className={shellClassName}>
+        {headerSection}
         <div className={pageContentClassName}>
           <div className={infoColumnClassName}>
-            {headerSection}
             {summarySection}
             {detailsSection}
           </div>
