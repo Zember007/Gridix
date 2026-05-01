@@ -75,7 +75,7 @@
   "subProjects": {
     "title": "בניינים",
     "add": "הוסף בניין",
-    "maxReached": "מקסימום 10 בניינים לפרויקט",
+    "maxReached": "מקסימום 50 בניינים לפרויקט",
     "default": "ראשי",
     "goTo": "פתח",
     "createTitle": "בניין חדש",

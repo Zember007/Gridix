@@ -75,7 +75,7 @@
   "subProjects": {
     "title": "Buildings",
     "add": "Add building",
-    "maxReached": "Maximum 10 buildings per project",
+    "maxReached": "Maximum 50 buildings per project",
     "default": "Main",
     "goTo": "Open",
     "createTitle": "New building",

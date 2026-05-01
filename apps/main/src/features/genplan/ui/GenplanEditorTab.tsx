@@ -20,10 +20,11 @@ import { DeactivateGenplanModal } from "./DeactivateGenplanModal";
 import { MasterplanCreateModal } from "./MasterplanCreateModal";
 import { DeleteMasterplanModal } from "./DeleteMasterplanModal";
 import { listSubProjects, loadMasterplanEditor } from "../api/genplanApi";
-import type {
-  SubProject,
-  MasterplanArea,
-  MasterplanEditorData,
+import {
+  MAX_SUB_PROJECTS_PER_PROJECT,
+  type MasterplanArea,
+  type MasterplanEditorData,
+  type SubProject,
 } from "../model/types";
 import { supabase } from "@gridix/utils/api";
 
@@ -173,7 +174,7 @@ export default function GenplanEditorTab({
             subProjects={subProjects}
             onAdd={() => setShowSubProjectHubModal(true)}
             onDeleted={handleSubProjectDeleted}
-            maxReached={subProjects.length >= 10}
+            maxReached={subProjects.length >= MAX_SUB_PROJECTS_PER_PROJECT}
           />
           <div className="border-t" />
         </>

@@ -40,6 +40,14 @@ interface PdfPageMetrics {
   mode: PdfAspectMode;
 }
 
+const SUMMARY_FIELD_NAMES = new Set([
+  "rooms",
+  "area",
+  "price",
+  "number",
+  "floor",
+]);
+
 function readPositiveSearchNumber(params: URLSearchParams, key: string) {
   const raw = params.get(key);
   if (!raw) return null;
@@ -139,9 +147,21 @@ const PDFTemplatePage = ({
         setProject(result.project);
         setSubProjectEntityKind(normalizeSubProjectKind(result.subProjectType));
         setApartment(result.apartment as Apartment | null);
-        setFieldSettings(
-          (result.fieldSettings ?? []) as unknown as PdfFieldSetting[],
-        );
+        setFieldSettings([
+          ...((result.fieldSettings ?? []) as unknown as PdfFieldSetting[]),
+          ...((result.customFields ?? []).map((field) => ({
+            id: field.id,
+            field_name: field.field_name,
+            field_type: field.field_type,
+            field_label: field.field_label,
+            is_visible: field.is_visible !== false,
+            is_custom: true,
+            sort_order: Number(field.sort_order) || 999,
+            field_label_translations: field.field_label_translations as Partial<
+              Record<Language, string>
+            >,
+          })) satisfies PdfFieldSetting[]),
+        ]);
         setProjectDomains(result.projectDomains ?? []);
         setCompanyName(result.companyName);
         setCompanyLogoUrl(result.companyLogoUrl);
@@ -235,14 +255,36 @@ const PDFTemplatePage = ({
   const getVisibleFields = () => {
     return fieldSettings
       .filter((field) => field.is_visible)
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .slice(0, 6);
+      .sort((a, b) => a.sort_order - b.sort_order);
   };
 
   const getCustomFieldValue = (apt: Apartment, fieldName: string) => {
     if (!apt.custom_fields) return null;
     const customFields = apt.custom_fields as Record<string, unknown>;
-    return customFields[fieldName] || null;
+    return customFields[fieldName] ?? null;
+  };
+
+  const getPdfFieldValue = (apt: Apartment, field: PdfFieldSetting) => {
+    if (field.is_custom) {
+      return getCustomFieldValue(apt, field.field_name);
+    }
+
+    switch (field.field_name) {
+      case "rooms":
+        return typeof apt.rooms === "number" ? apt.rooms : null;
+      case "area":
+        return apt.area;
+      case "price":
+        return apt.price;
+      case "status":
+        return apt.status;
+      case "floor":
+        return apt.floor_number;
+      case "number":
+        return apt.apartment_number;
+      default:
+        return null;
+    }
   };
 
   const formatFieldValue = (
@@ -372,11 +414,30 @@ const PDFTemplatePage = ({
   const isWidePdf = pdfMetrics.mode === "wide";
   const isSquarePdf = pdfMetrics.mode === "square";
   const isTallPdf = pdfMetrics.mode === "tall";
-  const hasPhotos = photos.length > 0;
-  const hasFloorPlan = Boolean(floorPlan);
+  const visibleFields = getVisibleFields();
+  const detailFields = visibleFields.filter(
+    (field) => !SUMMARY_FIELD_NAMES.has(field.field_name),
+  );
+  const detailFieldCount = detailFields.length;
+  const detailsAreCompact = detailFieldCount > 8 && detailFieldCount <= 16;
+  const detailsAreDense = detailFieldCount > 16;
+  const fieldHeavyThreshold = isWidePdf
+    ? 8
+    : isSquarePdf
+      ? 12
+      : isTallPdf
+        ? 8
+        : 14;
+  const fieldHeavyMode = detailFieldCount > fieldHeavyThreshold;
+  const fieldOverflowMode = detailFieldCount > 16;
+  const displayPhotos = fieldHeavyMode
+    ? photos.slice(0, isWidePdf ? 2 : 1)
+    : photos;
+  const shouldRenderMedia = !fieldHeavyMode;
+  const hasPhotos = shouldRenderMedia && displayPhotos.length > 0;
+  const hasFloorPlan = shouldRenderMedia && Boolean(floorPlan);
   const hasMedia = hasPhotos || hasFloorPlan;
   const useWideSplit = isWidePdf && hasMedia;
-  const visibleFields = getVisibleFields();
   const pdfStyle = {
     "--pdf-page-padding": isWidePdf
       ? "clamp(18px, 3.2vw, 38px) clamp(24px, 4vw, 52px)"
@@ -385,20 +446,24 @@ const PDFTemplatePage = ({
         : isTallPdf
           ? "clamp(20px, 4.4vw, 42px) clamp(18px, 4vw, 34px)"
           : "clamp(28px, 4.6vw, 54px)",
-    "--pdf-gap": isWidePdf
-      ? "clamp(8px, 1.4vh, 16px)"
-      : isSquarePdf
-        ? "clamp(10px, 1.5vh, 18px)"
-        : "clamp(12px, 1.7vh, 22px)",
+    "--pdf-gap": fieldHeavyMode
+      ? "clamp(5px, 0.8vh, 10px)"
+      : isWidePdf
+        ? "clamp(8px, 1.4vh, 16px)"
+        : isSquarePdf
+          ? "clamp(10px, 1.5vh, 18px)"
+          : "clamp(12px, 1.7vh, 22px)",
     "--pdf-column-gap": isWidePdf
       ? "clamp(20px, 3vw, 46px)"
       : "clamp(14px, 2.4vw, 28px)",
     "--pdf-card-padding-x": isWidePdf
       ? "clamp(20px, 2.6vw, 36px)"
       : "clamp(20px, 4vw, 32px)",
-    "--pdf-card-padding-y": isWidePdf
-      ? "clamp(14px, 2vh, 22px)"
-      : "clamp(14px, 2.2vh, 22px)",
+    "--pdf-card-padding-y": fieldHeavyMode
+      ? "clamp(8px, 1.2vh, 14px)"
+      : isWidePdf
+        ? "clamp(14px, 2vh, 22px)"
+        : "clamp(14px, 2.2vh, 22px)",
     "--pdf-title-size": isWidePdf
       ? "clamp(18px, 2.1vw, 24px)"
       : "clamp(19px, 2.6vw, 25px)",
@@ -409,20 +474,51 @@ const PDFTemplatePage = ({
     "--pdf-image-gap": isWidePdf
       ? "clamp(8px, 1.2vw, 14px)"
       : "clamp(10px, 1.8vw, 16px)",
-    "--pdf-photo-height": isWidePdf
-      ? "clamp(92px, 18vh, 178px)"
-      : isSquarePdf
-        ? "clamp(96px, 17vh, 170px)"
-        : isTallPdf
-          ? "clamp(68px, 8.6vh, 118px)"
-          : "clamp(110px, 16vh, 190px)",
-    "--pdf-plan-height": isWidePdf
-      ? "clamp(190px, 44vh, 380px)"
-      : isSquarePdf
-        ? "clamp(170px, 25vh, 260px)"
-        : isTallPdf
-          ? "clamp(120px, 18vh, 240px)"
-          : "clamp(180px, 26vh, 320px)",
+    "--pdf-field-row-py": detailsAreDense
+      ? "0px"
+      : detailsAreCompact
+        ? "1px"
+        : "4px",
+    "--pdf-field-gap-y": detailsAreDense
+      ? "0px"
+      : detailsAreCompact
+        ? "2px"
+        : "4px",
+    "--pdf-field-font-size": detailsAreDense
+      ? "clamp(9px, 0.95vw, 11px)"
+      : detailsAreCompact
+        ? "clamp(11px, 1.1vw, 13px)"
+        : "14px",
+    "--pdf-photo-height": fieldHeavyMode
+      ? isWidePdf
+        ? "clamp(72px, 13vh, 128px)"
+        : isSquarePdf
+          ? "clamp(72px, 11vh, 112px)"
+          : isTallPdf
+            ? "clamp(52px, 6vh, 82px)"
+            : "clamp(72px, 9vh, 108px)"
+      : isWidePdf
+        ? "clamp(92px, 18vh, 178px)"
+        : isSquarePdf
+          ? "clamp(96px, 17vh, 170px)"
+          : isTallPdf
+            ? "clamp(68px, 8.6vh, 118px)"
+            : "clamp(110px, 16vh, 190px)",
+    "--pdf-plan-height": fieldHeavyMode
+      ? isWidePdf
+        ? "clamp(150px, 32vh, 280px)"
+        : isSquarePdf
+          ? "clamp(120px, 17vh, 190px)"
+          : isTallPdf
+            ? "clamp(92px, 12vh, 160px)"
+            : "clamp(120px, 18vh, 220px)"
+      : isWidePdf
+        ? "clamp(190px, 44vh, 380px)"
+        : isSquarePdf
+          ? "clamp(170px, 25vh, 260px)"
+          : isTallPdf
+            ? "clamp(120px, 18vh, 240px)"
+            : "clamp(180px, 26vh, 320px)",
   } as CSSProperties;
   const shellClassName = [
     "mx-auto flex h-screen w-full flex-col gap-[var(--pdf-gap)] overflow-hidden p-[var(--pdf-page-padding)]",
@@ -435,7 +531,7 @@ const PDFTemplatePage = ({
       : "flex flex-col gap-[var(--pdf-gap)]",
   ].join(" ");
   const infoColumnClassName =
-    "flex min-h-0 min-w-0 flex-col gap-[var(--pdf-gap)]";
+    "flex min-h-0 min-w-0 flex-col gap-[var(--pdf-gap)] overflow-hidden";
   const headerClassName = [
     "flex shrink-0 gap-[var(--pdf-column-gap)]",
     useWideSplit || isTallPdf
@@ -456,8 +552,24 @@ const PDFTemplatePage = ({
       : "flex-wrap items-center justify-between",
   ].join(" ");
   const fieldsGridClassName = [
-    "grid min-h-0 gap-x-[var(--pdf-column-gap)] gap-y-1",
-    useWideSplit || isTallPdf ? "grid-cols-1" : "grid-cols-2",
+    "grid min-h-0 gap-x-[var(--pdf-column-gap)] gap-y-[var(--pdf-field-gap-y)]",
+    fieldOverflowMode
+      ? isTallPdf
+        ? "grid-cols-2"
+        : "grid-cols-3"
+      : isTallPdf
+        ? "grid-cols-1"
+        : isWidePdf
+          ? detailFieldCount > 8
+            ? "grid-cols-2"
+            : "grid-cols-1"
+          : isSquarePdf
+            ? detailFieldCount > 12
+              ? "grid-cols-3"
+              : "grid-cols-2"
+            : detailFieldCount > 14
+              ? "grid-cols-3"
+              : "grid-cols-2",
   ].join(" ");
   const mediaGridClassName = [
     "grid min-h-0 min-w-0 gap-[var(--pdf-gap)]",
@@ -567,58 +679,30 @@ const PDFTemplatePage = ({
     </div>
   );
 
-  const detailsSection = visibleFields.length > 0 && (
-    <section className="flex min-h-0 flex-col gap-2">
+  const detailsSection = detailFields.length > 0 && (
+    <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <h3 className={sectionTitleClassName}>
         {subProjectEntityKind === "object"
           ? "Object details"
           : t("apartment.details")}
       </h3>
       <div className={fieldsGridClassName}>
-        {visibleFields.map((field) => {
-          let value: unknown = null;
-          if (field.is_custom) {
-            value = getCustomFieldValue(apartment, field.field_name);
-          } else {
-            switch (field.field_name) {
-              case "rooms":
-                if (typeof apartment.rooms === "number") {
-                  value = apartment.rooms;
-                }
-                break;
-              case "area":
-                value = apartment.area;
-                break;
-              case "price":
-                value = apartment.price;
-                break;
-              case "status":
-                value = apartment.status;
-                break;
-              case "floor":
-                value = apartment.floor_number;
-                break;
-              case "number":
-                value = apartment.apartment_number;
-                break;
-              default:
-                value = null;
-            }
-          }
+        {detailFields.map((field) => {
+          const value = getPdfFieldValue(apartment, field);
 
           if (value === null) return null;
 
           return (
             <div
               key={field.id}
-              className="flex min-w-0 items-center justify-between gap-3 border-b border-gray-100 py-1"
+              className="flex min-w-0 items-center justify-between gap-3 border-b border-gray-100 py-[var(--pdf-field-row-py)]"
             >
-              <span className="min-w-0 truncate text-sm text-gray-600">
+              <span className="min-w-0 truncate text-[var(--pdf-field-font-size)] text-gray-600">
                 {field.is_custom
                   ? getFieldLabel(field)
                   : t(`project.${field.field_name}`)}
               </span>
-              <span className="min-w-0 truncate text-right text-sm font-medium text-gray-900">
+              <span className="min-w-0 truncate text-right font-medium text-[var(--pdf-field-font-size)] text-gray-900">
                 {field.field_name === "price"
                   ? formatPriceWithCurrencySpaces(
                       convertPrice(
@@ -643,7 +727,7 @@ const PDFTemplatePage = ({
         <section className="min-w-0">
           <h3 className={mediaSectionTitleClassName}>{t("pdf.photos")}</h3>
           <div className={photosGridClassName}>
-            {photos.map((photo) => (
+            {displayPhotos.map((photo) => (
               <div key={photo.id} className="relative min-w-0">
                 <img
                   src={photo.image_url}

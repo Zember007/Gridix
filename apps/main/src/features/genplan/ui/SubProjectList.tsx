@@ -2,7 +2,7 @@ import { Button } from "@gridix/ui";
 import { Plus } from "lucide-react";
 import { useLanguage } from "@gridix/utils/react";
 import { SubProjectCard } from "./SubProjectCard";
-import type { SubProject } from "../model/types";
+import { MAX_SUB_PROJECTS_PER_PROJECT, type SubProject } from "../model/types";
 
 interface SubProjectListProps {
   projectId: string;
@@ -26,7 +26,9 @@ export function SubProjectList({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground">
           {t("genplan.subProjects.title")}
-          <span className="ml-1.5 text-xs">({subProjects.length}/10)</span>
+          <span className="ml-1.5 text-xs">
+            ({subProjects.length}/{MAX_SUB_PROJECTS_PER_PROJECT})
+          </span>
         </h3>
         <Button
           size="sm"

@@ -1,5 +1,8 @@
 import type { Tables } from "@gridix/types/database";
 
+/** Hard cap on sub-projects (buildings/objects) per project — must match `project-editor` if enforced server-side. */
+export const MAX_SUB_PROJECTS_PER_PROJECT = 50;
+
 export type SubProject = Tables<"sub_projects">;
 export type Masterplan = Tables<"project_masterplans">;
 export type MasterplanArea = Tables<"project_masterplan_areas">;

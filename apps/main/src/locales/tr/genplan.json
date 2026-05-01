@@ -75,7 +75,7 @@
   "subProjects": {
     "title": "Binalar",
     "add": "Bina ekle",
-    "maxReached": "Proje başına maksimum 10 bina",
+    "maxReached": "Proje başına maksimum 50 bina",
     "default": "Ana",
     "goTo": "Aç",
     "createTitle": "Yeni bina",
