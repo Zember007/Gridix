@@ -443,7 +443,8 @@
       "date": "Tarih",
       "amount": "Tutar",
       "status": "Durum",
-      "view": "Aç"
+      "view": "Aç",
+      "viewPdf": "PDF'yi görüntüle"
     },
     "error": "Abonelikler yüklenirken hata oluştu"
   },

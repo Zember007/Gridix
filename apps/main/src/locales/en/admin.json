@@ -443,7 +443,8 @@
       "date": "Date",
       "amount": "Amount",
       "status": "Status",
-      "view": "View"
+      "view": "View",
+      "viewPdf": "View PDF"
     },
     "error": "Error loading subscriptions"
   },
