@@ -27,7 +27,7 @@ export const SubscriptionPricingSection = ({
   expiredProjectsCount,
 }: SubscriptionPricingSectionProps) => {
   return (
-    <section className="space-y-6">
+    <section className="mx-auto w-full max-w-5xl space-y-6">
       <div className="space-y-2 text-center">
         <h2 className="text-xl font-bold text-slate-900">{title}</h2>
         <p className="text-sm text-muted-foreground">{description}</p>

@@ -1,9 +1,12 @@
-import React from "react";
-import { Crown, CheckCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Crown, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@gridix/ui";
+import { cn } from "@gridix/utils/lib";
 import { SubscriptionPlan } from "@/entities/subscription/queries/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getAdminPricingContentBySlug } from "@/entities/subscription/model/adminPricingContent";
+
+const VISIBLE_FEATURE_ROWS = 4;
 
 interface PricingPlansProps {
   plans: SubscriptionPlan[];
@@ -21,9 +24,12 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
   expiredProjectsCount,
 }) => {
   const { t } = useLanguage();
+  const [expandedPlanIds, setExpandedPlanIds] = useState<
+    Record<string, boolean>
+  >({});
 
   return (
-    <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-6 lg:grid-cols-2">
+    <div className="grid w-full grid-cols-1 items-start gap-8 py-2 lg:grid-cols-2 lg:gap-10">
       {plans.map((plan) => {
         const pricing =
           plan.pricing?.find((p) => p.durationMonths === selectedDuration) ||
@@ -36,20 +42,25 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
           ? Math.round(pricing.savings * 100) / 100
           : 0;
 
+        const featureKeys = planContent.featureKeys;
+        const isExpanded = Boolean(expandedPlanIds[plan.id]);
+        const hasExpandToggle = featureKeys.length > VISIBLE_FEATURE_ROWS;
+        const headFeatureKeys = featureKeys.slice(0, VISIBLE_FEATURE_ROWS);
+        const extraFeatureKeys = hasExpandToggle
+          ? featureKeys.slice(VISIBLE_FEATURE_ROWS)
+          : [];
+        const extraRegionId = `pricing-plan-features-extra-${plan.id}`;
+
         return (
           <div
             key={plan.id}
-            className={`relative flex flex-col overflow-hidden rounded-3xl transition-all duration-300 ${
+            className={`relative flex -translate-y-1 flex-col overflow-hidden rounded-3xl transition-transform duration-300 ease-out motion-reduce:transition-none [&:has([data-pricing-cta]:hover)]:scale-[1.025] motion-reduce:[&:has([data-pricing-cta]:hover)]:scale-100 ${
               isPro
-                ? "bg-slate-900 text-white shadow-2xl ring-1 ring-slate-900"
-                : "border border-border bg-background text-foreground shadow-lg"
+                ? "bg-slate-900 text-white shadow-[0_28px_55px_-12px_rgba(0,0,0,0.55),0_14px_28px_-12px_rgba(0,0,0,0.35)] ring-1 ring-white/10"
+                : "border border-border/70 bg-background text-foreground shadow-[0_28px_55px_-12px_rgba(15,23,42,0.16),0_14px_28px_-12px_rgba(15,23,42,0.1)]"
             }`}
           >
-            {isPro && (
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
-            )}
-
-            <div className="flex flex-1 flex-col p-6 md:p-8">
+            <div className="flex flex-col p-6 md:p-8">
               <div className="mb-6 flex items-start justify-between">
                 <div>
                   <h3
@@ -63,7 +74,7 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
                     )}
                   </h3>
                   <p
-                    className={`mt-2 text-sm ${
+                    className={`mt-2 line-clamp-2 min-h-10 text-sm leading-5 ${
                       isPro ? "text-slate-400" : "text-muted-foreground"
                     }`}
                   >
@@ -130,32 +141,111 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
                 </div>
               )}
 
-              <ul className="mb-6 flex-1 space-y-3">
-                {planContent.featureKeys.map((featureKey) => (
-                  <li
-                    key={featureKey}
-                    className="flex items-start gap-3 text-left text-sm"
+              <div className="mb-6 flex flex-col">
+                <ul className="space-y-3">
+                  {headFeatureKeys.map((featureKey) => (
+                    <li
+                      key={featureKey}
+                      className="flex items-start gap-3 text-left text-sm"
+                    >
+                      <div
+                        className={`mt-0.5 shrink-0 rounded-full p-0.5 ${
+                          isPro
+                            ? "bg-blue-500/20 text-blue-400"
+                            : "bg-blue-100 text-blue-600"
+                        }`}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                      </div>
+                      <span
+                        className={isPro ? "text-slate-100" : "text-foreground"}
+                      >
+                        {t(featureKey)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {extraFeatureKeys.length > 0 ? (
+                  <div
+                    id={extraRegionId}
+                    className={cn(
+                      "ease-[cubic-bezier(0.23,1,0.32,1)] grid overflow-hidden transition-[grid-template-rows] duration-200 motion-reduce:transition-none",
+                      isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                    )}
                   >
-                    <div
-                      className={`mt-0.5 shrink-0 rounded-full p-0.5 ${
-                        isPro
-                          ? "bg-blue-500/20 text-blue-400"
-                          : "bg-blue-100 text-blue-600"
-                      }`}
-                    >
-                      <CheckCircle className="h-3 w-3" />
+                    <div className="min-h-0 overflow-hidden">
+                      <ul className="space-y-3 pt-3">
+                        {extraFeatureKeys.map((featureKey) => (
+                          <li
+                            key={featureKey}
+                            className="flex items-start gap-3 text-left text-sm"
+                          >
+                            <div
+                              className={`mt-0.5 shrink-0 rounded-full p-0.5 ${
+                                isPro
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : "bg-blue-100 text-blue-600"
+                              }`}
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                            </div>
+                            <span
+                              className={
+                                isPro ? "text-slate-100" : "text-foreground"
+                              }
+                            >
+                              {t(featureKey)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <span
-                      className={isPro ? "text-slate-100" : "text-foreground"}
-                    >
-                      {t(featureKey)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                ) : null}
+
+                {hasExpandToggle ? (
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={extraRegionId}
+                    className={cn(
+                      "mt-3 inline-flex items-center gap-1 self-start rounded-md text-sm font-medium outline-none ring-offset-background",
+                      "transition-[transform,color,background-color] duration-150 ease-out motion-reduce:transition-none",
+                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "active:scale-[0.97] motion-reduce:active:scale-100",
+                      isPro
+                        ? "text-slate-400 hover:text-white"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    onClick={() =>
+                      setExpandedPlanIds((prev) => ({
+                        ...prev,
+                        [plan.id]: !prev[plan.id],
+                      }))
+                    }
+                  >
+                    {isExpanded
+                      ? t("admin.subscriptionPage.pricing.showLessFeatures")
+                      : t("admin.subscriptionPage.pricing.showMoreFeatures")}
+                    {isExpanded ? (
+                      <ChevronUp
+                        className="ease-[cubic-bezier(0.23,1,0.32,1)] h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none"
+                        aria-hidden
+                      />
+                    ) : (
+                      <ChevronDown
+                        className="ease-[cubic-bezier(0.23,1,0.32,1)] h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none"
+                        aria-hidden
+                      />
+                    )}
+                  </button>
+                ) : null}
+              </div>
 
               <Button
-                className={`mt-auto w-full ${
+                data-pricing-cta
+                className={`w-full ${
                   isPro
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "bg-slate-900 text-white hover:bg-slate-800"

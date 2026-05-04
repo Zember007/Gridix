@@ -292,6 +292,8 @@
       "monthsShortPlural": "мес",
       "savings": "выгода",
       "choosePlan": "Выбрать {{name}}",
+      "showMoreFeatures": "Показать остальное",
+      "showLessFeatures": "Скрыть",
       "planContent": {
         "basic": {
           "description": "Базовый тарифный план для небольших проектов с ограниченным функционалом",

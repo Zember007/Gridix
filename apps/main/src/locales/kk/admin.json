@@ -292,6 +292,7 @@
       "monthsShortPlural": "айлар",
       "savings": "үнемдеу",
       "choosePlan": "{{name}} таңдаңыз",
+      "viewAllFeatures": "Барлық мүмкіндіктер",
       "planContent": {
         "basic": {
           "description": "Функционалдылығы шектеулі шағын жобаларға арналған негізгі жоспар",

@@ -292,6 +292,8 @@
       "monthsShortPlural": "თვეების",
       "savings": "დანაზოგი",
       "choosePlan": "აირჩიეთ {{name}}",
+      "showMoreFeatures": "დანარჩენის ჩვენება",
+      "showLessFeatures": "დამალვა",
       "planContent": {
         "basic": {
           "description": "საბაზისო სატარიფო გეგმა მცირე პროექტებისთვის შეზღუდული ფუნქციონალით",

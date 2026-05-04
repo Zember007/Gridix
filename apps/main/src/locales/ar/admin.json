@@ -292,6 +292,8 @@
       "monthsShortPlural": "أشهر",
       "savings": "توفير",
       "choosePlan": "اختيار {{name}}",
+      "showMoreFeatures": "عرض المزيد",
+      "showLessFeatures": "عرض أقل",
       "planContent": {
         "basic": {
           "description": "الخطة الأساسية للمشاريع الصغيرة بإمكانات محدودة",

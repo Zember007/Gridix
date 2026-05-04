@@ -43,7 +43,7 @@ export default function SubscriptionTab() {
   }
 
   return (
-    <div className="mx-auto flex flex-col gap-10 pb-20 duration-500 animate-in fade-in">
+    <div className="flex w-full flex-col gap-10 pb-20 duration-500 animate-in fade-in">
       {/* Header / Active Plans (как в SubscriptionPage) */}
       <section className="space-y-4">
         <SubscriptionHeader
