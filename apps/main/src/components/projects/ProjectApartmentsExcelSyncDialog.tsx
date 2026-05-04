@@ -1,19 +1,19 @@
 import { useState, useRef } from "react";
-import { Button } from "@gridix/ui";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  InsightTip,
+  Progress,
 } from "@gridix/ui";
-import { Progress } from "@gridix/ui";
 import {
   Upload,
   FileSpreadsheet,
   Link as LinkIcon,
   ArrowLeft,
-  Lightbulb,
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -324,21 +324,14 @@ const ProjectApartmentsExcelSyncDialog = ({
             <p className="leading-relaxed text-muted-foreground">
               {t("excel.sync.import.formatsNote")}
             </p>
-            <aside
-              className="flex gap-3 rounded-lg border border-border/80 bg-muted/35 p-4 text-foreground/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-              role="note"
-            >
-              <Lightbulb
-                className="mt-0.5 h-5 w-5 shrink-0 text-real-estate-600"
-                aria-hidden
-              />
-              <p className="min-w-0 flex-1 leading-relaxed">
+            <InsightTip>
+              <p className="leading-relaxed">
                 <span className="sr-only">
                   {t("excel.sync.import.tipLabel")}{" "}
                 </span>
                 {t("excel.sync.import.updateRuleNote")}
               </p>
-            </aside>
+            </InsightTip>
           </div>
         </div>
       </DialogContent>

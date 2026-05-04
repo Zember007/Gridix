@@ -18,7 +18,7 @@ import {
   Download,
   X,
 } from "lucide-react";
-import { useToast } from "@gridix/ui";
+import { InsightTip, useToast } from "@gridix/ui";
 import { useLanguage } from "@gridix/utils/react";
 import { usePartner } from "../queries/usePartner";
 import { usePartnerStats } from "../queries/usePartnerStats";
@@ -675,13 +675,9 @@ export const PartnerReferralsSection: React.FC = () => {
         )}
       </div>
 
-      <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
-        <div className="mt-0.5 text-blue-500">💡</div>
-        <div className="text-sm text-blue-800">
-          <p className="mb-1 font-semibold">{t("partners.utmInfoTitle")}</p>
-          <span>{t("partners.utmInfoText")}</span>
-        </div>
-      </div>
+      <InsightTip heading={t("partners.utmInfoTitle")}>
+        {t("partners.utmInfoText")}
+      </InsightTip>
     </div>
   );
 };
