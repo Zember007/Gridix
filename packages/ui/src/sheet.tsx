@@ -58,6 +58,8 @@ const SheetContent = React.forwardRef<
   SheetContentProps & {
     noCloseButton?: boolean;
     portalContainer?: HTMLElement | null;
+    /** Merged onto the default close control (absolute top-right). */
+    closeButtonClassName?: string;
   }
 >(
   (
@@ -66,6 +68,8 @@ const SheetContent = React.forwardRef<
       className,
       children,
       portalContainer: portalContainerProp,
+      noCloseButton,
+      closeButtonClassName,
       ...props
     },
     ref,
@@ -82,9 +86,14 @@ const SheetContent = React.forwardRef<
           {...props}
         >
           {children}
-          {props.noCloseButton ? null : (
-            <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary hover:bg-accent absolute top-5 right-4 rounded-md opacity-70 transition-[opacity,background-color] hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-              <ArrowRight className="text-foreground h-4 w-4" />
+          {noCloseButton ? null : (
+            <SheetPrimitive.Close
+              className={cn(
+                "ring-offset-background focus:ring-ring data-[state=open]:bg-secondary hover:bg-accent absolute top-5 right-4 rounded-md opacity-70 transition-[opacity,background-color] hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none",
+                closeButtonClassName,
+              )}
+            >
+              <ArrowRight className="text-foreground size-4" />
               <span className="sr-only">Close</span>
             </SheetPrimitive.Close>
           )}

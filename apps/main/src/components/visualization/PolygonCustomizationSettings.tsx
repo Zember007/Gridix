@@ -43,6 +43,8 @@ interface PolygonCustomizationSettingsProps {
   subProjectId?: string;
   onSettingsChange?: (settings: PolygonSettings) => void;
   initialSettings?: PolygonSettings | null;
+  /** Passed to root Card — use e.g. for borderless embedding in Sheet. */
+  cardClassName?: string;
 }
 
 const defaultSettings: PolygonSettings = {
@@ -159,6 +161,7 @@ const PolygonCustomizationSettings = ({
   subProjectId,
   onSettingsChange,
   initialSettings,
+  cardClassName,
 }: PolygonCustomizationSettingsProps) => {
   const [settings, setSettings] = useState<PolygonSettings>(() =>
     initialSettings
@@ -303,7 +306,7 @@ const PolygonCustomizationSettings = ({
   };
 
   return (
-    <Card>
+    <Card className={cardClassName}>
       <CardHeader className="pb-3">
         <div className="mx-auto w-full max-w-xl">
           <CardTitle className="text-lg">
@@ -321,20 +324,24 @@ const PolygonCustomizationSettings = ({
           <div className="space-y-3">
             <h4 className="font-medium">{t("polygonSettings.colors")}</h4>
             {type !== "floor" ? (
-              <div className="space-y-2">
-                <Label>{t("polygonSettings.buildingColor")}</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={settings.colors.building || "#3b82f6"}
-                    onChange={(e) =>
-                      updateSettings("colors.building", e.target.value)
-                    }
-                    className="h-8 w-8 cursor-pointer rounded border"
-                  />
-                  <span className="font-mono text-sm text-muted-foreground">
-                    {settings.colors.building || "#3b82f6"}
-                  </span>
+              <div className={POLYGON_TOGGLE_GROUP_CLASS}>
+                <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <Label className="mb-0">
+                    {t("polygonSettings.buildingColor")}
+                  </Label>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <input
+                      type="color"
+                      value={settings.colors.building || "#3b82f6"}
+                      onChange={(e) =>
+                        updateSettings("colors.building", e.target.value)
+                      }
+                      className="h-8 w-8 cursor-pointer rounded border"
+                    />
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {settings.colors.building || "#3b82f6"}
+                    </span>
+                  </div>
                 </div>
               </div>
             ) : (

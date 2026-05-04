@@ -77,6 +77,8 @@ export default function SubProjectEditorPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saving, setSaving] = useState(false);
+  const [facadePolygonSettingsHeaderHost, setFacadePolygonSettingsHeaderHost] =
+    useState<HTMLDivElement | null>(null);
 
   const subProjectRef = useRef<SubProject | null>(null);
   const lastCommittedSubProjectSig = useRef<string>("");
@@ -274,7 +276,13 @@ export default function SubProjectEditorPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="ml-2 flex shrink-0 items-center justify-end gap-2 sm:ml-4">
+                  {activeTab === "facade" && (
+                    <div
+                      ref={setFacadePolygonSettingsHeaderHost}
+                      className="flex items-center"
+                    />
+                  )}
                   <Button
                     onClick={handleSave}
                     disabled={saving}
@@ -499,6 +507,7 @@ export default function SubProjectEditorPage() {
                     prev ? { ...prev, building_image_url: imageUrl } : prev,
                   )
                 }
+                polygonSettingsHeaderHost={facadePolygonSettingsHeaderHost}
               />
             )}
 
