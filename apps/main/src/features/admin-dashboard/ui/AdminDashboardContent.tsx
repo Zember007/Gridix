@@ -97,7 +97,6 @@ export const AdminDashboardContent = ({
         showAdminSettings
           ? "flex flex-col overflow-hidden px-3 py-3 sm:px-6 sm:py-4 lg:py-6"
           : "overflow-y-auto",
-        !showAdminSettings && activeTab === "subscription" && "mx-auto",
         !showAdminSettings &&
           activeTab !== "leads" &&
           "px-3 py-3 sm:px-6 sm:py-4 lg:py-6",

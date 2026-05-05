@@ -629,6 +629,8 @@ const ProjectEditor = ({
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [accessError, setAccessError] = useState<string | null>(null);
+  const [facadePolygonSettingsHeaderHost, setFacadePolygonSettingsHeaderHost] =
+    useState<HTMLDivElement | null>(null);
 
   const { navigate } = useLanguageNavigation();
   const queryClient = useQueryClient();
@@ -1319,7 +1321,18 @@ const ProjectEditor = ({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="ml-2 flex shrink-0 items-center justify-end gap-2 sm:ml-4">
+                  {activeTab === "building" &&
+                    !project.has_masterplan &&
+                    !readOnly &&
+                    !isRestrictedProject &&
+                    defaultBuildingScopeReady &&
+                    defaultBuildingScope && (
+                      <div
+                        ref={setFacadePolygonSettingsHeaderHost}
+                        className="flex items-center"
+                      />
+                    )}
                   {!readOnly && (
                     <Button
                       onClick={handleSave}
@@ -2065,6 +2078,9 @@ const ProjectEditor = ({
                           currentImageUrl={
                             defaultBuildingScope.buildingImageUrl ??
                             project.building_image_url
+                          }
+                          polygonSettingsHeaderHost={
+                            facadePolygonSettingsHeaderHost
                           }
                         />
                       )}

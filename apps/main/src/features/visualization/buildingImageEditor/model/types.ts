@@ -19,6 +19,8 @@ export interface GenplanEditorConfig {
 
 export interface BuildingImageEditorProps {
   projectId: string;
+  /** When set, building facade polygon settings Sheet is portaled here (e.g. project editor header). */
+  polygonSettingsHeaderHost?: HTMLElement | null;
   /** When set, editor operates in subproject scope — facades/floors are filtered and created with this sub_project_id. */
   subProjectId?: string;
   /** Floors count for this scope (subproject.floors). Overrides project.floors. */

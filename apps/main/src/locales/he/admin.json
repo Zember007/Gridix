@@ -292,6 +292,8 @@
       "monthsShortPlural": "חודשים",
       "savings": "חיסכון",
       "choosePlan": "בחר {{name}}",
+      "showMoreFeatures": "הצג עוד",
+      "showLessFeatures": "הצג פחות",
       "planContent": {
         "basic": {
           "description": "תוכנית בסיסית לפרויקטים קטנים עם פונקציונליות מוגבלת",
@@ -443,7 +445,8 @@
       "date": "תאריך",
       "amount": "סכום",
       "status": "סטטוס",
-      "view": "צפייה"
+      "view": "צפייה",
+      "viewPdf": "הצג PDF"
     },
     "error": "שגיאה בטעינת מנויים"
   },

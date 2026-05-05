@@ -1025,7 +1025,7 @@ const ApartmentDetailsPage = ({
             </div>
 
             {/* Main content grid */}
-            <div className="flex gap-8">
+            <div className="flex gap-2">
               {/* Left side - Gallery and details */}
               <div className="flex-1 space-y-4">
                 {/* Gallery */}
@@ -1128,11 +1128,11 @@ const ApartmentDetailsPage = ({
                           {apartment.floor_number} {t("apartment.floor")}
                         </div>
                       </div>
-                      <div className="flex flex-wrap justify-between gap-[15px]">
+                      <div>
                         {apartment.status === "available" ? (
-                          <>
-                            <div className="flex flex-col items-start gap-4 whitespace-nowrap">
-                              <div className="mb-1 font-poppins text-4xl font-medium leading-[1] text-gray-900">
+                          <div className="space-y-4">
+                            <div className="flex flex-nowrap items-start justify-between gap-[15px]">
+                              <div className="min-w-0 flex-1 font-poppins text-4xl font-medium leading-[1] text-gray-900">
                                 {apartment.price && priceVisible
                                   ? formatPriceWithCurrency(
                                       convertPrice(
@@ -1144,33 +1144,8 @@ const ApartmentDetailsPage = ({
                                     )
                                   : t("common.priceOnRequest")}
                               </div>
-
-                              {project?.installment_enabled &&
-                                apartment.price &&
-                                priceVisible && (
-                                  <div className="mb-2 font-poppins text-xl font-light text-gray-700">
-                                    {t("project.from")}{" "}
-                                    {formatPriceWithCurrency(
-                                      convertPrice(
-                                        calculateMonthlyPayment(
-                                          apartment.price,
-                                        ),
-                                        project?.currency || null,
-                                        selectedCurrency,
-                                      ),
-                                      selectedCurrency,
-                                    )}{" "}
-                                    / {t("installment.perMonth")}
-                                  </div>
-                                )}
-
-                              <Badge className="rounded-[10px] bg-green-500 px-[16px] font-poppins text-sm font-medium text-white hover:bg-green-600">
-                                {t("installment.low")}
-                              </Badge>
-                            </div>
-                            {priceVisible && (
-                              <div className="flex min-w-0 flex-col gap-[10px]">
-                                <div className="flex w-full shrink-0 justify-end">
+                              {priceVisible && (
+                                <div className="shrink-0 pt-0.5">
                                   <CurrencyToggle
                                     variant="select"
                                     selectedCurrency={selectedCurrency}
@@ -1191,28 +1166,50 @@ const ApartmentDetailsPage = ({
                                     }
                                   />
                                 </div>
-                                <div>
-                                  {project?.installment_enabled &&
-                                    project?.max_installment_months &&
-                                    priceVisible && (
-                                      <>
-                                        <div className="font-poppins text-[14px] font-light text-gray-700">
-                                          {t("installment.period")}{" "}
-                                          {project.max_installment_months}{" "}
-                                          {t("installment.months")}
-                                        </div>
-                                        <div className="font-poppins text-[14px] font-light text-gray-700">
-                                          {t("installment.downPaymentFrom")}{" "}
-                                          {project?.min_down_payment_percent ??
-                                            20}
-                                          %
-                                        </div>
-                                      </>
-                                    )}
+                              )}
+                            </div>
+
+                            <div className="flex flex-col items-start gap-4">
+                              {project?.installment_enabled &&
+                                apartment.price &&
+                                priceVisible && (
+                                  <div className="mb-0 font-poppins text-xl font-light text-gray-700">
+                                    {t("project.from")}{" "}
+                                    {formatPriceWithCurrency(
+                                      convertPrice(
+                                        calculateMonthlyPayment(
+                                          apartment.price,
+                                        ),
+                                        project?.currency || null,
+                                        selectedCurrency,
+                                      ),
+                                      selectedCurrency,
+                                    )}{" "}
+                                    / {t("installment.perMonth")}
+                                  </div>
+                                )}
+
+                              <Badge className="rounded-[10px] bg-green-500 px-[16px] font-poppins text-sm font-medium text-white hover:bg-green-600">
+                                {t("installment.low")}
+                              </Badge>
+                            </div>
+
+                            {priceVisible &&
+                              project?.installment_enabled &&
+                              project?.max_installment_months && (
+                                <div className="space-y-1">
+                                  <div className="font-poppins text-[14px] font-light text-gray-700">
+                                    {t("installment.period")}{" "}
+                                    {project.max_installment_months}{" "}
+                                    {t("installment.months")}
+                                  </div>
+                                  <div className="font-poppins text-[14px] font-light text-gray-700">
+                                    {t("installment.downPaymentFrom")}{" "}
+                                    {project?.min_down_payment_percent ?? 20}%
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </>
+                              )}
+                          </div>
                         ) : (
                           <div
                             className="text-shadow mb-1 font-poppins text-4xl font-bold leading-[1]"

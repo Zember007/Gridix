@@ -57,6 +57,16 @@ import {
 import { BuildingPolygonWorkspace } from "./BuildingPolygonWorkspace";
 import { useLanguage } from "@gridix/utils/react";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
+
+const polygonSettingsSheetClassName =
+  "w-[min(100%,28rem)] gap-0 overflow-y-auto p-0 sm:max-w-md bg-card text-card-foreground rounded-l-lg";
+
+const polygonSettingsEmbeddedCardClassName = "border-0 shadow-none";
+
+/** Close control: larger hit target, vertically centered with PolygonCustomizationSettings CardTitle row. */
+const polygonSettingsSheetCloseButtonClassName =
+  "top-2 sm:top-3 right-3 sm:right-4 inline-flex h-10 w-10 shrink-0 items-center justify-center opacity-90 hover:opacity-100 [&>svg]:size-5";
 
 // ─── Genplan zone types ────────────────────────────────────────────────────
 
@@ -881,10 +891,14 @@ function GenplanEditorPanel({
                   </SheetTrigger>
                   <SheetContent
                     side="right"
-                    className="w-[min(100%,28rem)] gap-0 overflow-y-auto p-0 sm:max-w-md"
+                    className={polygonSettingsSheetClassName}
+                    closeButtonClassName={
+                      polygonSettingsSheetCloseButtonClassName
+                    }
                   >
-                    <div className="overflow-y-auto p-4 pb-8 pt-12 sm:p-6 sm:pb-10 sm:pt-14">
+                    <div className="overflow-y-auto">
                       <PolygonCustomizationSettings
+                        cardClassName={polygonSettingsEmbeddedCardClassName}
                         projectId={projectId}
                         type="genplan"
                       />
@@ -1042,6 +1056,7 @@ const BuildingModePanel = ({
   subProjectType,
   currentImageUrl,
   onImageUpdate,
+  polygonSettingsHeaderHost,
 }: Omit<BuildingImageEditorProps, "genplan" | "subProjectType"> & {
   subProjectType?: "building" | "object";
 }) => {
@@ -1231,6 +1246,58 @@ const BuildingModePanel = ({
     [loader.facadeDisplaySettings],
   );
 
+  const facadePolygonSettingsSheet = (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-9 shrink-0 p-0 shadow-sm transition-transform active:scale-[0.98]"
+          aria-label={t("polygonSettings.buildingTitle")}
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        className={polygonSettingsSheetClassName}
+        closeButtonClassName={polygonSettingsSheetCloseButtonClassName}
+      >
+        <div className="overflow-y-auto">
+          <PolygonCustomizationSettings
+            cardClassName={polygonSettingsEmbeddedCardClassName}
+            projectId={loader.project?.id || projectId}
+            subProjectId={subProjectId}
+            type="building"
+            initialSettings={facadePolygonInitialSettings}
+            onSettingsChange={(settings) => {
+              loader.setFacadeDisplaySettings({
+                colors: {
+                  building: settings.colors.building || "#3b82f6",
+                },
+                opacity: {
+                  normal: settings.opacity.normal,
+                  hover: settings.opacity.hover,
+                },
+                hoverEffects: {
+                  scale: settings.hoverEffects.scale,
+                  colorChange: settings.hoverEffects.colorChange,
+                  opacityChange: settings.hoverEffects.opacityChange,
+                  glow: settings.hoverEffects.glow,
+                },
+                display: {
+                  showNumbers: settings.display.showNumbers,
+                  showTooltip: settings.display.showTooltip,
+                },
+              });
+            }}
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+
   useEffect(() => {
     if (!guidedModeEnabled || hasCompletedAllFloors) {
       setPostSaveGuidance(null);
@@ -1337,6 +1404,9 @@ const BuildingModePanel = ({
 
   return (
     <div className="space-y-4">
+      {polygonSettingsHeaderHost
+        ? createPortal(facadePolygonSettingsSheet, polygonSettingsHeaderHost)
+        : null}
       <Card>
         <CardHeader className="pb-4">
           <CardDescription>
@@ -1917,53 +1987,7 @@ const BuildingModePanel = ({
             ) : null
           }
           canvasCornerActions={
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 shrink-0 shadow-sm transition-transform active:scale-[0.98]"
-                  aria-label={t("polygonSettings.buildingTitle")}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-[min(100%,28rem)] gap-0 overflow-y-auto p-0 sm:max-w-md"
-              >
-                <div className="overflow-y-auto p-4 pb-8 pt-12 sm:p-6 sm:pb-10 sm:pt-14">
-                  <PolygonCustomizationSettings
-                    projectId={loader.project?.id || projectId}
-                    subProjectId={subProjectId}
-                    type="building"
-                    initialSettings={facadePolygonInitialSettings}
-                    onSettingsChange={(settings) => {
-                      loader.setFacadeDisplaySettings({
-                        colors: {
-                          building: settings.colors.building || "#3b82f6",
-                        },
-                        opacity: {
-                          normal: settings.opacity.normal,
-                          hover: settings.opacity.hover,
-                        },
-                        hoverEffects: {
-                          scale: settings.hoverEffects.scale,
-                          colorChange: settings.hoverEffects.colorChange,
-                          opacityChange: settings.hoverEffects.opacityChange,
-                          glow: settings.hoverEffects.glow,
-                        },
-                        display: {
-                          showNumbers: settings.display.showNumbers,
-                          showTooltip: settings.display.showTooltip,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
+            polygonSettingsHeaderHost ? null : facadePolygonSettingsSheet
           }
         />
       )}
@@ -1981,6 +2005,7 @@ const BuildingImageEditor = ({
   currentImageUrl,
   onImageUpdate,
   genplan,
+  polygonSettingsHeaderHost,
 }: BuildingImageEditorProps) => {
   if (subProjectType === "genplan") {
     if (!genplan) return null;
@@ -2000,6 +2025,7 @@ const BuildingImageEditor = ({
       subProjectType={subProjectType as "building" | "object" | undefined}
       currentImageUrl={currentImageUrl}
       onImageUpdate={onImageUpdate}
+      polygonSettingsHeaderHost={polygonSettingsHeaderHost}
     />
   );
 };

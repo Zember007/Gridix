@@ -2,7 +2,7 @@ import { Skeleton } from "@gridix/ui";
 
 export function SubscriptionTabSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 pb-20">
+    <div className="flex w-full flex-col gap-10 pb-20">
       <section className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
@@ -35,15 +35,15 @@ export function SubscriptionTabSkeleton() {
           ))}
         </div>
       </section>
-      <section className="space-y-4">
+      <section className="mx-auto w-full max-w-5xl space-y-4">
         <Skeleton className="h-7 w-52" />
         <Skeleton className="h-4 w-full max-w-lg" />
         <div className="flex gap-2">
           <Skeleton className="h-9 w-28" />
           <Skeleton className="h-9 w-28" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
             <Skeleton key={i} className="min-h-[200px] rounded-xl" />
           ))}
         </div>

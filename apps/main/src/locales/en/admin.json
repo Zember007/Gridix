@@ -292,6 +292,8 @@
       "monthsShortPlural": "months",
       "savings": "savings",
       "choosePlan": "Choose {{name}}",
+      "showMoreFeatures": "Show more",
+      "showLessFeatures": "Show less",
       "planContent": {
         "basic": {
           "description": "Basic plan for small projects with limited functionality",
@@ -443,7 +445,8 @@
       "date": "Date",
       "amount": "Amount",
       "status": "Status",
-      "view": "View"
+      "view": "View",
+      "viewPdf": "View PDF"
     },
     "error": "Error loading subscriptions"
   },

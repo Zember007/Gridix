@@ -110,7 +110,7 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
     >
       <SelectTrigger
         className={cn(
-          "h-9 w-auto min-w-[5.5rem] max-w-[9rem] shrink-0 border-gray-200 bg-white px-2.5 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-offset-0",
+          "h-9 w-auto min-w-[5.5rem] shrink-0 whitespace-nowrap border-gray-200 bg-white px-2.5 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-offset-0 [&>span]:line-clamp-none",
           className,
         )}
         style={

@@ -292,6 +292,8 @@
       "monthsShortPlural": "aylar",
       "savings": "tasarruf",
       "choosePlan": "{{name}}'yi seçin",
+      "showMoreFeatures": "Diğerlerini göster",
+      "showLessFeatures": "Gizle",
       "planContent": {
         "basic": {
           "description": "Sınırlı işlevselliğe sahip küçük projeler için temel tarife planı",
@@ -443,7 +445,8 @@
       "date": "Tarih",
       "amount": "Tutar",
       "status": "Durum",
-      "view": "Aç"
+      "view": "Aç",
+      "viewPdf": "PDF'yi görüntüle"
     },
     "error": "Abonelikler yüklenirken hata oluştu"
   },

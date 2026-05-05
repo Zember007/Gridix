@@ -292,6 +292,8 @@
       "monthsShortPlural": "айлар",
       "savings": "үнемдеу",
       "choosePlan": "{{name}} таңдаңыз",
+      "showMoreFeatures": "Көбірек көрсету",
+      "showLessFeatures": "Азырақ көрсету",
       "planContent": {
         "basic": {
           "description": "Функционалдылығы шектеулі шағын жобаларға арналған негізгі жоспар",
@@ -443,7 +445,8 @@
       "date": "Күн",
       "amount": "Сома",
       "status": "Күй",
-      "view": "Көру"
+      "view": "Көру",
+      "viewPdf": "PDF қарау"
     },
     "error": "Жазылымдарды жүктеу қатесі"
   },

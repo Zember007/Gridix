@@ -292,6 +292,8 @@
       "monthsShortPlural": "мес",
       "savings": "выгода",
       "choosePlan": "Выбрать {{name}}",
+      "showMoreFeatures": "Показать остальное",
+      "showLessFeatures": "Скрыть",
       "planContent": {
         "basic": {
           "description": "Базовый тарифный план для небольших проектов с ограниченным функционалом",
@@ -443,7 +445,8 @@
       "date": "Дата",
       "amount": "Сумма",
       "status": "Статус",
-      "view": "Открыть"
+      "view": "Открыть",
+      "viewPdf": "Открыть PDF"
     },
     "error": "Ошибка загрузки подписок."
   },

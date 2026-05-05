@@ -28,6 +28,7 @@ export * from "./form-shell";
 export * from "./form";
 export * from "./header-title";
 export * from "./hover-card";
+export * from "./insight-tip";
 export * from "./input";
 export * from "./input-otp";
 export * from "./label";
