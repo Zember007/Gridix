@@ -67,6 +67,7 @@
   "upload": "העלה",
   "signatureArea": "אזור חתימה",
   "clear": "בָּרוּר",
+  "signaturePrivacyNotice": "החתימה שלך משמשת רק ליצירת החוזה הנוכחי. תמונת החתימה אינה נשמרת בפרופיל או במסד הנתונים ולא תהיה זמינה בקישור ישיר.",
   "contractsTitle": "חוזה(ים)",
   "contractsMultiLanguageHint": "אם נבחרו מספר שפות, חוזים מוצגים בשורה.",
   "loadingContracts": "טוען חוזים...",

@@ -23,12 +23,10 @@ export function AgentSettingsTab() {
     contractsQuery,
     handleSaveAll,
     handleSaveProfile,
-    myProfileQuery,
     onNotificationReady,
     profileForm,
     profileLoading,
     refreshContracts,
-    refreshProfile,
     saving,
     section,
     setProfileForm,
@@ -38,8 +36,6 @@ export function AgentSettingsTab() {
     userId,
   } = useAgentSettingsTabModel(translate);
 
-  const profileSignaturePath = myProfileQuery.data?.signature_path ?? null;
-  const profileSignatureMethod = myProfileQuery.data?.signature_method ?? null;
   const saveAllLabel = saving
     ? t("common.settings.savingProfile")
     : t("common.settings.saveAll");
@@ -100,12 +96,8 @@ export function AgentSettingsTab() {
               contracts={contractsQuery.data ?? []}
               contractsError={contractsQuery.error as Error | null}
               contractsLoading={contractsQuery.isLoading}
-              profileSignatureMethod={profileSignatureMethod}
-              profileSignaturePath={profileSignaturePath}
               refreshContracts={refreshContracts}
-              refreshProfile={refreshProfile}
               t={translate}
-              userId={userId}
             />
           </TabsContent>
         </Tabs>

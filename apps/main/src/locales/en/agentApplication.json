@@ -67,6 +67,7 @@
   "upload": "Upload",
   "signatureArea": "Signature area",
   "clear": "Clear",
+  "signaturePrivacyNotice": "Your signature is used only to generate the current contract. The signature image is not saved to your profile or database and will not be available by direct link.",
   "contractsTitle": "Contract(s)",
   "contractsMultiLanguageHint": "If multiple languages are selected, contracts are shown in a row.",
   "loadingContracts": "Loading contracts...",

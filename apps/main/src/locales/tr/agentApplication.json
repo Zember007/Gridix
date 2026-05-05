@@ -67,6 +67,7 @@
   "upload": "Yüklemek",
   "signatureArea": "İmza alanı",
   "clear": "Temizlemek",
+  "signaturePrivacyNotice": "İmzanız yalnızca mevcut sözleşmeyi oluşturmak için kullanılır. İmza görseli profilinize veya veritabanına kaydedilmez ve doğrudan bağlantıyla kullanılamaz.",
   "contractsTitle": "Sözleşme(ler)",
   "contractsMultiLanguageHint": "Birden fazla dil seçilirse sözleşmeler arka arkaya gösterilir.",
   "loadingContracts": "Sözleşmeler yükleniyor...",
