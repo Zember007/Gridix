@@ -229,13 +229,13 @@ export const FloorSelector = ({
       >
         {/* Floor Carousel */}
         <div
-          className={`${isMobile ? "flex min-h-0 flex-1 items-center justify-center py-2" : "flex min-h-[650px] flex-1 flex-col items-center justify-center py-10"}`}
+          className={`${isMobile ? "flex min-h-0 flex-1 items-center justify-center py-2" : "flex flex-1 flex-col items-center justify-center py-10"}`}
         >
           <div
-            className={`${isMobile ? "w-full max-w-[60vw]" : "h-full w-12"} relative`}
+            className={`${isMobile ? "w-full max-w-[60vw]" : "w-12"} relative`}
           >
             <Carousel
-              className={`h-full w-full ${isMobile ? "touch-pan-y" : ""}`}
+              className={`w-full ${isMobile ? "touch-pan-y" : ""}`}
               orientation={isMobile ? "horizontal" : "vertical"}
               opts={{
                 align: "center",

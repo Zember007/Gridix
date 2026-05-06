@@ -381,13 +381,18 @@ export const useProjectsManager = () => {
       }
 
       try {
-        const { error } = await supabase
-          .from("projects")
-          .delete()
-          .eq("id", projectId)
-          .eq("user_id", user.id);
+        const { data, error } = await supabase.functions.invoke(
+          "project-editor",
+          {
+            body: {
+              action: "delete-project",
+              projectId,
+            },
+          },
+        );
 
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
 
         // Очищаем кеш
         singleProjectCache.delete(projectId);
