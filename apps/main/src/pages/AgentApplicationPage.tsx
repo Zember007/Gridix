@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Checkbox,
   Dialog,
   DialogContent,
   Input,
@@ -17,6 +18,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   Switch,
 } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
@@ -81,6 +83,122 @@ type ContractPreviewProps = {
   openFileText: string;
 };
 
+const PdfViewerSkeleton = ({
+  loadingText,
+  isFullscreen = false,
+}: {
+  loadingText: string;
+  isFullscreen?: boolean;
+}) => (
+  <div
+    className={`flex h-full w-full bg-slate-100 ${isFullscreen ? "p-6" : "p-5"}`}
+    aria-label={loadingText}
+    role="status"
+  >
+    <div
+      className={`flex shrink-0 flex-col gap-4 border-r border-slate-200 bg-slate-50 ${
+        isFullscreen ? "w-44 p-4" : "w-40 p-4"
+      }`}
+    >
+      <Skeleton className="h-5 w-20 rounded-md" />
+      {[0, 1, 2, 3].map((idx) => (
+        <div
+          key={idx}
+          className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
+        >
+          <Skeleton className="aspect-[3/4] w-full rounded-md" />
+          <Skeleton className="mx-auto mt-2 h-3 w-10 rounded-full" />
+        </div>
+      ))}
+    </div>
+    <div className="flex min-w-0 flex-1 items-center justify-center bg-slate-200 p-8">
+      <div
+        className={`w-full max-w-[520px] rounded-xl border border-slate-200 bg-slate-50 p-8 shadow-xl ${
+          isFullscreen ? "h-full max-h-[900px]" : "h-[880px]"
+        }`}
+      >
+        <Skeleton className="h-7 w-2/3 rounded-lg" />
+        <Skeleton className="mt-8 h-4 w-full rounded-md" />
+        <Skeleton className="mt-4 h-4 w-[88%] rounded-md" />
+        <Skeleton className="mt-4 h-4 w-[94%] rounded-md" />
+        <div className="mt-10 grid grid-cols-2 gap-6">
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-24 rounded-lg" />
+        </div>
+        <Skeleton className="mt-10 h-48 rounded-lg" />
+        <div className="mt-10 space-y-4">
+          <Skeleton className="h-4 w-full rounded-md" />
+          <Skeleton className="h-4 w-[91%] rounded-md" />
+          <Skeleton className="h-4 w-[96%] rounded-md" />
+          <Skeleton className="h-4 w-3/4 rounded-md" />
+        </div>
+        <div className="mt-12 flex justify-end">
+          <Skeleton className="h-16 w-44 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const loadImage = (src: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = src;
+  });
+
+const drawContainedImage = (
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  box: { x: number; y: number; width: number; height: number },
+) => {
+  const imageWidth = image.naturalWidth || image.width;
+  const imageHeight = image.naturalHeight || image.height;
+  if (!imageWidth || !imageHeight) return;
+
+  const scale = Math.min(box.width / imageWidth, box.height / imageHeight);
+  const width = imageWidth * scale;
+  const height = imageHeight * scale;
+  const x = box.x + (box.width - width) / 2;
+  const y = box.y + (box.height - height) / 2;
+
+  ctx.drawImage(image, x, y, width, height);
+};
+
+const composeAgentSignatureImage = async (
+  signatureDataUrl: string,
+  stampDataUrl: string | null,
+): Promise<string> => {
+  if (!stampDataUrl) return signatureDataUrl;
+
+  const [signatureImage, stampImage] = await Promise.all([
+    loadImage(signatureDataUrl),
+    loadImage(stampDataUrl),
+  ]);
+  const canvas = document.createElement("canvas");
+  canvas.width = 900;
+  canvas.height = 360;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return signatureDataUrl;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawContainedImage(ctx, signatureImage, {
+    x: 70,
+    y: 70,
+    width: 760,
+    height: 220,
+  });
+  drawContainedImage(ctx, stampImage, {
+    x: 275,
+    y: 40,
+    width: 350,
+    height: 240,
+  });
+
+  return canvas.toDataURL("image/png");
+};
+
 const ContractPreview = memo(
   (props: ContractPreviewProps) => {
     const A4_W = 794;
@@ -143,9 +261,7 @@ const ContractPreview = memo(
             }}
           >
             {props.isLoading ? (
-              <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-500">
-                {props.loadingText}
-              </div>
+              <PdfViewerSkeleton loadingText={props.loadingText} />
             ) : embeddedUrl ? (
               <iframe
                 title={props.label}
@@ -265,6 +381,11 @@ export default function AgentApplicationPage() {
   const [uploadedSignatureDataUrl, setUploadedSignatureDataUrl] = useState<
     string | null
   >(null);
+  const [uploadedAgentStampDataUrl, setUploadedAgentStampDataUrl] = useState<
+    string | null
+  >(null);
+  const [combinedAgentSignatureDataUrl, setCombinedAgentSignatureDataUrl] =
+    useState<string | null>(null);
 
   // Contract selection state
   const [acceptedAgreements, setAcceptedAgreements] = useState(false);
@@ -437,8 +558,39 @@ export default function AgentApplicationPage() {
     [selectedTemplates, fullscreenTemplatePath],
   );
 
-  const finalSignatureDataUrl =
+  const rawSignatureDataUrl =
     signatureMethod === "draw" ? signatureDataUrl : uploadedSignatureDataUrl;
+  const finalSignatureDataUrl = combinedAgentSignatureDataUrl;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!rawSignatureDataUrl) {
+      setCombinedAgentSignatureDataUrl(null);
+      return;
+    }
+
+    if (!uploadedAgentStampDataUrl) {
+      setCombinedAgentSignatureDataUrl(rawSignatureDataUrl);
+      return;
+    }
+
+    setCombinedAgentSignatureDataUrl(null);
+    void composeAgentSignatureImage(
+      rawSignatureDataUrl,
+      uploadedAgentStampDataUrl,
+    )
+      .then((dataUrl) => {
+        if (!cancelled) setCombinedAgentSignatureDataUrl(dataUrl);
+      })
+      .catch((error) => {
+        console.error("Failed to compose agent stamp and signature", error);
+        if (!cancelled) setCombinedAgentSignatureDataUrl(rawSignatureDataUrl);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [rawSignatureDataUrl, uploadedAgentStampDataUrl]);
 
   useEffect(() => {
     if (!fullscreenTemplatePath) return;
@@ -685,7 +837,24 @@ export default function AgentApplicationPage() {
   const signatureValid = !!(
     finalSignatureDataUrl && finalSignatureDataUrl.startsWith("data:image/")
   );
-  const contractsValid = selectedTemplates.length > 0 && acceptedAgreements;
+  const contractPreviewsLoading = useMemo(() => {
+    if (templatesLoading) return true;
+    return selectedTemplates.some((template) => {
+      const preview = previewByTemplatePath[template.storage_path];
+      return !preview || preview.loading;
+    });
+  }, [previewByTemplatePath, selectedTemplates, templatesLoading]);
+  const contractsValid =
+    selectedTemplates.length > 0 &&
+    !contractPreviewsLoading &&
+    acceptedAgreements;
+
+  useEffect(() => {
+    if (contractPreviewsLoading && acceptedAgreements) {
+      setAcceptedAgreements(false);
+    }
+  }, [acceptedAgreements, contractPreviewsLoading]);
+
   const baseInputClass =
     "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-200";
   const stepItems: Array<{
@@ -718,7 +887,7 @@ export default function AgentApplicationPage() {
       return;
     }
 
-    if (templatesLoading) {
+    if (contractPreviewsLoading) {
       toast.error(t("agentApplication.waitLoadingContracts"));
       return;
     }
@@ -900,6 +1069,16 @@ export default function AgentApplicationPage() {
       const url = typeof reader.result === "string" ? reader.result : null;
       setUploadedSignatureDataUrl(url);
       setSignatureMethod("upload");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onUploadAgentStamp = async (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = typeof reader.result === "string" ? reader.result : null;
+      setUploadedAgentStampDataUrl(url);
     };
     reader.readAsDataURL(file);
   };
@@ -1575,6 +1754,66 @@ export default function AgentApplicationPage() {
                             </div>
                           </div>
                         )}
+
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                            <div className="min-w-0">
+                              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                {t("agentApplication.agentStampOptional")}
+                              </Label>
+                              <div className="mt-1 text-xs leading-5 text-slate-500">
+                                {t("agentApplication.agentStampHint")}
+                              </div>
+                            </div>
+                            {uploadedAgentStampDataUrl && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setUploadedAgentStampDataUrl(null)
+                                }
+                              >
+                                {t("agentApplication.removeStamp")}
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="mt-4">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) =>
+                                void onUploadAgentStamp(
+                                  e.target.files?.[0] ?? null,
+                                )
+                              }
+                            />
+                          </div>
+
+                          {(uploadedAgentStampDataUrl ||
+                            rawSignatureDataUrl) && (
+                            <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                              <div className="relative mx-auto h-40 max-w-sm">
+                                {rawSignatureDataUrl && (
+                                  <img
+                                    src={rawSignatureDataUrl}
+                                    alt="signature"
+                                    className="absolute inset-x-4 bottom-5 mx-auto max-h-24 max-w-72 object-contain mix-blend-multiply"
+                                  />
+                                )}
+                                {uploadedAgentStampDataUrl && (
+                                  <img
+                                    src={uploadedAgentStampDataUrl}
+                                    alt={t("agentApplication.agentStampAlt")}
+                                    className="absolute inset-x-0 bottom-7 mx-auto max-h-28 max-w-48 object-contain mix-blend-multiply"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium leading-5 text-emerald-900">
                           {t("agentApplication.signaturePrivacyNotice")}
                         </div>
@@ -1683,8 +1922,13 @@ export default function AgentApplicationPage() {
 
                                   if (isLoading) {
                                     return (
-                                      <div className="flex flex-1 items-center justify-center text-sm font-semibold text-slate-300">
-                                        {t("agentApplication.loadingContracts")}
+                                      <div className="min-h-0 flex-1">
+                                        <PdfViewerSkeleton
+                                          loadingText={t(
+                                            "agentApplication.loadingContracts",
+                                          )}
+                                          isFullscreen
+                                        />
                                       </div>
                                     );
                                   }
@@ -1730,14 +1974,17 @@ export default function AgentApplicationPage() {
                         </Dialog>
 
                         <div className="rounded-xl border border-slate-200 bg-white p-4">
-                          <label className="flex cursor-pointer items-start gap-3">
-                            <input
-                              type="checkbox"
+                          <label
+                            className={`flex items-center gap-3 ${contractPreviewsLoading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                          >
+                            <Checkbox
                               checked={acceptedAgreements}
-                              onChange={(e) =>
-                                setAcceptedAgreements(e.target.checked)
+                              disabled={contractPreviewsLoading}
+                              onCheckedChange={(checked) =>
+                                setAcceptedAgreements(
+                                  !contractPreviewsLoading && checked === true,
+                                )
                               }
-                              className="mt-1 h-5 w-5"
                             />
                             <div className="text-sm text-slate-700">
                               {t("agentApplication.confirmAgreementsRead")}{" "}
