@@ -24,6 +24,10 @@ export const fetchLeads = async (
       phone,
       project_id,
       apartment_id,
+      sub_project_id,
+      owner_user_id,
+      preferences,
+      price,
       amocrm_lead_id,
       amocrm_sent_at,
       status,
@@ -33,7 +37,7 @@ export const fetchLeads = async (
       pipeline_stage_id,
       assigned_to_user_id,
       tags,
-      projects!inner (
+      projects (
         name
       ),
       apartments (
@@ -46,11 +50,24 @@ export const fetchLeads = async (
     .order("created_at", { ascending: false });
 
   if (projectIdsForManager && projectIdsForManager.length > 0) {
-    query = query.in("project_id", projectIdsForManager);
+    if (filters?.projectId) {
+      if (filters.projectId === "projectless") {
+        query = query.is("project_id", null);
+      } else {
+        query = query.eq("project_id", filters.projectId);
+      }
+    } else {
+      const csv = projectIdsForManager.join(",");
+      query = query.or(`project_id.in.(${csv}),project_id.is.null`);
+    }
   }
 
-  if (filters?.projectId) {
-    query = query.eq("project_id", filters.projectId);
+  if (!projectIdsForManager?.length && filters?.projectId) {
+    if (filters.projectId === "projectless") {
+      query = query.is("project_id", null);
+    } else {
+      query = query.eq("project_id", filters.projectId);
+    }
   }
   if (filters?.status) {
     query = query.eq("status", filters.status);

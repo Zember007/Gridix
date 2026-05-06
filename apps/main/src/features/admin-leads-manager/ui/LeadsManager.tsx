@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { useAdminLeadsData } from "@/hooks/useAdminLeadsData";
 import { showToast } from "@gridix/utils/lib";
@@ -62,6 +63,7 @@ export function LeadsManager({
     handleAddTag,
     handleRemoveTag,
     handleDeleteSelected,
+    handleDeleteLead,
     handleMassAssign,
     handleUpdateLead,
     handleMergeLeads,
@@ -91,6 +93,7 @@ export function LeadsManager({
     cardConfig,
     handleSaveCardConfig,
     MOCK_USERS,
+    availableProjects,
     totalUnreadCount,
     unreadCountByFunnelId,
     isLoading,
@@ -168,6 +171,31 @@ export function LeadsManager({
     );
   };
 
+  const handleExportSingleLead = (
+    lead: NonNullable<
+      ComponentProps<typeof LeadsManagerDrawer>["selectedLead"]
+    >,
+  ) => {
+    exportLeadsXlsx({
+      leads: [
+        {
+          id: lead.id,
+          name: lead.name,
+          phone: lead.phone,
+          project: lead.project,
+          price: lead.price,
+          status: lead.status,
+          source: lead.source,
+          date: lead.date,
+        },
+      ],
+      funnelStages: funnelStages.map((stage) => ({
+        id: stage.id,
+        name: stage.name,
+      })),
+    });
+  };
+
   return (
     <div className="flex h-screen flex-col bg-[var(--admin-background)] duration-500 animate-in fade-in">
       {!readOnly && (
@@ -176,6 +204,8 @@ export function LeadsManager({
           setIsCreateModalOpen={setIsCreateModalOpen}
           handleCreateLead={handleCreateLead}
           filteredAndSortedLeads={filteredAndSortedLeads}
+          projectOptions={availableProjects}
+          defaultProjectId={projectId}
           isCardAppearanceModalOpen={isCardAppearanceModalOpen}
           setIsCardAppearanceModalOpen={setIsCardAppearanceModalOpen}
           cardConfig={cardConfig}
@@ -222,6 +252,7 @@ export function LeadsManager({
         isFilterPanelOpen={isFilterPanelOpen}
         setIsFilterPanelOpen={setIsFilterPanelOpen}
         searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
         filters={filters}
         activeFiltersCount={activeFiltersCount}
         draftSearchTerm={draftSearchTerm}
@@ -242,6 +273,9 @@ export function LeadsManager({
         setIsCreateModalOpen={setIsCreateModalOpen}
         setFilters={setFilters}
         resetFilters={resetFilters}
+        projectOptions={availableProjects}
+        funnelStages={funnelStages}
+        filterUsers={MOCK_USERS}
         readOnly={readOnly}
       />
 
@@ -306,6 +340,10 @@ export function LeadsManager({
         handleAddNote={handleAddNote}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
+        handleDeleteLead={handleDeleteLead}
+        handleExportLead={handleExportSingleLead}
+        projectOptions={availableProjects}
+        users={MOCK_USERS}
         readOnly={readOnly}
       />
 

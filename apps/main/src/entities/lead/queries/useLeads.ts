@@ -14,8 +14,12 @@ export interface Lead {
   name: string;
   email: string;
   phone: string;
-  project_id: string;
-  apartment_id: string;
+  project_id: string | null;
+  apartment_id: string | null;
+  sub_project_id?: string | null;
+  owner_user_id?: string | null;
+  preferences?: Record<string, unknown> | null;
+  price?: number | null;
   amocrm_lead_id?: number | null;
   amocrm_contact_id?: number | null;
   amocrm_sent_at?: string | null;
@@ -25,6 +29,9 @@ export interface Lead {
   source: string | null;
   notes?: string | null;
   agent_id?: string | null;
+  pipeline_stage_id?: string | null;
+  assigned_to_user_id?: string | null;
+  tags?: string[] | null;
   // Relations
   projects?: {
     name: string;

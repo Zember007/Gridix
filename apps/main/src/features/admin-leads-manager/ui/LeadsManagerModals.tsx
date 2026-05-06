@@ -8,6 +8,12 @@ type LeadsManagerModalsProps = {
   setIsCreateModalOpen: (value: boolean) => void;
   handleCreateLead: React.ComponentProps<typeof CreateLeadModal>["onCreate"];
   filteredAndSortedLeads: React.ComponentProps<typeof CreateLeadModal>["leads"];
+  projectOptions: React.ComponentProps<
+    typeof CreateLeadModal
+  >["projectOptions"];
+  defaultProjectId?: React.ComponentProps<
+    typeof CreateLeadModal
+  >["defaultProjectId"];
   isCardAppearanceModalOpen: boolean;
   setIsCardAppearanceModalOpen: (value: boolean) => void;
   cardConfig: React.ComponentProps<typeof CardAppearanceModal>["config"];
@@ -30,6 +36,8 @@ export const LeadsManagerModals = ({
   setIsCreateModalOpen,
   handleCreateLead,
   filteredAndSortedLeads,
+  projectOptions,
+  defaultProjectId,
   isCardAppearanceModalOpen,
   setIsCardAppearanceModalOpen,
   cardConfig,
@@ -49,6 +57,8 @@ export const LeadsManagerModals = ({
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateLead}
         leads={filteredAndSortedLeads}
+        projectOptions={projectOptions}
+        defaultProjectId={defaultProjectId}
       />
       <CardAppearanceModal
         isOpen={isCardAppearanceModalOpen}

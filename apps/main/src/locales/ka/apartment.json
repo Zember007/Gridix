@@ -51,5 +51,11 @@
   "leadUnexpectedError": "მოულოდნელი შეცდომა. სცადეთ ხელახლა.",
   "objectDetails": "ობიექტის დეტალები",
   "objectUnit": "ობიექტი",
-  "recommendedApartments": "რეკომენდებული ვარიანტები"
+  "recommendedApartments": "რეკომენდებული ვარიანტები",
+  "preferencesTitle": "სურვილები (არასავალდებულო)",
+  "preferencesLocations": "სასურველი ლოკაციები",
+  "preferencesBudgetMin": "ბიუჯეტი დან",
+  "preferencesBudgetMax": "ბიუჯეტი მდე",
+  "preferencesInterest": "ინტერესი",
+  "preferencesRequirements": "მოთხოვნები ან კომენტარი"
 }

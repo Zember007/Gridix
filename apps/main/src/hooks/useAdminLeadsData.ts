@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import i18n from "i18next";
 import { supabase } from "@gridix/utils/api";
 import {
   useLeads,
@@ -10,6 +11,7 @@ import {
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getManagerProjectIds } from "@/hooks/useManagerProjectIds";
+import { useAdminAccess } from "@/entities/admin-access";
 import { showToast } from "@gridix/utils/lib";
 import {
   ExtendedLead,
@@ -20,12 +22,141 @@ import {
   FunnelTrigger,
   LeadTask,
   LeadUser,
+  LeadPreferences,
+  LeadDocumentAttachment,
   CardAppearanceConfig,
   MOCK_USERS,
   TaskType,
 } from "@/entities/crm/model/types";
 
 type DbLeadPatch = Record<string, unknown>;
+type LeadProjectOption = { id: string; name: string };
+
+function parseLeadDocuments(value: unknown): LeadDocumentAttachment[] {
+  if (!Array.isArray(value)) return [];
+
+  const out: LeadDocumentAttachment[] = [];
+  let index = 0;
+  for (const item of value) {
+    if (!item || typeof item !== "object") {
+      index += 1;
+      continue;
+    }
+    const o = item as Record<string, unknown>;
+    const name = typeof o.name === "string" ? o.name : "";
+    const storagePath =
+      typeof o.storagePath === "string"
+        ? o.storagePath
+        : typeof (o as { path?: unknown }).path === "string"
+          ? String((o as { path: string }).path)
+          : "";
+    const url =
+      typeof o.url === "string"
+        ? o.url
+        : typeof (o as { publicUrl?: unknown }).publicUrl === "string"
+          ? String((o as { publicUrl: string }).publicUrl)
+          : "";
+    const id =
+      typeof o.id === "string" ? o.id : `doc_${storagePath}_${String(index)}`;
+    const createdAt =
+      typeof o.createdAt === "string" ? o.createdAt : new Date().toISOString();
+
+    index += 1;
+    if (!name.trim() || !storagePath.trim() || !url.trim()) continue;
+
+    const size =
+      typeof o.size === "number" && Number.isFinite(o.size)
+        ? o.size
+        : undefined;
+
+    out.push({
+      id,
+      name: name.trim(),
+      storagePath: storagePath.trim(),
+      url: url.trim(),
+      createdAt,
+      ...(size !== undefined ? { size } : {}),
+    });
+  }
+
+  return out;
+}
+
+const EMPTY_LEAD_PREFERENCES: LeadPreferences = {
+  locations: [],
+  interest: "",
+  requirements: "",
+  purpose: "",
+  budgetMin: null,
+  budgetMax: null,
+  currency: "USD",
+  siteComment: "",
+};
+
+function normalizeLeadPreferences(value: unknown): LeadPreferences {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { ...EMPTY_LEAD_PREFERENCES };
+  }
+
+  const raw = value as Record<string, unknown>;
+  const documents = parseLeadDocuments(raw.documents);
+
+  return {
+    locations: Array.isArray(raw.locations)
+      ? raw.locations.filter((item): item is string => typeof item === "string")
+      : [],
+    interest: typeof raw.interest === "string" ? raw.interest : "",
+    requirements: typeof raw.requirements === "string" ? raw.requirements : "",
+    purpose: typeof raw.purpose === "string" ? raw.purpose : "",
+    budgetMin:
+      typeof raw.budgetMin === "number" && Number.isFinite(raw.budgetMin)
+        ? raw.budgetMin
+        : null,
+    budgetMax:
+      typeof raw.budgetMax === "number" && Number.isFinite(raw.budgetMax)
+        ? raw.budgetMax
+        : null,
+    currency: typeof raw.currency === "string" ? raw.currency : "USD",
+    siteComment: typeof raw.siteComment === "string" ? raw.siteComment : "",
+    ...(documents.length ? { documents } : {}),
+  };
+}
+
+function buildLeadUser(
+  id: string,
+  name: string | null | undefined,
+  fallbackEmail?: string | null,
+): LeadUser {
+  const displayName = name?.trim() || fallbackEmail?.trim() || "User";
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const colors = [
+    "bg-blue-600",
+    "bg-purple-600",
+    "bg-amber-600",
+    "bg-emerald-600",
+    "bg-rose-600",
+    "bg-cyan-600",
+    "bg-slate-800",
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return {
+    id,
+    name: displayName,
+    initials: initials || "U",
+    color: colors[Math.abs(hash) % colors.length] || "bg-slate-800",
+  };
+}
 
 function buildDueDateIso(
   dateInput: string,
@@ -58,14 +189,31 @@ function patchDbLeadsArray(
     if (!l || typeof l !== "object") return l;
     const lead = l as Record<string, unknown>;
     if (String(lead.id) !== leadId) return l;
-    return {
+
+    const merged = {
       ...lead,
       ...patch,
       updated_at:
         typeof patch.updated_at === "string"
           ? patch.updated_at
           : new Date().toISOString(),
-    };
+    } as Record<string, unknown>;
+
+    if (
+      Object.prototype.hasOwnProperty.call(patch, "project_id") &&
+      patch.project_id === null
+    ) {
+      merged.projects = null;
+      merged.apartments = null;
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(patch, "apartment_id") &&
+      patch.apartment_id === null
+    ) {
+      merged.apartments = null;
+    }
+
+    return merged;
   });
 }
 
@@ -149,6 +297,32 @@ function patchSelectedExtendedLead(
   if (Object.prototype.hasOwnProperty.call(patch, "notes")) {
     next.notes = patch.notes as string | null;
   }
+  if (Object.prototype.hasOwnProperty.call(patch, "price")) {
+    const price = patch.price as number | null;
+    next.price = typeof price === "number" ? price : undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "source")) {
+    next.source = patch.source as string | null;
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "apartment_id")) {
+    (next as unknown as { apartment_id?: string | null }).apartment_id =
+      patch.apartment_id as string | null;
+    if (patch.apartment_id === null) {
+      (next as unknown as { apartments?: unknown }).apartments = undefined;
+      next.apartment = undefined;
+    }
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(patch, "project_id") &&
+    patch.project_id === null
+  ) {
+    (next as unknown as { project_id?: string | null }).project_id = null;
+    (next as unknown as { projects?: unknown }).projects = undefined;
+    (next as unknown as { apartments?: unknown }).apartments = undefined;
+    next.apartment = undefined;
+    next.project = i18n.t("leads.filters.projectless");
+  }
 
   // Copy raw keys as well, best-effort (keeps reference type as ExtendedLead)
   Object.assign(next as unknown as Record<string, unknown>, patch);
@@ -159,15 +333,19 @@ function patchSelectedExtendedLead(
 function mapDbLeadToExtended(
   dbLead: DbLead,
   unknownProjectLabel: string,
+  projectlessLabel: string,
 ): ExtendedLead {
-  const projectName = dbLead.projects?.name || unknownProjectLabel;
+  const projectName = dbLead.project_id
+    ? dbLead.projects?.name || unknownProjectLabel
+    : projectlessLabel;
   const apt = dbLead.apartments;
 
   const apartment = apt
     ? `№${apt.apartment_number}${apt.area ? ` (${apt.area}м²)` : ""}`
     : undefined;
 
-  const price = apt?.price ?? undefined;
+  const price =
+    typeof dbLead.price === "number" ? dbLead.price : (apt?.price ?? undefined);
 
   const crmStatus = {
     connected: !!dbLead.amocrm_lead_id,
@@ -186,6 +364,7 @@ function mapDbLeadToExtended(
   const assignedToUserId = anyLead.assigned_to_user_id;
   const tags = anyLead.tags || [];
   const tasks = Array.isArray(anyLead.tasks) ? anyLead.tasks : [];
+  const preferences = normalizeLeadPreferences(anyLead.preferences);
 
   return {
     ...dbLead,
@@ -199,6 +378,7 @@ function mapDbLeadToExtended(
     tasks,
     assignedTo: assignedToUserId || undefined,
     tags,
+    preferences,
   } as ExtendedLead;
 }
 
@@ -302,6 +482,7 @@ function localizeLegacyStageName(name: string, t: TranslationFn): string {
 export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
   const { user } = useAuth();
+  const adminAccess = useAdminAccess();
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -333,6 +514,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     dateTo: "",
     stages: [],
     assignedTo: [],
+    projectId: "all",
+    projectless: false,
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -432,6 +615,108 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       return (data || []) as Array<{ id: string; funnel_id: string }>;
     },
   });
+
+  const availableProjectsQuery = useQuery({
+    queryKey: [
+      "crm_lead_projects",
+      user?.id,
+      activeWorkspaceId,
+      isManagerMode,
+      adminAccess?.access?.active_project_ids.join(",") || "",
+    ],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return [] as LeadProjectOption[];
+
+      let projectIds: string[] | null = null;
+      const adminProjectIds = adminAccess?.access?.active_project_ids || [];
+
+      if (adminProjectIds.length > 0) {
+        projectIds = adminProjectIds;
+      } else if (isManagerMode && activeWorkspaceId) {
+        projectIds = await getManagerProjectIds(user.id, activeWorkspaceId);
+      }
+
+      let query = supabase
+        .from("projects")
+        .select("id, name")
+        .order("created_at", { ascending: true });
+
+      if (projectIds) {
+        if (projectIds.length === 0) return [] as LeadProjectOption[];
+        query = query.in("id", projectIds);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []).map((project) => ({
+        id: project.id,
+        name: project.name || t("leads.list.unknown"),
+      })) as LeadProjectOption[];
+    },
+  });
+
+  const leadUsersQuery = useQuery({
+    queryKey: ["crm_lead_users", crmFunnelOwnerId, user?.id],
+    enabled: !!crmFunnelOwnerId,
+    queryFn: async () => {
+      const usersById = new Map<string, LeadUser>();
+
+      const [{ data: ownerProfile }, { data: managerAccounts }] =
+        await Promise.all([
+          supabase
+            .from("user_profiles")
+            .select("id, full_name, email")
+            .eq("id", crmFunnelOwnerId!)
+            .maybeSingle(),
+          supabase
+            .from("manager_accounts")
+            .select("manager_id, full_name, email")
+            .eq("developer_id", crmFunnelOwnerId!)
+            .eq("status", "active"),
+        ]);
+
+      if (ownerProfile?.id) {
+        usersById.set(
+          ownerProfile.id,
+          buildLeadUser(
+            ownerProfile.id,
+            ownerProfile.full_name || "Owner",
+            ownerProfile.email,
+          ),
+        );
+      }
+
+      (managerAccounts || []).forEach((manager) => {
+        if (!manager.manager_id) return;
+        usersById.set(
+          manager.manager_id,
+          buildLeadUser(manager.manager_id, manager.full_name, manager.email),
+        );
+      });
+
+      if (user?.id && !usersById.has(user.id)) {
+        usersById.set(user.id, buildLeadUser(user.id, user.email, user.email));
+      }
+
+      return Array.from(usersById.values());
+    },
+  });
+
+  const leadUsers = useMemo(
+    () =>
+      leadUsersQuery.data && leadUsersQuery.data.length > 0
+        ? leadUsersQuery.data
+        : MOCK_USERS,
+    [leadUsersQuery.data],
+  );
+
+  const leadUserById = useMemo(
+    () => new Map(leadUsers.map((leadUser) => [leadUser.id, leadUser])),
+    [leadUsers],
+  );
 
   useEffect(() => {
     const data = funnelsQuery.data;
@@ -551,9 +836,13 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
               id: t.id,
               text: t.text,
               date: t.due_date,
-              type: "other", // Default type
+              time: t.due_time || undefined,
+              type: (t.type || "other") as TaskType,
               completed: t.completed,
-              assignedTo: MOCK_USERS[0], // Default
+              result: t.result || undefined,
+              assignedTo: t.assigned_to_user_id
+                ? leadUserById.get(t.assigned_to_user_id)
+                : undefined,
             })),
             history: (history || []).map((h) => ({
               id: h.id,
@@ -571,7 +860,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     };
 
     loadLeadDetails();
-  }, [selectedLead?.id]);
+  }, [leadUserById, selectedLead?.id]);
 
   // Mark lead as read when opening the drawer
   useEffect(() => {
@@ -618,7 +907,13 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   // Map DB leads to extended leads with computed fields
   const leads: ExtendedLead[] = useMemo(
     () =>
-      dbLeads.map((lead) => mapDbLeadToExtended(lead, t("leads.list.unknown"))),
+      dbLeads.map((lead) =>
+        mapDbLeadToExtended(
+          lead,
+          t("leads.list.unknown"),
+          t("leads.filters.projectless"),
+        ),
+      ),
     [dbLeads, t],
   );
 
@@ -655,10 +950,33 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   }, [allFunnelStagesQuery.data, funnelsQuery.data, leads]);
 
   const filteredAndSortedLeads = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
     const result = leads.filter((lead) => {
+      const preferenceText = [
+        ...(lead.preferences.locations || []),
+        lead.preferences.interest,
+        lead.preferences.requirements,
+        lead.preferences.purpose,
+        lead.preferences.siteComment,
+        lead.preferences.currency,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const searchable = [
+        lead.name,
+        lead.phone,
+        lead.email,
+        lead.project,
+        lead.apartment,
+        lead.notes,
+        ...(lead.tags || []),
+        preferenceText,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
       const matchesSearch =
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.project.toLowerCase().includes(searchTerm.toLowerCase());
+        normalizedSearch.length === 0 || searchable.includes(normalizedSearch);
 
       const matchesSource =
         filters.source === "all" || lead.source === filters.source;
@@ -690,6 +1008,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       const matchesAssignedTo =
         filters.assignedTo.length === 0 ||
         (lead.assignedTo && filters.assignedTo.includes(lead.assignedTo));
+      const matchesProject =
+        filters.projectId === "all" ||
+        (filters.projectId === "projectless"
+          ? !lead.project_id
+          : lead.project_id === filters.projectId);
+      const matchesProjectless = !filters.projectless || !lead.project_id;
 
       return (
         matchesSearch &&
@@ -697,7 +1021,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         matchesBudget &&
         matchesDate &&
         matchesStages &&
-        matchesAssignedTo
+        matchesAssignedTo &&
+        matchesProject &&
+        matchesProjectless
       );
     });
 
@@ -721,6 +1047,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     filters.dateTo,
     filters.stages,
     filters.assignedTo,
+    filters.projectId,
+    filters.projectless,
   ]);
 
   const totalLeadsSum = useMemo(
@@ -736,6 +1064,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     filters.dateTo !== "",
     filters.stages.length > 0,
     filters.assignedTo.length > 0,
+    filters.projectId !== "all",
+    filters.projectless,
   ].filter(Boolean).length;
 
   const resetFilters = () => {
@@ -747,6 +1077,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       dateTo: "",
       stages: [],
       assignedTo: [],
+      projectId: "all",
+      projectless: false,
     });
     setSearchTerm("");
   };
@@ -782,7 +1114,6 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     mutationFn: async (payload: Record<string, unknown>) => {
       const { data, error } = await supabase
         .from("leads")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(payload as any)
         .select("*")
         .single();
@@ -805,7 +1136,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       console.debug("updateLeadMutation", id, data);
       const shouldSyncWithAmo =
         Object.prototype.hasOwnProperty.call(data, "pipeline_stage_id") ||
-        Object.prototype.hasOwnProperty.call(data, "name");
+        Object.prototype.hasOwnProperty.call(data, "name") ||
+        Object.prototype.hasOwnProperty.call(data, "price");
 
       if (shouldSyncWithAmo) {
         const { data: fnData, error: fnError } =
@@ -827,7 +1159,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       }
 
       // Best-effort Bitrix sync (do NOT block UI if not connected / no mapping / no link)
-      if (Object.prototype.hasOwnProperty.call(data, "pipeline_stage_id")) {
+      if (
+        Object.prototype.hasOwnProperty.call(data, "pipeline_stage_id") ||
+        Object.prototype.hasOwnProperty.call(data, "name") ||
+        Object.prototype.hasOwnProperty.call(data, "price")
+      ) {
         try {
           await supabase.functions.invoke("bitrix-app", {
             body: {
@@ -933,84 +1269,62 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       return;
     }
 
-    let projectId: string | null = null;
+    const requestedProjectId =
+      typeof newLeadData.project_id === "string" && newLeadData.project_id
+        ? newLeadData.project_id
+        : null;
+    const scopedProjectId = filtersOverride?.projectId || null;
+    const availableProjects = availableProjectsQuery.data || [];
+    const projectId = requestedProjectId || scopedProjectId || null;
 
-    // Get accessible project based on user role
-    if (isManagerMode && activeWorkspaceId) {
-      // Manager mode: get accessible projects for this developer
-      const accessibleProjectIds = await getManagerProjectIds(
-        user.id,
-        activeWorkspaceId,
-      );
-      if (accessibleProjectIds.length === 0) {
-        showToast(
-          "error",
-          t("leads.toast.error.title"),
-          t("leads.toast.error.noAccessToProjects"),
-        );
-        return;
-      }
-      projectId = accessibleProjectIds[0] || null;
-    } else {
-      // Owner mode: get user's own projects
-      const { data: userProjects, error: projectsError } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1)
+    const apartmentId =
+      typeof newLeadData.apartment_id === "string" && newLeadData.apartment_id
+        ? newLeadData.apartment_id
+        : null;
+
+    let price =
+      typeof newLeadData.price === "number" &&
+      Number.isFinite(newLeadData.price)
+        ? newLeadData.price
+        : null;
+
+    if (apartmentId && projectId && price === null) {
+      const { data: apartment, error: apartmentError } = await supabase
+        .from("apartments")
+        .select("price")
+        .eq("id", apartmentId)
+        .eq("project_id", projectId)
         .maybeSingle();
 
-      if (projectsError || !userProjects) {
-        showToast(
-          "error",
-          t("leads.toast.error.title"),
-          t("leads.toast.error.noProjects"),
+      if (apartmentError) {
+        console.error(
+          "Failed to load apartment for lead snapshot",
+          apartmentError,
         );
-        console.error("No projects found", projectsError);
-        return;
       }
-      projectId = userProjects.id;
+      if (typeof apartment?.price === "number") {
+        price = apartment.price;
+      }
     }
 
-    if (!projectId) {
-      showToast(
-        "error",
-        t("leads.toast.error.title"),
-        t("leads.toast.error.noProjects"),
-      );
-      return;
-    }
-
-    // Get first apartment for the project
-    const { data: apartments, error: apartmentsError } = await supabase
-      .from("apartments")
-      .select("id")
-      .eq("project_id", projectId)
-      .limit(1)
-      .maybeSingle();
-
-    if (apartmentsError || !apartments) {
-      showToast(
-        "error",
-        t("leads.toast.error.title"),
-        t("leads.toast.error.noApartments"),
-      );
-      console.error("No apartments found", apartmentsError);
-      return;
-    }
-
-    const firstStageId = funnelStages[0]?.id;
+    const firstStageId =
+      typeof newLeadData.status === "string" && newLeadData.status
+        ? newLeadData.status
+        : funnelStages[0]?.id;
 
     const payload: Record<string, unknown> = {
       name: newLeadData.name.trim(),
       email: newLeadData.email?.trim() || "",
       phone: newLeadData.phone?.trim() || "",
+      owner_user_id: user.id,
       project_id: projectId,
-      apartment_id: apartments.id,
+      apartment_id: apartmentId,
+      price,
       source: newLeadData.source || "admin",
       status: "saved_only",
       pipeline_stage_id: firstStageId || null,
       tags: newLeadData.tags || [],
+      preferences: normalizeLeadPreferences(newLeadData.preferences),
     };
 
     try {
@@ -1036,11 +1350,31 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     data: Partial<ExtendedLead>,
   ) => {
     const dbPatch: Record<string, unknown> = {};
+    const leadPatch = data as Partial<ExtendedLead> & {
+      sub_project_id?: string | null;
+    };
 
     if (data.name !== undefined) dbPatch.name = data.name;
     if (data.email !== undefined) dbPatch.email = data.email;
     if (data.phone !== undefined) dbPatch.phone = data.phone;
     if (data.notes !== undefined) dbPatch.notes = data.notes;
+    if (data.price !== undefined) dbPatch.price = data.price ?? null;
+    if (data.source !== undefined) dbPatch.source = data.source;
+    if (data.assigned_to_user_id !== undefined) {
+      dbPatch.assigned_to_user_id = data.assigned_to_user_id;
+    }
+    if (data.project_id !== undefined) {
+      dbPatch.project_id = data.project_id;
+    }
+    if (data.apartment_id !== undefined) {
+      dbPatch.apartment_id = data.apartment_id;
+    }
+    if (leadPatch.sub_project_id !== undefined) {
+      dbPatch.sub_project_id = leadPatch.sub_project_id;
+    }
+    if (data.preferences !== undefined) {
+      dbPatch.preferences = normalizeLeadPreferences(data.preferences);
+    }
 
     await updateLeadMutation.mutateAsync({ id: leadId, data: dbPatch });
   };
@@ -1069,8 +1403,10 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
             lead_id: leadId,
             text: text,
             due_date: dueDateIso,
+            due_time: time,
             completed: false,
             type: type,
+            assigned_to_user_id: assignedTo.id,
           })
           .select("*")
           .single();
@@ -1131,7 +1467,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     try {
       const { error } = await supabase
         .from("lead_tasks")
-        .update({ completed: true })
+        .update({ completed: true, result })
         .eq("id", taskId);
 
       if (error) throw error;
@@ -1313,12 +1649,84 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     }
   };
 
-  const handleDeleteSelected = () => {
-    console.log("Delete selected not implemented yet", Array.from(selectedIds));
+  const handleDeleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    const { error } = await supabase.from("leads").delete().in("id", ids);
+    if (error) {
+      console.error("Failed to delete selected leads", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.updateFailed"),
+      );
+      return;
+    }
+
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ["leads"] });
   };
 
-  const handleMassAssign = (assignedToId: string) => {
-    console.log("Mass assign to", assignedToId, Array.from(selectedIds));
+  const handleDeleteLead = async (leadId: string) => {
+    const { error } = await supabase.from("leads").delete().eq("id", leadId);
+    if (error) {
+      console.error("Failed to delete lead", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.updateFailed"),
+      );
+      return;
+    }
+
+    setSelectedLead((prev) => (prev?.id === leadId ? null : prev));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(leadId);
+      return next;
+    });
+    queryClient.invalidateQueries({ queryKey: ["leads"] });
+  };
+
+  const handleMassAssign = async (assignedToId: string) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        assigned_to_user_id: assignedToId,
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", ids);
+
+    if (error) {
+      console.error("Failed to assign selected leads", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.updateFailed"),
+      );
+      return;
+    }
+
+    queryClient.setQueriesData({ queryKey: ["leads"] }, (old) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((lead) => {
+        if (!lead || typeof lead !== "object") return lead;
+        const record = lead as Record<string, unknown>;
+        if (!ids.includes(String(record.id))) return lead;
+        return {
+          ...record,
+          assigned_to_user_id: assignedToId,
+          updated_at: new Date().toISOString(),
+        };
+      });
+    });
+
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ["leads"] });
   };
 
   const handleMergeLeads = async (masterId: string, duplicateIds: string[]) => {
@@ -1910,6 +2318,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     handleAddTag,
     handleRemoveTag,
     handleDeleteSelected,
+    handleDeleteLead,
     handleMassAssign,
     handleUpdateLead,
     handleMergeLeads,
@@ -1941,9 +2350,14 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     handleDeleteAllTriggers,
     cardConfig,
     handleSaveCardConfig,
-    MOCK_USERS,
+    MOCK_USERS: leadUsers,
+    availableProjects: availableProjectsQuery.data || [],
     totalUnreadCount,
     unreadCountByFunnelId,
-    isLoading: leadsLoading || funnelsQuery.isLoading,
+    isLoading:
+      leadsLoading ||
+      funnelsQuery.isLoading ||
+      availableProjectsQuery.isLoading ||
+      leadUsersQuery.isLoading,
   };
 }

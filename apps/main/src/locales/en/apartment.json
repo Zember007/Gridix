@@ -51,5 +51,11 @@
   "leadUnexpectedError": "Something went wrong. Please try again.",
   "objectDetails": "Object details",
   "objectUnit": "Object",
-  "recommendedApartments": "Recommended apartments"
+  "recommendedApartments": "Recommended apartments",
+  "preferencesTitle": "Preferences (optional)",
+  "preferencesLocations": "Preferred locations",
+  "preferencesBudgetMin": "Budget from",
+  "preferencesBudgetMax": "Budget to",
+  "preferencesInterest": "Interest",
+  "preferencesRequirements": "Requirements or comment"
 }

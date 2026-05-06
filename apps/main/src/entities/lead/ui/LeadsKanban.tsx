@@ -109,6 +109,18 @@ const getSourceIcon = (source: LeadSource) => {
   }
 };
 
+function resolveKanbanStageId(
+  lead: ExtendedLead,
+  stages: FunnelStage[],
+): string {
+  const raw =
+    (lead as { pipeline_stage_id?: string | null }).pipeline_stage_id ??
+    lead.status ??
+    "";
+  if (raw && stages.some((s) => s.id === raw)) return raw;
+  return stages[0]?.id ?? "";
+}
+
 // --- KANBAN CARD ---
 const KanbanCard: React.FC<{
   lead: ExtendedLead;
@@ -171,7 +183,7 @@ const KanbanCard: React.FC<{
       onDragStart={handleDragStartLocal}
       onDragEnd={() => setIsDragging(false)}
       onClick={() => onSelect(lead)}
-      className={`group relative flex cursor-pointer select-none flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-300 hover:shadow-md ${isDragging ? "z-50 rotate-2 scale-105 border-blue-400 opacity-50 shadow-xl" : ""}`}
+      className={`hover:border-[var(--admin-primary)]/35 group relative flex max-w-[280px] cursor-pointer select-none flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-all hover:shadow-md ${isDragging ? "border-[var(--admin-primary)]/50 z-50 rotate-2 scale-105 opacity-50 shadow-xl" : ""}`}
     >
       {!(lead as unknown as { read_at?: string | null }).read_at && (
         <UnreadBadge
@@ -261,7 +273,7 @@ const KanbanCard: React.FC<{
         <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
           {t("leads.kanban.budget")}
         </div>
-        <div className="text-xl font-black tracking-tight text-slate-900">
+        <div className="text-sm font-black tracking-tight text-slate-900">
           ${lead.price ? lead.price.toLocaleString() : "0"}
         </div>
       </div>
@@ -269,15 +281,19 @@ const KanbanCard: React.FC<{
       {/* Project & Tags */}
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
-          <div className="flex max-w-full items-center gap-1 truncate rounded border border-blue-100 bg-blue-50 p-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">
-            <Building2 size={10} className="shrink-0" />
-            <span className="truncate">{lead.project}</span>
-          </div>
-          {lead.apartment && (
-            <div className="flex max-w-full items-center gap-1 truncate rounded border border-slate-200 bg-slate-100 p-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-              <span className="truncate">{lead.apartment}</span>
-            </div>
-          )}
+          {lead.project_id ? (
+            <>
+              <div className="border-[var(--admin-primary)]/15 bg-[var(--admin-primary)]/5 flex max-w-full items-center gap-1 truncate rounded border p-1 text-[10px] font-bold uppercase tracking-wide text-[var(--admin-primary)]">
+                <Building2 size={10} className="shrink-0" />
+                <span className="truncate">{lead.project}</span>
+              </div>
+              {lead.apartment ? (
+                <div className="flex max-w-full items-center gap-1 truncate rounded border border-slate-200 bg-slate-100 p-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                  <span className="truncate">{lead.apartment}</span>
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -327,7 +343,7 @@ const KanbanCard: React.FC<{
           <a
             href={`tel:${lead.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="rounded-md border border-transparent bg-slate-50 p-1.5 text-slate-400 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+            className="hover:border-[var(--admin-primary)]/25 rounded-md border border-transparent bg-slate-50 p-1.5 text-slate-400 transition-colors hover:bg-[var(--admin-background-secondary)] hover:text-[var(--admin-primary)]"
           >
             <Phone size={14} />
           </a>
@@ -388,7 +404,9 @@ export const LeadsKanban: React.FC<{
       className="flex h-full flex-col space-y-6 md:cursor-grab md:select-none md:flex-row md:items-stretch md:gap-4 md:space-y-0 md:overflow-x-auto md:px-2 md:pb-4"
     >
       {funnelStages.map((stage) => {
-        const columnLeads = leads.filter((l) => l.status === stage.id);
+        const columnLeads = leads.filter(
+          (l) => resolveKanbanStageId(l, funnelStages) === stage.id,
+        );
         const totalSum = columnLeads.reduce(
           (acc, lead) => acc + (lead.price || 0),
           0,
@@ -398,7 +416,7 @@ export const LeadsKanban: React.FC<{
         return (
           <div
             key={stage.id}
-            className={`flex w-full flex-col rounded-xl border-2 transition-all duration-200 md:w-[320px] md:min-w-[300px] ${isDropTarget ? "scale-[1.01] border-dashed border-blue-300 bg-blue-50/50" : "border-transparent bg-slate-100/50"}`}
+            className={`flex w-full flex-col border-2 transition-all duration-200 md:w-[320px] md:min-w-[300px] ${isDropTarget ? "border-[var(--admin-primary)]/45 bg-[var(--admin-primary)]/[0.06] scale-[1.01] border-dashed" : "border-transparent bg-slate-100/50"}`}
             onDragOver={(e) => {
               if (readOnly) return;
               e.preventDefault();
@@ -407,17 +425,17 @@ export const LeadsKanban: React.FC<{
             onDrop={(e) => handleDrop(e, stage.id)}
             onDragLeave={() => setDragOverColumn(null)}
           >
-            <div className="sticky top-0 z-10 mb-2 flex flex-col gap-1 rounded-t-xl border-b border-slate-200/50 bg-slate-100/80 p-3 backdrop-blur-md">
+            <div className="sticky top-0 z-10 mb-2 flex flex-col gap-0.5 rounded-t-xl border-b border-slate-200/50 bg-slate-100/80 px-2.5 py-2 backdrop-blur-md">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex min-w-0 items-center gap-2 overflow-hidden">
                   <div
                     className={`h-2 w-2 shrink-0 rounded-full bg-${stage.color}-500`}
                   ></div>
-                  <span className="truncate text-sm font-bold uppercase tracking-wide text-slate-700">
+                  <span className="truncate text-xs font-bold uppercase tracking-wide text-slate-700">
                     {stage.name}
                   </span>
                 </div>
-                <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-bold text-slate-600 shadow-sm">
+                <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-600 shadow-sm">
                   {columnLeads.length}
                 </span>
               </div>
@@ -449,7 +467,7 @@ export const LeadsKanban: React.FC<{
                       setQuickName("");
                     }
                   }}
-                  className="w-full rounded-xl border-2 border-transparent bg-white px-4 py-3 text-sm shadow-sm outline-none transition-all placeholder:text-slate-400 hover:shadow-md focus:border-blue-500"
+                  className="w-full rounded-xl border-2 border-transparent bg-white px-4 py-3 text-sm shadow-sm outline-none transition-all placeholder:text-slate-400 hover:shadow-md focus:border-[var(--admin-primary)]"
                 />
               </div>
             )}
@@ -481,8 +499,8 @@ export const LeadsKanban: React.FC<{
               )}
 
               {isDropTarget && (
-                <div className="flex animate-pulse items-center justify-center rounded-xl border-2 border-dashed border-blue-400 bg-blue-100/50 py-12">
-                  <span className="text-xs font-bold uppercase tracking-wide text-blue-600">
+                <div className="border-[var(--admin-primary)]/50 bg-[var(--admin-primary)]/[0.06] flex animate-pulse items-center justify-center rounded-xl border-2 border-dashed py-12">
+                  <span className="text-xs font-bold uppercase tracking-wide text-[var(--admin-primary)]">
                     {t("leads.kanban.moveHere")}
                   </span>
                 </div>

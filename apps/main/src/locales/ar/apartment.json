@@ -51,5 +51,11 @@
   "leadUnexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
   "objectDetails": "تفاصيل العقار",
   "objectUnit": "عقار",
-  "recommendedApartments": "خيارات موصى بها"
+  "recommendedApartments": "خيارات موصى بها",
+  "preferencesTitle": "التفضيلات (اختياري)",
+  "preferencesLocations": "المواقع المفضلة",
+  "preferencesBudgetMin": "الميزانية من",
+  "preferencesBudgetMax": "الميزانية إلى",
+  "preferencesInterest": "الاهتمام",
+  "preferencesRequirements": "المتطلبات أو تعليق"
 }

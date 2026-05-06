@@ -61,6 +61,16 @@ interface ApartmentReservationFormProps {
     phone: string;
     apartmentId: string;
     projectId: string;
+    preferences?: {
+      locations: string[];
+      interest: string;
+      requirements: string;
+      purpose: string;
+      budgetMin: number | null;
+      budgetMax: number | null;
+      currency: string;
+      siteComment: string;
+    };
   }) => void;
   onCancel?: () => void;
   themeColor?: string;
@@ -77,6 +87,12 @@ const ApartmentReservationForm = ({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [locations, setLocations] = useState("");
+  const [interest, setInterest] = useState("");
+  const [requirements, setRequirements] = useState("");
+  const [budgetMin, setBudgetMin] = useState("");
+  const [budgetMax, setBudgetMax] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -98,6 +114,20 @@ const ApartmentReservationForm = ({
 
     setSubmitting(true);
     try {
+      const preferences = {
+        locations: locations
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        interest: interest.trim(),
+        requirements: requirements.trim(),
+        purpose: "",
+        budgetMin: budgetMin ? Number(budgetMin) : null,
+        budgetMax: budgetMax ? Number(budgetMax) : null,
+        currency: "USD",
+        siteComment: requirements.trim(),
+      };
+
       if (onSubmit) {
         onSubmit({
           name,
@@ -105,6 +135,7 @@ const ApartmentReservationForm = ({
           phone: normalizedPhone,
           apartmentId,
           projectId,
+          preferences,
         });
       }
 
@@ -117,6 +148,7 @@ const ApartmentReservationForm = ({
             phone: normalizedPhone,
             apartmentId,
             projectId,
+            preferences,
             agentId: getAttributedAgentId(projectId),
           },
         },
@@ -152,6 +184,12 @@ const ApartmentReservationForm = ({
       setName("");
       setEmail("");
       setPhone("");
+      setLocations("");
+      setInterest("");
+      setRequirements("");
+      setBudgetMin("");
+      setBudgetMax("");
+      setShowPreferences(false);
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error(t("apartment.leadUnexpectedError"), {
@@ -225,6 +263,52 @@ const ApartmentReservationForm = ({
           >
             {t("apartment.phoneFormatHint")}
           </p>
+        </div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <button
+            type="button"
+            onClick={() => setShowPreferences((value) => !value)}
+            className="flex w-full items-center justify-between text-left text-sm font-medium text-foreground"
+          >
+            <span>{t("apartment.preferencesTitle")}</span>
+            <span className="text-xs text-muted-foreground">
+              {showPreferences ? "−" : "+"}
+            </span>
+          </button>
+          {showPreferences && (
+            <div className="mt-3 grid gap-3">
+              <Input
+                value={locations}
+                onChange={(e) => setLocations(e.target.value)}
+                placeholder={t("apartment.preferencesLocations")}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  type="number"
+                  value={budgetMin}
+                  onChange={(e) => setBudgetMin(e.target.value)}
+                  placeholder={t("apartment.preferencesBudgetMin")}
+                />
+                <Input
+                  type="number"
+                  value={budgetMax}
+                  onChange={(e) => setBudgetMax(e.target.value)}
+                  placeholder={t("apartment.preferencesBudgetMax")}
+                />
+              </div>
+              <Input
+                value={interest}
+                onChange={(e) => setInterest(e.target.value)}
+                placeholder={t("apartment.preferencesInterest")}
+              />
+              <textarea
+                value={requirements}
+                onChange={(e) => setRequirements(e.target.value)}
+                placeholder={t("apartment.preferencesRequirements")}
+                className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>
