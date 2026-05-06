@@ -70,8 +70,9 @@ export const useAllFailedLeadsStats = () => {
         const stats: Record<string, LeadStats> = {};
 
         (leads || []).forEach(
-          (lead: { project_id: string; status: string | null }) => {
+          (lead: { project_id: string | null; status: string | null }) => {
             const projectId = lead.project_id;
+            if (!projectId) return;
 
             if (!stats[projectId]) {
               stats[projectId] = {

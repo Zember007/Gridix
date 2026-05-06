@@ -15,12 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  LeadTask,
-  LeadUser,
-  TaskType,
-  MOCK_USERS,
-} from "@/entities/crm/model/types";
+import { LeadTask, LeadUser, TaskType } from "@/entities/crm/model/types";
 
 export const getTaskTypes = (
   t: any,
@@ -56,6 +51,7 @@ export const getTaskTypes = (
 });
 
 interface TaskComposerProps {
+  users: LeadUser[];
   onAdd: (
     text: string,
     type: TaskType,
@@ -65,7 +61,7 @@ interface TaskComposerProps {
   ) => void;
 }
 
-export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
+export const TaskComposer: React.FC<TaskComposerProps> = ({ users, onAdd }) => {
   const { t, i18n } = useTranslation();
   const TASK_TYPES = getTaskTypes(t);
   const [text, setText] = useState("");
@@ -74,7 +70,9 @@ export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
   const [date, setDate] = useState<Date>(new Date());
   const [showDate, setShowDate] = useState(false);
   const [time, setTime] = useState("09:00");
-  const [assignedUser, setAssignedUser] = useState<LeadUser>(MOCK_USERS[0]!);
+  const [assignedUser, setAssignedUser] = useState<LeadUser>(
+    users[0] || { id: "", name: "User", initials: "U", color: "bg-slate-800" },
+  );
   const [isUserOpen, setIsUserOpen] = useState(false);
 
   useEffect(() => {
@@ -82,6 +80,15 @@ export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
     d.setDate(d.getDate() + 1);
     setDate(d);
   }, []);
+
+  useEffect(() => {
+    if (
+      users.length > 0 &&
+      !users.some((user) => user.id === assignedUser.id)
+    ) {
+      setAssignedUser(users[0]!);
+    }
+  }, [assignedUser.id, users]);
 
   const setPresetDate = (offsetDays: number) => {
     const d = new Date();
@@ -253,7 +260,7 @@ export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
 
             {isUserOpen && (
               <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-slate-100 bg-white py-1 shadow-xl animate-in fade-in zoom-in-95">
-                {MOCK_USERS.map((user) => (
+                {users.map((user) => (
                   <button
                     key={user.id}
                     onClick={() => {

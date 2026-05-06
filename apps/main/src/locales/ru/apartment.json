@@ -51,5 +51,11 @@
   "leadUnexpectedError": "Произошла неожиданная ошибка. Попробуйте ещё раз.",
   "objectDetails": "Сведения об объекте",
   "objectUnit": "Объект",
-  "recommendedApartments": "Рекомендуемые варианты"
+  "recommendedApartments": "Рекомендуемые варианты",
+  "preferencesTitle": "Пожелания (необязательно)",
+  "preferencesLocations": "Предпочтительные локации",
+  "preferencesBudgetMin": "Бюджет от",
+  "preferencesBudgetMax": "Бюджет до",
+  "preferencesInterest": "Интерес",
+  "preferencesRequirements": "Требования или комментарий"
 }

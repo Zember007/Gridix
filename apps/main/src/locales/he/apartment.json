@@ -51,5 +51,11 @@
   "leadUnexpectedError": "אירעה שגיאה בלתי צפויה. נסה שוב.",
   "objectDetails": "פרטי הנכס",
   "objectUnit": "נכס",
-  "recommendedApartments": "המלצות"
+  "recommendedApartments": "המלצות",
+  "preferencesTitle": "העדפות (אופציונלי)",
+  "preferencesLocations": "מיקומים מועדפים",
+  "preferencesBudgetMin": "תקציב מ",
+  "preferencesBudgetMax": "תקציב עד",
+  "preferencesInterest": "עניין",
+  "preferencesRequirements": "דרישות או הערה"
 }

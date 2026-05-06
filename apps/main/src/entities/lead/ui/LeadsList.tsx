@@ -125,7 +125,7 @@ export const LeadsList: React.FC<LeadsListProps> = ({
                       leads.length > 0 && selectedIds.size === leads.length
                     }
                     onChange={onToggleAll}
-                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 transition-all focus:ring-blue-500"
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[var(--admin-primary)] transition-all focus:ring-[var(--admin-primary)]"
                   />
                 </div>
               </th>
@@ -149,8 +149,22 @@ export const LeadsList: React.FC<LeadsListProps> = ({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {leads.map((lead) => {
-              const stage = funnelStages.find((s) => s.id === lead.status);
-              const statusLabel = stage?.name || t("leads.list.unknown");
+              const pipelineRaw =
+                (
+                  lead as {
+                    pipeline_stage_id?: string | null;
+                  }
+                ).pipeline_stage_id ??
+                lead.status ??
+                null;
+              const effectiveStageId =
+                pipelineRaw && funnelStages.some((s) => s.id === pipelineRaw)
+                  ? pipelineRaw
+                  : (funnelStages[0]?.id ?? null);
+              const stage = effectiveStageId
+                ? funnelStages.find((s) => s.id === effectiveStageId)
+                : undefined;
+              const statusLabel = stage?.name || t("leads.list.stageUnset");
               const statusColor = stage?.color || "slate";
               const taskInfo = getTaskStatusInfo(lead.tasks);
               const waLink = `https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`;
@@ -159,7 +173,7 @@ export const LeadsList: React.FC<LeadsListProps> = ({
                 <tr
                   key={lead.id}
                   onClick={() => onSelect(lead)}
-                  className={`group cursor-pointer transition-all duration-200 hover:bg-blue-50/40 ${selectedIds.has(lead.id) ? "bg-blue-50" : ""}`}
+                  className={`hover:bg-[var(--admin-primary)]/[0.06] group cursor-pointer transition-all duration-200 ${selectedIds.has(lead.id) ? "bg-[var(--admin-primary)]/[0.08]" : ""}`}
                 >
                   <td
                     className="px-4 py-3"
@@ -170,7 +184,7 @@ export const LeadsList: React.FC<LeadsListProps> = ({
                         type="checkbox"
                         checked={selectedIds.has(lead.id)}
                         onChange={() => onToggleSelection(lead.id)}
-                        className="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[var(--admin-primary)] focus:ring-[var(--admin-primary)]"
                       />
                     </div>
                   </td>
@@ -190,7 +204,7 @@ export const LeadsList: React.FC<LeadsListProps> = ({
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-bold text-slate-900 transition-colors group-hover:text-blue-600">
+                        <div className="truncate text-sm font-bold text-slate-900 transition-colors group-hover:text-[var(--admin-primary)]">
                           {lead.name}
                         </div>
                         {(lead as unknown as { agent_id?: string | null })
@@ -249,18 +263,24 @@ export const LeadsList: React.FC<LeadsListProps> = ({
                     )}
                   </td>
                   <td className="hidden px-4 py-3 md:table-cell">
-                    <div className="flex items-center gap-1.5">
-                      <div className="rounded bg-slate-100 p-1 text-slate-400">
-                        <Building2 size={12} />
-                      </div>
-                      <div className="max-w-[140px] truncate text-sm font-medium text-slate-700">
-                        {lead.project}
-                      </div>
-                    </div>
-                    {lead.apartment && (
-                      <div className="pl-6 text-[10px] text-slate-400">
-                        {lead.apartment}
-                      </div>
+                    {lead.project_id ? (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <div className="rounded bg-slate-100 p-1 text-slate-400">
+                            <Building2 size={12} />
+                          </div>
+                          <div className="max-w-[140px] truncate text-sm font-medium text-slate-700">
+                            {lead.project}
+                          </div>
+                        </div>
+                        {lead.apartment ? (
+                          <div className="pl-6 text-[10px] text-slate-400">
+                            {lead.apartment}
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <span className="text-sm text-slate-300">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -277,7 +297,7 @@ export const LeadsList: React.FC<LeadsListProps> = ({
                       <a
                         href={`tel:${lead.phone}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="rounded-lg bg-slate-50 p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                        className="hover:bg-[var(--admin-primary)]/[0.08] rounded-lg bg-slate-50 p-2 text-slate-400 transition-colors hover:text-[var(--admin-primary)]"
                         title={t("leads.list.call")}
                       >
                         <Phone size={16} />

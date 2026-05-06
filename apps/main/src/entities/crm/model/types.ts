@@ -5,7 +5,32 @@ export type LeadSource =
   | "website"
   | "referral"
   | "walk_in"
-  | "facebook";
+  | "facebook"
+  | "admin"
+  | "amocrm_widget"
+  | "bitrix";
+
+export interface LeadDocumentAttachment {
+  id: string;
+  name: string;
+  storagePath: string;
+  url: string;
+  createdAt: string;
+  size?: number;
+}
+
+export interface LeadPreferences {
+  [key: string]: unknown;
+  locations?: string[];
+  interest?: string;
+  requirements?: string;
+  purpose?: string;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
+  currency?: string;
+  siteComment?: string;
+  documents?: LeadDocumentAttachment[];
+}
 
 export type TaskType = "call" | "meeting" | "message" | "payment" | "other";
 
@@ -51,7 +76,9 @@ export interface ExternalCrmStatus {
 export interface ExtendedLead extends DbLead {
   project: string;
   apartment?: string;
+  sub_project_id?: string | null;
   price?: number;
+  preferences: LeadPreferences;
   crmStatus: ExternalCrmStatus;
   date: string;
   history: LeadHistoryItem[];
@@ -105,6 +132,8 @@ export interface LeadsFilters {
   dateTo: string;
   stages: string[];
   assignedTo: string[];
+  projectId: string;
+  projectless: boolean;
 }
 
 export type SortOption = "date_desc" | "date_asc" | "price_desc" | "price_asc";

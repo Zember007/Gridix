@@ -88,6 +88,8 @@ export const useLeadsManagerUiState = ({
       dateTo: "",
       stages: [],
       assignedTo: [],
+      projectId: "all",
+      projectless: false,
     });
     setDraftSearchTerm("");
   };

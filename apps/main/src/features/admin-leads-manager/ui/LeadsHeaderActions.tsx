@@ -43,63 +43,52 @@ export const LeadsHeaderActions = ({
   readOnly = false,
 }: LeadsHeaderActionsProps) => {
   return (
-    <div className="flex shrink-0 items-center gap-3">
-      <div className="mr-4 hidden text-right leading-tight xl:block">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-          {filteredCount} {t("leads.stats.deals")}
-        </div>
-        <div className="text-sm font-bold text-slate-900">
+    <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+      <div className="hidden items-center gap-1 text-sm text-slate-500 lg:flex">
+        <span>
+          {filteredCount} {t("leads.stats.deals")}:
+        </span>
+        <span className="font-medium text-slate-700">
           {totalLeadsSum.toLocaleString()} $
-        </div>
-      </div>
-
-      <div className="flex items-center rounded-lg border border-slate-200 bg-slate-100 p-1">
-        <button
-          onClick={() => setViewMode("list")}
-          className={`rounded-md p-1.5 transition-all ${
-            viewMode === "list"
-              ? "bg-white text-[var(--admin-primary)] shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-          title={t("leads.list.selectAll")}
-        >
-          <ListIcon size={18} />
-        </button>
-        <button
-          onClick={() => setViewMode("kanban")}
-          className={`rounded-md p-1.5 transition-all ${
-            viewMode === "kanban"
-              ? "bg-white text-[var(--admin-primary)] shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-          title={t("leads.kanban.createDeal")}
-        >
-          <LayoutGrid size={18} />
-        </button>
+        </span>
       </div>
 
       <div className="relative" ref={settingsRef}>
         <button
+          type="button"
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-          className="rounded-lg border border-transparent p-2 text-slate-400 transition-colors hover:border-slate-200 hover:bg-slate-100 hover:text-slate-700"
+          className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100"
         >
-          <MoreHorizontal size={20} />
+          <MoreHorizontal size={18} />
         </button>
         {isSettingsOpen && (
-          <div className="absolute right-0 top-full z-30 mt-2 w-64 overflow-hidden rounded-lg border border-slate-100 bg-white py-1 shadow-xl duration-100 animate-in fade-in zoom-in-95">
+          <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-lg border border-slate-200 bg-white py-1 shadow-xl duration-100 animate-in fade-in zoom-in-95 md:w-56">
             <button
+              type="button"
               onClick={() => {
-                onExportClick();
+                setViewMode("list");
                 setIsSettingsOpen(false);
               }}
-              className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+              className={`flex w-full items-center gap-3 px-4 py-2 text-left text-sm hover:bg-slate-50 ${viewMode === "list" ? "font-semibold text-slate-900" : "text-slate-700"}`}
             >
-              <FileDown size={16} /> {t("leads.settings.export")}
+              <ListIcon size={16} /> {t("leads.views.list")}
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("kanban");
+                setIsSettingsOpen(false);
+              }}
+              className={`flex w-full items-center gap-3 px-4 py-2 text-left text-sm hover:bg-slate-50 ${viewMode === "kanban" ? "font-semibold text-slate-900" : "text-slate-700"}`}
+            >
+              <LayoutGrid size={16} /> {t("leads.views.kanban")}
+            </button>
+
             {!readOnly && (
               <>
-                <div className="my-1 h-px bg-slate-100"></div>
+                <div className="my-1 h-px bg-slate-100" />
                 <button
+                  type="button"
                   onClick={() => {
                     setIsFunnelSetupMode(true);
                     setIsSettingsOpen(false);
@@ -110,6 +99,7 @@ export const LeadsHeaderActions = ({
                   {t("leads.settings.funnelSetup")}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setIsCardAppearanceModalOpen(true);
                     setIsSettingsOpen(false);
@@ -118,8 +108,8 @@ export const LeadsHeaderActions = ({
                 >
                   <Wrench size={16} /> {t("leads.settings.cardAppearance")}
                 </button>
-                <div className="my-1 h-px bg-slate-100"></div>
                 <button
+                  type="button"
                   onClick={() => {
                     setIsDuplicateFinderOpen(true);
                     setIsSettingsOpen(false);
@@ -130,17 +120,32 @@ export const LeadsHeaderActions = ({
                 </button>
               </>
             )}
+
+            <div className="my-1 h-px bg-slate-100" />
+            <button
+              type="button"
+              onClick={() => {
+                onExportClick();
+                setIsSettingsOpen(false);
+              }}
+              className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <FileDown size={16} /> {t("leads.settings.export")}
+            </button>
           </div>
         )}
       </div>
 
       {!readOnly && (
         <button
+          type="button"
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-[var(--admin-primary)] px-4 py-2 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-sm transition-all hover:bg-[var(--admin-primary-hover)] active:scale-95 active:bg-[var(--admin-primary-active)]"
+          className="flex items-center gap-1 rounded-md bg-[var(--admin-primary)] px-3 py-1.5 text-sm font-bold text-[var(--admin-text-on-primary)] transition-colors hover:bg-[var(--admin-primary-hover)] sm:px-4"
         >
-          <Plus size={18} />
-          {t("leads.createModal.title")}
+          <Plus size={16} />
+          <span className="hidden sm:inline">
+            {t("leads.createModal.createDeal")}
+          </span>
         </button>
       )}
     </div>

@@ -1,4 +1,8 @@
-import type { LeadsFilters } from "@/entities/crm/model/types";
+import type {
+  FunnelStage,
+  LeadUser,
+  LeadsFilters,
+} from "@/entities/crm/model/types";
 import { getSourceOptions } from "../lib/getSourceOptions";
 import { LeadsFilterChipsRow } from "./LeadsFilterChipsRow";
 import { LeadsFiltersPanel } from "./LeadsFiltersPanel";
@@ -6,6 +10,7 @@ import { LeadsFunnelMenu } from "./LeadsFunnelMenu";
 import { LeadsHeaderActions } from "./LeadsHeaderActions";
 
 type Funnel = { id: string; name: string };
+type ProjectOption = { id: string; name: string };
 
 export type LeadsManagerHeaderProps = {
   t: (key: string) => string;
@@ -33,6 +38,7 @@ export type LeadsManagerHeaderProps = {
   isFilterPanelOpen: boolean;
   setIsFilterPanelOpen: (value: boolean) => void;
   searchTerm: string;
+  setSearchTerm: (value: string) => void;
   filters: LeadsFilters;
   activeFiltersCount: number;
   draftSearchTerm: string;
@@ -53,6 +59,9 @@ export type LeadsManagerHeaderProps = {
   setIsCreateModalOpen: (value: boolean) => void;
   setFilters: (updater: (prev: LeadsFilters) => LeadsFilters) => void;
   resetFilters: () => void;
+  projectOptions: ProjectOption[];
+  funnelStages: FunnelStage[];
+  filterUsers: LeadUser[];
   readOnly?: boolean;
 };
 
@@ -82,6 +91,7 @@ export const LeadsManagerHeader = ({
   isFilterPanelOpen,
   setIsFilterPanelOpen,
   searchTerm,
+  setSearchTerm,
   filters,
   activeFiltersCount,
   draftSearchTerm,
@@ -102,6 +112,9 @@ export const LeadsManagerHeader = ({
   setIsCreateModalOpen,
   setFilters,
   resetFilters,
+  projectOptions,
+  funnelStages,
+  filterUsers,
   readOnly = false,
 }: LeadsManagerHeaderProps) => {
   const sourceOptions = getSourceOptions(t);
@@ -142,8 +155,8 @@ export const LeadsManagerHeader = ({
   }
 
   return (
-    <div className="shrink-0 border-b border-slate-200 bg-white shadow-sm">
-      <div className="hidden h-16 items-center gap-4 px-6 lg:flex">
+    <div className="shrink-0 border-b border-slate-200 bg-white">
+      <div className="flex h-14 items-center gap-3 px-4 transition-all md:gap-4 md:px-6">
         <LeadsFunnelMenu
           t={t}
           funnelMenuRef={funnelMenuRef}
@@ -163,15 +176,13 @@ export const LeadsManagerHeader = ({
           readOnly={readOnly}
         />
 
-        <div className="h-6 w-px bg-slate-200"></div>
-
         <LeadsFiltersPanel
           t={t}
           filterContainerRef={filterContainerRef}
           isFilterPanelOpen={isFilterPanelOpen}
           setIsFilterPanelOpen={setIsFilterPanelOpen}
           searchTerm={searchTerm}
-          filters={filters}
+          setSearchTerm={setSearchTerm}
           activeFiltersCount={activeFiltersCount}
           draftSearchTerm={draftSearchTerm}
           setDraftSearchTerm={setDraftSearchTerm}
@@ -181,6 +192,9 @@ export const LeadsManagerHeader = ({
           handleResetDraftFilters={handleResetDraftFilters}
           filteredCount={filteredCount}
           sourceOptions={sourceOptions}
+          projectOptions={projectOptions}
+          funnelStages={funnelStages}
+          filterUsers={filterUsers}
         />
 
         <LeadsHeaderActions
@@ -206,6 +220,7 @@ export const LeadsManagerHeader = ({
         activeFiltersCount={activeFiltersCount}
         filters={filters}
         sourceOptions={sourceOptions}
+        projectOptions={projectOptions}
         setFilters={setFilters}
         resetFilters={resetFilters}
       />

@@ -5,6 +5,7 @@ import {
   Phone,
   DollarSign,
   Globe,
+  Building2,
   Tag,
   Plus,
   AlertTriangle,
@@ -18,6 +19,8 @@ interface CreateLeadModalProps {
   onClose: () => void;
   onCreate: (lead: Partial<ExtendedLead>) => void;
   leads: ExtendedLead[]; // Passed to check duplicates
+  projectOptions: Array<{ id: string; name: string }>;
+  defaultProjectId?: string;
 }
 
 export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
@@ -25,6 +28,8 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
   onClose,
   onCreate,
   leads,
+  projectOptions,
+  defaultProjectId,
 }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
@@ -32,6 +37,16 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
     phone: "",
     price: "",
     source: "walk_in",
+    projectId: defaultProjectId || "",
+  });
+  const [preferences, setPreferences] = useState({
+    locations: "",
+    interest: "",
+    requirements: "",
+    purpose: "",
+    budgetMin: "",
+    budgetMax: "",
+    currency: "USD",
   });
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -40,11 +55,26 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
   // Reset when opening
   useEffect(() => {
     if (isOpen) {
-      setFormData({ name: "", phone: "", price: "", source: "walk_in" });
+      setFormData({
+        name: "",
+        phone: "",
+        price: "",
+        source: "walk_in",
+        projectId: defaultProjectId || "",
+      });
       setTags([]);
+      setPreferences({
+        locations: "",
+        interest: "",
+        requirements: "",
+        purpose: "",
+        budgetMin: "",
+        budgetMax: "",
+        currency: "USD",
+      });
       setDuplicateLead(null);
     }
-  }, [isOpen]);
+  }, [defaultProjectId, isOpen]);
 
   // Duplicate check logic
   useEffect(() => {
@@ -108,6 +138,33 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
             </div>
           </div>
 
+          {!defaultProjectId && (
+            <div className="space-y-1.5">
+              <label className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+                {t("leads.drawer.project")}
+              </label>
+              <div className="group relative">
+                <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-500">
+                  <Building2 size={18} />
+                </div>
+                <select
+                  className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-medium text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
+                  value={formData.projectId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, projectId: e.target.value })
+                  }
+                >
+                  <option value="">{t("leads.filters.projectless")}</option>
+                  {projectOptions.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           {/* Phone & Duplicate Warning */}
           <div className="space-y-1.5">
             <label className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -151,6 +208,69 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
               </div>
             )}
           </div>
+
+          <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-slate-500">
+              {t("leads.preferences.title")}
+            </summary>
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              <input
+                type="text"
+                value={preferences.locations}
+                onChange={(e) =>
+                  setPreferences({ ...preferences, locations: e.target.value })
+                }
+                placeholder={t("leads.preferences.locations")}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)]"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  value={preferences.budgetMin}
+                  onChange={(e) =>
+                    setPreferences({
+                      ...preferences,
+                      budgetMin: e.target.value,
+                    })
+                  }
+                  placeholder={t("leads.preferences.budgetMin")}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)]"
+                />
+                <input
+                  type="number"
+                  value={preferences.budgetMax}
+                  onChange={(e) =>
+                    setPreferences({
+                      ...preferences,
+                      budgetMax: e.target.value,
+                    })
+                  }
+                  placeholder={t("leads.preferences.budgetMax")}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)]"
+                />
+              </div>
+              <input
+                type="text"
+                value={preferences.interest}
+                onChange={(e) =>
+                  setPreferences({ ...preferences, interest: e.target.value })
+                }
+                placeholder={t("leads.preferences.interest")}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)]"
+              />
+              <textarea
+                value={preferences.requirements}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    requirements: e.target.value,
+                  })
+                }
+                placeholder={t("leads.preferences.requirements")}
+                className="min-h-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)]"
+              />
+            </div>
+          </details>
 
           <div className="grid grid-cols-2 gap-4">
             {/* Budget */}
@@ -263,18 +383,36 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
                 phone: formData.phone,
                 price: Number(formData.price) || 0,
                 source: formData.source as LeadSource,
+                project_id: defaultProjectId || formData.projectId || null,
                 tags: tags,
+                preferences: {
+                  locations: preferences.locations
+                    .split(",")
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                  interest: preferences.interest.trim(),
+                  requirements: preferences.requirements.trim(),
+                  purpose: preferences.purpose.trim(),
+                  budgetMin: preferences.budgetMin
+                    ? Number(preferences.budgetMin)
+                    : null,
+                  budgetMax: preferences.budgetMax
+                    ? Number(preferences.budgetMax)
+                    : null,
+                  currency: preferences.currency || "USD",
+                },
               });
               setFormData({
                 name: "",
                 phone: "",
                 price: "",
                 source: "walk_in",
+                projectId: defaultProjectId || "",
               });
               setTags([]);
             }}
             disabled={!formData.name.trim() || !!duplicateLead}
-            className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-[var(--admin-primary)] py-2.5 text-sm font-bold text-[var(--admin-text-on-primary)] shadow-md transition-colors hover:bg-[var(--admin-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={18} />
             {duplicateLead

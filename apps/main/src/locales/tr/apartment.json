@@ -51,5 +51,11 @@
   "leadUnexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
   "objectDetails": "Nesne detayları",
   "objectUnit": "Nesne",
-  "recommendedApartments": "Önerilen seçenekler"
+  "recommendedApartments": "Önerilen seçenekler",
+  "preferencesTitle": "Tercihler (opsiyonel)",
+  "preferencesLocations": "Tercih edilen lokasyonlar",
+  "preferencesBudgetMin": "Bütçe min",
+  "preferencesBudgetMax": "Bütçe max",
+  "preferencesInterest": "İlgi",
+  "preferencesRequirements": "Gereksinimler veya yorum"
 }

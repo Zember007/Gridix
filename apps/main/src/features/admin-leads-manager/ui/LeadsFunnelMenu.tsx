@@ -43,10 +43,11 @@ export const LeadsFunnelMenu = ({
   return (
     <div className="relative shrink-0" ref={funnelMenuRef}>
       <button
+        type="button"
         onClick={() => setIsFunnelMenuOpen(!isFunnelMenuOpen)}
-        className="group flex max-w-[240px] items-center gap-2 rounded-lg border border-transparent px-3 py-1.5 transition-all hover:border-slate-200 hover:bg-slate-100"
+        className="group -ml-2 flex max-w-[min(240px,calc(100vw-220px))] items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-slate-50"
       >
-        <h2 className="truncate text-sm font-bold uppercase tracking-wide text-slate-900">
+        <h2 className="truncate text-[15px] font-bold uppercase leading-none tracking-tight text-slate-800">
           {activeFunnel?.name || t("leads.funnel.funnels")}
         </h2>
         {totalUnreadCount > 0 && (
@@ -58,7 +59,7 @@ export const LeadsFunnelMenu = ({
         )}
         <ChevronDown
           size={16}
-          className={`text-slate-400 transition-transform duration-200 group-hover:text-slate-600 ${
+          className={`shrink-0 text-blue-500 transition-transform duration-200 ${
             isFunnelMenuOpen ? "rotate-180" : ""
           }`}
         />

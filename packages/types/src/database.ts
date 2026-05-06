@@ -540,7 +540,7 @@ export type Database = {
       };
       bitrix_deal_links: {
         Row: {
-          apartment_id: string;
+          apartment_id: string | null;
           bitrix_deal_id: number;
           created_at: string;
           crm_connection_id: string;
@@ -550,7 +550,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
-          apartment_id: string;
+          apartment_id?: string | null;
           bitrix_deal_id: number;
           created_at?: string;
           crm_connection_id: string;
@@ -560,7 +560,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
-          apartment_id?: string;
+          apartment_id?: string | null;
           bitrix_deal_id?: number;
           created_at?: string;
           crm_connection_id?: string;
@@ -1566,16 +1566,19 @@ export type Database = {
           amocrm_lead_id: number | null;
           amocrm_retries: number | null;
           amocrm_sent_at: string | null;
-          apartment_id: string;
+          apartment_id: string | null;
           assigned_to_user_id: string | null;
           created_at: string;
           email: string;
           id: string;
           name: string;
           notes: string | null;
+          owner_user_id: string | null;
           phone: string;
           pipeline_stage_id: string | null;
-          project_id: string;
+          preferences: Json;
+          price: number | null;
+          project_id: string | null;
           source: string | null;
           status: string | null;
           sub_project_id: string | null;
@@ -1589,16 +1592,19 @@ export type Database = {
           amocrm_lead_id?: number | null;
           amocrm_retries?: number | null;
           amocrm_sent_at?: string | null;
-          apartment_id: string;
+          apartment_id?: string | null;
           assigned_to_user_id?: string | null;
           created_at?: string;
           email: string;
           id?: string;
           name: string;
           notes?: string | null;
+          owner_user_id?: string | null;
           phone: string;
           pipeline_stage_id?: string | null;
-          project_id: string;
+          preferences?: Json;
+          price?: number | null;
+          project_id?: string | null;
           source?: string | null;
           status?: string | null;
           sub_project_id?: string | null;
@@ -1612,16 +1618,19 @@ export type Database = {
           amocrm_lead_id?: number | null;
           amocrm_retries?: number | null;
           amocrm_sent_at?: string | null;
-          apartment_id?: string;
+          apartment_id?: string | null;
           assigned_to_user_id?: string | null;
           created_at?: string;
           email?: string;
           id?: string;
           name?: string;
           notes?: string | null;
+          owner_user_id?: string | null;
           phone?: string;
           pipeline_stage_id?: string | null;
-          project_id?: string;
+          preferences?: Json;
+          price?: number | null;
+          project_id?: string | null;
           source?: string | null;
           status?: string | null;
           sub_project_id?: string | null;

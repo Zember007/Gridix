@@ -51,5 +51,11 @@
   "leadUnexpectedError": "Бірдеңе дұрыс болмады. Қайталап көріңіз.",
   "objectDetails": "Нысан мәліметтері",
   "objectUnit": "Нысан",
-  "recommendedApartments": "Recommended apartments"
+  "recommendedApartments": "Recommended apartments",
+  "preferencesTitle": "Қалаулар (міндетті емес)",
+  "preferencesLocations": "Қалаулы локациялар",
+  "preferencesBudgetMin": "Бюджет бастап",
+  "preferencesBudgetMax": "Бюджет дейін",
+  "preferencesInterest": "Қызығушылық",
+  "preferencesRequirements": "Талаптар немесе пікір"
 }
