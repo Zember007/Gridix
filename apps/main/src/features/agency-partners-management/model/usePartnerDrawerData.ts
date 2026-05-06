@@ -90,7 +90,7 @@ export const usePartnerDrawerData = ({
       const { data, error } = await supabase
         .from("agent_applications")
         .select(
-          "id, developer_user_id, agreement_signed, agreement_signed_at, signature_path, signature_method, commission_rate",
+          "id, developer_user_id, agreement_signed, agreement_signed_at, commission_rate",
         )
         .eq("id", partnerId)
         .single();
@@ -99,12 +99,7 @@ export const usePartnerDrawerData = ({
     },
   });
 
-  const signatureUrl = useMemo(() => {
-    const path = applicationDetailsQuery.data?.signature_path;
-    if (!path) return null;
-    return supabase.storage.from("project-images").getPublicUrl(String(path))
-      .data.publicUrl;
-  }, [applicationDetailsQuery.data]);
+  const signatureUrl = null;
 
   const signedContractsQuery = useQuery({
     queryKey: ["signed_contracts", partnerId],

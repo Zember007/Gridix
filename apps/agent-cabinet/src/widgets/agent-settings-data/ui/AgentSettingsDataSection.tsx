@@ -7,7 +7,6 @@ import {
   AgentContractCard,
   AgentSignedContractsSection,
 } from "@/entities/agent-contract";
-import { AgentSignatureSection } from "@/features/agent-signature-update";
 
 interface AgentSettingsDataSectionProps {
   activeWorkspaceId: string | null;
@@ -17,12 +16,8 @@ interface AgentSettingsDataSectionProps {
   contracts: SignedContract[];
   contractsError: Error | null;
   contractsLoading: boolean;
-  profileSignatureMethod: string | null;
-  profileSignaturePath: string | null;
   refreshContracts: () => void;
-  refreshProfile: () => Promise<void>;
   t: (key: string) => string;
-  userId: string | null;
 }
 
 function EmptyWorkspaceContractState({ t }: { t: (key: string) => string }) {
@@ -45,14 +40,6 @@ function EmptyWorkspaceContractState({ t }: { t: (key: string) => string }) {
 export function AgentSettingsDataSection(props: AgentSettingsDataSectionProps) {
   return (
     <>
-      <AgentSignatureSection
-        userId={props.userId}
-        existingSignaturePath={props.profileSignaturePath}
-        existingMethod={props.profileSignatureMethod}
-        onUpdated={props.refreshProfile}
-        t={props.t}
-      />
-
       <AgentSignedContractsSection
         applicationId={props.activeWorkspaceId}
         loading={props.contractsLoading}

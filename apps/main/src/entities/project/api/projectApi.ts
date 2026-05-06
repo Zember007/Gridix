@@ -136,16 +136,18 @@ export const updateProject = async (
 };
 
 export const deleteProject = async (
-  userId: string,
+  _userId: string,
   projectId: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from("projects")
-    .delete()
-    .eq("id", projectId)
-    .eq("user_id", userId);
+  const { data, error } = await supabase.functions.invoke("project-editor", {
+    body: {
+      action: "delete-project",
+      projectId,
+    },
+  });
 
   if (error) throw error;
+  if (data?.error) throw new Error(data.error);
 };
 
 export const incrementProjectView = async (

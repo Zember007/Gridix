@@ -386,18 +386,15 @@ export default function AgentApplicationPage() {
     }, 450);
   };
 
-  const verifyExistingUserPassword = async (): Promise<{
-    valid: boolean;
-    hasSignature: boolean;
-  }> => {
+  const verifyExistingUserPassword = async (): Promise<{ valid: boolean }> => {
     const emailNorm = formData.email.trim().toLowerCase();
     if (!emailNorm) {
       toast.error(t("agentApplication.enterEmail"));
-      return { valid: false, hasSignature: false };
+      return { valid: false };
     }
     if (!password) {
       toast.error(t("agentApplication.enterPassword"));
-      return { valid: false, hasSignature: false };
+      return { valid: false };
     }
     try {
       setAuthLoading(true);
@@ -413,43 +410,10 @@ export default function AgentApplicationPage() {
       if (!valid) {
         toast.error(t("agentApplication.wrongPassword"));
         setPasswordVerified(false);
-        return { valid: false, hasSignature: false };
+        return { valid: false };
       }
       setPasswordVerified(true);
-
-      // If the agent already has a global signature, pre-fill it
-      let hasSignature = false;
-      const sig = data?.agent_signature;
-      if (sig && typeof sig.signature_url === "string" && sig.signature_url) {
-        try {
-          const resp = await fetch(sig.signature_url);
-          const blob = await resp.blob();
-          const reader = new FileReader();
-          const dataUrl = await new Promise<string | null>((resolve) => {
-            reader.onload = () =>
-              resolve(typeof reader.result === "string" ? reader.result : null);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
-          });
-          if (dataUrl && dataUrl.startsWith("data:image/")) {
-            setUploadedSignatureDataUrl(dataUrl);
-            setSignatureMethod(
-              typeof sig.signature_method === "string" &&
-                sig.signature_method === "draw"
-                ? "draw"
-                : "upload",
-            );
-            hasSignature = true;
-          }
-        } catch (fetchErr) {
-          console.warn(
-            "Could not fetch existing agent signature image",
-            fetchErr,
-          );
-        }
-      }
-
-      return { valid: true, hasSignature };
+      return { valid: true };
     } catch (e: unknown) {
       console.error("verify_auth_user_password failed", e);
       toast.error(
@@ -458,7 +422,7 @@ export default function AgentApplicationPage() {
           : t("agentApplication.passwordCheckFailed"),
       );
       setPasswordVerified(false);
-      return { valid: false, hasSignature: false };
+      return { valid: false };
     } finally {
       setAuthLoading(false);
     }
@@ -1611,6 +1575,9 @@ export default function AgentApplicationPage() {
                             </div>
                           </div>
                         )}
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium leading-5 text-emerald-900">
+                          {t("agentApplication.signaturePrivacyNotice")}
+                        </div>
                       </div>
                     )}
 
@@ -1838,12 +1805,7 @@ export default function AgentApplicationPage() {
                                 const result =
                                   await verifyExistingUserPassword();
                                 if (result.valid) {
-                                  // If agent already has a signature, skip the signature step
-                                  setStep(
-                                    result.hasSignature
-                                      ? "contracts"
-                                      : "signature",
-                                  );
+                                  setStep("signature");
                                 }
                               })();
                               return;
