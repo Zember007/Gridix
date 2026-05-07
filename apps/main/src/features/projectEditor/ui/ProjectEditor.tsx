@@ -80,6 +80,7 @@ import {
   tryAutoOpenProjectChecklistPanel,
 } from "@gridix/utils/integrations";
 import { startProjectEditorDriverTour } from "@/features/onboarding/driver";
+import { normalizeCompletedInteractiveTours } from "@/features/onboarding/interactiveTourState";
 import { resetProjectEditorInteractiveOnboardingStorage } from "@/features/onboarding/resetInteractiveOnboardingStorage";
 import { ProjectOnboardingChecklistPanel } from "@/features/onboarding/checklist";
 import {
@@ -88,6 +89,9 @@ import {
   type ProjectEditorProject,
 } from "@/features/projectEditor/model/types";
 import type { AdminBootstrapProject } from "@/entities/admin-access";
+import { useAdminAccess } from "@/entities/admin-access";
+import type { AdminBootstrapResponse } from "@/entities/admin-access/model/types";
+import { ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX } from "@/entities/admin-access/queries/useAdminAccessQuery";
 import { refreshAdminBootstrapCache } from "@/entities/admin-access/lib/refreshAdminBootstrapCache";
 import { AdminAccessNotice } from "@/shared/ui/AdminAccessNotice";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
@@ -634,6 +638,7 @@ const ProjectEditor = ({
 
   const { navigate } = useLanguageNavigation();
   const queryClient = useQueryClient();
+  const adminAccess = useAdminAccess();
   const location = useLocation();
   const { user, userProfile, loading: authLoading, signOut } = useAuth();
   const { t } = useLanguage();
@@ -647,6 +652,14 @@ const ProjectEditor = ({
   const projectRef = useRef(project);
   const lastCommittedProjectSigRef = useRef<string | null>(null);
   const projectPersistInFlight = useRef(false);
+
+  const bootstrapInteractiveTours = useMemo(
+    () =>
+      normalizeCompletedInteractiveTours(
+        adminAccess?.data?.completed_interactive_tours,
+      ),
+    [adminAccess?.data?.completed_interactive_tours],
+  );
 
   const { scope: defaultBuildingScope, isReady: defaultBuildingScopeReady } =
     useDefaultSubProjectBuildingScope(!isNew && project.id ? project.id : null);
@@ -875,9 +888,9 @@ const ProjectEditor = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.has_masterplan, activeTab]);
 
-  // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
+  // Project editor onboarding: Driver.js — источник истины туров в колонке `user_profiles.completed_interactive_tours` + локальный LS.
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || adminAccess?.loading) return;
 
     if (!user?.id) return;
     if (isNew) return;
@@ -890,6 +903,8 @@ const ProjectEditor = ({
         await startProjectEditorDriverTour({
           userId: user.id,
           t,
+          completedInteractiveTours: bootstrapInteractiveTours,
+          queryClient,
         });
       } catch (e) {
         console.warn("Failed to start project editor onboarding tour:", e);
@@ -897,7 +912,16 @@ const ProjectEditor = ({
     };
 
     void run();
-  }, [authLoading, isNew, project?.id, t, user?.id]);
+  }, [
+    adminAccess?.loading,
+    authLoading,
+    bootstrapInteractiveTours,
+    isNew,
+    project?.id,
+    queryClient,
+    t,
+    user?.id,
+  ]);
 
   // In-app project checklist: auto-open once per (user, project); skipped in driver dev mode
   useEffect(() => {
@@ -914,13 +938,23 @@ const ProjectEditor = ({
 
   const replayInteractiveProjectOnboarding = useCallback(async () => {
     if (!user?.id || !project?.id || isNew) return;
-    resetProjectEditorInteractiveOnboardingStorage(user.id, project.id);
+    await resetProjectEditorInteractiveOnboardingStorage(user.id, project.id);
+    await refreshAdminBootstrapCache(queryClient);
+    const cachedPairs = queryClient.getQueriesData<AdminBootstrapResponse>({
+      queryKey: [...ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX],
+    });
+    const freshPayload = cachedPairs.find(([, d]) => d != null)?.[1];
+    const replayTours = normalizeCompletedInteractiveTours(
+      freshPayload?.completed_interactive_tours,
+    );
     startedEditorTourRef.current = false;
     startedEditorTourRef.current = true;
     try {
       await startProjectEditorDriverTour({
         userId: user.id,
         t,
+        completedInteractiveTours: replayTours,
+        queryClient,
       });
     } catch (e) {
       console.warn("Failed to start project editor onboarding tour:", e);
@@ -930,7 +964,7 @@ const ProjectEditor = ({
     } catch (e) {
       console.warn("Failed to open project checklist panel:", e);
     }
-  }, [isNew, project?.id, t, user?.id]);
+  }, [isNew, project?.id, queryClient, t, user?.id]);
 
   // Reset per-project guard when switching projects (and allow re-run on navigation)
   useEffect(() => {

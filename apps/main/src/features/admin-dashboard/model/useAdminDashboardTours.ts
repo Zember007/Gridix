@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { QueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  hasDriverTourCompletedOnce,
   isDriverDevMode,
   tryAutoOpenAdminChecklistPanel,
   waitForSelectors,
 } from "@gridix/utils/integrations";
+import type { AdminBootstrapResponse } from "@/entities/admin-access/model/types";
+import { ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX } from "@/entities/admin-access/queries/useAdminAccessQuery";
 import {
   ADMIN_MAIN_DRIVER_TOUR_ID,
   destroyPartnersDriverTour,
@@ -14,6 +16,12 @@ import {
   startPartnersDriverTour,
   startProjectCreationDriverTour,
 } from "@/features/onboarding/driver";
+import type { CompletedInteractiveTours } from "@/features/onboarding/interactiveTourState";
+import {
+  isInteractiveTourMarkedComplete,
+  mirrorCompletedInteractiveToursToLocalStorage,
+  normalizeCompletedInteractiveTours,
+} from "@/features/onboarding/interactiveTourState";
 import { resetAdminInteractiveOnboardingStorage } from "@/features/onboarding/resetInteractiveOnboardingStorage";
 
 type UserMetadata = Record<string, unknown> | null | undefined;
@@ -38,6 +46,9 @@ type UserProfileLike =
 
 type UseAdminDashboardToursParams = {
   loading: boolean;
+  adminBootstrapLoading: boolean;
+  completedInteractiveTours: Record<string, string> | null | undefined;
+  queryClient: QueryClient;
   activeTab: string;
   showCreateModal: boolean;
   user: UserLike | undefined;
@@ -46,6 +57,9 @@ type UseAdminDashboardToursParams = {
 
 export const useAdminDashboardTours = ({
   loading,
+  adminBootstrapLoading,
+  completedInteractiveTours,
+  queryClient,
   activeTab,
   showCreateModal,
   user,
@@ -59,9 +73,36 @@ export const useAdminDashboardTours = ({
   const wasPartnersTabRef = useRef(false);
   const startedProjectCreationTourRef = useRef(false);
 
+  const normalizedRemoteTours = useMemo<CompletedInteractiveTours>(() => {
+    return normalizeCompletedInteractiveTours(completedInteractiveTours);
+  }, [completedInteractiveTours]);
+
+  /** Актуальная карта из кэша bootstrap (учитывает refetch после сброса прогресса). */
+  const getBootstrapInteractiveTours =
+    useCallback((): CompletedInteractiveTours => {
+      const cachedPairs = queryClient.getQueriesData<AdminBootstrapResponse>({
+        queryKey: [...ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX],
+      });
+      const firstPayload = cachedPairs.find(([, d]) => d != null)?.[1];
+      return normalizeCompletedInteractiveTours(
+        firstPayload?.completed_interactive_tours,
+      );
+    }, [queryClient]);
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    mirrorCompletedInteractiveToursToLocalStorage(
+      userId,
+      normalizedRemoteTours,
+    );
+  }, [user?.id, normalizedRemoteTours]);
+
   const runAdminMainTourAndChecklistSequence = useCallback(async () => {
     const userId = user?.id;
     if (!userId) return;
+
+    const interactiveTours = getBootstrapInteractiveTours();
 
     try {
       const anchorsReady = await waitForSelectors(
@@ -79,16 +120,22 @@ export const useAdminDashboardTours = ({
         return;
       }
 
-      const willRunAdminMainTour = !hasDriverTourCompletedOnce(
+      const willRunAdminMainTour = !isInteractiveTourMarkedComplete(
         userId,
         ADMIN_MAIN_DRIVER_TOUR_ID,
+        interactiveTours,
       );
       if (willRunAdminMainTour) {
         setSuppressAdminChecklistChrome(true);
       }
 
       try {
-        await startAdminMainDriverTour({ userId, t });
+        await startAdminMainDriverTour({
+          userId,
+          t,
+          completedInteractiveTours: interactiveTours,
+          queryClient,
+        });
       } catch (tourError) {
         console.warn("Failed to start admin main driver tour:", tourError);
       } finally {
@@ -114,21 +161,27 @@ export const useAdminDashboardTours = ({
       console.warn("Failed admin dashboard onboarding sequence:", error);
       adminMainAndChecklistSequenceRef.current = false;
     }
-  }, [t, user?.id]);
+  }, [getBootstrapInteractiveTours, queryClient, t, user?.id]);
 
   /** Driver admin main tour, затем in-app checklist panel — без параллельного старта. */
   useEffect(() => {
-    if (loading) return;
+    if (loading || adminBootstrapLoading) return;
     const userId = user?.id;
     if (!userId) return;
     if (adminMainAndChecklistSequenceRef.current) return;
 
     adminMainAndChecklistSequenceRef.current = true;
     void runAdminMainTourAndChecklistSequence();
-  }, [loading, runAdminMainTourAndChecklistSequence, user, userProfile]);
+  }, [
+    adminBootstrapLoading,
+    loading,
+    runAdminMainTourAndChecklistSequence,
+    user,
+    userProfile,
+  ]);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || adminBootstrapLoading) return;
     const devTour = isDriverDevMode();
 
     if (devTour && !showCreateModal) {
@@ -147,6 +200,8 @@ export const useAdminDashboardTours = ({
         await startProjectCreationDriverTour({
           userId,
           t,
+          completedInteractiveTours: getBootstrapInteractiveTours(),
+          queryClient,
         });
       } catch (error) {
         console.warn(
@@ -161,7 +216,16 @@ export const useAdminDashboardTours = ({
     return () => {
       destroyProjectCreationDriverTour();
     };
-  }, [loading, showCreateModal, t, user, userProfile]);
+  }, [
+    adminBootstrapLoading,
+    getBootstrapInteractiveTours,
+    loading,
+    showCreateModal,
+    t,
+    user,
+    userProfile,
+    queryClient,
+  ]);
 
   useEffect(() => {
     const onPartners = activeTab === "partners";
@@ -178,7 +242,7 @@ export const useAdminDashboardTours = ({
       startedPartnersTourRef.current = false;
     }
     if (activeTab !== "partners") return;
-    if (loading) return;
+    if (loading || adminBootstrapLoading) return;
     const userId = user?.id;
     if (!userId) return;
     if (startedPartnersTourRef.current) return;
@@ -186,35 +250,65 @@ export const useAdminDashboardTours = ({
     startedPartnersTourRef.current = true;
     const run = async () => {
       try {
-        await startPartnersDriverTour({ userId, t });
+        await startPartnersDriverTour({
+          userId,
+          t,
+          completedInteractiveTours: getBootstrapInteractiveTours(),
+          queryClient,
+        });
       } catch (error) {
         console.warn("Failed to start partners onboarding tour:", error);
       }
     };
 
     void run();
-  }, [activeTab, loading, t, user?.id]);
+  }, [
+    activeTab,
+    adminBootstrapLoading,
+    getBootstrapInteractiveTours,
+    loading,
+    queryClient,
+    t,
+    user?.id,
+  ]);
 
   const retakeTraining = useCallback(async () => {
     if (loading) return;
     const userId = user?.id;
     if (!userId) return;
 
-    resetAdminInteractiveOnboardingStorage(userId);
+    await resetAdminInteractiveOnboardingStorage(userId);
+
     destroyPartnersDriverTour();
     destroyProjectCreationDriverTour();
 
-    adminMainAndChecklistSequenceRef.current = false;
     startedPartnersTourRef.current = false;
     startedProjectCreationTourRef.current = false;
 
-    adminMainAndChecklistSequenceRef.current = true;
+    try {
+      await queryClient.refetchQueries({
+        queryKey: [...ADMIN_BOOTSTRAP_QUERY_KEY_PREFIX],
+      });
+    } catch (error) {
+      console.warn(
+        "retakeTraining: bootstrap refetch after reset failed:",
+        error,
+      );
+    }
+
     await runAdminMainTourAndChecklistSequence();
+
+    const replayTours = getBootstrapInteractiveTours();
 
     if (activeTab === "partners") {
       startedPartnersTourRef.current = true;
       try {
-        await startPartnersDriverTour({ userId, t });
+        await startPartnersDriverTour({
+          userId,
+          t,
+          completedInteractiveTours: replayTours,
+          queryClient,
+        });
       } catch (error) {
         console.warn("Failed to replay partners onboarding tour:", error);
       }
@@ -223,7 +317,12 @@ export const useAdminDashboardTours = ({
     if (showCreateModal) {
       startedProjectCreationTourRef.current = true;
       try {
-        await startProjectCreationDriverTour({ userId, t });
+        await startProjectCreationDriverTour({
+          userId,
+          t,
+          completedInteractiveTours: replayTours,
+          queryClient,
+        });
       } catch (error) {
         console.warn(
           "Failed to replay project creation onboarding tour:",
@@ -233,7 +332,9 @@ export const useAdminDashboardTours = ({
     }
   }, [
     activeTab,
+    getBootstrapInteractiveTours,
     loading,
+    queryClient,
     runAdminMainTourAndChecklistSequence,
     showCreateModal,
     t,

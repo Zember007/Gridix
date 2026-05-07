@@ -1,11 +1,16 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { DriveStep, Driver, Side } from "@gridix/utils/integrations";
 import {
   createGridixDriver,
-  hasDriverTourCompletedOnce,
-  markDriverTourCompletedOnce,
   waitForSelectors,
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
+
+import { completeInteractiveTour } from "@/features/onboarding/completeInteractiveTour";
+import {
+  type CompletedInteractiveTours,
+  isInteractiveTourMarkedComplete,
+} from "@/features/onboarding/interactiveTourState";
 
 import { requestProjectCreationTourKindScreen } from "./projectCreationTourNavBridge";
 
@@ -372,10 +377,11 @@ function destroyActiveInstance(): void {
 
 function createProjectCreationPhase1Driver(params: {
   userId: string;
+  queryClient: QueryClient;
   t: Translate;
   finish: () => void;
 }): Driver {
-  const { userId, t, finish } = params;
+  const { userId, queryClient, t, finish } = params;
   const driver = createGridixDriver({
     allowClose: true,
     allowKeyboardControl: false,
@@ -390,7 +396,11 @@ function createProjectCreationPhase1Driver(params: {
         activeProjectCreationDriver = null;
       }
       if (!skipMarkProjectCreationOnceOnDestroy) {
-        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
+        void completeInteractiveTour(
+          userId,
+          PROJECT_CREATION_DRIVER_TOUR_ID,
+          queryClient,
+        );
         finish();
       }
     },
@@ -408,15 +418,20 @@ export function destroyProjectCreationDriverTour(): void {
 
 function startPhase2Driver(params: {
   userId: string;
+  queryClient: QueryClient;
   t: Translate;
   finish: () => void;
 }): void {
-  const { userId, t, finish } = params;
+  const { userId, queryClient, t, finish } = params;
 
   const rawSteps = buildPhase2Steps(t);
   const readySteps = filterStepsWithDomTargets(rawSteps);
   if (!readySteps.length) {
-    markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
+    void completeInteractiveTour(
+      userId,
+      PROJECT_CREATION_DRIVER_TOUR_ID,
+      queryClient,
+    );
     finish();
     return;
   }
@@ -437,7 +452,11 @@ function startPhase2Driver(params: {
         if (activeProjectCreationDriver === driver) {
           activeProjectCreationDriver = null;
         }
-        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
+        void completeInteractiveTour(
+          userId,
+          PROJECT_CREATION_DRIVER_TOUR_ID,
+          queryClient,
+        );
         finish();
       },
     });
@@ -453,7 +472,11 @@ function startPhase2Driver(params: {
       if (activeProjectCreationDriver === driver) {
         activeProjectCreationDriver = null;
       }
-      markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
+      void completeInteractiveTour(
+        userId,
+        PROJECT_CREATION_DRIVER_TOUR_ID,
+        queryClient,
+      );
       finish();
     }
   }).catch(() => {
@@ -470,12 +493,20 @@ function startPhase2Driver(params: {
 export function startProjectCreationDriverTour(params: {
   userId: string;
   t: Translate;
+  completedInteractiveTours: CompletedInteractiveTours | null | undefined;
+  queryClient: QueryClient;
 }): Promise<void> {
-  const { userId, t } = params;
+  const { userId, t, completedInteractiveTours, queryClient } = params;
 
   if (typeof window === "undefined") return Promise.resolve();
   if (!userId) return Promise.resolve();
-  if (hasDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID)) {
+  if (
+    isInteractiveTourMarkedComplete(
+      userId,
+      PROJECT_CREATION_DRIVER_TOUR_ID,
+      completedInteractiveTours,
+    )
+  ) {
     return Promise.resolve();
   }
 
@@ -539,7 +570,7 @@ export function startProjectCreationDriverTour(params: {
           if (!document.querySelector(".project_creation_modal_usertour"))
             return;
 
-          startPhase2Driver({ userId, t, finish });
+          startPhase2Driver({ userId, queryClient, t, finish });
         })();
       };
 
@@ -571,6 +602,7 @@ export function startProjectCreationDriverTour(params: {
           const kindStep = buildKindStep(t, (d) => continueAfterKindChoice(d));
           const newDriver = createProjectCreationPhase1Driver({
             userId,
+            queryClient,
             t,
             finish,
           });
@@ -647,6 +679,7 @@ export function startProjectCreationDriverTour(params: {
 
             const importDriver = createProjectCreationPhase1Driver({
               userId,
+              queryClient,
               t,
               finish,
             });
@@ -692,6 +725,7 @@ export function startProjectCreationDriverTour(params: {
 
       const driver = createProjectCreationPhase1Driver({
         userId,
+        queryClient,
         t,
         finish,
       });
@@ -714,7 +748,11 @@ export function startProjectCreationDriverTour(params: {
         if (activeProjectCreationDriver === driver) {
           activeProjectCreationDriver = null;
         }
-        markDriverTourCompletedOnce(userId, PROJECT_CREATION_DRIVER_TOUR_ID);
+        void completeInteractiveTour(
+          userId,
+          PROJECT_CREATION_DRIVER_TOUR_ID,
+          queryClient,
+        );
         finish();
       }
     }).catch(() => {
