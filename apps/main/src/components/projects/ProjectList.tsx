@@ -2040,7 +2040,9 @@ ${externalVideoListItems.join("\n")}
           }
           className="create_project_usertour min-h-[320px] items-center text-center"
         >
-          {!adminAccess?.isDemoWorkspace && <JoinDemoButton variant="inline" />}
+          {!isCrmMode && !adminAccess?.isDemoWorkspace && (
+            <JoinDemoButton variant="inline" />
+          )}
         </DataState>
       ) : (
         <div className="space-y-5">
@@ -2055,7 +2057,7 @@ ${externalVideoListItems.join("\n")}
             }
             actions={
               <>
-                {!adminAccess?.isDemoWorkspace && (
+                {!isCrmMode && !adminAccess?.isDemoWorkspace && (
                   <JoinDemoButton variant="inline" />
                 )}
                 {!isCrmMode && onCreateNew && (
