@@ -18,28 +18,45 @@ function toPositiveInt(v: string | null): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function buildCrmSearchParams(existingSearch: string, dealId: number | null) {
+type CrmEmbedType = "bitrix" | "amocrm";
+
+function buildCrmSearchParams(
+  existingSearch: string,
+  crm: CrmEmbedType,
+  entityId: number | null,
+) {
   const sp = new URLSearchParams(existingSearch);
-  sp.set("crm", "bitrix");
-  if (dealId) sp.set("deal_id", String(dealId));
-  else sp.delete("deal_id");
+  sp.set("crm", crm);
+  if (crm === "bitrix") {
+    if (entityId) sp.set("deal_id", String(entityId));
+    else sp.delete("deal_id");
+    sp.delete("lead_id");
+  } else {
+    if (entityId) sp.set("lead_id", String(entityId));
+    else sp.delete("lead_id");
+    sp.delete("deal_id");
+  }
   return sp;
 }
 
-type BitrixCrmTopBarProps = {
+type CrmTopBarProps = {
+  crm?: CrmEmbedType;
   projects: CrmProjectLite[];
   loading?: boolean;
+  entityId?: number | null;
   dealId?: number | null;
   /** Current project id if a project is open; null -> Catalog is active */
   activeProjectId?: string | null;
 };
 
-export function BitrixCrmTopBar({
+export function CrmTopBar({
+  crm = "bitrix",
   projects,
   loading,
+  entityId,
   dealId,
   activeProjectId,
-}: BitrixCrmTopBarProps) {
+}: CrmTopBarProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,20 +65,23 @@ export function BitrixCrmTopBar({
 
   const adminAccess = useAdminAccess();
 
-  const dealIdResolved = useMemo(() => {
+  const entityIdResolved = useMemo(() => {
+    if (typeof entityId === "number") return entityId;
+    if (typeof dealId === "number") return dealId;
+    const key = crm === "bitrix" ? "deal_id" : "lead_id";
     const fromUrl = toPositiveInt(
-      new URLSearchParams(location.search).get("deal_id"),
+      new URLSearchParams(location.search).get(key),
     );
-    return dealId ?? fromUrl;
-  }, [dealId, location.search]);
+    return fromUrl;
+  }, [crm, dealId, entityId, location.search]);
 
   const value = activeProjectId ?? "catalog";
 
   const onValueChange = (next: string) => {
-    const sp = buildCrmSearchParams(location.search, dealIdResolved);
+    const sp = buildCrmSearchParams(location.search, crm, entityIdResolved);
     if (next === "catalog") {
       navigate({
-        pathname: `/${langSegment}/bitrix`,
+        pathname: `/${langSegment}/${crm === "bitrix" ? "bitrix" : "amocrm"}`,
         search: `?${sp.toString()}`,
       });
       return;
@@ -114,12 +134,14 @@ export function BitrixCrmTopBar({
         </Select>
       </div>
 
-      {dealIdResolved ? (
+      {entityIdResolved ? (
         <div className="shrink-0 rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">
-          {t("bitrix.topBar.currentDeal")}{" "}
-          <span className="font-mono text-foreground">{dealIdResolved}</span>
+          {crm === "bitrix" ? t("bitrix.topBar.currentDeal") : "AmoCRM lead"}{" "}
+          <span className="font-mono text-foreground">{entityIdResolved}</span>
         </div>
       ) : null}
     </div>
   );
 }
+
+export const BitrixCrmTopBar = CrmTopBar;
