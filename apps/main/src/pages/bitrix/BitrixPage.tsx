@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -96,10 +96,15 @@ function BitrixPageInner() {
   const { data: sessionQuery, isLoading: isSessionLoading } =
     useCurrentSession();
 
-  const { status, user, connectUrl } = useBitrixConnect(bxDomain, bxMemberId);
+  const { status, user, connectUrl, claimInstall } = useBitrixConnect(
+    bxDomain,
+    bxMemberId,
+  );
   const { projects, loading: projectsLoading } = useCrmProjectsLite(
     !!user && status === "claimed",
   );
+  const claimAttemptedRef = useRef(false);
+  const [claimLoading, setClaimLoading] = useState(false);
 
   const setSearchParams = (patch: Record<string, string | null>) => {
     const url = new URL(window.location.href);
@@ -190,35 +195,33 @@ function BitrixPageInner() {
     ssoAttempted,
   ]);
 
-  const showProjects = !!user && status === "claimed";
-
   useEffect(() => {
-    const reloadGuardKey = "bitrix:connected-reloaded";
-    if (!showProjects) {
-      try {
-        sessionStorage.removeItem(reloadGuardKey);
-      } catch {
-        // ignore
-      }
-      return;
-    }
+    if (status !== "pending" || !user || claimAttemptedRef.current) return;
 
-    try {
-      const alreadyReloaded = sessionStorage.getItem(reloadGuardKey) === "1";
-      if (!alreadyReloaded) {
-        sessionStorage.setItem(reloadGuardKey, "1");
-        window.location.reload();
+    claimAttemptedRef.current = true;
+    setClaimLoading(true);
+
+    void (async () => {
+      try {
+        const ok = await claimInstall();
+        if (!ok) {
+          claimAttemptedRef.current = false;
+        }
+      } finally {
+        setClaimLoading(false);
       }
-    } catch {
-      window.location.reload();
-    }
-  }, [showProjects]);
+    })();
+  }, [status, user, claimInstall]);
+
+  const showProjects = !!user && status === "claimed";
 
   const loading =
     status === "loading" ||
+    claimLoading ||
     isSessionLoading ||
     (status === "claimed" && !user && (!ssoAttempted || ssoLoading));
   const needsConnect =
+    !claimLoading &&
     !user &&
     (status === "pending" ||
       status === "needs_install" ||
