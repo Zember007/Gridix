@@ -107,7 +107,7 @@ const ApartmentDetailsPage = ({
 
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
-  const [bitrixBusy, setBitrixBusy] = useState(false);
+  const [crmBusy, setCrmBusy] = useState(false);
   const [isBitrixDealPickerOpen, setIsBitrixDealPickerOpen] = useState(false);
   const [bitrixDealsLoading, setBitrixDealsLoading] = useState(false);
   const [bitrixDeals, setBitrixDeals] = useState<
@@ -129,24 +129,35 @@ const ApartmentDetailsPage = ({
       : undefined,
   );
 
-  const bitrixContext = useMemo(() => {
+  const crmContext = useMemo(() => {
     const sp = new URLSearchParams(location.search);
     const crm = sp.get("crm");
     const dealIdRaw = sp.get("deal_id");
+    const leadIdRaw = sp.get("lead_id");
     const dealIdNum = dealIdRaw ? Number(dealIdRaw) : NaN;
+    const leadIdNum = leadIdRaw ? Number(leadIdRaw) : NaN;
     return {
+      crm,
       isBitrix: crm === "bitrix",
+      isAmoCrm: crm === "amocrm",
+      isCrm: crm === "bitrix" || crm === "amocrm",
       dealId: Number.isFinite(dealIdNum) && dealIdNum > 0 ? dealIdNum : null,
+      leadId: Number.isFinite(leadIdNum) && leadIdNum > 0 ? leadIdNum : null,
     };
   }, [location.search]);
 
   const [bitrixDealId, setBitrixDealId] = useState<number | null>(
-    bitrixContext.dealId,
+    crmContext.dealId,
   );
+  const [amoLeadId, setAmoLeadId] = useState<number | null>(crmContext.leadId);
 
   useEffect(() => {
-    setBitrixDealId(bitrixContext.dealId);
-  }, [bitrixContext.dealId]);
+    setBitrixDealId(crmContext.dealId);
+  }, [crmContext.dealId]);
+
+  useEffect(() => {
+    setAmoLeadId(crmContext.leadId);
+  }, [crmContext.leadId]);
 
   const patchSearchParams = useCallback(
     (patch: Record<string, string | null>) => {
@@ -257,7 +268,7 @@ const ApartmentDetailsPage = ({
   const bitrixCreateDeal = async () => {
     if (!apartment || !project) return;
     try {
-      setBitrixBusy(true);
+      setCrmBusy(true);
       await ensureGridixAuth();
 
       const { data, error } = await supabase.functions.invoke("bitrix-app", {
@@ -286,7 +297,7 @@ const ApartmentDetailsPage = ({
         e instanceof Error ? e.message : "Не удалось создать сделку в Bitrix",
       );
     } finally {
-      setBitrixBusy(false);
+      setCrmBusy(false);
     }
   };
 
@@ -294,7 +305,7 @@ const ApartmentDetailsPage = ({
     async (dealId: number) => {
       if (!apartment || !project) return;
       try {
-        setBitrixBusy(true);
+        setCrmBusy(true);
         await ensureGridixAuth();
 
         setBitrixDealId(dealId);
@@ -319,7 +330,7 @@ const ApartmentDetailsPage = ({
             : "Не удалось привязать квартиру к сделке",
         );
       } finally {
-        setBitrixBusy(false);
+        setCrmBusy(false);
       }
     },
     [apartment, ensureGridixAuth, patchSearchParams, project],
@@ -338,6 +349,82 @@ const ApartmentDetailsPage = ({
     setIsBitrixDealPickerOpen(true);
     if (!bitrixDeals.length) {
       void loadBitrixUnlinkedDeals();
+    }
+  };
+
+  const amoBindLeadToApartment = async () => {
+    if (!apartment || !project || !amoLeadId) return;
+    try {
+      setCrmBusy(true);
+      await ensureGridixAuth();
+
+      const { error } = await supabase.functions.invoke("amocrm-api", {
+        body: {
+          action: "bind_lead_to_apartment",
+          lead_id: amoLeadId,
+          project_id: apartment.project_id,
+          apartment_id: apartment.id,
+        },
+      });
+      if (error) throw error;
+
+      patchSearchParams({ crm: "amocrm", lead_id: String(amoLeadId) });
+      toast.success(`Квартира привязана к amoCRM лиду #${amoLeadId}`);
+    } catch (e) {
+      console.error(e);
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Не удалось привязать квартиру к amoCRM лиду",
+      );
+    } finally {
+      setCrmBusy(false);
+    }
+  };
+
+  const amoCreateLead = async () => {
+    if (!apartment || !project) return;
+    try {
+      setCrmBusy(true);
+      await ensureGridixAuth();
+
+      const unique = `${Date.now()}-${apartment.id.slice(0, 8)}`;
+      const { data, error } = await supabase.functions.invoke(
+        "create-amocrm-lead",
+        {
+          body: {
+            name: `AmoCRM Lead ${apartment.apartment_number}`,
+            email: `amocrm-gridix-${unique}@gridix.local`,
+            phone: `amocrm-gridix-${unique}`,
+            projectId: apartment.project_id,
+            apartmentId: apartment.id,
+          },
+        },
+      );
+      if (error) throw error;
+
+      const results = Array.isArray((data as any)?.results)
+        ? ((data as any).results as Array<any>)
+        : [];
+      const amoResult = results.find((r) => r?.kind === "amocrm");
+      const createdLeadId = Number(
+        amoResult?.crm?.amocrmLeadId ?? amoResult?.crm?.id,
+      );
+
+      if (Number.isFinite(createdLeadId) && createdLeadId > 0) {
+        setAmoLeadId(createdLeadId);
+        patchSearchParams({ crm: "amocrm", lead_id: String(createdLeadId) });
+        toast.success(`amoCRM лид создан (#${createdLeadId})`);
+      } else {
+        toast.success("Лид создан в Gridix");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error(
+        e instanceof Error ? e.message : "Не удалось создать лид в amoCRM",
+      );
+    } finally {
+      setCrmBusy(false);
     }
   };
 
@@ -1232,42 +1319,74 @@ const ApartmentDetailsPage = ({
                       <div className="space-y-3">
                         {/* Green installment button */}
 
-                        {/* Main reserve / Bitrix actions */}
-                        {bitrixContext.isBitrix ? (
+                        {/* Main reserve / CRM actions */}
+                        {crmContext.isCrm ? (
                           <div className="space-y-2">
-                            <Button
-                              className="w-full rounded-lg py-3 font-poppins text-sm font-medium text-white hover:opacity-90"
-                              style={getButtonStyle("available")}
-                              onClick={bitrixLinkToDeal}
-                              disabled={bitrixBusy}
-                            >
-                              {bitrixBusy
-                                ? "..."
-                                : bitrixDealId
-                                  ? t(
-                                      "bitrix.apartmentDetails.linkDealWithId",
-                                      {
-                                        dealId: bitrixDealId,
-                                      },
-                                    )
-                                  : t(
-                                      "bitrix.apartmentDetails.linkExistingDeal",
-                                    )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full rounded-lg py-3 font-poppins text-sm"
-                              onClick={bitrixCreateDeal}
-                              disabled={bitrixBusy}
-                            >
-                              {bitrixBusy
-                                ? "..."
-                                : t(
-                                    "bitrix.apartmentDetails.createDealInBitrix",
-                                  )}
-                            </Button>
+                            {crmContext.isBitrix ? (
+                              <>
+                                <Button
+                                  className="w-full rounded-lg py-3 font-poppins text-sm font-medium text-white hover:opacity-90"
+                                  style={getButtonStyle("available")}
+                                  onClick={bitrixLinkToDeal}
+                                  disabled={crmBusy}
+                                >
+                                  {crmBusy
+                                    ? "..."
+                                    : bitrixDealId
+                                      ? t(
+                                          "bitrix.apartmentDetails.linkDealWithId",
+                                          { dealId: bitrixDealId },
+                                        )
+                                      : t(
+                                          "bitrix.apartmentDetails.linkExistingDeal",
+                                        )}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="w-full rounded-lg py-3 font-poppins text-sm"
+                                  onClick={bitrixCreateDeal}
+                                  disabled={crmBusy}
+                                >
+                                  {crmBusy
+                                    ? "..."
+                                    : t(
+                                        "bitrix.apartmentDetails.createDealInBitrix",
+                                      )}
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                {amoLeadId ? (
+                                  <Button
+                                    className="w-full rounded-lg py-3 font-poppins text-sm font-medium text-white hover:opacity-90"
+                                    style={getButtonStyle("available")}
+                                    onClick={amoBindLeadToApartment}
+                                    disabled={crmBusy}
+                                  >
+                                    {crmBusy
+                                      ? "..."
+                                      : `Привязать к amoCRM лиду #${amoLeadId}`}
+                                  </Button>
+                                ) : null}
+                                <Button
+                                  variant={amoLeadId ? "outline" : "default"}
+                                  className="w-full rounded-lg py-3 font-poppins text-sm"
+                                  onClick={amoCreateLead}
+                                  disabled={crmBusy}
+                                  style={
+                                    amoLeadId
+                                      ? undefined
+                                      : getButtonStyle("available")
+                                  }
+                                >
+                                  {crmBusy ? "..." : "Создать лид в amoCRM"}
+                                </Button>
+                              </>
+                            )}
                             <div className="text-xs text-muted-foreground">
-                              {t("bitrix.apartmentDetails.syncHint")}
+                              {crmContext.isBitrix
+                                ? t("bitrix.apartmentDetails.syncHint")
+                                : "Данные выбранной квартиры будут сохранены в amoCRM и воронке Gridix."}
                             </div>
                           </div>
                         ) : (
@@ -1377,32 +1496,60 @@ const ApartmentDetailsPage = ({
         {apartment.status === "available" && (
           <div className="sticky bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white p-4 lg:hidden">
             <div className="mx-auto max-w-sm space-y-3">
-              {bitrixContext.isBitrix ? (
+              {crmContext.isCrm ? (
                 <div className="space-y-2">
-                  <Button
-                    className="w-full rounded-2xl py-3 text-lg font-semibold text-white hover:opacity-90"
-                    style={getButtonStyle("available")}
-                    onClick={bitrixLinkToDeal}
-                    disabled={bitrixBusy}
-                  >
-                    {bitrixBusy
-                      ? "..."
-                      : bitrixDealId
-                        ? t("bitrix.apartmentDetails.linkDealWithId", {
-                            dealId: bitrixDealId,
-                          })
-                        : t("bitrix.apartmentDetails.linkDeal")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-2xl border-2 border-gray-200 py-3 hover:border-gray-300"
-                    onClick={bitrixCreateDeal}
-                    disabled={bitrixBusy}
-                  >
-                    {bitrixBusy
-                      ? "..."
-                      : t("bitrix.apartmentDetails.createDeal")}
-                  </Button>
+                  {crmContext.isBitrix ? (
+                    <>
+                      <Button
+                        className="w-full rounded-2xl py-3 text-lg font-semibold text-white hover:opacity-90"
+                        style={getButtonStyle("available")}
+                        onClick={bitrixLinkToDeal}
+                        disabled={crmBusy}
+                      >
+                        {crmBusy
+                          ? "..."
+                          : bitrixDealId
+                            ? t("bitrix.apartmentDetails.linkDealWithId", {
+                                dealId: bitrixDealId,
+                              })
+                            : t("bitrix.apartmentDetails.linkDeal")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-2xl border-2 border-gray-200 py-3 hover:border-gray-300"
+                        onClick={bitrixCreateDeal}
+                        disabled={crmBusy}
+                      >
+                        {crmBusy
+                          ? "..."
+                          : t("bitrix.apartmentDetails.createDeal")}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {amoLeadId ? (
+                        <Button
+                          className="w-full rounded-2xl py-3 text-lg font-semibold text-white hover:opacity-90"
+                          style={getButtonStyle("available")}
+                          onClick={amoBindLeadToApartment}
+                          disabled={crmBusy}
+                        >
+                          {crmBusy ? "..." : `Привязать #${amoLeadId}`}
+                        </Button>
+                      ) : null}
+                      <Button
+                        variant={amoLeadId ? "outline" : "default"}
+                        className="w-full rounded-2xl border-2 border-gray-200 py-3 hover:border-gray-300"
+                        onClick={amoCreateLead}
+                        disabled={crmBusy}
+                        style={
+                          amoLeadId ? undefined : getButtonStyle("available")
+                        }
+                      >
+                        {crmBusy ? "..." : "Создать лид в amoCRM"}
+                      </Button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <Button
@@ -1447,7 +1594,7 @@ const ApartmentDetailsPage = ({
         )}
 
         {/* Dialogs rendered once (avoid double-open on shared state) */}
-        {!bitrixContext.isBitrix && (
+        {!crmContext.isCrm && (
           <Dialog
             open={isReserveDialogOpen}
             onOpenChange={setIsReserveDialogOpen}
@@ -1484,7 +1631,7 @@ const ApartmentDetailsPage = ({
               <InstallmentCalculator
                 applyInstallment={() => {
                   setIsCalculatorDialogOpen(false);
-                  if (!bitrixContext.isBitrix) setIsReserveDialogOpen(true);
+                  if (!crmContext.isCrm) setIsReserveDialogOpen(true);
                 }}
                 apartmentPrice={apartment.price}
                 currency={project.currency}
@@ -1500,7 +1647,7 @@ const ApartmentDetailsPage = ({
         )}
 
         {/* Bitrix deal picker (avoid UI freeze on BX24.selectCRM) */}
-        {bitrixContext.isBitrix && (
+        {crmContext.isBitrix && (
           <Dialog
             open={isBitrixDealPickerOpen}
             onOpenChange={(open) => {
@@ -1526,12 +1673,12 @@ const ApartmentDetailsPage = ({
                     onChange={(e) => setBitrixDealsQuery(e.target.value)}
                     placeholder="Поиск по названию или #ID"
                     className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    disabled={bitrixDealsLoading || bitrixBusy}
+                    disabled={bitrixDealsLoading || crmBusy}
                   />
                   <Button
                     variant="outline"
                     onClick={() => void loadBitrixUnlinkedDeals()}
-                    disabled={bitrixDealsLoading || bitrixBusy}
+                    disabled={bitrixDealsLoading || crmBusy}
                   >
                     Обновить
                   </Button>
@@ -1553,7 +1700,7 @@ const ApartmentDetailsPage = ({
                       );
                     }
                   }}
-                  disabled={bitrixDealsLoading || bitrixBusy}
+                  disabled={bitrixDealsLoading || crmBusy}
                 >
                   Выбрать через Bitrix (BX24)
                 </Button>
@@ -1582,7 +1729,7 @@ const ApartmentDetailsPage = ({
                             setIsBitrixDealPickerOpen(false);
                             await linkApartmentToBitrixDeal(d.id);
                           }}
-                          disabled={bitrixBusy}
+                          disabled={crmBusy}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <div className="font-medium">#{d.id}</div>

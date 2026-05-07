@@ -1,12 +1,17 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { DriveStep, Side } from "@gridix/utils/integrations";
 import {
   GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
   GRIDIX_DRIVER_STAGE_RADIUS_MAX,
   createGridixDriver,
-  hasDriverTourCompletedOnce,
-  markDriverTourCompletedOnce,
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
+
+import { completeInteractiveTour } from "@/features/onboarding/completeInteractiveTour";
+import {
+  type CompletedInteractiveTours,
+  isInteractiveTourMarkedComplete,
+} from "@/features/onboarding/interactiveTourState";
 
 export const ADMIN_MAIN_DRIVER_TOUR_ID = "admin_main";
 
@@ -80,16 +85,26 @@ function buildAdminMainSteps(t: Translate): DriveStep[] {
 
 /**
  * Админский welcome-тур (дашборд): Driver.js вместо Usertour admin main flow.
- * Once-per-user: `markDriverTourCompletedOnce` + dev-режим через `isDriverDevMode` в utils.
+ * Завершение: `completeInteractiveTour` (Supabase JSON + localStorage once).
  */
 export async function startAdminMainDriverTour(params: {
   userId: string;
   t: Translate;
+  completedInteractiveTours: CompletedInteractiveTours | null | undefined;
+  queryClient: QueryClient;
 }): Promise<void> {
-  const { userId, t } = params;
+  const { userId, t, completedInteractiveTours, queryClient } = params;
   if (typeof window === "undefined") return;
   if (!userId) return;
-  if (hasDriverTourCompletedOnce(userId, ADMIN_MAIN_DRIVER_TOUR_ID)) return;
+  if (
+    isInteractiveTourMarkedComplete(
+      userId,
+      ADMIN_MAIN_DRIVER_TOUR_ID,
+      completedInteractiveTours,
+    )
+  ) {
+    return;
+  }
 
   const steps = buildAdminMainSteps(t);
   const readySteps = filterStepsWithDomTargets(steps);
@@ -112,7 +127,11 @@ export async function startAdminMainDriverTour(params: {
         showButtons: ["next", "previous", "close"],
         disableActiveInteraction: true,
         onDestroyed: () => {
-          markDriverTourCompletedOnce(userId, ADMIN_MAIN_DRIVER_TOUR_ID);
+          void completeInteractiveTour(
+            userId,
+            ADMIN_MAIN_DRIVER_TOUR_ID,
+            queryClient,
+          );
           complete();
         },
       });

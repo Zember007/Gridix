@@ -1,11 +1,16 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { DriveStep, Side } from "@gridix/utils/integrations";
 import {
   createGridixDriver,
-  hasDriverTourCompletedOnce,
-  markDriverTourCompletedOnce,
   waitForSelectors,
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
+
+import { completeInteractiveTour } from "@/features/onboarding/completeInteractiveTour";
+import {
+  type CompletedInteractiveTours,
+  isInteractiveTourMarkedComplete,
+} from "@/features/onboarding/interactiveTourState";
 
 export const PROJECT_EDITOR_DRIVER_TOUR_ID = "project_editor";
 
@@ -64,11 +69,20 @@ function buildProjectEditorSteps(t: Translate): DriveStep[] {
 export async function startProjectEditorDriverTour(params: {
   userId: string;
   t: Translate;
+  completedInteractiveTours: CompletedInteractiveTours | null | undefined;
+  queryClient: QueryClient;
 }): Promise<void> {
-  const { userId, t } = params;
+  const { userId, t, completedInteractiveTours, queryClient } = params;
   if (typeof window === "undefined") return;
   if (!userId) return;
-  if (hasDriverTourCompletedOnce(userId, PROJECT_EDITOR_DRIVER_TOUR_ID)) return;
+  if (
+    isInteractiveTourMarkedComplete(
+      userId,
+      PROJECT_EDITOR_DRIVER_TOUR_ID,
+      completedInteractiveTours,
+    )
+  )
+    return;
 
   const anchorsReady = await waitForSelectors(
     [".sidebar_usertour", ".general_usertour", ".project_save_usertour"],
@@ -92,7 +106,11 @@ export async function startProjectEditorDriverTour(params: {
       doneBtnText: t("driverOnboarding.buttons.done"),
       showButtons: ["next", "previous", "close"],
       onDestroyed: () => {
-        markDriverTourCompletedOnce(userId, PROJECT_EDITOR_DRIVER_TOUR_ID);
+        void completeInteractiveTour(
+          userId,
+          PROJECT_EDITOR_DRIVER_TOUR_ID,
+          queryClient,
+        );
       },
     });
 

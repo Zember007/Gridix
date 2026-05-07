@@ -4,9 +4,9 @@ import { ProjectApartmentSelector } from "@/components/project-selector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
 
-const BitrixCrmTopBar = lazy(() =>
+const CrmTopBar = lazy(() =>
   import("@/pages/bitrix/components/BitrixCrmTopBar").then((m) => ({
-    default: m.BitrixCrmTopBar,
+    default: m.CrmTopBar,
   })),
 );
 
@@ -28,19 +28,18 @@ const ProjectWidgetPageInner = ({ useId = false }: ProjectWidgetPageProps) => {
     () => new URLSearchParams(location.search).get("crm"),
     [location.search],
   );
-  const isBitrixCrm = crm === "bitrix";
-  const { projects, loading: projectsLoading } =
-    useCrmProjectsLite(isBitrixCrm);
+  const isCrmEmbed = crm === "bitrix" || crm === "amocrm";
+  const { projects, loading: projectsLoading } = useCrmProjectsLite(isCrmEmbed);
 
   const activeProjectId = useMemo(() => {
-    if (!isBitrixCrm) return null;
+    if (!isCrmEmbed) return null;
     const bySlug = projectSlug
       ? projects.find((p) => p.slug === projectSlug)
       : null;
     if (bySlug?.id) return bySlug.id;
     const byId = projectId ? projects.find((p) => p.id === projectId) : null;
     return byId?.id ?? null;
-  }, [isBitrixCrm, projectId, projectSlug, projects]);
+  }, [isCrmEmbed, projectId, projectSlug, projects]);
 
   if (!projectIdentifier) {
     return (
@@ -57,10 +56,11 @@ const ProjectWidgetPageInner = ({ useId = false }: ProjectWidgetPageProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {isBitrixCrm && (
+      {isCrmEmbed && (
         <div className="p-3">
           <Suspense fallback={null}>
-            <BitrixCrmTopBar
+            <CrmTopBar
+              crm={crm === "amocrm" ? "amocrm" : "bitrix"}
               projects={projects}
               loading={projectsLoading}
               dealId={null}

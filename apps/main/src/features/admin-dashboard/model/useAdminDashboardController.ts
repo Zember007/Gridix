@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +9,7 @@ import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { useLeadsRealtime } from "@/hooks/useLeadsRealtime";
 import { useLeads } from "@/entities/lead/queries/useLeads";
+import { useAdminAccess } from "@/entities/admin-access";
 import { useAdminDashboardInit } from "./useAdminDashboardInit";
 import { useAdminDashboardTours } from "./useAdminDashboardTours";
 import type { MainProjectCreationKind } from "@/components/projects/mainProjectCreationKind";
@@ -25,6 +27,8 @@ export const useAdminDashboardController = () => {
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
   const { amoWidget } = useAmoWidget();
+  const queryClient = useQueryClient();
+  const adminAccess = useAdminAccess();
   const shouldEnableLeads = activeTab === "leads";
   const { leads: allLeadsForUnread } = useLeads(undefined, {
     enabled: shouldEnableLeads,
@@ -35,6 +39,10 @@ export const useAdminDashboardController = () => {
   const { retakeTraining, suppressAdminChecklistChrome } =
     useAdminDashboardTours({
       loading,
+      adminBootstrapLoading: adminAccess?.loading ?? false,
+      completedInteractiveTours:
+        adminAccess?.data?.completed_interactive_tours ?? null,
+      queryClient,
       activeTab,
       showCreateModal,
       user,

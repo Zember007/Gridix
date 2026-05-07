@@ -1,14 +1,19 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { DriveStep, Driver, Side } from "@gridix/utils/integrations";
 import {
   GRIDIX_DRIVER_DEFAULT_STAGE_RADIUS,
   GRIDIX_DRIVER_STAGE_RADIUS_MAX,
   createGridixDriver,
-  hasDriverTourCompletedOnce,
-  markDriverTourCompletedOnce,
   queryFirstVisibleElement,
   waitForSelectors,
   withOnboardingUiBlocked,
 } from "@gridix/utils/integrations";
+
+import { completeInteractiveTour } from "@/features/onboarding/completeInteractiveTour";
+import {
+  type CompletedInteractiveTours,
+  isInteractiveTourMarkedComplete,
+} from "@/features/onboarding/interactiveTourState";
 
 export const PARTNERS_DRIVER_TOUR_ID = "partners";
 
@@ -287,11 +292,20 @@ export function destroyPartnersDriverTour(): void {
 export async function startPartnersDriverTour(params: {
   userId: string;
   t: Translate;
+  completedInteractiveTours: CompletedInteractiveTours | null | undefined;
+  queryClient: QueryClient;
 }): Promise<void> {
-  const { userId, t } = params;
+  const { userId, t, completedInteractiveTours, queryClient } = params;
   if (typeof window === "undefined") return;
   if (!userId) return;
-  if (hasDriverTourCompletedOnce(userId, PARTNERS_DRIVER_TOUR_ID)) return;
+  if (
+    isInteractiveTourMarkedComplete(
+      userId,
+      PARTNERS_DRIVER_TOUR_ID,
+      completedInteractiveTours,
+    )
+  )
+    return;
 
   const mode = await waitForPartnerProgramShell({
     timeoutMs: 12_000,
@@ -319,7 +333,11 @@ export async function startPartnersDriverTour(params: {
           activePartnersDriver = null;
         }
         if (!skipMarkPartnersOnceOnDestroy) {
-          markDriverTourCompletedOnce(userId, PARTNERS_DRIVER_TOUR_ID);
+          void completeInteractiveTour(
+            userId,
+            PARTNERS_DRIVER_TOUR_ID,
+            queryClient,
+          );
         }
         skipMarkPartnersOnceOnDestroy = false;
       },

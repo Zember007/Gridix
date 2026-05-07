@@ -115,7 +115,7 @@ const ProfileFooterMenu = ({
           className={`flex w-full items-center ${
             isCollapsed
               ? "flex-col justify-center gap-0.5 px-0.5 py-1"
-              : "gap-2 p-1.5"
+              : "gap-2 px-2 py-1.5"
           } hover:bg-opacity-80 rounded-md transition-colors`}
           style={{ backgroundColor: "transparent" }}
           onMouseEnter={(e) => {
@@ -126,15 +126,7 @@ const ProfileFooterMenu = ({
             e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-full"
-            style={{ backgroundColor: ADMIN_THEME.primaryActive }}
-          >
-            <UserCircle
-              className="h-3.5 w-3.5"
-              style={{ color: ADMIN_THEME.textOnPrimary }}
-            />
-          </div>
+          <UserCircle className="h-5 w-5 text-[var(--admin-sidebar-text)] transition-colors duration-200 hover:text-[var(--admin-sidebar-active-text)]" />
 
           <div className="min-w-0 flex-1 text-left">
             <p

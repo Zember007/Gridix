@@ -3726,6 +3726,7 @@ export type Database = {
           billing_currency: string | null;
           company_name: string | null;
           company_type: string | null;
+          completed_interactive_tours: Json;
           created_at: string;
           email: string | null;
           full_name: string | null;
@@ -3757,6 +3758,7 @@ export type Database = {
           billing_currency?: string | null;
           company_name?: string | null;
           company_type?: string | null;
+          completed_interactive_tours?: Json;
           created_at?: string;
           email?: string | null;
           full_name?: string | null;
@@ -3788,6 +3790,7 @@ export type Database = {
           billing_currency?: string | null;
           company_name?: string | null;
           company_type?: string | null;
+          completed_interactive_tours?: Json;
           created_at?: string;
           email?: string | null;
           full_name?: string | null;
@@ -4073,6 +4076,10 @@ export type Database = {
         Args: { p_event_id: string };
         Returns: undefined;
       };
+      merge_completed_interactive_tour: {
+        Args: { p_tour_id: string };
+        Returns: undefined;
+      };
       needs_token_refresh: { Args: { settings_id: string }; Returns: boolean };
       purge_agent_public_preview_files: {
         Args: { max_files?: number };
@@ -4081,6 +4088,10 @@ export type Database = {
       resolve_billing_project_id: {
         Args: { p_project_id: string };
         Returns: string;
+      };
+      remove_completed_interactive_tours: {
+        Args: { p_tour_ids: string[] };
+        Returns: undefined;
       };
       trigger_changelog_scan: { Args: never; Returns: undefined };
     };

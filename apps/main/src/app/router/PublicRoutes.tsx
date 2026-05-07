@@ -19,6 +19,7 @@ const BitrixInstallPage = lazy(
   () => import("@/pages/bitrix/BitrixInstallPage"),
 );
 const BitrixPage = lazy(() => import("@/pages/bitrix/BitrixPage"));
+const AmoCrmPage = lazy(() => import("@/pages/amocrm/AmoCrmPage"));
 const ChangelogPage = lazy(() => import("@gridix/ui/changelog-page"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -117,6 +118,12 @@ export function PublicRoutes() {
         path="bitrix"
         element={
           <EmbedProviders>{withLocalSuspense(<BitrixPage />)}</EmbedProviders>
+        }
+      />
+      <Route
+        path="amocrm"
+        element={
+          <EmbedProviders>{withLocalSuspense(<AmoCrmPage />)}</EmbedProviders>
         }
       />
 

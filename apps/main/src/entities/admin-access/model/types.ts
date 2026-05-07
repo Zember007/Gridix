@@ -70,6 +70,8 @@ export interface AdminBootstrapResponse {
     company_name: string | null;
     phone: string | null;
   } | null;
+  /** Выполненные интерактивные туры (Driver.js) для текущего пользователя: tour_id → ISO timestamp. */
+  completed_interactive_tours: Record<string, string>;
   projects: AdminBootstrapProject[];
   subscriptions_by_project: Record<string, AdminBootstrapSubscription>;
   access: AdminProjectAccess;
