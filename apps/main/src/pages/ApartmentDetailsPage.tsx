@@ -114,6 +114,17 @@ const ApartmentDetailsPage = ({
     Array<{ id: number; title: string; stage_id?: string | null }>
   >([]);
   const [bitrixDealsQuery, setBitrixDealsQuery] = useState("");
+  const [isAmoLeadPickerOpen, setIsAmoLeadPickerOpen] = useState(false);
+  const [amoLeadsLoading, setAmoLeadsLoading] = useState(false);
+  const [amoLeads, setAmoLeads] = useState<
+    Array<{
+      id: number;
+      title: string;
+      status_id?: number | null;
+      pipeline_id?: number | null;
+    }>
+  >([]);
+  const [amoLeadsQuery, setAmoLeadsQuery] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("RUB");
   const trackedApartmentViewsRef = useRef<Set<string>>(new Set());
   const trackedProjectViewsRef = useRef<Set<string>>(new Set());
@@ -352,8 +363,47 @@ const ApartmentDetailsPage = ({
     }
   };
 
-  const amoBindLeadToApartment = async () => {
-    if (!apartment || !project || !amoLeadId) return;
+  const loadAmoUnlinkedLeads = useCallback(async () => {
+    if (!apartment) return;
+    try {
+      setAmoLeadsLoading(true);
+      await ensureGridixAuth();
+
+      const { data, error } = await supabase.functions.invoke("amocrm-api", {
+        body: {
+          action: "list_unlinked_leads",
+          project_id: apartment.project_id,
+          limit: 100,
+        },
+      });
+      if (error) throw error;
+
+      const leads = ((data as any)?.leads ?? []) as Array<any>;
+      const normalized = Array.isArray(leads)
+        ? leads
+            .map((lead) => ({
+              id: Number(lead?.id),
+              title: String(lead?.title ?? ""),
+              status_id:
+                typeof lead?.status_id === "number" ? lead.status_id : null,
+              pipeline_id:
+                typeof lead?.pipeline_id === "number" ? lead.pipeline_id : null,
+            }))
+            .filter((lead) => Number.isFinite(lead.id) && lead.id > 0)
+        : [];
+      setAmoLeads(normalized);
+    } catch (e) {
+      console.error(e);
+      toast.error(
+        e instanceof Error ? e.message : "Не удалось загрузить лиды amoCRM",
+      );
+    } finally {
+      setAmoLeadsLoading(false);
+    }
+  }, [apartment, ensureGridixAuth]);
+
+  const amoBindLeadToApartment = async (leadId = amoLeadId) => {
+    if (!apartment || !project || !leadId) return;
     try {
       setCrmBusy(true);
       await ensureGridixAuth();
@@ -361,15 +411,16 @@ const ApartmentDetailsPage = ({
       const { error } = await supabase.functions.invoke("amocrm-api", {
         body: {
           action: "bind_lead_to_apartment",
-          lead_id: amoLeadId,
+          lead_id: leadId,
           project_id: apartment.project_id,
           apartment_id: apartment.id,
         },
       });
       if (error) throw error;
 
-      patchSearchParams({ crm: "amocrm", lead_id: String(amoLeadId) });
-      toast.success(`Квартира привязана к amoCRM лиду #${amoLeadId}`);
+      setAmoLeadId(leadId);
+      patchSearchParams({ crm: "amocrm", lead_id: String(leadId) });
+      toast.success(`Квартира привязана к amoCRM лиду #${leadId}`);
     } catch (e) {
       console.error(e);
       toast.error(
@@ -379,6 +430,20 @@ const ApartmentDetailsPage = ({
       );
     } finally {
       setCrmBusy(false);
+    }
+  };
+
+  const amoLinkToLead = async () => {
+    if (!apartment || !project) return;
+
+    if (amoLeadId) {
+      await amoBindLeadToApartment(amoLeadId);
+      return;
+    }
+
+    setIsAmoLeadPickerOpen(true);
+    if (!amoLeads.length) {
+      void loadAmoUnlinkedLeads();
     }
   };
 
@@ -1356,28 +1421,23 @@ const ApartmentDetailsPage = ({
                               </>
                             ) : (
                               <>
-                                {amoLeadId ? (
-                                  <Button
-                                    className="w-full rounded-lg py-3 font-poppins text-sm font-medium text-white hover:opacity-90"
-                                    style={getButtonStyle("available")}
-                                    onClick={amoBindLeadToApartment}
-                                    disabled={crmBusy}
-                                  >
-                                    {crmBusy
-                                      ? "..."
-                                      : `Привязать к amoCRM лиду #${amoLeadId}`}
-                                  </Button>
-                                ) : null}
                                 <Button
-                                  variant={amoLeadId ? "outline" : "default"}
+                                  className="w-full rounded-lg py-3 font-poppins text-sm font-medium text-white hover:opacity-90"
+                                  style={getButtonStyle("available")}
+                                  onClick={amoLinkToLead}
+                                  disabled={crmBusy}
+                                >
+                                  {crmBusy
+                                    ? "..."
+                                    : amoLeadId
+                                      ? `Привязать к текущему лиду #${amoLeadId}`
+                                      : "Привязать к существующему лиду"}
+                                </Button>
+                                <Button
+                                  variant="outline"
                                   className="w-full rounded-lg py-3 font-poppins text-sm"
                                   onClick={amoCreateLead}
                                   disabled={crmBusy}
-                                  style={
-                                    amoLeadId
-                                      ? undefined
-                                      : getButtonStyle("available")
-                                  }
                                 >
                                   {crmBusy ? "..." : "Создать лид в amoCRM"}
                                 </Button>
@@ -1527,24 +1587,23 @@ const ApartmentDetailsPage = ({
                     </>
                   ) : (
                     <>
-                      {amoLeadId ? (
-                        <Button
-                          className="w-full rounded-2xl py-3 text-lg font-semibold text-white hover:opacity-90"
-                          style={getButtonStyle("available")}
-                          onClick={amoBindLeadToApartment}
-                          disabled={crmBusy}
-                        >
-                          {crmBusy ? "..." : `Привязать #${amoLeadId}`}
-                        </Button>
-                      ) : null}
                       <Button
-                        variant={amoLeadId ? "outline" : "default"}
+                        className="w-full rounded-2xl py-3 text-lg font-semibold text-white hover:opacity-90"
+                        style={getButtonStyle("available")}
+                        onClick={amoLinkToLead}
+                        disabled={crmBusy}
+                      >
+                        {crmBusy
+                          ? "..."
+                          : amoLeadId
+                            ? `Привязать #${amoLeadId}`
+                            : "Привязать лид"}
+                      </Button>
+                      <Button
+                        variant="outline"
                         className="w-full rounded-2xl border-2 border-gray-200 py-3 hover:border-gray-300"
                         onClick={amoCreateLead}
                         disabled={crmBusy}
-                        style={
-                          amoLeadId ? undefined : getButtonStyle("available")
-                        }
                       >
                         {crmBusy ? "..." : "Создать лид в amoCRM"}
                       </Button>
@@ -1748,6 +1807,95 @@ const ApartmentDetailsPage = ({
                     {!bitrixDeals.length && (
                       <div className="px-3 py-6 text-sm text-muted-foreground">
                         Не найдено доступных сделок для привязки.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {crmContext.isAmoCrm && (
+          <Dialog
+            open={isAmoLeadPickerOpen}
+            onOpenChange={(open) => {
+              setIsAmoLeadPickerOpen(open);
+              if (open) void loadAmoUnlinkedLeads();
+              if (!open) setAmoLeadsQuery("");
+            }}
+          >
+            <DialogContent className="sm:max-w-[650px]">
+              <DialogHeader>
+                <DialogTitle>Выберите лид amoCRM</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                <div className="text-sm text-muted-foreground">
+                  Показываем лиды amoCRM из настроенной воронки проекта, которые
+                  еще не зафиксированы в Gridix.
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    value={amoLeadsQuery}
+                    onChange={(e) => setAmoLeadsQuery(e.target.value)}
+                    placeholder="Поиск по названию или #ID"
+                    className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={amoLeadsLoading || crmBusy}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => void loadAmoUnlinkedLeads()}
+                    disabled={amoLeadsLoading || crmBusy}
+                  >
+                    Обновить
+                  </Button>
+                </div>
+
+                {amoLeadsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader />
+                  </div>
+                ) : (
+                  <div className="max-h-[360px] overflow-auto rounded-md border border-border">
+                    {amoLeads
+                      .filter((lead) => {
+                        const q = amoLeadsQuery.trim().toLowerCase();
+                        if (!q) return true;
+                        return (
+                          String(lead.id).includes(q) ||
+                          lead.title.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((lead) => (
+                        <button
+                          key={lead.id}
+                          type="button"
+                          className="w-full border-b px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-muted disabled:opacity-50"
+                          onClick={async () => {
+                            setIsAmoLeadPickerOpen(false);
+                            await amoBindLeadToApartment(lead.id);
+                          }}
+                          disabled={crmBusy}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="font-medium">#{lead.id}</div>
+                            {lead.status_id ? (
+                              <div className="text-xs text-muted-foreground">
+                                status {lead.status_id}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="break-words text-sm text-muted-foreground">
+                            {lead.title || "Без названия"}
+                          </div>
+                        </button>
+                      ))}
+
+                    {!amoLeads.length && (
+                      <div className="px-3 py-6 text-sm text-muted-foreground">
+                        Не найдено доступных лидов amoCRM для привязки.
                       </div>
                     )}
                   </div>
